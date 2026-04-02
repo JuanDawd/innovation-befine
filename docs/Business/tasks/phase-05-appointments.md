@@ -1,0 +1,138 @@
+# Phase 5 — Appointments
+
+> Goal: secretary can book, confirm, and manage appointments; double-booking is prevented; no-show count is tracked; confirmation email is sent via Resend.
+
+---
+
+## T049 — Appointments table migration
+
+**Phase:** 5 — Appointments
+**Status:** pending
+**Dependencies:** T029, T012
+
+### What to do
+Create the `appointments` table: `id`, `client_id` (FK nullable), `guest_name` (nullable), `stylist_employee_id` (FK), `service_summary` (text — free description for now), `scheduled_at` (timestamp with timezone), `duration_minutes` (default 60), `status` (`booked` | `confirmed` | `completed` | `cancelled` | `rescheduled` | `no_show`), `cancelled_at` (nullable), `cancellation_reason` (nullable), `created_by`, `created_at`, `updated_at`.
+
+### Acceptance criteria
+- [ ] Migration runs without errors
+- [ ] `status` uses Drizzle `pgEnum`
+- [ ] Either `client_id` or `guest_name` must be present
+
+---
+
+## T050 — Appointment booking UI (secretary / cashier)
+
+**Phase:** 5 — Appointments
+**Status:** pending
+**Dependencies:** T049, T030
+
+### What to do
+Build the appointment booking form: client (saved or guest), service summary, stylist selector, date, time, and duration. On submit, validate there is no overlapping appointment for the same stylist, then create the record.
+
+### Acceptance criteria
+- [ ] Date and time pickers are usable on mobile
+- [ ] Stylist selector shows only active stylists
+- [ ] Overlap validation runs before insert (checks `scheduled_at` to `scheduled_at + duration_minutes`)
+- [ ] Conflict → clear error message with the conflicting appointment time shown
+- [ ] New appointment triggers in-app notification to the assigned stylist (via T048)
+
+---
+
+## T051 — Double-booking prevention
+
+**Phase:** 5 — Appointments
+**Status:** pending
+**Dependencies:** T050
+
+### What to do
+Add a database-level constraint (or a serializable transaction check) to guarantee no two appointments for the same stylist overlap, even under concurrent writes.
+
+### Acceptance criteria
+- [ ] Two concurrent booking attempts for the same slot result in exactly one success and one error
+- [ ] Error message on conflict is user-friendly (not a raw DB error)
+- [ ] Existing overlapping data (if any) is blocked on insert, not silently accepted
+
+---
+
+## T052 — Appointment list and calendar view
+
+**Phase:** 5 — Appointments
+**Status:** pending
+**Dependencies:** T050
+
+### What to do
+Build the appointments screen for secretary and cashier: a daily calendar or list grouped by stylist, showing all appointments with their status. Navigation to previous/next day.
+
+### Acceptance criteria
+- [ ] View defaults to today's appointments
+- [ ] Navigate to any date
+- [ ] Filter by stylist
+- [ ] Appointment cards show client name, service summary, time, and status
+- [ ] Responsive — works as a stacked list on mobile
+
+---
+
+## T053 — Appointment status management
+
+**Phase:** 5 — Appointments
+**Status:** pending
+**Dependencies:** T050
+
+### What to do
+Add actions on each appointment card: confirm, cancel (with reason), reschedule (changes `scheduled_at` with overlap check), complete, or mark no-show. Each action is available to secretary and cashier. Completing an appointment optionally links to a ticket.
+
+### Acceptance criteria
+- [ ] All six status transitions are reachable from the UI
+- [ ] Reschedule re-runs the overlap check
+- [ ] Cancellation reason stored
+- [ ] "No-show" transition increments `clients.no_show_count` for saved clients (via T032)
+- [ ] Guest no-shows update only the appointment record, not any client profile
+
+---
+
+## T054 — Resend email integration
+
+**Phase:** 5 — Appointments
+**Status:** pending
+**Dependencies:** T003
+
+### What to do
+Install `resend` and `@react-email/components`. Add `RESEND_API_KEY` and `RESEND_FROM_EMAIL` to environment variables and `.env.example`. Create a utility function `sendEmail(to, subject, reactComponent)`.
+
+### Acceptance criteria
+- [ ] Resend API key stored securely in env (not committed)
+- [ ] Utility function sends an email successfully in a test
+- [ ] Failed sends log an error but do not crash the app (fire-and-forget with try/catch)
+
+---
+
+## T055 — Appointment confirmation email template
+
+**Phase:** 5 — Appointments
+**Status:** pending
+**Dependencies:** T054
+
+### What to do
+Build a React Email template for appointment confirmations. Template includes: client name, stylist name, service summary, date and time, and a note to contact the salon to reschedule or cancel.
+
+### Acceptance criteria
+- [ ] Template renders correctly in React Email preview
+- [ ] Displays clearly on mobile email clients (test with at least one mobile preview)
+- [ ] Template is in `apps/web/src/emails/AppointmentConfirmation.tsx`
+
+---
+
+## T056 — "Send confirmation email" action
+
+**Phase:** 5 — Appointments
+**Status:** pending
+**Dependencies:** T055, T053
+
+### What to do
+Add a "Send confirmation email" button on appointment cards (visible when status is `booked` or `confirmed` and client has an email). Clicking calls the send utility and records `confirmation_sent_at` on the appointment record.
+
+### Acceptance criteria
+- [ ] Button visible only when client email is available
+- [ ] Email delivered within 30 seconds in staging
+- [ ] `confirmation_sent_at` recorded after successful send
+- [ ] Button disabled after first send (re-send requires a second explicit click with a confirmation prompt)
