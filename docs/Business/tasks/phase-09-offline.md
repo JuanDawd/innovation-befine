@@ -72,7 +72,7 @@ Show a persistent sync indicator in the app header/nav:
 **Dependencies:** T001
 
 ### What to do
-Add a service worker using Workbox (via `next-pwa` or a custom Workbox config). Strategy:
+Add a service worker using Workbox. Evaluate the wrapper library: **`@ducanh2912/next-pwa`** (actively maintained fork) or a **custom Workbox config** (no wrapper). Do **not** use the original `next-pwa` without verifying it supports the project's Next.js version — it has had maintenance gaps. Strategy:
 - **App shell (JS/CSS/fonts):** Cache First
 - **API GET requests (catalog, clients, schedule):** Stale While Revalidate
 - **Mutating requests (POST/PUT):** NetworkOnly (handled by IndexedDB queue instead)

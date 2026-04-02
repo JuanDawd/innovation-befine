@@ -36,7 +36,7 @@ Build the analytics home screen for admin: daily revenue for the current busines
 ### Acceptance criteria
 - [ ] Shows current day totals prominently
 - [ ] Comparison row beneath: "vs yesterday: +X% / -X%"
-- [ ] Updates in near-real-time (Pusher event on ticket close can trigger a refresh)
+- [ ] Updates in near-real-time (real-time event on ticket close can trigger a refresh)
 - [ ] Responsive
 
 ---
@@ -91,6 +91,24 @@ Analyze the analytics queries (T071) with `EXPLAIN ANALYZE` on Neon and add the 
 - [ ] All analytics queries complete in < 200 ms on 6 months of realistic seeded data
 - [ ] No sequential scans on large tables
 - [ ] Indexes documented in a comment in the schema file
+
+---
+
+## T101 — Analytics seed script
+
+**Phase:** 8 — Analytics *(new — Senior SWE review F24)*
+**Status:** pending
+**Dependencies:** T071
+
+### What to do
+Create a `db:seed:analytics` script that generates 6 months of realistic business data: randomized tickets across employees, varying daily revenue, some no-shows, cloth batches with approvals, and payouts. This data is needed to test analytics queries (T071–T075) on realistic volumes and to verify that reports render correctly with real-world variance.
+
+### Acceptance criteria
+- [ ] Script generates ~180 business days of data (6 months)
+- [ ] Data includes variation: weekday vs weekend patterns, different employee workloads, occasional no-shows
+- [ ] All analytics queries (T071) return meaningful, non-zero results after seeding
+- [ ] Script is idempotent (can be re-run; clears and re-seeds analytics data)
+- [ ] Does not affect or overwrite real data if run against a non-empty database (operates in a seeded namespace or requires explicit flag)
 
 ---
 

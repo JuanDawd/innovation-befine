@@ -6,6 +6,23 @@
 
 ---
 
+## T032b — No-show count increment logic
+
+**Phase:** 5 — Appointments *(split from T032 — Senior SWE review F8)*
+**Status:** pending
+**Dependencies:** T032, T053
+
+### What to do
+Implement the atomic increment of `clients.no_show_count` when an appointment is marked "no-show" (T053). This logic was split from T032 (Phase 3) because the appointment system that triggers no-shows doesn't exist until Phase 5.
+
+### Acceptance criteria
+- [ ] `no_show_count` increments atomically when a no-show is recorded via T053
+- [ ] Only saved clients are affected (guests have no client record)
+- [ ] Increment is idempotent — marking the same appointment as no-show twice does not double-count
+- [ ] Warning badge in client search (from T032) updates to reflect new count
+
+---
+
 ## T049 — Appointments table migration
 
 **Phase:** 5 — Appointments
@@ -13,12 +30,13 @@
 **Dependencies:** T029, T012
 
 ### What to do
-Create the `appointments` table: `id`, `client_id` (FK nullable), `guest_name` (nullable), `stylist_employee_id` (FK), `service_summary` (text — free description for now), `scheduled_at` (timestamp with timezone), `duration_minutes` (default 60), `status` (`booked` | `confirmed` | `completed` | `cancelled` | `rescheduled` | `no_show`), `cancelled_at` (nullable), `cancellation_reason` (nullable), `created_by`, `created_at`, `updated_at`.
+Create the `appointments` table: `id`, `client_id` (FK nullable), `guest_name` (nullable), `stylist_employee_id` (FK), `service_summary` (text — free description for now), `scheduled_at` (timestamp with timezone), `duration_minutes` (default 60), `status` (`booked` | `confirmed` | `completed` | `cancelled` | `rescheduled` | `no_show`), `cancelled_at` (nullable), `cancellation_reason` (nullable), `confirmation_sent_at` (nullable timestamp — used by T056 to record when the confirmation email was sent), `created_by`, `created_at`, `updated_at`.
 
 ### Acceptance criteria
 - [ ] Migration runs without errors
 - [ ] `status` uses Drizzle `pgEnum`
 - [ ] Either `client_id` or `guest_name` must be present
+- [ ] `confirmation_sent_at` column exists (nullable timestamp) — used by T056
 
 ---
 
@@ -87,7 +105,7 @@ Add actions on each appointment card: confirm, cancel (with reason), reschedule 
 - [ ] All six status transitions are reachable from the UI
 - [ ] Reschedule re-runs the overlap check
 - [ ] Cancellation reason stored
-- [ ] "No-show" transition increments `clients.no_show_count` for saved clients (via T032)
+- [ ] "No-show" transition increments `clients.no_show_count` for saved clients (via T032b)
 - [ ] Guest no-shows update only the appointment record, not any client profile
 
 ---

@@ -20,7 +20,7 @@ A service with no meaningful variants still has at least one default variant (na
 ### Acceptance criteria
 - [ ] Migration runs without errors
 - [ ] `commission_pct` has a check constraint (0 ≤ value ≤ 100)
-- [ ] `customer_price` is stored as integer cents (or numeric with 2 decimal places) — decide once and document
+- [ ] `customer_price` is stored as **integer cents** (`bigint`) per the money storage convention decided in T002
 - [ ] Both tables have `is_active` to allow soft-deletion
 
 ---
@@ -50,12 +50,13 @@ Build the admin service catalog screen: list all services with their variants, p
 **Dependencies:** T024
 
 ### What to do
-Create a `catalog_audit_log` table (`id`, `entity_type`, `entity_id`, `changed_by`, `changed_at`, `old_value` jsonb, `new_value` jsonb). On every create/edit of a service or variant, insert a record. Display the log on each service's detail view (admin only).
+Create a **generic** `catalog_audit_log` table (`id`, `entity_type`, `entity_id`, `changed_by`, `changed_at`, `old_value` jsonb, `new_value` jsonb). The `entity_type` field supports multiple catalog types — both **services/variants** (this phase) and **cloth pieces** (T027 will also write to this table). On every create/edit of a service, variant, or cloth piece, insert a record. Display the log on each entity's detail view (admin only).
 
 ### Acceptance criteria
 - [ ] Every price or commission change creates an audit record
 - [ ] Audit log shows what changed, who changed it, and when
 - [ ] Audit log is append-only (no deletes from the admin UI)
+- [ ] `entity_type` supports at least `service`, `service_variant`, and `cloth_piece` — T027 uses the same table for cloth piece price changes
 
 ---
 

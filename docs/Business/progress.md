@@ -5,6 +5,8 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 **Statuses:** `pending` · `in-progress` · `done` · `blocked`
 
 > Last restructured after Senior Product Owner review (April 2026). See `docs/research/senior_product_owner.md` for all findings and rationale. Net change: 89 → 94 tasks.
+>
+> **Updated after Senior Software Engineer review (April 2026).** See `docs/research/senior_software_engineer.md` for all findings. All 25 findings accepted. Net change: 94 → 103 tasks. T085 moved Phase 10 → Phase 0; T032 split into T032 (Phase 3) + T032b (Phase 5); new tasks: T094, T095, T097, T098, T099, T100, T101, T102. Multiple existing tasks received additional acceptance criteria (T002, T005, T006, T018, T025, T045, T049, T083).
 
 ---
 
@@ -24,6 +26,12 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | T010 | RBAC role definitions (roles + stylist subtypes) | pending | T007 |
 | T011 | Seed script for development (one user per role) | pending | T010 |
 | T077 | Offline policy document *(moved from Phase 9)* | pending | — |
+| T085 | Sentry error tracking setup *(moved from Phase 10)* | pending | T004 |
+| T094 | Testing infrastructure (Vitest + Playwright) *(new)* | pending | T001 |
+| T095 | CI/CD pipeline (GitHub Actions) *(new)* | pending | T094, T002 |
+| T097 | API design conventions document *(new)* | pending | T001 |
+| T098 | Real-time abstraction layer *(new)* | pending | T009 |
+| T099 | Internationalization (i18n) setup *(new)* | pending | T001 |
 
 ---
 
@@ -66,7 +74,7 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | T029 | Clients table migration | pending | T006 |
 | T030 | Saved client CRUD and search UI (cashier/secretary) | pending | T029 |
 | T031 | Guest client flow (name only, no record) | pending | T030 |
-| T032 | No-show count tracking | pending | T029 |
+| T032 | No-show count display | pending | T029 |
 
 ---
 
@@ -77,14 +85,14 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | T033 | Tickets table migration (incl. idempotency_key column) | pending | T019, T029 |
 | T034 | Ticket items table migration (with price/commission snapshot) | pending | T033, T023 |
 | T035 | Ticket creation — stylist / secretary / cashier (incl. walk-in flow) | pending | T034, T031, T028 |
-| T036 | Cashier dashboard with live Pusher updates | pending | T035, T009 |
+| T036 | Cashier dashboard with live updates | pending | T035, T098 |
 | T037 | Ticket status transitions and permissions | pending | T035 |
 | T038 | Checkout flow (optimistic lock, payment method, close ticket) | pending | T037 |
 | T039 | Split payment at checkout (ticket_payments table) | pending | T038 |
 | T040 | Price override at checkout (cashier only) | pending | T038 |
 | T041 | Edit approval flow (secretary/stylist → cashier) | pending | T035, T048 |
 | T042 | Ticket reopen and earnings recompute flag | pending | T038 |
-| T048 | In-app notification system (MVP) | pending | T009 |
+| T048 | In-app notification system (MVP) | pending | T098 |
 | T092 | Closed ticket history view (admin / cashier) *(new)* | pending | T038 |
 | T093 | Admin home / day-at-a-glance screen *(new)* | pending | T036, T038 |
 
@@ -111,6 +119,7 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 
 | ID | Task | Status | Dependencies |
 |----|------|--------|-------------|
+| T032b | No-show count increment logic *(split from T032)* | pending | T032, T053 |
 | T049 | Appointments table migration | pending | T029, T012 |
 | T050 | Appointment booking UI (secretary / cashier) | pending | T049, T030 |
 | T051 | Double-booking prevention (DB-level) | pending | T050 |
@@ -163,6 +172,7 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | T073 | Weekly and monthly revenue dashboards with comparison | pending | T071 |
 | T074 | Per-employee performance views and drill-down | pending | T071 |
 | T075 | Analytics database indexes and query optimization | pending | T071 |
+| T101 | Analytics seed script (6 months of data) *(new)* | pending | T071 |
 | T076 | CSV export for accountant (stretch) | pending | T071 |
 
 ---
@@ -187,11 +197,12 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 |----|------|--------|-------------|
 | T083 | Responsive QA pass (mobile + desktop, all roles) | pending | all phases |
 | T084 | Loading states and optimistic UI | pending | all phases |
-| T085 | Sentry error tracking setup | pending | T004 |
 | T086 | Database backup policy and restore drill | pending | T005 |
 | T087 | Uptime monitoring (`/api/health` endpoint + monitor) | pending | T004 |
 | T088 | Internal training guide (one page per role) | pending | all phases |
-| T089 | Production cutover checklist and go-live | pending | T083–T088 |
+| T102 | Stale-tab version detection *(new)* | pending | T004 |
+| T100 | Data migration from existing spreadsheets *(new)* | pending | T029, T030 |
+| T089 | Production cutover checklist and go-live | pending | T083, T084, T086, T087, T088, T100, T102 |
 
 ---
 
@@ -199,19 +210,19 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 
 | Phase | Tasks | Done | In progress |
 |-------|-------|------|-------------|
-| 0 — Foundation | 12 | 0 | 0 |
+| 0 — Foundation | 18 | 0 | 0 |
 | 1 — Identity | 12 | 0 | 0 |
 | 2 — Catalog | 6 | 0 | 0 |
 | 3 — Clients | 4 | 0 | 0 |
 | 4A — Tickets and checkout | 13 | 0 | 0 |
 | 4B — Cloth batches | 4 | 0 | 0 |
-| 5 — Appointments | 7 | 0 | 0 |
+| 5 — Appointments | 8 | 0 | 0 |
 | 6 — Large orders | 6 | 0 | 0 |
 | 7 — Payroll | 11 | 0 | 0 |
-| 8 — Analytics | 6 | 0 | 0 |
+| 8 — Analytics | 7 | 0 | 0 |
 | 9 — Offline | 5 | 0 | 0 |
-| 10 — Polish | 7 | 0 | 0 |
-| **Total** | **94** | **0** | **0** |
+| 10 — Polish | 8 | 0 | 0 |
+| **Total** | **103** | **0** | **0** |
 
 ---
 

@@ -55,7 +55,7 @@ The company currently tracks daily services, employee pay, and cloth production 
 | Layer | Technology | Decision basis |
 |-------|-----------|----------------|
 | Framework | Next.js (App Router) + Turborepo monorepo | SSR, API routes, server actions; monorepo for shared types |
-| UI | React + Base UI (Base Web by Uber) | Requested by client; validate App Router compatibility in Phase 0 spike |
+| UI | React + Base UI (Base Web by Uber); **shadcn/ui + Tailwind CSS** as fallback | Primary requested by client; fallback if Base Web fails App Router spike |
 | Hosting | Vercel | Seamless Next.js deploy; free tier sufficient for MVP |
 | Database | PostgreSQL via **Neon** | Serverless, Vercel-native integration, usage-based pricing, free in development |
 | ORM | Drizzle ORM | TypeScript-native, lightweight, works well with Neon's serverless driver |
@@ -63,6 +63,10 @@ The company currently tracks daily services, employee pay, and cloth production 
 | Real-time | **Pusher** (free tier) → native SSE + Postgres LISTEN/NOTIFY later | Live cashier dashboard; Pusher free tier covers MVP; migrate when ready |
 | Email | **Resend** (free tier) | Appointment confirmation emails; React Email templates; 100 emails/day free |
 | Error tracking | Sentry (free tier) | Phase 10 |
+| Forms | React Hook Form + Zod resolver | Shared validation schemas between client and server |
+| Server state | TanStack Query (React Query) | Caching, revalidation, and server state management |
+| Client state | Zustand | Ephemeral UI state (offline queue, notification count) |
+| Dates | date-fns | All date manipulation, formatting, timezone-aware comparisons |
 | PWA / offline | Workbox + IndexedDB | Phase 9 — service worker caching + local mutation queue |
 
 > Full research and rationale for each decision: see `docs/research/`.

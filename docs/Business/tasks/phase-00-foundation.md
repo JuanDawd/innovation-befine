@@ -35,6 +35,12 @@ Add ESLint (Next.js config), Prettier, and a shared config package. Add a pre-co
 - [ ] `turbo format` formats all files
 - [ ] Pre-commit hook blocks commits with lint errors
 - [ ] `docs/standards.md` note added: Zod validation required on all server-side inputs
+- [ ] `docs/standards.md` includes money storage convention: **all monetary values stored as integer cents** (`bigint`); display layer converts to decimal for the user. No `numeric` or `float` types for money.
+- [ ] `docs/standards.md` includes soft-delete policy: use `is_active` for entities that appear in selectors (services, clients, employees, cloth pieces); use status fields for lifecycle entities (tickets, appointments, orders); document when hard-delete is allowed (never for financial records)
+- [ ] `docs/standards.md` includes error handling pattern: server-side uses typed result objects (not thrown errors) for expected failures; financial operations wrapped in DB transactions; client-side shows toast notifications for action results and inline errors for form validation
+- [ ] `docs/standards.md` includes accessibility baseline: all form inputs must have associated labels; interactive elements must be keyboard-accessible; colour contrast must meet WCAG AA (4.5:1 for normal text); focus indicators must be visible
+- [ ] `docs/standards.md` includes performance targets: LCP < 2.5 s; API P95 < 500 ms; real-time event delivery < 2 s; client search < 300 ms; analytics queries < 500 ms (< 200 ms after index optimization in T075)
+- [ ] `docs/standards.md` includes standard libraries: **React Hook Form + Zod resolver** for all forms (same Zod schemas used for server-side validation); **TanStack Query** for server state caching and revalidation; **Zustand** for ephemeral client-side state (offline queue, notification count); **date-fns** for all date manipulation, formatting, and comparison (no native `Date` arithmetic)
 
 ---
 
@@ -84,6 +90,7 @@ Create a Neon project (free tier). Add the database URL to Vercel environment va
 - [ ] Preview deploys connect to the Neon `staging` branch
 - [ ] Production connects to the Neon `main` branch
 - [ ] Connection uses Neon's serverless driver (`@neondatabase/serverless`)
+- [ ] Connection strategy documented: which driver to use in Edge Functions vs Serverless Functions; free-tier connection limits noted; what happens when connections are exhausted (error handling, not silent failure)
 
 ---
 
@@ -101,6 +108,7 @@ Install and configure Drizzle ORM with the Neon serverless adapter. Set up `driz
 - [ ] `npm run db:studio` opens Drizzle Studio connected to the local/dev DB
 - [ ] Schema files live in `packages/db/src/schema/`
 - [ ] An empty initial migration runs successfully against Neon
+- [ ] Schema naming conventions documented at the top of the first schema file: table names `snake_case` plural (e.g. `employees`); column names `snake_case`; enums named `{entity}_{field}_enum`; indexes named `idx_{table}_{columns}`; all timestamps use `timestamp with time zone`
 
 ---
 
@@ -122,20 +130,28 @@ Install Better Auth and configure it with the Postgres adapter pointing to the N
 
 ---
 
-## T008 — Base UI (Base Web) spike
+## T008 — UI component library spike
 
 **Phase:** 0 — Foundation
 **Status:** pending
 **Dependencies:** T001
 
 ### What to do
-Install Base Web (`baseui`) and its peer dependency (`styletron-react`). Render one representative component (e.g. a Button and a Table) inside the Next.js App Router. Confirm there are no SSR hydration mismatches or build errors.
+Evaluate the UI component library. **Primary candidate:** Base Web (`baseui`) + Styletron. **Fallback:** shadcn/ui + Tailwind CSS (if Base Web fails the spike).
+
+**Step 1 — Base Web spike (timebox: 2 hours):** Install Base Web and its peer dependency (`styletron-react`). Render one representative component (e.g. a Button and a Table) inside the Next.js App Router. Confirm there are no SSR hydration mismatches or build errors. Check how many components require `"use client"` wrappers — if most do, RSC benefits are lost.
+
+**Step 2 — Decision gate:** If Base Web passes all criteria below, use it. If it fails any criterion (hydration errors, excessive `"use client"` wrappers, build failures, Styletron incompatibilities), switch to the fallback.
+
+**Step 3 — Fallback (if needed):** Install Tailwind CSS + shadcn/ui CLI. Initialize a few core components (Button, Input, Table, Dialog). Confirm they render correctly in the App Router.
 
 ### Acceptance criteria
-- [ ] Base Web components render without errors in development
+- [ ] Chosen library's components render without errors in development
 - [ ] No hydration mismatch warnings in the browser console
-- [ ] Production build (`next build`) completes without Base Web-related errors
-- [ ] Document any workarounds needed (e.g. `"use client"` boundaries) in a comment or small `docs/` note
+- [ ] Production build (`next build`) completes without component-library-related errors
+- [ ] Document any workarounds needed (e.g. `"use client"` boundaries) in `docs/research/ui-library-spike.md`
+- [ ] If Base Web requires `"use client"` on more than 50% of usage sites, switch to shadcn/ui fallback
+- [ ] Decision documented: which library was chosen and why. All subsequent tasks use this library.
 
 ---
 
@@ -209,3 +225,114 @@ Include: what happens to queued actions if the business day closes while the dev
 - [ ] Every user-initiated action in the app is listed with its offline classification
 - [ ] Business stakeholder has signed off (record the date and name in the document)
 - [ ] Document reviewed before Phase 4A task planning begins
+
+---
+
+## T085 — Sentry error tracking setup
+
+**Phase:** 0 — Foundation *(moved from Phase 10)*
+**Status:** pending
+**Dependencies:** T004
+
+### What to do
+Install `@sentry/nextjs` and configure it for the Vercel deployment. Set up a free-tier Sentry project. Capture unhandled errors on both client and server. Add a custom error boundary around the main app shell. Moving this to Phase 0 ensures observability from the first deployed feature, saving debugging time across all subsequent phases.
+
+### Acceptance criteria
+- [ ] Sentry DSN added to Vercel environment variables
+- [ ] A test error (`throw new Error("test")`) appears in the Sentry dashboard
+- [ ] Source maps uploaded so stack traces show original TypeScript line numbers
+- [ ] PII (client names, emails) is scrubbed from Sentry events (configure `beforeSend`)
+
+---
+
+## T094 — Testing infrastructure
+
+**Phase:** 0 — Foundation *(new — Senior SWE review F1)*
+**Status:** pending
+**Dependencies:** T001
+
+### What to do
+Set up the testing stack: **Vitest** for unit and integration tests, **Playwright** for E2E tests. Add `turbo test` and `turbo test:e2e` pipelines. Document the testing policy: every task that implements business logic (earnings computation, status transitions, permissions) must include unit tests. E2E tests are required for critical flows starting in Phase 4A (checkout).
+
+### Acceptance criteria
+- [ ] `vitest` configured with TypeScript support and path aliases matching `tsconfig`
+- [ ] `playwright` configured with at least one smoke test (loads the login page)
+- [ ] `turbo test` runs all Vitest tests across the monorepo
+- [ ] `turbo test:e2e` runs Playwright tests against a local dev server
+- [ ] `docs/standards.md` includes testing policy: unit tests required for business logic; E2E tests required for checkout and payroll flows
+
+---
+
+## T095 — CI/CD pipeline
+
+**Phase:** 0 — Foundation *(new — Senior SWE review F2)*
+**Status:** pending
+**Dependencies:** T094, T002
+
+### What to do
+Create a GitHub Actions workflow that runs on every pull request: `turbo lint`, `turbo typecheck`, `turbo test`. Block PR merges if any step fails (require status checks in branch protection rules). Optionally run Playwright E2E tests against the Vercel preview deploy.
+
+### Acceptance criteria
+- [ ] `.github/workflows/ci.yml` exists and runs on every PR to `main`
+- [ ] Pipeline runs lint, typecheck, and unit tests
+- [ ] PR merge is blocked if any check fails (branch protection configured)
+- [ ] Pipeline completes in < 5 minutes on a clean repo
+- [ ] Workflow uses caching for `node_modules` and Turborepo cache
+
+---
+
+## T097 — API design conventions document
+
+**Phase:** 0 — Foundation *(new — Senior SWE review F4)*
+**Status:** pending
+**Dependencies:** T001
+
+### What to do
+Write `docs/standards-api.md` defining the API conventions used throughout the project. Cover: Server Actions vs REST API routes (when to use each), standard error response shape, pagination pattern (cursor-based or offset), Zod validation error formatting for the client, and request/response typing strategy using shared packages.
+
+### Acceptance criteria
+- [ ] Document at `docs/standards-api.md`
+- [ ] Decision: Server Actions for mutations, API routes for real-time and external integrations (or alternative — documented)
+- [ ] Standard error shape defined (e.g. `{ success: false, error: { code: string, message: string } }`)
+- [ ] Pagination pattern defined with an example
+- [ ] Zod validation errors formatted as `{ field: string, message: string }[]`
+- [ ] Server state caching pattern documented: use **TanStack Query** for GET-derived data; invalidate queries after mutations; define stale times for common data (catalog: 5 min, tickets: 0 / real-time)
+- [ ] Form pattern documented: use **React Hook Form** + `zodResolver`; share Zod schemas between client and server via `packages/types`
+- [ ] Client state pattern documented: use **Zustand** for ephemeral UI state (e.g. offline queue count, sidebar open/close); do not use Zustand for server-derived data
+
+---
+
+## T098 — Real-time abstraction layer
+
+**Phase:** 0 — Foundation *(new — Senior SWE review F6)*
+**Status:** pending
+**Dependencies:** T009
+
+### What to do
+Create a thin abstraction layer around the real-time transport (Pusher) so that migrating to native SSE + Postgres LISTEN/NOTIFY later does not require touching every file that uses real-time events. The abstraction lives in `packages/realtime/`.
+
+### Acceptance criteria
+- [ ] Server export: `publishEvent(channel: string, event: string, data: unknown)` — calls Pusher internally
+- [ ] Client export: `useRealtimeEvent(channel: string, event: string, callback: (data) => void)` — subscribes via Pusher internally
+- [ ] All Phase 4A+ tasks use the abstraction, never Pusher SDK directly
+- [ ] Switching the underlying transport requires changes only in `packages/realtime/`, not in consuming code
+- [ ] Types for channel names and event names are centralized (string literal union or enum)
+
+---
+
+## T099 — Internationalization (i18n) setup
+
+**Phase:** 0 — Foundation *(new — Senior SWE review F11)*
+**Status:** pending
+**Dependencies:** T001
+
+### What to do
+Set up `next-intl` (or equivalent) for bilingual support (Spanish + English). Spanish is the primary locale; English is secondary. Create the translation file structure and a helper for currency formatting using the project's currency (define which currency — e.g. COP, USD). All user-facing strings from Phase 1 onward must use the translation system, not hardcoded text.
+
+### Acceptance criteria
+- [ ] `next-intl` installed and configured with Next.js App Router
+- [ ] Translation files at `messages/es.json` and `messages/en.json` with a few sample keys
+- [ ] Locale switcher component exists (can be hidden for MVP if only Spanish is active)
+- [ ] Currency constant defined (confirm with stakeholder: COP, USD, or other)
+- [ ] Currency formatting utility: `formatMoney(cents: number)` → localized display string (e.g. "$12.500" for COP or "$125.00" for USD)
+- [ ] Date formatting utility using the i18n locale (DD/MM/YYYY for Spanish)

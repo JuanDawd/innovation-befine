@@ -119,6 +119,7 @@ Add Next.js middleware that checks the Better Auth session on every request. Red
 - [ ] Authenticated user accessing an unauthorized route → 403
 - [ ] Public routes (`/login`, `/reset-password`) are accessible without session
 - [ ] Middleware does not add measurable latency on hot paths
+- [ ] Secretary financial restriction enforced: secretary role is blocked from all financial routes (revenue, employee pay, settlement records, analytics, payout screens). Define the blocked route patterns in a centralized config and verify with at least one integration test.
 
 ---
 
@@ -133,7 +134,7 @@ Create the `business_days` table (migration: `id`, `opened_at`, `closed_at` null
 
 ### Acceptance criteria
 - [ ] Migration runs without errors
-- [ ] Only one business day can be open at a time (DB constraint or app-level guard)
+- [ ] Only one business day can be open at a time — enforced by a **database constraint** (partial unique index on `business_days` where `closed_at IS NULL`); app-level guard alone is not sufficient for a financial system
 - [ ] Open and close timestamps recorded with the acting user's ID
 - [ ] Current open business day ID is accessible in a shared server context (e.g. a helper function)
 - [ ] Admin home screen shows current day status (open / closed / last closed at)

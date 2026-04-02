@@ -39,6 +39,7 @@ Build the batch creation form: add pieces by selecting piece type and assigning 
 - [ ] Unassigned pieces are visible to all clothiers on their home screen
 - [ ] Batch is linked to the current open business day
 - [ ] In-app notification (T048) sent to each clothier who receives an assignment
+- [ ] **Reassignment note:** if a clothier is absent and their assigned pieces need to go to someone else, the admin/secretary creates a new batch with the unfinished pieces assigned to a different clothier. Direct piece-level reassignment within an existing batch is not supported in MVP.
 
 ---
 

@@ -63,7 +63,7 @@ The API route must accept an idempotency key so offline replay (Phase 9) does no
 - [ ] Service and variant selector shows only active catalog items
 - [ ] Client selector supports saved clients (search) and guest name entry
 - [ ] Walk-in ticket can be created without linking to any appointment
-- [ ] Ticket appears on the cashier dashboard immediately (via Pusher event)
+- [ ] Ticket appears on the cashier dashboard immediately (via real-time event — T098 abstraction)
 - [ ] Cannot create a ticket if no business day is open
 - [ ] API accepts `Idempotency-Key` header and returns the same response on duplicate submission
 
@@ -73,10 +73,10 @@ The API route must accept an idempotency key so offline replay (Phase 9) does no
 
 **Phase:** 4A — Tickets and checkout
 **Status:** pending
-**Dependencies:** T035, T009
+**Dependencies:** T035, T098
 
 ### What to do
-Build the main cashier screen: a board showing all open tickets grouped by employee. Each card shows: employee name, service, client name, status, and time elapsed since creation. When a ticket is created or updated, Pusher pushes an event and the board updates without a full reload.
+Build the main cashier screen: a board showing all open tickets grouped by employee. Each card shows: employee name, service, client name, status, and time elapsed since creation. When a ticket is created or updated, a real-time event (via the `packages/realtime` abstraction) pushes to connected clients and the board updates without a full reload.
 
 ### Acceptance criteria
 - [ ] Board shows all `logged` and `awaiting_payment` tickets for the current business day
@@ -103,7 +103,7 @@ Implement the allowed status transitions and who can trigger each:
 ### Acceptance criteria
 - [ ] Each transition has a server action / API route that checks the caller's role
 - [ ] Unauthorized transition attempts return 403
-- [ ] Pusher event fired on every status change
+- [ ] Real-time event published on every status change (via T098 abstraction)
 
 ---
 
@@ -124,7 +124,7 @@ Add optimistic lock: if another session has already closed the ticket, return a 
 - [ ] Payment method required before closing (cash / card / bank transfer)
 - [ ] Concurrent checkout attempt on the same ticket → one succeeds, one receives a clear conflict error
 - [ ] On close: ticket status → `closed`, `closed_at` and `closed_by` set
-- [ ] Pusher event fires on close so the board removes the ticket
+- [ ] Real-time event fires on close so the board removes the ticket
 
 ---
 
@@ -191,7 +191,7 @@ Cashier can reopen a closed ticket. On reopen: status → `reopened`; any payout
 
 ### Acceptance criteria
 - [ ] "Reopen" button visible on closed tickets in the history view (cashier only)
-- [ ] Status transitions correctly; Pusher event fires
+- [ ] Status transitions correctly; real-time event fires
 - [ ] Payout records that included this ticket are flagged `needs_review`
 - [ ] Cashier must go through checkout again to re-close
 
@@ -201,10 +201,10 @@ Cashier can reopen a closed ticket. On reopen: status → `reopened`; any payout
 
 **Phase:** 4A — Tickets and checkout
 **Status:** pending
-**Dependencies:** T009
+**Dependencies:** T098
 
 ### What to do
-Create a minimal in-app notification system: a `notifications` table (`id`, `recipient_employee_id`, `message`, `link` nullable, `is_read`, `created_at`). A bell icon in the nav shell (T090) shows the unread count. Clicking opens a dropdown list. Pusher delivers new notifications in real time.
+Create a minimal in-app notification system: a `notifications` table (`id`, `recipient_employee_id`, `message`, `link` nullable, `is_read`, `created_at`). A bell icon in the nav shell (T090) shows the unread count. Clicking opens a dropdown list. Real-time events (via `packages/realtime` abstraction) deliver new notifications instantly.
 
 ### Acceptance criteria
 - [ ] Notification created when a cashier approves or rejects an edit request (T041)
@@ -244,7 +244,7 @@ Build the admin landing page after login: business day status (open/closed), cou
 
 ### Acceptance criteria
 - [ ] Shows whether the business day is open or closed
-- [ ] Live count of open tickets (updates via Pusher)
+- [ ] Live count of open tickets (updates via real-time events)
 - [ ] Revenue figure: sum of closed ticket totals for the current business day
 - [ ] Quick-action links to key admin screens
 - [ ] Unsettled earnings alert badge (stub — will be wired in T070, Phase 7)

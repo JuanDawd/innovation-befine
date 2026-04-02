@@ -25,6 +25,7 @@ Flows to test per role:
 - [ ] Text is legible at default mobile font size (no sub-12px text)
 - [ ] Forms are fillable on a phone keyboard (no content covered by the virtual keyboard)
 - [ ] All critical actions reachable within 3 taps on mobile
+- [ ] Accessibility check: all form inputs have labels; keyboard navigation works for all primary flows; colour contrast meets WCAG AA (4.5:1); focus indicators visible on interactive elements
 
 ---
 
@@ -45,23 +46,6 @@ Audit every user action that triggers a server call. Add:
 - [ ] Submit buttons cannot be double-clicked (disabled after first click)
 - [ ] Optimistic ticket status update reverts to previous state on API error
 - [ ] Error messages are user-friendly (not raw API errors)
-
----
-
-## T085 — Sentry error tracking
-
-**Phase:** 10 — Polish
-**Status:** pending
-**Dependencies:** T004
-
-### What to do
-Install `@sentry/nextjs` and configure it for the Vercel deployment. Set up a free-tier Sentry project. Capture unhandled errors on both client and server. Add a custom error boundary around the cashier dashboard.
-
-### Acceptance criteria
-- [ ] Sentry DSN added to Vercel environment variables
-- [ ] A test error (`throw new Error("test")`) appears in the Sentry dashboard
-- [ ] Source maps uploaded so stack traces show original TypeScript line numbers
-- [ ] PII (client names, emails) is scrubbed from Sentry events (configure `beforeSend`)
 
 ---
 
@@ -119,11 +103,48 @@ Sections:
 
 ---
 
+## T102 — Stale-tab version detection
+
+**Phase:** 10 — Polish *(new — Senior SWE review F25)*
+**Status:** pending
+**Dependencies:** T004
+
+### What to do
+When a new version of the app is deployed, users with stale browser tabs should see a non-blocking "A new version is available — please refresh" banner. Implement by including a build-time version identifier (e.g. git commit hash or build timestamp) in the app. Periodically check the deployed version via a lightweight API endpoint or header. If the versions differ, show the banner.
+
+### Acceptance criteria
+- [ ] Version identifier embedded at build time (e.g. `NEXT_PUBLIC_BUILD_ID`)
+- [ ] Client polls `/api/version` (or reads a response header) every 5 minutes
+- [ ] If deployed version differs from the client's version, a non-blocking banner appears at the top of the screen
+- [ ] Banner includes a "Refresh now" button and a "Dismiss" option (banner reappears on next check)
+- [ ] Banner does not interrupt an active checkout or form submission
+
+---
+
+## T100 — Data migration from existing spreadsheets
+
+**Phase:** 10 — Polish *(new — Senior SWE review F10)*
+**Status:** pending
+**Dependencies:** T029, T030
+
+### What to do
+Create a migration script or admin UI to import existing client records from the company's current spreadsheets into the `clients` table. At minimum, import: client name, phone number, and email. This ensures the app doesn't start from zero on day one — staff can search for existing clients immediately.
+
+### Acceptance criteria
+- [ ] Import script accepts a CSV file with columns: name, phone, email
+- [ ] Duplicate detection by phone or email (skip or flag duplicates)
+- [ ] Import summary: X imported, Y skipped (duplicates), Z errors
+- [ ] Imported clients appear in the client search (T030) immediately
+- [ ] Script is idempotent (safe to run multiple times)
+- [ ] Optional: import no-show counts if available in the source data
+
+---
+
 ## T089 — Production cutover checklist
 
 **Phase:** 10 — Polish
 **Status:** pending
-**Dependencies:** T083, T084, T085, T086, T087, T088
+**Dependencies:** T083, T084, T086, T087, T088, T100, T102
 
 ### What to do
 Create and execute the go-live checklist before switching staff from the old system (spreadsheets) to the app.

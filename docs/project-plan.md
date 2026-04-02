@@ -3,6 +3,8 @@
 This plan divides work into **phases** with **deliverables** and **dependencies**. Order matters most for: **auth → catalog → daily operations → money → reporting → offline**.
 
 > **Restructured after Senior Product Owner review (April 2026).** See `docs/research/senior_product_owner.md` for all findings and rationale. Summary of changes: T077 moved to Phase 0; T054 moved to Phase 1; Phase 4 split into 4A and 4B; T020/T021/T022b moved to Phase 7; T090/T091/T092/T093 added; T043 retired. Total tasks: 89 → 94.
+>
+> **Updated after Senior Software Engineer review (April 2026).** See `docs/research/senior_software_engineer.md` for all 25 findings. All accepted. New tasks: T094 (testing), T095 (CI/CD), T097 (API conventions), T098 (realtime abstraction), T099 (i18n), T100 (data migration), T101 (analytics seed), T102 (stale-tab detection), T032b (no-show logic). T085 moved Phase 10 → Phase 0. Multiple existing tasks received additional ACs (T002, T005, T006, T018, T025, T045, T049, T083). Dependency graph corrected. Total tasks: 94 → 103.
 
 ---
 
@@ -11,14 +13,20 @@ This plan divides work into **phases** with **deliverables** and **dependencies*
 | Work package | Output |
 |--------------|--------|
 | Monorepo scaffold | Turborepo with Next.js app, shared `packages/` for types and utils |
-| Repo standards | ESLint, Prettier, TypeScript strict mode, Zod validation policy, env sample |
+| Repo standards | ESLint, Prettier, TypeScript strict mode, Zod validation policy, env sample, **money format (integer cents)** |
 | Infrastructure | Vercel project, Neon Postgres (dev + staging branches), Drizzle ORM |
 | Auth spike | Better Auth with RBAC plugin + rate limiting confirmed |
 | Real-time spike | Pusher free tier confirmed on Vercel preview |
+| **Real-time abstraction** | Thin wrapper around Pusher (`packages/realtime/`) for future migration to SSE |
 | RBAC matrix | Roles in DB + code: cashier/admin, secretary, stylist (with subtype), clothier |
 | **Offline policy** | `docs/research/offline-policy.md` signed off by stakeholder — before Phase 4A APIs are built |
+| **Testing infrastructure** | Vitest + Playwright configured; testing policy documented |
+| **CI/CD pipeline** | GitHub Actions: lint, typecheck, test on every PR; merge blocked on failure |
+| **API conventions** | `docs/standards-api.md`: Server Actions vs REST, error shapes, pagination, Zod format |
+| **i18n setup** | `next-intl` configured for Spanish (primary) + English; currency formatting utility |
+| **Error tracking** | Sentry configured from day one (moved from Phase 10) |
 
-**Exit criteria:** App deploys to staging; DB connects; offline policy agreed; empty authenticated shell per role.
+**Exit criteria:** App deploys to staging; DB connects; offline policy agreed; CI pipeline green; empty authenticated shell per role; i18n and error tracking active.
 
 ---
 
@@ -70,10 +78,10 @@ This plan divides work into **phases** with **deliverables** and **dependencies*
 | Ticket creation | Stylist, secretary, or cashier creates ticket; walk-in and appointment-linked both supported |
 | `idempotency_key` on tickets table | Designed in from the start per offline policy (T077) |
 | Ticket lifecycle | `logged → awaiting payment → closed`; reopened by cashier only; optimistic lock on checkout |
-| Cashier dashboard | Real-time view of all open tickets grouped by employee; live Pusher updates |
+| Cashier dashboard | Real-time view of all open tickets grouped by employee; live updates via `packages/realtime` abstraction |
 | Checkout | Line items, split payment, price override; optimistic lock prevents concurrent double-close |
 | Edit approval flow | Stylist or secretary submits edit request → cashier approves or rejects |
-| In-app notifications | Bell icon + Pusher delivery; used by edit approval flow first |
+| In-app notifications | Bell icon + real-time delivery via abstraction; used by edit approval flow first |
 | **Ticket history view** | Admin/cashier sees all closed tickets for any business day; search by client name |
 | **Admin home screen** | Live day status, open ticket count, revenue so far, quick links |
 
@@ -103,7 +111,7 @@ This plan divides work into **phases** with **deliverables** and **dependencies*
 | Double-booking prevention | System rejects overlapping time slots for the same stylist |
 | Appointment states | `booked → confirmed → completed / cancelled / rescheduled / no-show` |
 | No-show tracking | Recorded against saved client profile; guest no-shows not tracked |
-| Confirmation flag | Manual "confirmed" toggle in MVP; external channel (email/SMS) deferred |
+| Confirmation email | Confirmation email via Resend (T055 + T056); WhatsApp deferred to post-MVP |
 
 **Exit criteria:** Secretary can book, confirm, and manage appointments; double-booking is blocked.
 
@@ -145,6 +153,7 @@ This plan divides work into **phases** with **deliverables** and **dependencies*
 | Revenue dashboard | Day / week / month totals + comparison to prior equivalent period |
 | Employee performance | Jobs count per employee; earnings per employee; both with period comparison |
 | Indexes and query opt. | Ensure report queries stay fast on realistic data volumes |
+| **Analytics seed script** | 6 months of realistic test data for verifying query correctness and performance |
 | CSV export (stretch) | Export for accountant |
 
 **Exit criteria:** Admin can answer "how did we do vs last week?" and "who earned what this month?" without manual work.
@@ -170,9 +179,10 @@ This plan divides work into **phases** with **deliverables** and **dependencies*
 
 | Work package | Output |
 |--------------|--------|
-| Responsive QA | Test all role flows on phones and desktop |
+| Responsive + a11y QA | Test all role flows on phones and desktop; verify WCAG AA compliance |
 | Performance pass | Loading states, optimistic UI, slow-connection testing |
-| Error tracking | Sentry (or equivalent) integrated |
+| **Stale-tab detection** | "Please refresh" banner when a new version is deployed |
+| **Data migration** | Import existing client records from spreadsheets |
 | Backups and monitoring | DB backup policy; uptime monitoring on Vercel |
 | Training material | Short internal guide (one page per role) |
 
@@ -199,14 +209,13 @@ flowchart LR
   P4A --> P4B
   P4A --> P5
   P4B --> P6
-  P5 --> P6
   P4A --> P7 --> P8
   P4A --> P9
   P8 --> P10
   P9 --> P10
 ```
 
-> 4B and 5 can run in parallel after 4A. Both feed into Phase 6 (large orders link batches; appointments link to tickets).
+> 4B and 5 can run in parallel after 4A. Phase 6 depends on 4B (batches link to large orders) but not on Phase 5. Phase 5 → Phase 6 edge removed after Senior SWE review (no Phase 6 task depends on appointments).
 
 ---
 
@@ -248,16 +257,29 @@ Everything else (appointments, large orders, full payroll UI, analytics, offline
 | Payout method | Amount + payment method recorded |
 | Employee deactivation | Deactivated (history kept); termination payment shortcut |
 | Analytics comparison | Totals + comparison to prior period |
-| Real-time dashboard | Live (WebSocket or SSE) |
+| Real-time dashboard | Live via `packages/realtime` abstraction (Pusher for MVP; SSE + Postgres LISTEN/NOTIFY later) |
 | In-app notifications | Yes for clothier (batch assignment) and stylist (new appointment) |
 | Promotions / discounts | Out of scope for now |
 | Multi-branch | Out of scope for now |
+| Money storage format | Integer cents (`bigint`); display layer converts. No `numeric` or `float`. |
+| UI language | Bilingual: Spanish (primary) + English. i18n via `next-intl`. |
+| Business day uniqueness | DB constraint (partial unique index) — not app-level guard only |
+| Error tracking timing | Phase 0 (Sentry configured from day one) |
+| Testing strategy | Vitest for unit/integration; Playwright for E2E; policy: unit tests required for business logic |
+| CI/CD | GitHub Actions on every PR; merge blocked on failure |
+| UI component library | Base Web (primary); **shadcn/ui + Tailwind CSS** as fallback if spike fails |
+| Forms | React Hook Form + Zod resolver; shared schemas between client and server |
+| Server state | TanStack Query for caching and revalidation |
+| Client state | Zustand for ephemeral UI state (offline queue, notifications) |
+| Date library | date-fns for all date manipulation and formatting |
+| PWA wrapper | Evaluate `@ducanh2912/next-pwa` or custom Workbox (not original `next-pwa`) |
 
 ---
 
 ## Remaining open questions
 
-- **Base UI version**: Confirm Uber Base Web compatibility with your target Next.js major version before Phase 0 (spike required).
+- **UI library**: T008 spike will determine Base Web vs shadcn/ui. If Base Web requires `"use client"` on >50% of usage sites or has hydration issues, switch to shadcn/ui + Tailwind CSS.
+- **Currency**: Confirm the currency used by the business (COP, USD, or other) — needed for i18n setup (T099).
 
 ## Researched and recommended (see `docs/research/`)
 

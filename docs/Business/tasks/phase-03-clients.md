@@ -56,16 +56,16 @@ When creating a ticket or appointment, allow the user to skip client lookup and 
 
 ---
 
-## T032 — No-show count tracking
+## T032 — No-show count display
 
 **Phase:** 3 — Clients
 **Status:** pending
 **Dependencies:** T029
 
 ### What to do
-When an appointment is marked "no-show" (Phase 5), increment `clients.no_show_count` for saved clients. Display the no-show count on the client profile and in the client search results.
+Display the `no_show_count` (already part of the `clients` table from T029) on the client profile card and in the client search results. The actual increment logic is implemented in T032b (Phase 5) when the appointment system exists.
 
 ### Acceptance criteria
-- [ ] `no_show_count` increments atomically when a no-show is recorded
 - [ ] Count visible on the client profile card
 - [ ] Shown as a warning badge in the client search widget if count ≥ 3 (threshold configurable in code)
+- [ ] No-show count is read-only in this phase — increment logic added in T032b (Phase 5)
