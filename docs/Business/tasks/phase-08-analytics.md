@@ -38,6 +38,9 @@ Build the analytics home screen for admin: daily revenue for the current busines
 - [ ] Comparison row beneath: "vs yesterday: +X% / -X%"
 - [ ] Updates in near-real-time (real-time event on ticket close can trigger a refresh)
 - [ ] Responsive
+- [ ] **Visualization:** Large number display for revenue total; colour-coded delta indicator (green for positive, red for negative) with arrow icon and percentage. Use Recharts for any chart elements.
+- [ ] Empty state shown when no data exists for the current period (message: "No revenue data yet — close tickets to see daily totals")
+- [ ] **Stretch:** Print stylesheet for daily summary (`@media print` hides nav, formats for A4/Letter)
 
 ---
 
@@ -58,6 +61,7 @@ Each tab shows the same three metrics (revenue, jobs count, earnings paid).
 - [ ] Prior period comparison visible in all three
 - [ ] Week and month calculations use business days (not calendar dates) to align with the business model
 - [ ] Loading state while queries run
+- [ ] **Visualization:** Bar chart (Recharts) comparing current vs prior period for each metric. Bars use the primary brand colour for current period and a muted variant for prior period. Delta percentage shown above each bar pair.
 
 ---
 
@@ -75,6 +79,7 @@ Add a "By employee" section in the analytics screen: a table showing each active
 - [ ] Sortable by name, jobs count, earnings
 - [ ] Drill-down shows per-business-day breakdown for the selected period
 - [ ] Correct by employee role (stylist uses commission model, clothier uses piece model)
+- [ ] **Visualization:** Sortable data table (DataTable component from T103) with inline horizontal bar indicators showing relative performance. Use Recharts sparklines for trend lines in the drill-down view.
 
 ---
 

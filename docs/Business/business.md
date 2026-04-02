@@ -67,6 +67,8 @@ The company currently tracks daily services, employee pay, and cloth production 
 | Server state | TanStack Query (React Query) | Caching, revalidation, and server state management |
 | Client state | Zustand | Ephemeral UI state (offline queue, notification count) |
 | Dates | date-fns | All date manipulation, formatting, timezone-aware comparisons |
+| Charts | **Recharts** | Data visualization for analytics dashboards (Phase 8) |
+| Icons | **Lucide Icons** | Consistent iconography across all UI; default icon set for shadcn/ui |
 | PWA / offline | Workbox + IndexedDB | Phase 9 — service worker caching + local mutation queue |
 
 > Full research and rationale for each decision: see `docs/research/`.

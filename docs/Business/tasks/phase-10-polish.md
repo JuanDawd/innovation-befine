@@ -26,6 +26,9 @@ Flows to test per role:
 - [ ] Forms are fillable on a phone keyboard (no content covered by the virtual keyboard)
 - [ ] All critical actions reachable within 3 taps on mobile
 - [ ] Accessibility check: all form inputs have labels; keyboard navigation works for all primary flows; colour contrast meets WCAG AA (4.5:1); focus indicators visible on interactive elements
+- [ ] **Stretch — Dark mode:** If design tokens (T103) were built dark-mode-aware, implement a dark theme toggle. Test all screens in dark mode.
+- [ ] **Stretch — Gesture support:** Evaluate swipe interactions for mobile-primary roles: swipe to mark done (clothier), swipe to dismiss notifications. Only add if gesture UX testing shows clear improvement over tap.
+- [ ] **Stretch — Page transitions:** Add subtle transitions between list → detail → edit navigations (e.g. slide-in for detail views, fade for tab switches). Ensure breadcrumbs or back-links are present on all detail/edit views regardless.
 
 ---
 
@@ -46,6 +49,7 @@ Audit every user action that triggers a server call. Add:
 - [ ] Submit buttons cannot be double-clicked (disabled after first click)
 - [ ] Optimistic ticket status update reverts to previous state on API error
 - [ ] Error messages are user-friendly (not raw API errors)
+- [ ] **Note:** Basic loading states (skeleton screens and button spinners) should already exist from Phase 1 onward per T002 standards. This task is for polishing and auditing completeness, not creating loading states from scratch.
 
 ---
 
@@ -100,6 +104,7 @@ Sections:
 - [ ] One page per role (concise — staff should be able to read their section in < 5 minutes)
 - [ ] Includes screenshots or screen recordings for the 2–3 most confusing steps
 - [ ] Stored in `docs/training/` and accessible to the client
+- [ ] **Stretch — Contextual help:** Add tooltip-style help on the 5 most confusing UI elements (identified during QA pass). Tooltips link to the relevant section of the training guide. Ensure all action buttons have clear text labels (not icon-only).
 
 ---
 

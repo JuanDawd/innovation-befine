@@ -105,3 +105,4 @@ Build the large orders list screen: all orders with client name, status, total p
 - [ ] Filter by status
 - [ ] Balance due highlighted in a warning color if order is `delivered` but not `paid_in_full`
 - [ ] Responsive — works on mobile
+- [ ] Empty state shown when no large orders exist (message + "Create order" CTA)

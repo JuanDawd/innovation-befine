@@ -66,6 +66,7 @@ The API route must accept an idempotency key so offline replay (Phase 9) does no
 - [ ] Ticket appears on the cashier dashboard immediately (via real-time event — T098 abstraction)
 - [ ] Cannot create a ticket if no business day is open
 - [ ] API accepts `Idempotency-Key` header and returns the same response on duplicate submission
+- [ ] **Stylist UX:** When logged in as a stylist, the flow is optimized for speed — stylist is pre-selected, prominent "Log service" CTA, minimal steps. Designed and tested **mobile-first** (phone is the primary device for stylists between clients).
 
 ---
 
@@ -84,6 +85,10 @@ Build the main cashier screen: a board showing all open tickets grouped by emplo
 - [ ] New ticket appears on the board within 2 seconds of creation
 - [ ] Status change to `awaiting_payment` visually highlights the card (e.g. colour change or badge)
 - [ ] Board is usable on both desktop and tablet/phone
+- [ ] **Cashier UX:** Optimized for desktop information density — status columns or Kanban-style board layout. Keyboard navigation between ticket cards (arrow keys to select, Enter to open checkout).
+- [ ] **Stretch:** Keyboard shortcuts — `Ctrl/Cmd+K` or equivalent for quick search/actions; `Enter` to open selected ticket's checkout
+- [ ] **Real-time animation:** New tickets fade in with a 2-second highlight; status changes animate the badge colour (300ms transition); closed tickets fade out with a 500ms delay; bulk updates stagger by 100ms
+- [ ] Empty state shown when no tickets exist for the current business day (message: "No open tickets — services will appear here as they're logged")
 
 ---
 
@@ -125,6 +130,9 @@ Add optimistic lock: if another session has already closed the ticket, return a 
 - [ ] Concurrent checkout attempt on the same ticket → one succeeds, one receives a clear conflict error
 - [ ] On close: ticket status → `closed`, `closed_at` and `closed_by` set
 - [ ] Real-time event fires on close so the board removes the ticket
+- [ ] **Post-checkout confirmation screen:** After closing, show a transaction summary (service, client, amount, payment method, time). Include a "Print receipt" button (browser print dialog with receipt-formatted view) and optionally "Email receipt" if the client has an email on file.
+- [ ] **Confirmation dialog:** Closing a ticket uses the destructive confirmation pattern (prominent warning before finalizing the financial transaction)
+- [ ] **Stretch:** `Enter` key confirms payment on the active dialog; `Escape` cancels/closes modals
 
 ---
 
@@ -212,6 +220,12 @@ Create a minimal in-app notification system: a `notifications` table (`id`, `rec
 - [ ] Clicking a notification marks it read and (if link provided) navigates to the relevant screen
 - [ ] Works on mobile and desktop
 - [ ] Phase 4B will add clothier piece-assignment notifications; Phase 5 will add appointment notifications
+- [ ] **Notification grouping:** Multiple notifications of the same type within 5 minutes are grouped (e.g. "3 new edit requests" instead of 3 separate items)
+- [ ] **Notification actions:** Where applicable, notifications include an inline action button (e.g. "View request" on an edit approval notification) so the user can act without navigating away
+- [ ] **Mark all read:** A "Mark all as read" action in the dropdown header
+- [ ] **Persistence:** Notifications auto-archive after 7 days; "Show older" link to view archived
+- [ ] **Stretch:** Browser push notifications for critical events (new ticket for cashier, batch assignment for clothier) — requires service worker from T081
+- [ ] Empty state in notification dropdown: "No notifications" with a subtle icon
 
 ---
 
@@ -230,6 +244,8 @@ Build an operational history screen: admin and cashier can view all closed ticke
 - [ ] Search by client name (saved or guest)
 - [ ] Clicking a ticket shows its full detail (line items, payment breakdown, override notes)
 - [ ] Responsive
+- [ ] Empty state shown when no closed tickets exist for the selected day (message: "No closed tickets for this day")
+- [ ] **Stretch:** Print stylesheet — `@media print` hides navigation and formats content for A4/Letter paper
 
 ---
 
@@ -248,3 +264,4 @@ Build the admin landing page after login: business day status (open/closed), cou
 - [ ] Revenue figure: sum of closed ticket totals for the current business day
 - [ ] Quick-action links to key admin screens
 - [ ] Unsettled earnings alert badge (stub — will be wired in T070, Phase 7)
+- [ ] Empty state shown when no business day is open (message + "Open day" CTA); also shown when business day is open but no activity yet

@@ -36,6 +36,7 @@ Build the client management screen: list, search by name or phone/email, create,
 - [ ] Can edit contact info, notes on the client profile
 - [ ] Archiving a client hides them from search but preserves all history
 - [ ] Admins can unarchive a client
+- [ ] Empty state shown when no saved clients exist yet (message + "Add client" CTA)
 
 ---
 

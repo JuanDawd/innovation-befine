@@ -40,6 +40,7 @@ Build the admin service catalog screen: list all services with their variants, p
 - [ ] Can add, edit, and soft-delete variants on an existing service
 - [ ] Inactive services/variants are hidden from non-admin views
 - [ ] Non-admin roles cannot access this screen
+- [ ] Empty state shown when no services exist yet (message + "Create service" CTA)
 
 ---
 
@@ -90,6 +91,7 @@ Build the admin cloth piece catalog screen: list all piece types with sale price
 - [ ] Admin can edit name, description, sale price, and clothier pay
 - [ ] Soft-delete hides the piece from batch creation for new batches (existing assignments unaffected)
 - [ ] Audit log (T025 pattern) records price changes
+- [ ] Empty state shown when no cloth pieces exist yet (message + "Create piece type" CTA)
 
 ---
 

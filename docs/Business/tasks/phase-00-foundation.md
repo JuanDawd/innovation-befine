@@ -41,6 +41,9 @@ Add ESLint (Next.js config), Prettier, and a shared config package. Add a pre-co
 - [ ] `docs/standards.md` includes accessibility baseline: all form inputs must have associated labels; interactive elements must be keyboard-accessible; colour contrast must meet WCAG AA (4.5:1 for normal text); focus indicators must be visible
 - [ ] `docs/standards.md` includes performance targets: LCP < 2.5 s; API P95 < 500 ms; real-time event delivery < 2 s; client search < 300 ms; analytics queries < 500 ms (< 200 ms after index optimization in T075)
 - [ ] `docs/standards.md` includes standard libraries: **React Hook Form + Zod resolver** for all forms (same Zod schemas used for server-side validation); **TanStack Query** for server state caching and revalidation; **Zustand** for ephemeral client-side state (offline queue, notification count); **date-fns** for all date manipulation, formatting, and comparison (no native `Date` arithmetic)
+- [ ] `docs/standards.md` includes form UX conventions: stacked labels (better for mobile and a11y); validate on blur for fields, on submit for full form; inline errors under each field (red text, aria-associated); required fields by default, mark optional with "(optional)" suffix; success feedback via toast + redirect
+- [ ] `docs/standards.md` includes mobile-first policy: **clothier and stylist screens must be designed and tested mobile-first** (phone is their primary device); desktop layout is the secondary adaptation for these roles. Admin and secretary screens may be desktop-first.
+- [ ] `docs/standards.md` includes loading pattern policy: all screens must implement basic loading states (skeleton or spinner) from Phase 1 onward — not deferred to Phase 10. Use the `LoadingSkeleton` component from T103.
 
 ---
 
@@ -336,3 +339,74 @@ Set up `next-intl` (or equivalent) for bilingual support (Spanish + English). Sp
 - [ ] Currency constant defined (confirm with stakeholder: COP, USD, or other)
 - [ ] Currency formatting utility: `formatMoney(cents: number)` → localized display string (e.g. "$12.500" for COP or "$125.00" for USD)
 - [ ] Date formatting utility using the i18n locale (DD/MM/YYYY for Spanish)
+- [ ] Percentage formatting utility: `formatPercent(value: number)` → localized string (e.g. "15 %" or "+15 %↑" for deltas)
+- [ ] Count formatting utility: locale-aware number separators (e.g. "1.500" for Spanish, "1,500" for English)
+- [ ] Relative time formatting utility: "hace 2 horas" / "2 hours ago" using date-fns + locale
+
+---
+
+## T103 — Design system, design tokens, and component patterns
+
+**Phase:** 0 — Foundation *(new — Senior Designer review D1, D4, D9, D11, D15, D18, D20, D24, D26)*
+**Status:** pending
+**Dependencies:** T008
+
+### What to do
+Define and implement the project's design system. This covers design tokens (colours, typography, spacing, shadows), semantic status colours, and reusable component patterns. The design system must be configured before the first UI task (T016 — Login page) so all screens share a consistent visual language.
+
+If shadcn/ui is chosen (T008 fallback), configure tokens in `tailwind.config.ts` and `app/globals.css`. If Base Web is chosen, configure a Styletron theme provider with equivalent tokens.
+
+### Acceptance criteria
+
+**Design tokens:**
+- [ ] Colour palette defined: primary, secondary, neutral scale (50–950), and semantic colours (success, warning, error, info)
+- [ ] Status colour mapping documented: grey = initial states (logged, pending, booked); blue = in-progress (awaiting_payment, in_production, confirmed); amber = needs attention (reopened, done_pending_approval, rescheduled); green = completed (closed, approved, delivered, paid_in_full, completed); red = negative (cancelled, no_show)
+- [ ] Typography scale defined: font family, heading sizes (h1–h4), body, small, caption, monospaced (for monetary amounts)
+- [ ] Spacing scale defined: base unit (4px or 8px), consistent margin/padding values
+- [ ] Border radius scale: small (inputs), medium (cards), large (modals), full (avatars/badges)
+- [ ] Shadow/elevation levels: none, sm, md, lg (for cards, dropdowns, modals)
+- [ ] Dark mode readiness: all colours defined via CSS variables so a dark theme can be added later without refactoring
+
+**Icon library:**
+- [ ] **Lucide Icons** installed and configured as the single icon source
+- [ ] Commonly used icons documented: add, edit, delete, search, filter, close, check, alert, chevron, calendar, bell, user, settings, logout
+
+**Component patterns (documented or implemented as reusable components):**
+- [ ] `EmptyState` — icon, message, optional CTA button. Used on all list/dashboard screens when no data exists.
+- [ ] `ConfirmationDialog` — standard variant (Cancel + Confirm) for reversible actions; destructive variant (red-highlighted, prominent warning) for financial/permanent actions (payout, deactivation, close day)
+- [ ] `SearchFilter` — search bar (debounced 300ms, clear button) + horizontal filter chips + active filter indicators + zero-results state
+- [ ] `LoadingSkeleton` — page-level skeleton matching common layouts; component-level spinner; button spinner with disabled state
+- [ ] `StatusBadge` — pill-shaped badge using the status colour mapping; supports all entity statuses
+- [ ] `DataTable` — fixed header, vertical scroll, numbers right-aligned, text left-aligned, row hover, mobile card transformation for 4+ columns
+- [ ] `NumericBadge` — red circle with count (for notification bell, unsettled alerts); dot variant (small coloured dot); inline alert pill (coloured pill with text)
+- [ ] Real-time update animation pattern documented: new item = fade-in with 2s highlight; status change = 300ms colour transition; item removal = 500ms fade-out; bulk updates = 100ms stagger
+
+---
+
+## T104 — Key screen wireframes and layout specification
+
+**Phase:** 0 — Foundation *(new — Senior Designer review D2, D13)*
+**Status:** pending
+**Dependencies:** T103
+
+### What to do
+Create low-fidelity wireframes (Figma, Excalidraw, or documented Markdown layouts) for the 7 most critical screens. These don't need to be pixel-perfect — they define layout structure, component placement, and information hierarchy so developers have a shared visual target. Also define layout patterns (when to use full-width list, card grid, sidebar+content, or form page) and the calendar UX approach for appointments and absences.
+
+### Acceptance criteria
+
+**Wireframes for 7 key screens:**
+- [ ] **Login page** (T016) — brand presence, centred form, responsive
+- [ ] **Cashier dashboard** (T036) — ticket cards grouped by employee, status columns or Kanban board, real-time update areas. Optimized for desktop information density; keyboard navigation annotated
+- [ ] **Checkout flow** (T038) — line items, payment section, split payment UI, confirmation step, receipt/summary. Consider stepped flow: 1. Review items → 2. Payment → 3. Confirm
+- [ ] **Admin home** (T093) — business day status, KPI cards, quick-action grid, unsettled alert area
+- [ ] **Appointment calendar** (T052) — day view (time slots × stylists on desktop; stacked list on mobile), day navigation, date picker jump
+- [ ] **Payroll settlement** (T067) — employee selector, date range, earnings breakdown, adjustment field, confirm
+- [ ] **Analytics dashboard** (T072–T074) — large number displays with delta indicators, bar chart areas, period tabs, per-employee table
+
+**Layout patterns documented:**
+- [ ] When to use: full-width list (employee list, ticket history), card grid (dashboard, batches), sidebar+content (detail views), full-page form (creation/edit)
+- [ ] Responsive breakpoints defined: mobile (< 768px), tablet (768–1024px), desktop (> 1024px)
+
+**Calendar UX guidance:**
+- [ ] Appointment calendar (T052): day view as default; time slots in rows, stylists in columns (desktop); stacked list (mobile). Day navigation arrows + date picker for jumping.
+- [ ] Absence calendar (T021): month grid with coloured dots per absence type. Mobile: list grouped by date.

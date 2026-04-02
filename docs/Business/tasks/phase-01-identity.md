@@ -52,6 +52,7 @@ Build a list screen showing all employees with their role, subtype, status (acti
 - [ ] Filter by role and active/inactive
 - [ ] Admin can edit name, role, subtype, and daily rate
 - [ ] Changes are saved and reflected immediately
+- [ ] Empty state shown when no employees exist yet (message + "Create employee" CTA)
 
 ---
 
@@ -191,6 +192,27 @@ Build the persistent app shell: top header (app name, user avatar, logout), side
 - [ ] Mobile layout uses a bottom bar or collapsible drawer (no sidebar crowding a phone screen)
 - [ ] Logout action clears the session and redirects to `/login`
 - [ ] Shell is responsive across all target breakpoints
+- [ ] Brand logo/wordmark displayed in the header (uses assets from T105)
+- [ ] Nav icons use Lucide Icons consistently (from T103 icon library)
+
+---
+
+## T105 — Brand identity and asset gathering
+
+**Phase:** 1 — Identity *(new — Senior Designer review D17)*
+**Status:** pending
+**Dependencies:** T103
+
+### What to do
+Gather or create the visual brand assets for Innovation Befine: logo (or typographic wordmark if no logo exists), extract brand colours and apply them to the design token system (T103), generate a favicon (16×16, 32×32), and create PWA icons (192×192, 512×512) for T082. If the company has existing brand materials (business cards, signage, social media), extract colours and typography from them. If not, create a simple typographic identity.
+
+### Acceptance criteria
+- [ ] Logo or wordmark sourced or created; placed in the app header (T090 shell)
+- [ ] Brand colours (primary, accent) mapped to design token primary/secondary slots
+- [ ] Favicon generated and added to `app/favicon.ico` (or `app/icon.tsx`)
+- [ ] PWA icons (192×192, 512×512) generated and ready for T082 (manifest)
+- [ ] Splash/loading screen background colour set to brand primary (for PWA standalone mode)
+- [ ] All assets stored in `public/brand/` or equivalent
 
 ---
 

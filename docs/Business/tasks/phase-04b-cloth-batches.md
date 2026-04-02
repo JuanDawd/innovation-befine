@@ -57,6 +57,8 @@ Build the clothier's home screen: list of batch pieces assigned to them (or unas
 - [ ] "Mark as done" button transitions piece to `done_pending_approval`
 - [ ] In-app notification (T048) sent to secretary/admin when a piece is marked done
 - [ ] Screen is responsive — primary use is on a phone
+- [ ] **Clothier UX:** Designed and tested **mobile-first** (phone is the primary device). Large tap targets for "Mark as done" buttons. Checklist-style UI with progress bar showing batch completion (e.g. "4/10 pieces done"). One-handed phone use optimized — actions reachable in the lower half of the screen.
+- [ ] Empty state shown when no pieces are assigned to the clothier today (message: "No pieces assigned — new assignments will appear here")
 
 ---
 

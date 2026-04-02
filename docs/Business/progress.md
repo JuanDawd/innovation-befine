@@ -7,6 +7,8 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 > Last restructured after Senior Product Owner review (April 2026). See `docs/research/senior_product_owner.md` for all findings and rationale. Net change: 89 → 94 tasks.
 >
 > **Updated after Senior Software Engineer review (April 2026).** See `docs/research/senior_software_engineer.md` for all findings. All 25 findings accepted. Net change: 94 → 103 tasks. T085 moved Phase 10 → Phase 0; T032 split into T032 (Phase 3) + T032b (Phase 5); new tasks: T094, T095, T097, T098, T099, T100, T101, T102. Multiple existing tasks received additional acceptance criteria (T002, T005, T006, T018, T025, T045, T049, T083).
+>
+> **Updated after Senior Designer review (April 2026).** See `docs/research/senior_designer.md` for all 26 findings. All accepted. Net change: 103 → 106 tasks. New tasks: T103 (design system), T104 (wireframes), T105 (brand identity). Multiple existing tasks received additional UX/design acceptance criteria (T002, T014, T021, T024, T027, T030, T035, T036, T038, T046, T048, T050, T052, T062, T069, T070, T072, T073, T074, T082, T083, T084, T088, T090, T092, T093, T099). Recharts and Lucide Icons added to tech stack.
 
 ---
 
@@ -32,6 +34,8 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | T097 | API design conventions document *(new)* | pending | T001 |
 | T098 | Real-time abstraction layer *(new)* | pending | T009 |
 | T099 | Internationalization (i18n) setup *(new)* | pending | T001 |
+| T103 | Design system, design tokens, and component patterns *(new)* | pending | T008 |
+| T104 | Key screen wireframes and layout specification *(new)* | pending | T103 |
 
 ---
 
@@ -51,6 +55,7 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | T054 | Resend email integration *(moved from Phase 5)* | pending | T003 |
 | T090 | App navigation / layout shell *(new)* | pending | T010 |
 | T091 | Employee self-service password change *(new)* | pending | T016 |
+| T105 | Brand identity and asset gathering *(new)* | pending | T103 |
 
 ---
 
@@ -210,8 +215,8 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 
 | Phase | Tasks | Done | In progress |
 |-------|-------|------|-------------|
-| 0 — Foundation | 18 | 0 | 0 |
-| 1 — Identity | 12 | 0 | 0 |
+| 0 — Foundation | 20 | 0 | 0 |
+| 1 — Identity | 13 | 0 | 0 |
 | 2 — Catalog | 6 | 0 | 0 |
 | 3 — Clients | 4 | 0 | 0 |
 | 4A — Tickets and checkout | 13 | 0 | 0 |
@@ -222,7 +227,7 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | 8 — Analytics | 7 | 0 | 0 |
 | 9 — Offline | 5 | 0 | 0 |
 | 10 — Polish | 8 | 0 | 0 |
-| **Total** | **103** | **0** | **0** |
+| **Total** | **106** | **0** | **0** |
 
 ---
 

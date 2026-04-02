@@ -36,6 +36,7 @@ Build a UI where admin can add, edit, and delete absence records per employee. S
 - [ ] Calendar view shows coloured indicators per absence type
 - [ ] "Who works today" query returns active employees without an absence on the current business day's date
 - [ ] Used immediately by T065 (secretary earnings computation)
+- [ ] **Calendar UX:** Month grid view with coloured dots per absence type (vacation = blue, approved absence = amber, missed = red). Mobile: simplified to a list grouped by date. Navigation arrows for previous/next month.
 
 ---
 
@@ -173,6 +174,7 @@ Build the "My earnings" screen for stylists, clothiers, and secretaries. Shows: 
 - [ ] Correctly computes earnings for the viewing employee's role and model
 - [ ] Payout history shows past payouts with date and amount
 - [ ] Responsive — primary use case is a phone
+- [ ] Empty state shown when no earnings exist for the period (message: "No earnings recorded for this period")
 
 ---
 
@@ -189,3 +191,4 @@ On the admin dashboard, show a badge or section listing employees with unsettled
 - [ ] Any closed business day with approved work and no payout triggers the alert
 - [ ] Alert disappears once a payout covers the period
 - [ ] Alert shown on admin home screen (not buried in a submenu)
+- [ ] Empty state when no unsettled earnings exist (alert area hidden or shows "All earnings settled" message)

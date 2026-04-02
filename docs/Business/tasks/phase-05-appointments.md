@@ -55,6 +55,7 @@ Build the appointment booking form: client (saved or guest), service summary, st
 - [ ] Overlap validation runs before insert (checks `scheduled_at` to `scheduled_at + duration_minutes`)
 - [ ] Conflict → clear error message with the conflicting appointment time shown
 - [ ] New appointment triggers in-app notification to the assigned stylist (via T048)
+- [ ] **Secretary UX:** Calendar-first booking approach — secretary selects a time slot on the calendar (T052), then fills in client and service details. Form efficiency optimized for frequent use throughout the day.
 
 ---
 
@@ -89,6 +90,8 @@ Build the appointments screen for secretary and cashier: a daily calendar or lis
 - [ ] Filter by stylist
 - [ ] Appointment cards show client name, service summary, time, and status
 - [ ] Responsive — works as a stacked list on mobile
+- [ ] **Calendar UX:** Desktop uses a day view with time slots in rows and stylists in columns. Mobile uses a stacked list grouped by time. Day navigation arrows + date picker for jumping to a specific date. Status badges use the unified status colour system (T103).
+- [ ] Empty state shown when no appointments exist for the selected day (message: "No appointments for this day" + "Book appointment" CTA)
 
 ---
 

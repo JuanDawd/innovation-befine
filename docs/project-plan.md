@@ -5,6 +5,8 @@ This plan divides work into **phases** with **deliverables** and **dependencies*
 > **Restructured after Senior Product Owner review (April 2026).** See `docs/research/senior_product_owner.md` for all findings and rationale. Summary of changes: T077 moved to Phase 0; T054 moved to Phase 1; Phase 4 split into 4A and 4B; T020/T021/T022b moved to Phase 7; T090/T091/T092/T093 added; T043 retired. Total tasks: 89 → 94.
 >
 > **Updated after Senior Software Engineer review (April 2026).** See `docs/research/senior_software_engineer.md` for all 25 findings. All accepted. New tasks: T094 (testing), T095 (CI/CD), T097 (API conventions), T098 (realtime abstraction), T099 (i18n), T100 (data migration), T101 (analytics seed), T102 (stale-tab detection), T032b (no-show logic). T085 moved Phase 10 → Phase 0. Multiple existing tasks received additional ACs (T002, T005, T006, T018, T025, T045, T049, T083). Dependency graph corrected. Total tasks: 94 → 103.
+>
+> **Updated after Senior Designer review (April 2026).** See `docs/research/senior_designer.md` for all 26 findings. All accepted. New tasks: T103 (design system and tokens), T104 (key screen wireframes), T105 (brand identity). Multiple existing tasks received additional UX/design ACs (T002, T014, T021, T024, T027, T030, T035, T036, T038, T046, T048, T050, T052, T062, T069, T070, T072, T073, T074, T082, T083, T084, T088, T090, T092, T093, T099). Recharts and Lucide Icons added to tech stack. Total tasks: 103 → 106.
 
 ---
 
@@ -25,8 +27,10 @@ This plan divides work into **phases** with **deliverables** and **dependencies*
 | **API conventions** | `docs/standards-api.md`: Server Actions vs REST, error shapes, pagination, Zod format |
 | **i18n setup** | `next-intl` configured for Spanish (primary) + English; currency formatting utility |
 | **Error tracking** | Sentry configured from day one (moved from Phase 10) |
+| **Design system** | Design tokens (colours, typography, spacing, shadows), status colour palette, component patterns (empty states, confirmation dialogs, loading skeletons, search/filter, tables, badges), icon library (Lucide) |
+| **Key screen wireframes** | Low-fidelity wireframes for 7 critical screens (cashier dashboard, checkout, admin home, login, appointment calendar, payroll, analytics) |
 
-**Exit criteria:** App deploys to staging; DB connects; offline policy agreed; CI pipeline green; empty authenticated shell per role; i18n and error tracking active.
+**Exit criteria:** App deploys to staging; DB connects; offline policy agreed; CI pipeline green; empty authenticated shell per role; i18n and error tracking active; design system documented and tokens configured.
 
 ---
 
@@ -39,11 +43,12 @@ This plan divides work into **phases** with **deliverables** and **dependencies*
 | Employee profiles | Link user ↔ role; stylist subtype; daily rate for secretary; active flag |
 | Employee visibility flag | Admin toggle: show/hide own earnings per employee |
 | **App navigation shell** | Role-aware sidebar/bottom nav; persistent layout for all subsequent screens |
+| **Brand identity** | Logo/wordmark, brand colours applied to design tokens, favicon, PWA icons |
 | **Self-service password change** | Authenticated employee changes own password |
 | Business day open / close | Admin button; records stamped with business day ID, not calendar date |
 | Basic employee deactivation | Disable login, preserve history (T022a) — earnings guard added in Phase 7 |
 
-**Exit criteria:** Admin can open/close the day; create employees; navigation shell works for all roles. Vacation/absence and deactivation guard deferred to Phase 7.
+**Exit criteria:** Admin can open/close the day; create employees; navigation shell works for all roles; brand identity applied. Vacation/absence and deactivation guard deferred to Phase 7.
 
 ---
 
@@ -150,8 +155,8 @@ This plan divides work into **phases** with **deliverables** and **dependencies*
 
 | Work package | Output |
 |--------------|--------|
-| Revenue dashboard | Day / week / month totals + comparison to prior equivalent period |
-| Employee performance | Jobs count per employee; earnings per employee; both with period comparison |
+| Revenue dashboard | Day / week / month totals + comparison to prior equivalent period; Recharts visualizations |
+| Employee performance | Jobs count per employee; earnings per employee; both with period comparison; sortable table with inline indicators |
 | Indexes and query opt. | Ensure report queries stay fast on realistic data volumes |
 | **Analytics seed script** | 6 months of realistic test data for verifying query correctness and performance |
 | CSV export (stretch) | Export for accountant |
@@ -179,7 +184,7 @@ This plan divides work into **phases** with **deliverables** and **dependencies*
 
 | Work package | Output |
 |--------------|--------|
-| Responsive + a11y QA | Test all role flows on phones and desktop; verify WCAG AA compliance |
+| Responsive + a11y QA | Test all role flows on phones and desktop; verify WCAG AA compliance; dark mode stretch; gesture support stretch |
 | Performance pass | Loading states, optimistic UI, slow-connection testing |
 | **Stale-tab detection** | "Please refresh" banner when a new version is deployed |
 | **Data migration** | Import existing client records from spreadsheets |
@@ -273,6 +278,18 @@ Everything else (appointments, large orders, full payroll UI, analytics, offline
 | Client state | Zustand for ephemeral UI state (offline queue, notifications) |
 | Date library | date-fns for all date manipulation and formatting |
 | PWA wrapper | Evaluate `@ducanh2912/next-pwa` or custom Workbox (not original `next-pwa`) |
+| Design system | Design tokens defined in Phase 0; covers colours, typography, spacing, shadows, status palette |
+| Icon library | **Lucide Icons** — default with shadcn/ui; consistent style across all UI |
+| Charts library | **Recharts** — React-native, composable, good mobile support |
+| Status colours | Unified semantic colour palette: grey (initial), blue (in-progress), amber (needs attention), green (completed), red (negative) |
+| Mobile-first roles | Clothier and stylist screens designed mobile-first; desktop is the secondary adaptation |
+| Form UX | Stacked labels; validate on blur + submit; inline errors; required by default; "(optional)" suffix on exceptions |
+| Loading pattern | Skeleton screens for page loads; spinner for buttons; applied from Phase 1, not retrofitted in Phase 10 |
+| Empty states | All list/dashboard screens must have a designed empty state with message and optional CTA |
+| Confirmation dialogs | Standard (Cancel + Confirm) for reversible actions; destructive variant (red, prominent warning) for financial/permanent actions |
+| Receipts | Post-checkout confirmation screen with optional print; added to T038 |
+| Brand identity | Logo, brand colours, favicon, PWA icons gathered or created in Phase 1 (T105) |
+| Dark mode | Design tokens built dark-mode-aware; dark mode implementation is a Phase 10 stretch goal |
 
 ---
 
@@ -280,6 +297,7 @@ Everything else (appointments, large orders, full payroll UI, analytics, offline
 
 - **UI library**: T008 spike will determine Base Web vs shadcn/ui. If Base Web requires `"use client"` on >50% of usage sites or has hydration issues, switch to shadcn/ui + Tailwind CSS.
 - **Currency**: Confirm the currency used by the business (COP, USD, or other) — needed for i18n setup (T099).
+- **Brand assets**: Does Innovation Befine have an existing logo and brand colours? Needed for T105 (brand identity).
 
 ## Researched and recommended (see `docs/research/`)
 

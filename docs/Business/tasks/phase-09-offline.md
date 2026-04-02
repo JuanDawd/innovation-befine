@@ -99,3 +99,4 @@ Create `app/manifest.ts` (Next.js App Router manifest) with app name, icons (at 
 - [ ] Install prompt appears on Android Chrome after first visit
 - [ ] App name and icon appear correctly when installed to home screen
 - [ ] Manifest passes Next.js build validation
+- [ ] PWA icons use brand assets from T105 (192×192 and 512×512)
