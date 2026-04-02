@@ -4,6 +4,8 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 
 **Statuses:** `pending` · `in-progress` · `done` · `blocked`
 
+> Last restructured after Senior Product Owner review (April 2026). See `docs/research/senior_product_owner.md` for all findings and rationale. Net change: 89 → 94 tasks.
+
 ---
 
 ## Phase 0 — Foundation
@@ -11,16 +13,17 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | ID | Task | Status | Dependencies |
 |----|------|--------|-------------|
 | T001 | Initialize Next.js monorepo with Turborepo | pending | — |
-| T002 | Configure code quality tooling (ESLint, Prettier, Husky) | pending | T001 |
+| T002 | Configure code quality tooling (ESLint, Prettier, Husky, Zod policy) | pending | T001 |
 | T003 | Environment variable schema and runtime validation | pending | T001 |
 | T004 | Vercel project setup and staging deploys | pending | T001 |
 | T005 | Neon Postgres setup with dev and staging branches | pending | T004 |
 | T006 | Drizzle ORM setup and migration workflow | pending | T005 |
-| T007 | Better Auth spike and integration (RBAC validation) | pending | T006 |
+| T007 | Better Auth spike and integration (RBAC + rate limiting validation) | pending | T006 |
 | T008 | Base UI (Base Web) spike for Next.js App Router | pending | T001 |
-| T009 | Pusher free tier spike for real-time events | pending | T001 |
+| T009 | Pusher free tier spike for real-time events | pending | T001, T004 |
 | T010 | RBAC role definitions (roles + stylist subtypes) | pending | T007 |
 | T011 | Seed script for development (one user per role) | pending | T010 |
+| T077 | Offline policy document *(moved from Phase 9)* | pending | — |
 
 ---
 
@@ -33,12 +36,13 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | T014 | Employee list and profile view (admin) | pending | T013 |
 | T015 | Employee earnings visibility flag | pending | T014 |
 | T016 | Login page | pending | T007, T008 |
-| T017 | Password reset flow (Resend email) | pending | T016 |
+| T017 | Password reset flow | pending | T016, T054 |
 | T018 | Session middleware and route protection | pending | T010 |
 | T019 | Business day open/close (table + admin action) | pending | T012 |
-| T020 | Absences and vacation table migration | pending | T012 |
-| T021 | Vacation and absence management UI (admin) | pending | T020 |
-| T022 | Employee deactivation and termination flow | pending | T014 |
+| T022a | Basic employee deactivation *(split from T022)* | pending | T014 |
+| T054 | Resend email integration *(moved from Phase 5)* | pending | T003 |
+| T090 | App navigation / layout shell *(new)* | pending | T010 |
+| T091 | Employee self-service password change *(new)* | pending | T016 |
 
 ---
 
@@ -66,30 +70,44 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 
 ---
 
-## Phase 4 — Daily operations: tickets, checkout, cloth batches
+## Phase 4A — Tickets and checkout
 
 | ID | Task | Status | Dependencies |
 |----|------|--------|-------------|
-| T033 | Tickets table migration | pending | T019, T029 |
+| T033 | Tickets table migration (incl. idempotency_key column) | pending | T019, T029 |
 | T034 | Ticket items table migration (with price/commission snapshot) | pending | T033, T023 |
-| T035 | Ticket creation (stylist / secretary / cashier) | pending | T034, T031, T028 |
+| T035 | Ticket creation — stylist / secretary / cashier (incl. walk-in flow) | pending | T034, T031, T028 |
 | T036 | Cashier dashboard with live Pusher updates | pending | T035, T009 |
 | T037 | Ticket status transitions and permissions | pending | T035 |
-| T038 | Checkout flow (payment method, close ticket) | pending | T037 |
+| T038 | Checkout flow (optimistic lock, payment method, close ticket) | pending | T037 |
 | T039 | Split payment at checkout (ticket_payments table) | pending | T038 |
 | T040 | Price override at checkout (cashier only) | pending | T038 |
-| T041 | Edit approval flow (secretary/stylist → cashier) | pending | T035 |
+| T041 | Edit approval flow (secretary/stylist → cashier) | pending | T035, T048 |
 | T042 | Ticket reopen and earnings recompute flag | pending | T038 |
-| T043 | Walk-in flow (no appointment required) | pending | T035 |
+| T048 | In-app notification system (MVP) | pending | T009 |
+| T092 | Closed ticket history view (admin / cashier) *(new)* | pending | T038 |
+| T093 | Admin home / day-at-a-glance screen *(new)* | pending | T036, T038 |
+
+> T043 (walk-in flow) retired — merged into T035 acceptance criteria.
+
+---
+
+## Phase 4B — Cloth batches
+
+> Can run in parallel with Phase 5 once Phase 4A is complete.
+
+| ID | Task | Status | Dependencies |
+|----|------|--------|-------------|
 | T044 | Cloth batches and batch_pieces table migration | pending | T019, T026 |
 | T045 | Cloth batch creation UI (secretary / admin) | pending | T044, T028 |
 | T046 | Clothier batch view and piece completion | pending | T045 |
 | T047 | Piece approval flow (secretary / admin) | pending | T046 |
-| T048 | In-app notification system (MVP) | pending | T009 |
 
 ---
 
 ## Phase 5 — Appointments
+
+> Can run in parallel with Phase 4B once Phase 4A is complete.
 
 | ID | Task | Status | Dependencies |
 |----|------|--------|-------------|
@@ -98,7 +116,6 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | T051 | Double-booking prevention (DB-level) | pending | T050 |
 | T052 | Appointment list and calendar view | pending | T050 |
 | T053 | Appointment status management (confirm, cancel, no-show, etc.) | pending | T050 |
-| T054 | Resend email integration | pending | T003 |
 | T055 | Appointment confirmation email template (React Email) | pending | T054 |
 | T056 | "Send confirmation email" action on appointment | pending | T055, T053 |
 
@@ -119,11 +136,16 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 
 ## Phase 7 — Payroll settlement and audit
 
+> Includes absence tracking (T020, T021) and deactivation guard (T022b) — moved here because they are only consumed by payroll logic.
+
 | ID | Task | Status | Dependencies |
 |----|------|--------|-------------|
+| T020 | Absences and vacation table migration *(moved from Phase 1)* | pending | T012 |
+| T021 | Vacation and absence management UI (admin) *(moved from Phase 1)* | pending | T020 |
+| T022b | Deactivation guard + termination payment *(split from T022)* | pending | T022a, T067 |
 | T063 | Earnings computation: stylists (commission %) | pending | T038 |
 | T064 | Earnings computation: clothiers (per-piece) | pending | T047 |
-| T065 | Earnings computation: secretary (daily rate × days) | pending | T021 |
+| T065 | Earnings computation: secretary (daily rate × days) | pending | T021, T020 |
 | T066 | Payouts table migration (with junction tables) | pending | T006 |
 | T067 | Payout recording UI (admin) | pending | T063, T064, T065, T066 |
 | T068 | Double-pay prevention | pending | T067 |
@@ -147,10 +169,11 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 
 ## Phase 9 — Offline / sync hardening
 
+> T077 (offline policy) moved to Phase 0. The `idempotency_key` column is added to tickets in T033 (Phase 4A).
+
 | ID | Task | Status | Dependencies |
 |----|------|--------|-------------|
-| T077 | Offline policy document | pending | — |
-| T078 | Idempotency keys on mutating API routes | pending | T033, T044 |
+| T078 | Idempotency keys on remaining mutating API routes | pending | T033, T044 |
 | T079 | IndexedDB local mutation queue | pending | T078 |
 | T080 | Sync status UI (online/offline/syncing indicator) | pending | T079 |
 | T081 | Service worker with Workbox (caching strategies) | pending | T001 |
@@ -176,15 +199,25 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 
 | Phase | Tasks | Done | In progress |
 |-------|-------|------|-------------|
-| 0 — Foundation | 11 | 0 | 0 |
-| 1 — Identity | 11 | 0 | 0 |
+| 0 — Foundation | 12 | 0 | 0 |
+| 1 — Identity | 12 | 0 | 0 |
 | 2 — Catalog | 6 | 0 | 0 |
 | 3 — Clients | 4 | 0 | 0 |
-| 4 — Daily operations | 16 | 0 | 0 |
-| 5 — Appointments | 8 | 0 | 0 |
+| 4A — Tickets and checkout | 13 | 0 | 0 |
+| 4B — Cloth batches | 4 | 0 | 0 |
+| 5 — Appointments | 7 | 0 | 0 |
 | 6 — Large orders | 6 | 0 | 0 |
-| 7 — Payroll | 8 | 0 | 0 |
+| 7 — Payroll | 11 | 0 | 0 |
 | 8 — Analytics | 6 | 0 | 0 |
-| 9 — Offline | 6 | 0 | 0 |
+| 9 — Offline | 5 | 0 | 0 |
 | 10 — Polish | 7 | 0 | 0 |
-| **Total** | **89** | **0** | **0** |
+| **Total** | **94** | **0** | **0** |
+
+---
+
+## Retired task IDs (do not reuse)
+
+| ID | Reason |
+|----|--------|
+| T043 | Walk-in flow — merged into T035 acceptance criteria |
+| T022 | Split into T022a (Phase 1) and T022b (Phase 7) |

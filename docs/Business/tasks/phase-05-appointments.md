@@ -1,6 +1,8 @@
 # Phase 5 — Appointments
 
-> Goal: secretary can book, confirm, and manage appointments; double-booking is prevented; no-show count is tracked; confirmation email is sent via Resend.
+> Goal: secretary can book, confirm, and manage appointments; double-booking is prevented; no-show count is tracked; confirmation email is sent via Resend (already configured in Phase 1 / T054).
+>
+> Can run in parallel with Phase 4B (cloth batches) once Phase 4A is complete.
 
 ---
 
@@ -90,27 +92,11 @@ Add actions on each appointment card: confirm, cancel (with reason), reschedule 
 
 ---
 
-## T054 — Resend email integration
-
-**Phase:** 5 — Appointments
-**Status:** pending
-**Dependencies:** T003
-
-### What to do
-Install `resend` and `@react-email/components`. Add `RESEND_API_KEY` and `RESEND_FROM_EMAIL` to environment variables and `.env.example`. Create a utility function `sendEmail(to, subject, reactComponent)`.
-
-### Acceptance criteria
-- [ ] Resend API key stored securely in env (not committed)
-- [ ] Utility function sends an email successfully in a test
-- [ ] Failed sends log an error but do not crash the app (fire-and-forget with try/catch)
-
----
-
 ## T055 — Appointment confirmation email template
 
 **Phase:** 5 — Appointments
 **Status:** pending
-**Dependencies:** T054
+**Dependencies:** T054 *(Resend already configured in Phase 1)*
 
 ### What to do
 Build a React Email template for appointment confirmations. Template includes: client name, stylist name, service summary, date and time, and a note to contact the salon to reschedule or cancel.

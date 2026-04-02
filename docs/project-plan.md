@@ -2,19 +2,23 @@
 
 This plan divides work into **phases** with **deliverables** and **dependencies**. Order matters most for: **auth → catalog → daily operations → money → reporting → offline**.
 
+> **Restructured after Senior Product Owner review (April 2026).** See `docs/research/senior_product_owner.md` for all findings and rationale. Summary of changes: T077 moved to Phase 0; T054 moved to Phase 1; Phase 4 split into 4A and 4B; T020/T021/T022b moved to Phase 7; T090/T091/T092/T093 added; T043 retired. Total tasks: 89 → 94.
+
 ---
 
 ## Phase 0 — Foundation
 
 | Work package | Output |
 |--------------|--------|
-| Monorepo scaffold | Turborepo (or equivalent) with Next.js app, shared `packages/` for types and utils |
-| Repo standards | ESLint, Prettier, TypeScript strict mode, env sample (no secrets committed) |
-| Infrastructure | Vercel project, Postgres provider (Neon / Supabase / RDS), migration tool (Prisma / Drizzle / Kysely) |
+| Monorepo scaffold | Turborepo with Next.js app, shared `packages/` for types and utils |
+| Repo standards | ESLint, Prettier, TypeScript strict mode, Zod validation policy, env sample |
+| Infrastructure | Vercel project, Neon Postgres (dev + staging branches), Drizzle ORM |
+| Auth spike | Better Auth with RBAC plugin + rate limiting confirmed |
+| Real-time spike | Pusher free tier confirmed on Vercel preview |
 | RBAC matrix | Roles in DB + code: cashier/admin, secretary, stylist (with subtype), clothier |
-| Real-time layer | Choose and spike WebSocket vs SSE provider for live cashier dashboard updates |
+| **Offline policy** | `docs/research/offline-policy.md` signed off by stakeholder — before Phase 4A APIs are built |
 
-**Exit criteria:** App deploys to staging; DB connects; empty authenticated shell per role.
+**Exit criteria:** App deploys to staging; DB connects; offline policy agreed; empty authenticated shell per role.
 
 ---
 
@@ -22,14 +26,16 @@ This plan divides work into **phases** with **deliverables** and **dependencies*
 
 | Work package | Output |
 |--------------|--------|
-| Auth | Login, session, password reset; only admin creates accounts |
-| Employee profiles | Link user ↔ role; stylist subtype field; fixed daily rate for secretary; active/deactivated flag |
+| **Resend setup** | Email transport configured; used by password reset and later by appointments |
+| Auth | Login, session, password reset (via Resend); only admin creates accounts |
+| Employee profiles | Link user ↔ role; stylist subtype; daily rate for secretary; active flag |
 | Employee visibility flag | Admin toggle: show/hide own earnings per employee |
-| Vacation / absence | Calendar model: vacation, approved absence, no-show; "who works today" query |
-| Business day open / close | Admin button to open and close the day; all records stamped with business day ID, not calendar date |
-| Employee deactivation | Deactivate (preserve history); termination payment shortcut; block deactivation if unsettled pay exists |
+| **App navigation shell** | Role-aware sidebar/bottom nav; persistent layout for all subsequent screens |
+| **Self-service password change** | Authenticated employee changes own password |
+| Business day open / close | Admin button; records stamped with business day ID, not calendar date |
+| Basic employee deactivation | Disable login, preserve history (T022a) — earnings guard added in Phase 7 |
 
-**Exit criteria:** Admin can open/close the day; create and deactivate employees; system knows who is available.
+**Exit criteria:** Admin can open/close the day; create employees; navigation shell works for all roles. Vacation/absence and deactivation guard deferred to Phase 7.
 
 ---
 
@@ -57,22 +63,35 @@ This plan divides work into **phases** with **deliverables** and **dependencies*
 
 ---
 
-## Phase 4 — Daily operations: tickets, checkout, cloth batches
+## Phase 4A — Tickets and checkout
 
 | Work package | Output |
 |--------------|--------|
-| Ticket creation | Any of: stylist, secretary, cashier creates ticket (employee + service variant + client or guest) |
-| Ticket lifecycle | `logged → awaiting payment → closed`; reopened by cashier only; earnings recomputed on reopen |
-| Cashier dashboard | Real-time view of all open tickets grouped by employee; live updates (WebSocket / SSE) |
-| Checkout | Line item(s), total, payment method(s) (cash / card / transfer, split allowed); close ticket |
-| Price override | Cashier can override price at checkout; reason stored in DB; not visible in frontend UI |
-| Edit approval flow | Stylist or secretary submits an edit → cashier receives approval request → approves or rejects |
-| Walk-in flow | No appointment required; start from ticket creation directly |
+| Ticket creation | Stylist, secretary, or cashier creates ticket; walk-in and appointment-linked both supported |
+| `idempotency_key` on tickets table | Designed in from the start per offline policy (T077) |
+| Ticket lifecycle | `logged → awaiting payment → closed`; reopened by cashier only; optimistic lock on checkout |
+| Cashier dashboard | Real-time view of all open tickets grouped by employee; live Pusher updates |
+| Checkout | Line items, split payment, price override; optimistic lock prevents concurrent double-close |
+| Edit approval flow | Stylist or secretary submits edit request → cashier approves or rejects |
+| In-app notifications | Bell icon + Pusher delivery; used by edit approval flow first |
+| **Ticket history view** | Admin/cashier sees all closed tickets for any business day; search by client name |
+| **Admin home screen** | Live day status, open ticket count, revenue so far, quick links |
+
+**Exit criteria:** Full service-to-payment loop works end to end; cashier dashboard updates live; admin has operational day view.
+
+---
+
+## Phase 4B — Cloth batches
+
+> Can run in parallel with Phase 5 once Phase 4A is done.
+
+| Work package | Output |
+|--------------|--------|
 | Cloth batches | Secretary/admin creates batch; assigns pieces to clothier(s) per-piece or whole-batch |
 | Piece completion | Clothier marks done → secretary/admin approves (or admin marks done directly) |
-| In-app notifications | Clothier notified on new assignment; stylist notified on new appointment |
+| Notifications | Clothier notified on assignment; secretary notified on piece completion |
 
-**Exit criteria:** Full service-to-payment loop works end to end; cashier dashboard updates live; cloth batches assignable.
+**Exit criteria:** Secretary can create and assign batches; clothier can mark pieces done; approvals tracked.
 
 ---
 
@@ -107,13 +126,15 @@ This plan divides work into **phases** with **deliverables** and **dependencies*
 
 | Work package | Output |
 |--------------|--------|
-| Earnings computation | Stylist: sum of commissions from closed tickets; clothier: sum of approved piece pays; secretary: daily rate × days worked |
-| Payout records | Amount, date paid, period covered, payment method (cash / transfer); per employee |
+| **Absence / vacation tracking** | Table + admin calendar UI (T020, T021) — moved here from Phase 1; consumed by secretary earnings |
+| **Deactivation guard + termination** | Block deactivation if unsettled pay; termination payment shortcut (T022b) |
+| Earnings computation | Stylist: commissions; clothier: approved pieces; secretary: daily rate × days worked |
+| Payout records | Amount, date, period, payment method; per employee |
 | Prevent double-pay | Block settling the same period twice per employee |
 | Admin review screen | Filter by employee and date range; mark settled |
 | Unsettled flag | Surface any employee with open unpaid earnings |
 
-**Exit criteria:** Admin can pay any employee with a full audit trail; no period can be double-settled.
+**Exit criteria:** Admin can pay any employee with a full audit trail; vacation calendar live; deactivation guard active.
 
 ---
 
@@ -132,13 +153,14 @@ This plan divides work into **phases** with **deliverables** and **dependencies*
 
 ## Phase 9 — Offline / sync hardening
 
+> The offline policy (T077) was decided in Phase 0. The `idempotency_key` column on tickets was added in Phase 4A (T033). This phase implements the client-side queue and service worker on top of those foundations.
+
 | Work package | Output |
 |--------------|--------|
-| Offline policy doc | Which actions are offline-capable vs online-only (checkout = online-only for payment; service logging = offline-capable) |
-| IndexedDB local queue | Queue mutations locally with stable client-generated IDs |
-| Sync status UI | Indicator showing pending / synced / failed items |
-| Idempotent API | Idempotency keys on all mutating routes; Postgres-backed deduplication |
-| PWA | Web App Manifest, service worker (Workbox), install prompt on supported devices |
+| Idempotency on remaining routes | Apply idempotency key pattern to piece mark-done and any other offline-capable mutations |
+| IndexedDB local queue | Queue ticket creation and piece-done mutations locally with stable client-generated UUIDs |
+| Sync status UI | Indicator: synced / syncing / offline / failed with retry |
+| PWA | Web App Manifest, service worker (Workbox caching), install prompt |
 
 **Exit criteria:** Stylist logs are not lost on flaky connections; no duplicate tickets or double charges after reconnect.
 
@@ -161,10 +183,11 @@ This plan divides work into **phases** with **deliverables** and **dependencies*
 ```mermaid
 flowchart LR
   P0[Phase 0 Foundation]
-  P1[Phase 1 Identity and business day]
+  P1[Phase 1 Identity]
   P2[Phase 2 Catalog]
   P3[Phase 3 Clients]
-  P4[Phase 4 Tickets and batches]
+  P4A[Phase 4A Tickets + checkout]
+  P4B[Phase 4B Cloth batches]
   P5[Phase 5 Appointments]
   P6[Phase 6 Large orders]
   P7[Phase 7 Payroll]
@@ -172,14 +195,18 @@ flowchart LR
   P9[Phase 9 Offline]
   P10[Phase 10 Polish]
 
-  P0 --> P1 --> P2 --> P3 --> P4
-  P4 --> P5
-  P4 --> P6
-  P4 --> P7 --> P8
-  P4 --> P9
+  P0 --> P1 --> P2 --> P3 --> P4A
+  P4A --> P4B
+  P4A --> P5
+  P4B --> P6
+  P5 --> P6
+  P4A --> P7 --> P8
+  P4A --> P9
   P8 --> P10
   P9 --> P10
 ```
+
+> 4B and 5 can run in parallel after 4A. Both feed into Phase 6 (large orders link batches; appointments link to tickets).
 
 ---
 

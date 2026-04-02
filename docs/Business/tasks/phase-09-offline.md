@@ -1,26 +1,8 @@
 # Phase 9 — Offline / sync hardening
 
 > Goal: service logs are not lost on flaky connections; no duplicate tickets or double charges after reconnect.
-
----
-
-## T077 — Offline policy document
-
-**Phase:** 9 — Offline
-**Status:** pending
-**Dependencies:** none
-
-### What to do
-Write a short internal document (can live in `docs/research/`) defining which actions are offline-capable and which are online-only. Canonical decisions:
-- **Offline-capable:** service log creation (ticket creation in `logged` status), piece "mark done".
-- **Online-only:** checkout / payment collection, payout recording, catalog edits, business day open/close.
-
-This document must be reviewed and agreed upon by the business before implementation begins.
-
-### Acceptance criteria
-- [ ] Document exists at `docs/research/offline-policy.md`
-- [ ] Each action in the app is listed with its offline policy
-- [ ] Business stakeholder has signed off (note the date in the document)
+>
+> **T077 (offline policy document) was moved to Phase 0** — it must be agreed before Phase 4A API routes are built so idempotency is designed in, not retrofitted. The `idempotency_key` column on the `tickets` table is already created in T033 (Phase 4A).
 
 ---
 

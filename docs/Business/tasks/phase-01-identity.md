@@ -1,6 +1,6 @@
 # Phase 1 — Identity, employees, and business day
 
-> Goal: admin can create employees, assign roles, open/close the business day, and mark employees as on vacation or absent.
+> Goal: admin can create employees, assign roles, open/close the business day. Email is configured. Navigation shell exists. Vacations and deactivation guard moved to Phase 7 (when payroll is in place).
 
 ---
 
@@ -31,7 +31,7 @@ Build the admin UI to create a new employee: form with name, email (becomes logi
 
 ### Acceptance criteria
 - [ ] Admin can create users of any role from the dashboard
-- [ ] The new user receives a password reset email to set their password
+- [ ] The new user receives a password reset email (via Resend, depends on T054) to set their password
 - [ ] Employee record is created and linked to the auth user
 - [ ] Conditional fields (subtype, daily rate) show/hide correctly
 - [ ] Non-admin roles cannot access this screen
@@ -92,10 +92,10 @@ Build the login page using Better Auth's sign-in method and Base Web UI componen
 
 **Phase:** 1 — Identity
 **Status:** pending
-**Dependencies:** T016
+**Dependencies:** T016, T054
 
 ### What to do
-Implement the "forgot password" and "set new password" flows using Better Auth's built-in email verification. Use Resend to deliver the reset email.
+Implement the "forgot password" and "set new password" flows using Better Auth's built-in email verification. Use the Resend client configured in T054 to deliver the reset email.
 
 ### Acceptance criteria
 - [ ] "Forgot password" link on login page
@@ -112,11 +112,11 @@ Implement the "forgot password" and "set new password" flows using Better Auth's
 **Dependencies:** T010
 
 ### What to do
-Add Next.js middleware that checks the Better Auth session on every request. Redirect unauthenticated users to `/login`. Redirect authenticated users to the wrong role's screen to a 403 page.
+Add Next.js middleware that checks the Better Auth session on every request. Redirect unauthenticated users to `/login`. Redirect authenticated users trying to access a route they don't have permission for to a 403 page.
 
 ### Acceptance criteria
 - [ ] Unauthenticated request to any protected route → redirected to `/login`
-- [ ] Authenticated user accessing a route they don't have permission for → 403
+- [ ] Authenticated user accessing an unauthorized route → 403
 - [ ] Public routes (`/login`, `/reset-password`) are accessible without session
 - [ ] Middleware does not add measurable latency on hot paths
 
@@ -140,49 +140,70 @@ Create the `business_days` table (migration: `id`, `opened_at`, `closed_at` null
 
 ---
 
-## T020 — Absences and vacation table migration
-
-**Phase:** 1 — Identity
-**Status:** pending
-**Dependencies:** T012
-
-### What to do
-Create the `employee_absences` table: `id`, `employee_id`, `type` (`vacation` | `approved_absence` | `missed`), `date`, `note` (nullable), `created_by`, `created_at`.
-
-### Acceptance criteria
-- [ ] Migration runs without errors
-- [ ] Type enum enforced at DB level (Drizzle `pgEnum`)
-
----
-
-## T021 — Vacation and absence management UI (admin)
-
-**Phase:** 1 — Identity
-**Status:** pending
-**Dependencies:** T020
-
-### What to do
-Build a UI where admin can add, edit, and delete absence records per employee. Show a monthly calendar view indicating which employees have absences.
-
-### Acceptance criteria
-- [ ] Admin can log a vacation, absence, or missed day for any employee
-- [ ] Calendar view shows colored indicators per absence type
-- [ ] "Who works today" query returns active employees without an absence on the current business day
-
----
-
-## T022 — Employee deactivation and termination
+## T022a — Basic employee deactivation
 
 **Phase:** 1 — Identity
 **Status:** pending
 **Dependencies:** T014
 
 ### What to do
-Add a "Deactivate employee" action on the employee detail view. The system checks if the employee has unsettled earnings; if so, block deactivation with an explanatory message. For termination, allow the admin to enter a termination payment amount which creates a final payout record before deactivating.
+Add a "Deactivate employee" action on the employee detail view. Sets `is_active = false` and `deactivated_at = now()`. The deactivated employee cannot log in. Their history is fully preserved. The earnings guard (block if unsettled) is added in T022b (Phase 7) once the payroll system exists.
 
 ### Acceptance criteria
-- [ ] Deactivation is blocked if employee has unsettled earnings
-- [ ] Termination flow: enter amount → creates payout record → deactivates account
-- [ ] Deactivated employee cannot log in
-- [ ] Employee history (tickets, payouts, absences) is fully preserved and queryable by admin
+- [ ] Admin can deactivate any employee from their profile
+- [ ] Deactivated employee's session is invalidated; login attempt is blocked
 - [ ] Deactivated employees are hidden from active lists but visible under a "Show inactive" filter
+- [ ] All historic records (tickets, payouts, absences) remain intact and queryable by admin
+- [ ] No earnings check yet (that comes in T022b, Phase 7)
+
+---
+
+## T054 — Resend email integration
+
+**Phase:** 1 — Identity
+**Status:** pending
+**Dependencies:** T003
+
+### What to do
+Install `resend` and `@react-email/components`. Add `RESEND_API_KEY` and `RESEND_FROM_EMAIL` to environment variables and `.env.example`. Create a utility function `sendEmail(to, subject, reactComponent)`. This is the shared email transport used by T017 (password reset) and later T055 (appointment confirmation template).
+
+### Acceptance criteria
+- [ ] Resend API key stored securely in env (not committed)
+- [ ] Utility function sends an email successfully in a test
+- [ ] Failed sends log an error but do not crash the app (fire-and-forget with try/catch)
+- [ ] `RESEND_API_KEY` and `RESEND_FROM_EMAIL` added to `.env.example`
+
+---
+
+## T090 — App navigation / layout shell
+
+**Phase:** 1 — Identity
+**Status:** pending
+**Dependencies:** T010
+
+### What to do
+Build the persistent app shell: top header (app name, user avatar, logout), sidebar or bottom navigation bar, and mobile hamburger drawer. Navigation items are role-aware — each role sees only the routes relevant to them. All subsequent screen-level tasks build inside this shell.
+
+### Acceptance criteria
+- [ ] Shell renders for all four roles with correct nav items
+- [ ] Active route is visually highlighted in the nav
+- [ ] Mobile layout uses a bottom bar or collapsible drawer (no sidebar crowding a phone screen)
+- [ ] Logout action clears the session and redirects to `/login`
+- [ ] Shell is responsive across all target breakpoints
+
+---
+
+## T091 — Employee self-service password change
+
+**Phase:** 1 — Identity
+**Status:** pending
+**Dependencies:** T016
+
+### What to do
+Add a "Change password" option inside the user's profile or settings screen. The employee must enter their current password before setting a new one.
+
+### Acceptance criteria
+- [ ] Any authenticated user can access the change-password form
+- [ ] Current password is verified server-side before accepting the new password
+- [ ] Weak passwords (< 8 characters) are rejected with a clear message
+- [ ] On success: session remains active; no logout required
