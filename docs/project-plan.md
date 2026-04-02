@@ -230,8 +230,13 @@ Everything else (appointments, large orders, full payroll UI, analytics, offline
 
 ## Remaining open questions
 
-- **Postgres provider**: Neon, Supabase, RDS, or other?
-- **Auth provider**: Auth.js, Clerk, or custom?
-- **Real-time transport**: WebSocket (e.g. Pusher, Ably, or self-hosted) vs SSE?
-- **Appointment confirmation channel**: Email, WhatsApp, or manual-only for MVP?
-- **Base UI version**: Confirm Uber Base Web compatibility with your target Next.js major version before Phase 0.
+- **Base UI version**: Confirm Uber Base Web compatibility with your target Next.js major version before Phase 0 (spike required).
+
+## Researched and recommended (see `docs/research/`)
+
+| Decision | Recommendation | Research file |
+|----------|---------------|---------------|
+| Postgres provider | **Neon** — Vercel-native, usage-based, free in dev | [postgres-providers.md](./research/postgres-providers.md) |
+| Auth provider | **Better Auth** — free, built-in RBAC, self-hosted | [auth-providers.md](./research/auth-providers.md) |
+| Real-time transport | **Pusher free tier** for MVP; native SSE + Postgres LISTEN/NOTIFY later | [realtime-transport.md](./research/realtime-transport.md) |
+| Appointment confirmation | **Email via Resend** for MVP; WhatsApp post-MVP | [notification-channels.md](./research/notification-channels.md) |
