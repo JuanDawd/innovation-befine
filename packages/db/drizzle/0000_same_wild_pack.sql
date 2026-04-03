@@ -1,0 +1,1 @@
+CREATE TYPE "public"."payment_method_enum" AS ENUM('cash', 'card', 'transfer');

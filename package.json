@@ -9,6 +9,10 @@
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "test:e2e": "turbo run test:e2e",
+    "db:generate": "pnpm --filter @befine/db db:generate",
+    "db:migrate": "pnpm --filter @befine/db db:migrate",
+    "db:push": "pnpm --filter @befine/db db:push",
+    "db:studio": "pnpm --filter @befine/db db:studio",
     "clean": "turbo run clean && rm -rf node_modules",
     "prepare": "husky"
   },

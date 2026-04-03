@@ -1,23 +1,4 @@
-import { neon, neonConfig, type NeonQueryFunction } from "@neondatabase/serverless";
-
-/**
- * Neon serverless driver connection.
- *
- * Uses the HTTP-based `neon()` query function — works in Edge Functions,
- * Serverless Functions, and Server Components without connection pooling.
- *
- * Connection strategy (T005):
- * - Edge Functions: use `neon()` (HTTP, no persistent connection)
- * - Serverless Functions: use `neon()` (HTTP) — no need for `Pool`
- *   on free tier since Neon handles connection pooling server-side
- * - Free tier limits: 100 concurrent connections (pooled), 500 hours
- *   of compute per month, 0.5 GB storage
- * - Connection exhaustion: `neon()` uses HTTP so it cannot exhaust
- *   connections. If the compute endpoint is suspended (cold start),
- *   the first query takes 0.5-3s extra to wake it up.
- */
-
-neonConfig.fetchConnectionCache = true;
+import { createDb, type Database } from "@befine/db";
 
 function getDatabaseUrl(): string {
   const url = process.env.DATABASE_URL;
@@ -29,20 +10,20 @@ function getDatabaseUrl(): string {
   return url;
 }
 
-let _sql: NeonQueryFunction<false, false> | undefined;
+let _db: Database | undefined;
 
-export function getDb(): NeonQueryFunction<false, false> {
-  if (!_sql) {
-    _sql = neon(getDatabaseUrl());
+export function getDb(): Database {
+  if (!_db) {
+    _db = createDb(getDatabaseUrl());
   }
-  return _sql;
+  return _db;
 }
 
 export async function healthCheck(): Promise<{ ok: boolean; latencyMs: number }> {
   const start = performance.now();
   try {
-    const sql = getDb();
-    await sql`SELECT 1`;
+    const db = getDb();
+    await db.execute("SELECT 1");
     return { ok: true, latencyMs: Math.round(performance.now() - start) };
   } catch {
     return { ok: false, latencyMs: Math.round(performance.now() - start) };

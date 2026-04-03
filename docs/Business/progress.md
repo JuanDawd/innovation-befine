@@ -47,7 +47,7 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | T003 | Environment variable schema and runtime validation                  | done    | T001         |
 | T004 | Vercel project setup and staging deploys                            | done    | T001         |
 | T005 | Neon Postgres setup with dev and staging branches                   | done    | T004         |
-| T006 | Drizzle ORM setup and migration workflow                            | pending | T005         |
+| T006 | Drizzle ORM setup and migration workflow                            | done    | T005         |
 | T007 | Better Auth spike and integration (RBAC + rate limiting validation) | pending | T006         |
 | T008 | UI library spike (shadcn/ui chosen, Base Web failed)                | done    | T001         |
 | T009 | Pusher free tier spike for real-time events                         | pending | T001, T004   |
@@ -251,7 +251,7 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 
 | Phase                     | Tasks   | Done   | In progress |
 | ------------------------- | ------- | ------ | ----------- |
-| 0A — Foundation (Infra)   | 13      | 7      | 0           |
+| 0A — Foundation (Infra)   | 13      | 8      | 0           |
 | 0B — Foundation (Std/Dsg) | 7       | 5      | 0           |
 | 1 — Identity              | 13      | 0      | 0           |
 | 2 — Catalog               | 6       | 0      | 0           |
@@ -264,7 +264,7 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | 8 — Analytics             | 8       | 0      | 0           |
 | 9 — Offline               | 5       | 0      | 0           |
 | 10 — Polish               | 9       | 0      | 0           |
-| **Total**                 | **108** | **13** | **0**       |
+| **Total**                 | **108** | **14** | **0**       |
 
 ---
 
