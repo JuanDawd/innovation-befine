@@ -2,7 +2,7 @@
 
 > **Purpose:** Living document that captures gaps, loopholes, inconsistencies, and risks discovered during project audits and development. Every issue found during development **must** be logged here with a severity, status, and resolution.
 >
-> **Last audit:** April 2026 (pre-development comprehensive audit)
+> **Last audit:** April 2026 (pre-development comprehensive audit + two independent project assessments + stakeholder decision session)
 
 ---
 
@@ -51,18 +51,18 @@
 ### C-03 — Currency decision still unresolved
 
 - **Severity:** Critical
-- **Status:** Open
+- **Status:** Resolved
 - **Affected:** T099 (i18n), every UI that displays money, earnings computations
 - **Description:** The open question "Confirm the currency used by the business (COP, USD, or other)" blocks T099 and every money-display task. COP has no cents (integer storage = whole pesos), while USD uses cents. This affects `formatMoney()`, decimal separators, and all price display logic.
-- **Fix:** Get a definitive answer from the client before Phase 0 begins. Document in `project-plan.md` resolved decisions.
+- **Fix:** Confirmed: **COP (Colombian Pesos)**. No cents — integer storage = whole pesos. `formatMoney(pesos)` uses Colombian locale (e.g. "$12.500"). T099 ACs updated.
 
 ### C-04 — No data privacy/compliance research
 
 - **Severity:** Critical
-- **Status:** Open
+- **Status:** Resolved
 - **Affected:** Entire project
 - **Description:** The app stores PII (client names, phone, email, appointment history) and financial data (employee pay, payments). Latin American countries have data protection laws (Colombia: Ley 1581 de 2012, Brazil: LGPD, Mexico: LFPDPPP). No research document addresses compliance, data retention policies, or right-to-deletion requirements. The soft-delete pattern (preserving history) may conflict with deletion requests.
-- **Fix:** Create `docs/research/data-privacy-compliance.md` and consult the specific legal requirements for the business's country.
+- **Fix:** Created `docs/research/data-privacy-compliance.md` covering Colombian Ley 1581 de 2012, PII inventory, consent model, anonymization-over-deletion approach, data retention policy, cross-border transfer considerations, and SIC registration requirements.
 
 ---
 
@@ -71,10 +71,10 @@
 ### H-01 — Phase 0 scope inflation
 
 - **Severity:** High
-- **Status:** Open
+- **Status:** Resolved
 - **Affected:** Phase 0 timeline and deliverability
 - **Description:** Phase 0 started with ~8 work packages. After three senior reviews, it now has 20 tasks including: monorepo, linting, env vars, Vercel, Neon, Drizzle, auth spike, UI library spike, Pusher spike, RBAC, seed script, offline policy, Sentry, testing infra, CI/CD, API conventions, real-time abstraction, i18n, design system + tokens, and wireframes. No analysis estimates whether this is achievable as a single phase.
-- **Fix:** Consider splitting Phase 0 into 0A (infrastructure: T001–T011, T085, T094, T095) and 0B (standards and design: T002 standards docs, T077, T097, T098, T099, T103, T104).
+- **Fix:** Phase 0 split into **0A (Infrastructure)** and **0B (Standards & Design)**. 0A: T001, T003, T004, T005, T006, T007, T008, T009, T010, T011, T085, T094, T095. 0B: T002, T077, T097, T098, T099, T103, T104. Updated in `phase-00-foundation.md` and `progress.md`.
 
 ### H-02 — Sentry timing stale in `business.md`
 
@@ -95,18 +95,18 @@
 ### H-04 — Better Auth fallback plan is too shallow
 
 - **Severity:** High
-- **Status:** Open
+- **Status:** Resolved
 - **Affected:** T007 (auth spike), entire auth layer
 - **Description:** Better Auth is the newest and least battle-tested option (2024-2025). The mitigation is a 1-2 hour spike, which only tests initial setup, not production edge cases (session handling under load, RBAC with nested permissions). If critical issues emerge in Phase 3+, switching requires rewriting all auth code, middleware, and RBAC checks.
-- **Fix:** Document a more robust fallback plan: "If critical issues emerge after Phase 0, the auth layer is abstracted behind middleware (T018), enabling a 2-day migration to Clerk or Auth.js."
+- **Fix:** Added a comprehensive "Migration Path" section to `docs/research/auth-providers.md` documenting concrete migration steps to Auth.js (2 days) and Clerk (1.5 days), including decision triggers for when to migrate.
 
 ### H-05 — Pusher reliability for financial operations
 
 - **Severity:** High
-- **Status:** Open
+- **Status:** Resolved
 - **Affected:** T036 (cashier dashboard), T098 (real-time abstraction)
 - **Description:** Pusher's free tier has no message delivery guarantee (fire-and-forget). For the cashier dashboard driving checkout decisions, a missed event means the cashier doesn't see a ticket awaiting payment. No fallback mechanism is documented.
-- **Fix:** Add periodic polling as a fallback to the real-time abstraction (T098). The dashboard should poll every 30 seconds as a safety net, not rely solely on push events.
+- **Fix:** Added 30-second polling fallback to T098 acceptance criteria. The abstraction auto-activates polling when the push transport fails or disconnects. Cashier dashboard never relies solely on push events.
 
 ### H-06 — No security audit on go-live checklist
 
@@ -119,10 +119,10 @@
 ### H-07 — No Neon free-tier storage capacity estimate
 
 - **Severity:** High
-- **Status:** Open
+- **Status:** Resolved
 - **Affected:** T005 (Neon setup), T101 (analytics seed script)
 - **Description:** Neon free tier provides 0.5 GB storage. No estimate calculates expected data volume. The analytics seed script (T101) generates 6 months of data — nobody has verified this fits within 0.5 GB. Hitting the limit during staging would block development.
-- **Fix:** Add a data volume estimate to `docs/research/postgres-providers.md` or `docs/technical-feasibility-and-research.md`.
+- **Fix:** Added a detailed "Storage Capacity Estimate" section to `docs/research/postgres-providers.md`. 6 months of production data estimated at ~28 MB — well within the 0.5 GB free tier. Upgrade threshold: ~8–10 years at current growth rate.
 
 ### H-08 — Shared payment method enum defined three times
 
@@ -159,10 +159,10 @@
 ### H-12 — Neon cold start impact on POS workflow
 
 - **Severity:** High
-- **Status:** Open
+- **Status:** Resolved
 - **Affected:** T005 (Neon setup), T019 (business day open)
 - **Description:** Neon's free tier auto-suspends after inactivity, causing the first query to take slightly longer. For a POS system, the first transaction of the business day (opening the day) could experience a noticeable delay with no user feedback.
-- **Fix:** Either disable auto-suspend on the production branch (paid tier), or implement a health-check cron that keeps the DB warm, or add a clear loading state on the "Open day" action.
+- **Fix:** Added loading state to T019 "Open Day" action. Added "Cold Start Mitigation" section to `docs/research/postgres-providers.md` documenting the chosen approach and alternatives.
 
 ---
 
@@ -171,26 +171,26 @@
 ### M-01 — No-show count never decrements
 
 - **Severity:** Medium
-- **Status:** Open
+- **Status:** Resolved
 - **Affected:** T032b (no-show increment), T053 (appointment status)
 - **Description:** If an appointment is incorrectly marked as no-show and the status is corrected, the `no_show_count` on the client record is never decremented. The count only goes up.
-- **Fix:** Add decrement logic when a no-show status is reversed, or document this as a conscious limitation.
+- **Fix:** Added decrement logic to T032b ACs: when a no-show status is reversed (changed back to completed/confirmed), `no_show_count` is decremented atomically. Decrement does not go below zero.
 
 ### M-02 — No guest-to-saved-client conversion
 
 - **Severity:** Medium
-- **Status:** Open
+- **Status:** Won't fix
 - **Affected:** T031 (guest flow), T030 (saved clients)
 - **Description:** There is no mechanism to convert a guest entry into a saved client. If a walk-in customer becomes a regular, previous guest visits cannot be linked to their new profile.
-- **Fix:** Add a "Create saved client from guest" action, or document as a post-MVP enhancement.
+- **Fix:** Deferred to post-MVP enhancement. Guest records are name-only with no persistent data, so no historical linking is possible at the data level anyway.
 
 ### M-03 — `service_summary` on appointments is disconnected from catalog
 
 - **Severity:** Medium
-- **Status:** Open
+- **Status:** Resolved
 - **Affected:** T049 (appointments migration), T035 (ticket creation)
 - **Description:** The `service_summary` field on appointments is free text, not linked to the catalog. When a ticket is created from an appointment, there's no automatic service pre-selection, creating potential inconsistencies between what was booked and what was billed.
-- **Fix:** Consider adding a `service_variant_id` FK (nullable) to appointments, with `service_summary` as a fallback for non-catalog descriptions.
+- **Fix:** Added `service_variant_id (FK nullable)` to T049 appointments table schema. When present, ticket creation from the appointment auto-populates the service. `service_summary` remains as fallback for non-catalog descriptions.
 
 ### M-04 — T028 missing cashier and clothier read access
 
@@ -203,34 +203,34 @@
 ### M-05 — Client table has no unique constraint on phone or email
 
 - **Severity:** Medium
-- **Status:** Open
+- **Status:** Won't fix
 - **Affected:** T029 (clients migration), T100 (data migration)
 - **Description:** The `clients` table allows duplicate phone numbers and emails, making duplicate detection during data migration (T100) difficult. Whether duplicates are intentional is undocumented.
-- **Fix:** Decide: unique constraint on phone, email, or a composite? Or document that duplicates are allowed and the data migration script must handle deduplication.
+- **Fix:** No unique constraint — staff manages duplicates manually. Some clients share phones (family members). The data migration script (T100) handles deduplication via duplicate detection (flag duplicates, don't block import).
 
 ### M-06 — T019 — No mechanism to reopen a prematurely closed business day
 
 - **Severity:** Medium
-- **Status:** Open
+- **Status:** Resolved
 - **Affected:** T019 (business day), operational workflow
 - **Description:** Once a business day is closed, there is no path to reopen it. If the admin closes the day prematurely, tickets cannot be created for that day. The decision to disallow reopening is not explicitly documented.
-- **Fix:** Either add a "reopen day" capability (admin only, with audit trail) or document the restriction as intentional with the workaround (open a new business day).
+- **Fix:** Added reopen capability to T019 ACs: admin can reopen the most recently closed business day with audit trail (who, when, reason). Only the single most recently closed day can be reopened.
 
 ### M-07 — T065 — "Days expected to work" assumes full-time for all employees
 
 - **Severity:** Medium
-- **Status:** Open
-- **Affected:** T065 (secretary earnings), T020/T021 (absences)
+- **Status:** Resolved
+- **Affected:** T065 (secretary earnings), T020/T021 (absences), T012 (employees table)
 - **Description:** Secretary earnings are calculated as `daily_rate × days_worked`. The system assumes every active employee is expected to work every business day. Part-time employees or employees with specific schedules are not supported.
-- **Fix:** Confirm with the client that all employees work every day. If not, add a "work schedule" concept or per-employee expected days.
+- **Fix:** Confirmed: part-time employees exist. Added `expected_work_days` (integer, default 6, range 1–7) to T012 employees table. T065 earnings computation updated to respect this field. Full schedule management deferred to post-MVP.
 
 ### M-08 — T067 — Payout amount adjustment has no audit trail
 
 - **Severity:** Medium
-- **Status:** Open
-- **Affected:** T067 (payout recording)
+- **Status:** Resolved
+- **Affected:** T067 (payout recording), T066 (payouts table)
 - **Description:** The admin can adjust the payout amount before confirming, but there's no requirement to store the reason for adjustment or the original computed value. For a financial system, this is a significant audit gap.
-- **Fix:** Add `original_computed_amount` and `adjustment_reason` columns to the payouts table.
+- **Fix:** Added `original_computed_amount` (integer) and `adjustment_reason` (text, nullable, required when amount differs from computed) to T066 payouts table schema.
 
 ### M-09 — T100 — No data validation or rollback for spreadsheet import
 
@@ -267,26 +267,26 @@
 ### M-13 — T057 — `deposit_paid` column is redundant with payments table
 
 - **Severity:** Medium
-- **Status:** Open
+- **Status:** Resolved
 - **Affected:** T057 (large orders migration)
 - **Description:** The schema has both `deposit_paid` (column) and the initial deposit recorded in `large_order_payments`. This creates a dual source of truth that can diverge.
-- **Fix:** Remove `deposit_paid` and compute from the payments table, or clarify it as a denormalized convenience column with an update trigger.
+- **Fix:** Removed `deposit_paid` column from T057 schema. Deposit status is computed from the `large_order_payments` table. Single source of truth.
 
 ### M-14 — Timezone handling for appointments
 
 - **Severity:** Medium
-- **Status:** Open
-- **Affected:** T049 (appointments), T052 (calendar view)
+- **Status:** Resolved
+- **Affected:** T049 (appointments), T052 (calendar view), all time displays
 - **Description:** Appointments use `timestamp with time zone` but no specification locks the display timezone to the business location. On devices with different timezone settings, appointments could display at wrong times.
-- **Fix:** Define the business timezone as a configuration constant. Display all times in that timezone regardless of the device's local setting.
+- **Fix:** Added business timezone constant `America/Bogota` (UTC-5) to T002 standards. All timestamps stored in UTC; all user-facing displays converted to business timezone regardless of device locale.
 
 ### M-15 — No state management or form library research document
 
 - **Severity:** Medium
-- **Status:** Open
+- **Status:** Resolved
 - **Affected:** Tech stack consistency
 - **Description:** TanStack Query, Zustand, React Hook Form + Zod, date-fns, Recharts, and Lucide were accepted into the tech stack from inline review recommendations, but unlike Neon, Better Auth, Pusher, and Resend, they have no dedicated research document with pros/cons/alternatives.
-- **Fix:** Either create a combined `docs/research/frontend-libraries.md` or add the rationale to `docs/technical-feasibility-and-research.md`.
+- **Fix:** Created `docs/research/frontend-libraries.md` with comparison tables and rationale for each library vs alternatives.
 
 ### M-16 — Pusher free-tier message volume not estimated
 
@@ -299,18 +299,18 @@
 ### M-17 — `commission_pct` precision not specified
 
 - **Severity:** Medium
-- **Status:** Open
+- **Status:** Resolved
 - **Affected:** T023 (services migration), T063 (earnings computation)
 - **Description:** `commission_pct` is stored as `numeric(0–100)` but the exact precision (e.g., `numeric(5,2)` for values like `15.50%`) is not defined. This affects earnings computation accuracy.
-- **Fix:** Specify the exact `numeric` precision in T023 acceptance criteria.
+- **Fix:** Updated T023 ACs: `commission_pct` is `numeric(5,2)`. Rounding policy: banker's rounding (round half-even) for all financial calculations — documented in T002 standards.
 
 ### M-18 — Real-time migration from Pusher has no task
 
 - **Severity:** Medium
-- **Status:** Open
+- **Status:** Won't fix
 - **Affected:** `docs/research/realtime-transport.md`, project plan
 - **Description:** The research file says "Build this in Phase 9" but Phase 9 is specifically about offline/PWA. No actual task covers migrating from Pusher to SSE + Postgres LISTEN/NOTIFY.
-- **Fix:** Either add a placeholder task for the migration, or document it as a post-MVP activity.
+- **Fix:** Documented as a post-MVP activity in `docs/research/realtime-transport.md`. No task allocated. The real-time abstraction layer (T098) ensures migration requires changes only in `packages/realtime/`.
 
 ---
 
@@ -383,10 +383,10 @@
 ### L-09 — No file/image storage research
 
 - **Severity:** Low
-- **Status:** Open
+- **Status:** Won't fix
 - **Affected:** General project scope
 - **Description:** Large cloth orders may benefit from reference photos; employee profiles might need photos. No file storage solution is researched (Vercel Blob, S3, Cloudinary). File upload is implicitly out of scope but never explicitly stated.
-- **Fix:** Document that file/image upload is out of scope for MVP, or add a research item.
+- **Fix:** File/image uploads explicitly documented as out of scope for MVP in `docs/Business/business.md` scope exclusions.
 
 ### L-10 — `business.md` ORM reference mentions Prisma/Kysely
 
@@ -431,10 +431,58 @@
 ### L-15 — `commission_pct` precision not specified
 
 - **Severity:** Low
-- **Status:** Open
+- **Status:** Resolved
 - **Affected:** T023, T063 (earnings computation)
 - **Description:** Moved from M-17 scope — `commission_pct` is stored as `numeric(0–100)` but rounding policy for fractional commissions (e.g. 33.33% of $100 = $33.33 or $33.34?) is not defined. This affects every stylist payout and compounds over time.
-- **Fix:** Define rounding policy in T002 standards: recommend round half-up for customer-facing amounts, truncate for commission calculations. Specify `numeric(5,2)` precision for `commission_pct`.
+- **Fix:** Rounding policy defined in T002 standards: **banker's rounding (round half-even)** for all financial calculations. `commission_pct` precision = `numeric(5,2)`. Test cases with pre-calculated expected results in `docs/testing/phase-07-test-plan.md`.
+
+### H-13 — Race condition scenarios undocumented for financial operations
+
+- **Severity:** High
+- **Status:** Resolved
+- **Affected:** T038 (checkout), T051 (double-booking), T067 (payout), T068 (double-pay)
+- **Description:** POS systems are inherently concurrent — multiple cashiers/stylists act simultaneously. No test scenarios document what happens with concurrent checkout of the same ticket, ticket modification during checkout, overlapping payouts, or business day closure during ticket creation.
+- **Fix:** Created `docs/testing/concurrency-test-plan.md` with 8 race condition scenarios, each documenting preconditions, concurrent actions, expected outcomes, and verification methods.
+
+### H-14 — Business day boundary edge cases untested
+
+- **Severity:** High
+- **Status:** Resolved
+- **Affected:** T019 (business day), Phase 1, analytics queries
+- **Description:** The business day spans calendar boundaries (e.g. 6 AM to 2 AM). No test scenarios cover: tickets across midnight belonging to the same day, opening a day without closing the previous one, analytics spanning midnight, timezone edge cases (Neon in UTC, business in Colombia UTC-5).
+- **Fix:** Business day boundary test scenarios included in `docs/testing/phase-04a-test-plan.md`. Timezone constant defined (America/Bogota) in T002 standards.
+
+### H-15 — No UAT task before go-live
+
+- **Severity:** High
+- **Status:** Resolved
+- **Affected:** T088 (training), T089 (production cutover)
+- **Description:** No task exists between training (T088) and go-live (T089) where actual staff use the system in a realistic scenario and provide feedback before production.
+- **Fix:** Added T106 (User Acceptance Testing) to Phase 10, between T088 and T089. Each role representative uses staging for one full business day with realistic data. T089 now depends on T106.
+
+### H-16 — No post-deployment smoke test
+
+- **Severity:** High
+- **Status:** Resolved
+- **Affected:** T095 (CI/CD pipeline)
+- **Description:** CI runs lint, typecheck, and unit tests on PRs, but after deployment to staging/production, no automated verification confirms the deployed app works (login, DB connection, core flow).
+- **Fix:** Added post-deployment smoke test AC to T095: Playwright suite runs against the deployed URL after Vercel deploys.
+
+### M-19 — No structured logging for silent business logic failures
+
+- **Severity:** Medium
+- **Status:** Resolved
+- **Affected:** T085 (Sentry), financial operations
+- **Description:** Sentry captures thrown errors, but silent business logic failures are more dangerous: a payout junction table insert silently fails, a real-time event fails to publish, a commission uses a stale rate. No structured logging exists for these cases.
+- **Fix:** Added structured business logic logging AC to T085: pino or similar for every financial operation, logging operation type, actor, amount, entities, and timestamps.
+
+### M-20 — No integration test scenarios at phase boundaries
+
+- **Severity:** Medium
+- **Status:** Resolved
+- **Affected:** All phases
+- **Description:** Task dependencies are documented, but no integration test verifies that deliverables from Phase N-1 work correctly with Phase N's code (e.g., a client created in Phase 3 links to a ticket in Phase 4A, earnings from Phase 4A aggregate in Phase 7 payroll).
+- **Fix:** Integration test approach documented in `docs/testing/README.md`. When starting Phase N, the first task includes an integration test verifying Phase N-1 deliverables.
 
 ---
 
@@ -447,6 +495,8 @@
 | ---- | ----- | ----- | ---------- | ---------- |
 | 2026-04-02 | Pre-dev | 12 issues fixable by documentation update were left open | Issues identified but fixes deferred — no process to batch-resolve documentation-only issues | Schedule a documentation fix sweep after each review round; don't wait for development to start |
 | 2026-04-02 | Pre-dev | No test plans, QA strategy, or edge case scenarios existed despite 106 well-specified tasks | Acceptance criteria were treated as sufficient for testing; no QA perspective in review cycle | Include a QA review as a standard step after every major planning document is created; ACs define _what_ to verify, test plans define _how_ and _what else_ to try breaking |
+| 2026-04-02 | Pre-dev | Two independent project assessments found the same gaps — confirming they are real, not reviewer opinion | Both reviews converged on: currency decision, data privacy, test plans, auth fallback, Pusher reliability, Neon storage/cold-start | When multiple reviewers agree on a gap, prioritize it immediately — convergence is a strong signal |
+| 2026-04-02 | Pre-dev | 17 stakeholder decisions were needed before development could start | Decisions accumulated across 4 review rounds without a resolution session | Schedule a dedicated decision session after each review round — don't let open questions pile up |
 
 
 ---
@@ -470,5 +520,28 @@
 | M-11     | 2026-04-02    | Added T061 to T062 dependency list in task file and progress.md | Senior QA review |
 | L-10     | 2026-04-02    | Updated `postgres-providers.md` to reference only Drizzle ORM | Senior QA review |
 | L-12     | 2026-04-02    | Updated T087 health endpoint AC to include DB connectivity check (`SELECT 1`) | Senior QA review |
+| C-03     | 2026-04-02    | Currency confirmed as COP (Colombian Pesos). T099 ACs updated. | Stakeholder decision session |
+| C-04     | 2026-04-02    | Created `docs/research/data-privacy-compliance.md` (Colombian Ley 1581 de 2012) | Stakeholder decision session |
+| H-01     | 2026-04-02    | Phase 0 split into 0A (Infrastructure) and 0B (Standards & Design) | Stakeholder decision session |
+| H-04     | 2026-04-02    | Added "Migration Path" section to `docs/research/auth-providers.md` with Auth.js and Clerk steps | Stakeholder decision session |
+| H-05     | 2026-04-02    | Added 30-second polling fallback to T098 ACs | Stakeholder decision session |
+| H-07     | 2026-04-02    | Added storage capacity estimate to `docs/research/postgres-providers.md` (~28 MB for 6 months) | Stakeholder decision session |
+| H-12     | 2026-04-02    | Added loading state to T019 "Open Day" and cold start documentation to postgres-providers.md | Stakeholder decision session |
+| H-13     | 2026-04-02    | Created `docs/testing/concurrency-test-plan.md` with 8 race condition scenarios | QA review action |
+| H-14     | 2026-04-02    | Business day boundary tests added to phase-04a test plan; timezone constant defined | QA review action |
+| H-15     | 2026-04-02    | Added T106 (UAT) to Phase 10 between T088 and T089 | QA review action |
+| H-16     | 2026-04-02    | Added post-deployment smoke test AC to T095 | QA review action |
+| M-01     | 2026-04-02    | Added no-show decrement logic to T032b ACs | Stakeholder decision session |
+| M-03     | 2026-04-02    | Added `service_variant_id` FK to T049 appointments table | Stakeholder decision session |
+| M-06     | 2026-04-02    | Added reopen day capability to T019 ACs (admin only, audit trail, most recent day only) | Stakeholder decision session |
+| M-07     | 2026-04-02    | Added `expected_work_days` to T012 employees table; T065 updated for part-time | Stakeholder decision session |
+| M-08     | 2026-04-02    | Added `original_computed_amount` and `adjustment_reason` to T066 payouts table | Stakeholder decision session |
+| M-13     | 2026-04-02    | Removed `deposit_paid` column from T057; computed from payments table | Stakeholder decision session |
+| M-14     | 2026-04-02    | Business timezone constant `America/Bogota` added to T002 standards | Stakeholder decision session |
+| M-15     | 2026-04-02    | Created `docs/research/frontend-libraries.md` | Stakeholder decision session |
+| M-17     | 2026-04-02    | `commission_pct` precision set to `numeric(5,2)` in T023; banker's rounding in T002 | Stakeholder decision session |
+| M-19     | 2026-04-02    | Added structured business logic logging AC to T085 | QA review action |
+| M-20     | 2026-04-02    | Integration test approach documented in `docs/testing/README.md` | QA review action |
+| L-15     | 2026-04-02    | Rounding policy (banker's rounding) and precision defined in T002 standards | Stakeholder decision session |
 
 
