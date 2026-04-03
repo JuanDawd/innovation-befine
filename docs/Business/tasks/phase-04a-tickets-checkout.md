@@ -13,7 +13,7 @@
 **Dependencies:** T019, T029
 
 ### What to do
-Create the `tickets` table: `id`, `business_day_id` (FK), `employee_id` (FK — the performing stylist), `client_id` (FK nullable), `guest_name` (nullable), `status` (`logged` | `awaiting_payment` | `closed` | `reopened`), `closed_at` (nullable), `closed_by` (nullable), `created_at`, `created_by`.
+Create the `tickets` table: `id`, `business_day_id` (FK), `employee_id` (FK — the performing stylist), `client_id` (FK nullable), `guest_name` (nullable), `appointment_id` (FK nullable — links to appointments table when ticket is created from an appointment; set automatically in Phase 5), `status` (`logged` | `awaiting_payment` | `closed` | `reopened`), `closed_at` (nullable), `closed_by` (nullable), `created_at`, `created_by`.
 
 Add `idempotency_key` (text, nullable, unique) now — the offline policy (T077) decided this must be present from the start, not retrofitted.
 
@@ -22,6 +22,7 @@ Add `idempotency_key` (text, nullable, unique) now — the offline policy (T077)
 - [ ] Either `client_id` or `guest_name` must be present (check constraint or app-level)
 - [ ] `status` uses a Drizzle `pgEnum`
 - [ ] `idempotency_key` column exists and has a unique index
+- [ ] `appointment_id` column exists as a nullable FK (populated in Phase 5 when a ticket is opened from an appointment)
 - [ ] Requires an open business day (enforced at app level)
 
 ---

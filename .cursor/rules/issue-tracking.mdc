@@ -1,0 +1,34 @@
+---
+description: Track and log issues discovered during development into docs/issues-tracker.md
+alwaysApply: true
+---
+
+# Issue tracking during development
+
+When working on any task in this project, actively look for gaps, loopholes, inconsistencies, missing error handling, security concerns, UX problems, or any other issues. When you find one:
+
+1. **Log it immediately** in `docs/issues-tracker.md` under the appropriate severity section
+2. **Use the existing format**: issue ID (next available in its severity group), severity, status, affected tasks, description, and fix recommendation
+3. **Add a lessons-learned entry** if the issue reveals a pattern that should be prevented in the future (use the "Lessons learned" table at the bottom)
+
+## What to watch for
+
+- Missing error handling or edge cases in acceptance criteria
+- Security gaps (unprotected endpoints, missing input validation, PII exposure)
+- Dependency mismatches between tasks
+- Inconsistencies between docs and implementation
+- UX gaps (missing loading states, empty states, error feedback)
+- Performance concerns (missing indexes, unbounded queries, N+1 patterns)
+- Financial accuracy issues (rounding, currency, double-pay, race conditions)
+- Accessibility violations (missing labels, contrast, keyboard navigation)
+
+## Severity guide
+
+- **Critical**: Data loss, financial errors, security breaches, blocks delivery
+- **High**: Significant rework if not caught; affects multiple tasks
+- **Medium**: Important but not blocking; quality improvement
+- **Low**: Minor polish, documentation, edge cases
+
+## When resolving issues
+
+Update the issue status to "Resolved" and add an entry to the "Resolution log" table with the date and commit/PR reference.

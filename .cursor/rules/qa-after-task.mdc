@@ -1,0 +1,64 @@
+---
+description: Senior QA review after every completed task — test, verify, and log issues
+alwaysApply: true
+---
+
+# QA gate after task completion
+
+When a task (T001–T106) is marked as complete or you finish implementing a task, run these checks **before** moving on:
+
+## 1. Acceptance criteria verification
+
+- Re-read every AC checkbox for the task
+- Verify each one is actually met (not just assumed from code changes)
+- For UI tasks: check mobile viewport AND desktop
+- For API tasks: test with valid input, invalid input, and unauthorized role
+
+## 2. Edge case and error path testing
+
+Test at minimum:
+- **Invalid input**: empty strings, null, too-long strings, special characters, SQL injection patterns
+- **Permission boundary**: call the endpoint/action as a role that should NOT have access — verify 403
+- **Stale data**: what happens if the entity was modified between page load and form submit?
+- **Empty state**: does the screen handle zero records gracefully?
+- **Concurrent access**: if the feature involves shared state (tickets, payouts, business day), consider what happens with two simultaneous users
+
+## 3. Regression check
+
+- Run `turbo test` (when test infrastructure exists) to verify no existing tests broke
+- Manually verify that the 2-3 features most closely related to this task still work
+- If the task modified a shared table (tickets, employees, clients, business_days), check downstream features
+
+## 4. Financial accuracy (for money-related tasks)
+
+For any task involving prices, commissions, payments, or payroll:
+- Verify integer cents storage (no floats, no decimals in DB)
+- Test with known inputs and pre-calculated expected outputs
+- Test boundary cases: $0 amount, override to $0, 100% commission, 0% commission
+- Verify rounding behavior is consistent
+
+## 5. Log findings
+
+If you find ANY issue — bug, gap, edge case, missing error handling, UX problem:
+
+1. **Log it in `docs/issues-tracker.md`** under the appropriate severity section
+2. Use the next available issue ID in its severity group
+3. Include: severity, status (Open), affected tasks, description, fix recommendation
+4. If it's blocking the current task, fix it now
+5. If it's not blocking, add it as a prioritized follow-up
+
+## 6. Issue prioritization guide
+
+When creating new issues from QA findings, prioritize:
+
+- **Critical**: Data loss, financial errors, security breach, blocks delivery
+- **High**: Will cause rework if not fixed before the next phase; affects multiple tasks
+- **Medium**: Important quality improvement; not blocking but should be fixed before go-live
+- **Low**: Minor polish, documentation, edge cases that can wait
+
+## 7. Update progress
+
+After QA passes:
+- Mark the task as `done` in `docs/Business/progress.md`
+- If issues were found and fixed, note it in the issues-tracker resolution log
+- If issues were found but deferred, ensure they are tracked with correct severity

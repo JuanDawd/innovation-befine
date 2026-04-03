@@ -31,7 +31,7 @@ Build the admin UI to create a new employee: form with name, email (becomes logi
 
 ### Acceptance criteria
 - [ ] Admin can create users of any role from the dashboard
-- [ ] The new user receives a password reset email (via Resend, depends on T054) to set their password
+- [ ] The new user receives a password reset email (via Resend, depends on T054) to set their password. If email delivery is unavailable (T054 not yet complete or Resend is down), the admin can set an initial temporary password directly in the creation form.
 - [ ] Employee record is created and linked to the auth user
 - [ ] Conditional fields (subtype, daily rate) show/hide correctly
 - [ ] Non-admin roles cannot access this screen

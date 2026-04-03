@@ -62,7 +62,7 @@ The company currently tracks daily services, employee pay, and cloth production 
 | Auth | **Better Auth** | Self-hosted, free, built-in RBAC + 2FA; no vendor lock-in; data stays in own DB |
 | Real-time | **Pusher** (free tier) → native SSE + Postgres LISTEN/NOTIFY later | Live cashier dashboard; Pusher free tier covers MVP; migrate when ready |
 | Email | **Resend** (free tier) | Appointment confirmation emails; React Email templates; 100 emails/day free |
-| Error tracking | Sentry (free tier) | Phase 10 |
+| Error tracking | Sentry (free tier) | Phase 0 |
 | Forms | React Hook Form + Zod resolver | Shared validation schemas between client and server |
 | Server state | TanStack Query (React Query) | Caching, revalidation, and server state management |
 | Client state | Zustand | Ephemeral UI state (offline queue, notification count) |

@@ -88,6 +88,6 @@
 2. **Free during development**: build and test at zero cost.
 3. **Usage-based in production**: cost scales with actual use, not a flat instance fee.
 4. **Branching for CI**: a staging/test branch per PR is trivial.
-5. **Pure Postgres**: no lock-in; the ORM (Prisma/Drizzle/Kysely) talks to standard Postgres.
+5. **Pure Postgres**: no lock-in; Drizzle ORM talks to standard Postgres.
 
 Supabase is worth revisiting only if the team later wants to consolidate realtime into one vendor. RDS is not recommended unless the product grows to enterprise scale or requires multi-region compliance.

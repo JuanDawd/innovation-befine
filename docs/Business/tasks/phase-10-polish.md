@@ -79,7 +79,7 @@ Verify and document Neon's built-in backup behavior. Neon free tier provides poi
 Set up a free uptime monitor (e.g. Better Uptime free tier, UptimeRobot, or Vercel's built-in checks) to ping the app's health endpoint every 5 minutes and alert via email if it goes down.
 
 ### Acceptance criteria
-- [ ] A `/api/health` endpoint returns `{ status: "ok" }` with a 200 response
+- [ ] A `/api/health` endpoint returns `{ status: "ok", db: "ok" }` with a 200 response; the endpoint includes a lightweight DB connectivity check (`SELECT 1`) — if the DB is unreachable, it returns `{ status: "degraded", db: "unreachable" }` with a 503
 - [ ] Monitor configured to check the endpoint every 5 minutes
 - [ ] Alert email sent within 5 minutes of a downtime event (tested by temporarily returning 500)
 
@@ -167,4 +167,5 @@ Checklist items:
 
 ### Acceptance criteria
 - [ ] Every item on the checklist above is ticked
+- [ ] **Security review completed**: CSRF protection verified, XSS prevention confirmed (CSP headers set), rate limiting active on all mutation endpoints (not just login), SQL injection prevention verified (all queries use parameterized statements via Drizzle), no PII leaked in API error responses
 - [ ] A "go / no-go" decision is made by the business owner before staff cutover

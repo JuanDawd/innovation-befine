@@ -112,6 +112,7 @@ Install and configure Drizzle ORM with the Neon serverless adapter. Set up `driz
 - [ ] Schema files live in `packages/db/src/schema/`
 - [ ] An empty initial migration runs successfully against Neon
 - [ ] Schema naming conventions documented at the top of the first schema file: table names `snake_case` plural (e.g. `employees`); column names `snake_case`; enums named `{entity}_{field}_enum`; indexes named `idx_{table}_{columns}`; all timestamps use `timestamp with time zone`
+- [ ] Shared enums defined once and referenced by multiple tables: `payment_method_enum` (`cash` | `card` | `transfer`) used by `ticket_payments` (T039), `large_order_payments` (T057), and `payouts` (T066) — not redefined independently in each migration
 
 ---
 
@@ -302,6 +303,7 @@ Write `docs/standards-api.md` defining the API conventions used throughout the p
 - [ ] Server state caching pattern documented: use **TanStack Query** for GET-derived data; invalidate queries after mutations; define stale times for common data (catalog: 5 min, tickets: 0 / real-time)
 - [ ] Form pattern documented: use **React Hook Form** + `zodResolver`; share Zod schemas between client and server via `packages/types`
 - [ ] Client state pattern documented: use **Zustand** for ephemeral UI state (e.g. offline queue count, sidebar open/close); do not use Zustand for server-derived data
+- [ ] Rate limiting policy documented: apply rate limiting to all mutation endpoints (not just login). Policy: login = Better Auth default; password reset = 5 requests/hour per email; email sends = 10/minute per user; ticket creation = 30/minute per user; payout recording = 5/minute per admin. Use a rate-limiting middleware or library (e.g. `@upstash/ratelimit` or custom token bucket)
 
 ---
 

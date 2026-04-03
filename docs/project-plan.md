@@ -215,12 +215,13 @@ flowchart LR
   P4A --> P5
   P4B --> P6
   P4A --> P7 --> P8
+  P4B --> P7
   P4A --> P9
   P8 --> P10
   P9 --> P10
 ```
 
-> 4B and 5 can run in parallel after 4A. Phase 6 depends on 4B (batches link to large orders) but not on Phase 5. Phase 5 → Phase 6 edge removed after Senior SWE review (no Phase 6 task depends on appointments).
+> 4B and 5 can run in parallel after 4A. Phase 6 depends on 4B (batches link to large orders) but not on Phase 5. Phase 5 → Phase 6 edge removed after Senior SWE review (no Phase 6 task depends on appointments). Phase 7 depends on both 4A (ticket earnings) and 4B (clothier earnings from approved batch pieces).
 
 ---
 

@@ -11,7 +11,7 @@
 **Dependencies:** T029
 
 ### What to do
-Create `large_orders`: `id`, `client_id` (FK — must be a saved client, not guest), `description` (text), `total_price`, `deposit_paid`, `balance_due` (computed: `total_price - sum(payments)`), `status` (`pending` | `in_production` | `ready` | `delivered` | `paid_in_full`), `estimated_delivery_at` (nullable), `notes` (nullable), `created_by`, `created_at`, `updated_at`.
+Create `large_orders`: `id`, `client_id` (FK — must be a saved client, not guest), `description` (text), `total_price`, `deposit_paid`, `balance_due` (computed: `total_price - sum(payments)`), `status` (`pending` | `in_production` | `ready` | `delivered` | `paid_in_full` | `cancelled`), `estimated_delivery_at` (nullable), `notes` (nullable), `cancellation_reason` (nullable — required when status is `cancelled`), `cancelled_at` (nullable), `created_by`, `created_at`, `updated_at`.
 
 Also create `large_order_payments`: `id`, `order_id` (FK), `amount`, `method` (`cash` | `card` | `transfer`), `paid_at`, `recorded_by`.
 
@@ -47,10 +47,12 @@ Build the large order form: select saved client, enter description, total price,
 **Dependencies:** T058
 
 ### What to do
-Add status transition buttons to the order detail view: `pending → in_production → ready → delivered → paid_in_full`. Only admin and secretary can update the status. Each transition records `updated_by` and `updated_at`.
+Add status transition buttons to the order detail view: `pending → in_production → ready → delivered → paid_in_full`. Also add a `cancelled` action available from any status except `paid_in_full`. Only admin and secretary can update the status. Each transition records `updated_by` and `updated_at`. Cancellation requires a reason and records `cancelled_at`.
 
 ### Acceptance criteria
 - [ ] Status can only move forward (no backward transitions without a direct DB override)
+- [ ] `cancelled` is reachable from any status except `paid_in_full`; requires a cancellation reason
+- [ ] Cancellation of an order with deposits recorded prompts a confirmation noting whether deposits are refundable (business decision: document refund policy)
 - [ ] Each transition is timestamped
 - [ ] Status badge on the order card/list updates immediately
 
@@ -95,7 +97,7 @@ Allow admin/secretary to record additional payments against a large order over t
 
 **Phase:** 6 — Large orders
 **Status:** pending
-**Dependencies:** T059
+**Dependencies:** T059, T061
 
 ### What to do
 Build the large orders list screen: all orders with client name, status, total price, balance due, and ETA. Filter by status. Admin and secretary can access; cashier read-only.
