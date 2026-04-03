@@ -69,7 +69,7 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | T098 | Real-time abstraction layer _(new)_                                  | pending | T009         |
 | T099 | Internationalization (i18n) setup _(new)_                            | done    | T001         |
 | T103 | Design system, design tokens, and component patterns _(new)_         | done    | T008         |
-| T104 | Key screen wireframes and layout specification _(new)_               | pending | T103         |
+| T104 | Key screen wireframes and layout specification _(new)_               | done    | T103         |
 
 ---
 
@@ -252,7 +252,7 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | Phase                     | Tasks   | Done   | In progress |
 | ------------------------- | ------- | ------ | ----------- |
 | 0A — Foundation (Infra)   | 13      | 5      | 0           |
-| 0B — Foundation (Std/Dsg) | 7       | 4      | 0           |
+| 0B — Foundation (Std/Dsg) | 7       | 5      | 0           |
 | 1 — Identity              | 13      | 0      | 0           |
 | 2 — Catalog               | 6       | 0      | 0           |
 | 3 — Clients               | 4       | 0      | 0           |
@@ -264,7 +264,7 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | 8 — Analytics             | 8       | 0      | 0           |
 | 9 — Offline               | 5       | 0      | 0           |
 | 10 — Polish               | 9       | 0      | 0           |
-| **Total**                 | **108** | **10** | **0**       |
+| **Total**                 | **108** | **11** | **0**       |
 
 ---
 
