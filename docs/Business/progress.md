@@ -55,7 +55,7 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | T011 | Seed script for development (one user per role)                     | pending | T010         |
 | T085 | Sentry error tracking setup _(moved from Phase 10)_                 | pending | T004         |
 | T094 | Testing infrastructure (Vitest + Playwright) _(new)_                | done    | T001         |
-| T095 | CI/CD pipeline (GitHub Actions) _(new)_                             | pending | T094, T002   |
+| T095 | CI/CD pipeline (GitHub Actions) _(new)_                             | done    | T094, T002   |
 
 ---
 
@@ -249,22 +249,22 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 
 ## Totals
 
-| Phase                     | Tasks   | Done  | In progress |
-| ------------------------- | ------- | ----- | ----------- |
-| 0A — Foundation (Infra)   | 13      | 4     | 0           |
-| 0B — Foundation (Std/Dsg) | 7       | 4     | 0           |
-| 1 — Identity              | 13      | 0     | 0           |
-| 2 — Catalog               | 6       | 0     | 0           |
-| 3 — Clients               | 4       | 0     | 0           |
-| 4A — Tickets and checkout | 13      | 0     | 0           |
-| 4B — Cloth batches        | 4       | 0     | 0           |
-| 5 — Appointments          | 8       | 0     | 0           |
-| 6 — Large orders          | 6       | 0     | 0           |
-| 7 — Payroll               | 11      | 0     | 0           |
-| 8 — Analytics             | 8       | 0     | 0           |
-| 9 — Offline               | 5       | 0     | 0           |
-| 10 — Polish               | 9       | 0     | 0           |
-| **Total**                 | **108** | **9** | **0**       |
+| Phase                     | Tasks   | Done   | In progress |
+| ------------------------- | ------- | ------ | ----------- |
+| 0A — Foundation (Infra)   | 13      | 5      | 0           |
+| 0B — Foundation (Std/Dsg) | 7       | 4      | 0           |
+| 1 — Identity              | 13      | 0      | 0           |
+| 2 — Catalog               | 6       | 0      | 0           |
+| 3 — Clients               | 4       | 0      | 0           |
+| 4A — Tickets and checkout | 13      | 0      | 0           |
+| 4B — Cloth batches        | 4       | 0      | 0           |
+| 5 — Appointments          | 8       | 0      | 0           |
+| 6 — Large orders          | 6       | 0      | 0           |
+| 7 — Payroll               | 11      | 0      | 0           |
+| 8 — Analytics             | 8       | 0      | 0           |
+| 9 — Offline               | 5       | 0      | 0           |
+| 10 — Polish               | 9       | 0      | 0           |
+| **Total**                 | **108** | **10** | **0**       |
 
 ---
 
