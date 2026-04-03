@@ -91,3 +91,76 @@
 5. **Pure Postgres**: no lock-in; Drizzle ORM talks to standard Postgres.
 
 Supabase is worth revisiting only if the team later wants to consolidate realtime into one vendor. RDS is not recommended unless the product grows to enterprise scale or requires multi-region compliance.
+
+---
+
+## Storage capacity estimate (free tier)
+
+> Added April 2026 (H-07 resolution). Estimates whether 6 months of production data fits within Neon's 0.5 GB free tier.
+
+### Assumptions
+
+- Business operates 6 days/week (~26 days/month, ~156 days in 6 months)
+- ~20 employees, ~500 saved clients
+- ~50 tickets/day, ~3 items per ticket
+- ~30 appointments/day
+- ~5 cloth batches/day, ~10 pieces per batch
+- ~1 payout per employee per period (bi-weekly → ~12 payouts/employee in 6 months)
+
+### Row estimates (6 months)
+
+| Table | Rows | Avg row size | Estimated size |
+|-------|------|-------------|---------------|
+| `employees` | 20 | 200 B | ~4 KB |
+| `clients` | 500 | 150 B | ~75 KB |
+| `business_days` | 156 | 100 B | ~16 KB |
+| `tickets` | 7,800 | 200 B | ~1.5 MB |
+| `ticket_items` | 23,400 | 250 B | ~5.6 MB |
+| `ticket_payments` | 7,800 | 150 B | ~1.1 MB |
+| `appointments` | 4,680 | 300 B | ~1.4 MB |
+| `cloth_batches` | 780 | 200 B | ~150 KB |
+| `batch_pieces` | 7,800 | 200 B | ~1.5 MB |
+| `large_orders` | 50 | 400 B | ~20 KB |
+| `large_order_payments` | 150 | 150 B | ~22 KB |
+| `payouts` | 240 | 250 B | ~60 KB |
+| `payout_ticket_items` | 23,400 | 50 B | ~1.1 MB |
+| `payout_batch_pieces` | 7,800 | 50 B | ~380 KB |
+| `employee_absences` | 500 | 100 B | ~50 KB |
+| `catalog_audit_log` | 200 | 500 B | ~100 KB |
+| Auth tables (users, sessions) | 500 | 300 B | ~150 KB |
+| **Indexes** (estimated) | — | — | ~15 MB |
+| **Total estimated** | — | — | **~28 MB** |
+
+### Verdict
+
+6 months of production data is estimated at **~28 MB**, well within the **0.5 GB (512 MB)** free tier limit. The analytics seed script (T101) generating the same volume should also fit comfortably.
+
+**Upgrade threshold:** At the current growth rate, the database would reach 0.5 GB after approximately **8–10 years** of production use. Monitor via Neon dashboard; set an alert at 400 MB.
+
+The free tier is sufficient for the foreseeable future. Upgrading to the paid tier ($0.35/GB-month) is not needed for MVP.
+
+---
+
+## Cold start mitigation
+
+> Added April 2026 (H-12 resolution). Addresses the Neon free-tier auto-suspend delay.
+
+### The issue
+
+Neon free tier auto-suspends the compute endpoint after **5 minutes of inactivity**. The first query after suspension takes **~0.5–2 seconds** to re-activate ("cold start"). For a POS system, this delay affects the first transaction of the business day — specifically the "Open Day" action (T019).
+
+### Mitigation: loading state (chosen approach)
+
+Add a clear loading state (spinner + "Connecting..." message) to the "Open Day" button in T019. The user sees immediate feedback that the operation is in progress. Once the DB responds, the UI transitions to the normal state.
+
+This is the simplest approach and requires no additional infrastructure.
+
+### Alternatives (not chosen for MVP)
+
+- **Keep-alive cron:** A scheduled function (Vercel Cron or GitHub Actions) pings the DB every 4 minutes to prevent suspension. This eliminates cold starts but adds complexity and consumes compute hours from the free tier.
+- **Disable auto-suspend:** Available on paid tiers only. Eliminates cold starts entirely but incurs a monthly cost.
+- **Connection pooling:** Neon's connection pooler reduces connection setup time but does not eliminate the compute cold start.
+
+### Recommendation
+
+Use the loading state approach for MVP. If the delay is noticeable in practice (staff report frustration), evaluate the keep-alive cron as a follow-up.

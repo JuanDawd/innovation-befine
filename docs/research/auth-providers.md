@@ -96,3 +96,46 @@ This app has a **non-trivial role system** (admin, secretary, stylists by subtyp
 If build speed is the top constraint, **Clerk** is the fastest path to a working auth system; just accept the lock-in and that pricing will need reviewing if the product ever goes public. **Auth.js** is the fallback if Better Auth proves immature during the Phase 0 spike — but you would need to build RBAC manually.
 
 **Proposed action:** spike Better Auth in Phase 0 for 1–2 hours; if RBAC integration feels clean, commit to it.
+
+---
+
+## Migration path (fallback plan)
+
+> Added April 2026 (H-04 resolution). Documents the concrete steps to migrate away from Better Auth if critical issues emerge after Phase 0.
+
+Better Auth is the newest option (2024–2025). The 1–2 hour spike validates initial setup, but production edge cases (session handling under load, RBAC with nested permissions) may surface later. The following plan ensures migration is feasible without rewriting the entire auth layer.
+
+### Architecture safeguard
+
+The auth layer is **abstracted behind middleware** (T018). All route protection, session access, and role checks go through a centralized middleware layer — no component directly imports Better Auth internals. This means swapping the auth provider requires changes in one place, not across every protected route.
+
+### Migration to Auth.js (NextAuth v5)
+
+**Estimated effort:** 2 days (for a team familiar with both libraries).
+
+1. Install Auth.js and configure the Postgres adapter (reuse existing Neon connection)
+2. Create migration script to convert Better Auth user/session tables to Auth.js schema
+3. Replace `packages/auth/` internals: swap session retrieval, login, logout, and role access functions
+4. Implement RBAC manually (Auth.js has no built-in RBAC): add a `role` field to the user record; create a `hasRole(session, role)` utility
+5. Update T018 middleware to use Auth.js session API
+6. Re-test all RBAC negative cases from `docs/testing/rbac-matrix.md`
+7. Verify rate limiting (Auth.js does not include rate limiting — add via `@upstash/ratelimit` or custom middleware)
+
+### Migration to Clerk
+
+**Estimated effort:** 1.5 days (Clerk has pre-built components).
+
+1. Create a Clerk application and configure roles via Clerk Organizations
+2. Migrate user records to Clerk (Clerk provides a user import API)
+3. Replace `packages/auth/` internals with Clerk SDK (`@clerk/nextjs`)
+4. Update T018 middleware to use `auth()` from Clerk
+5. Re-test RBAC
+6. **Trade-off:** passwords and sessions move to Clerk's servers (vendor lock-in; data sovereignty concern for Colombia — see `docs/research/data-privacy-compliance.md`)
+
+### Decision trigger
+
+Migrate if any of the following occur:
+- Better Auth session handling fails under concurrent users (> 10 simultaneous sessions)
+- RBAC plugin cannot support the permission model needed (e.g., "stylist can only see own tickets")
+- A critical security vulnerability is disclosed with no patch within 7 days
+- Better Auth project becomes unmaintained (no release for 6+ months)

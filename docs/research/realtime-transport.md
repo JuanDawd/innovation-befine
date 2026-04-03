@@ -116,3 +116,9 @@ Same model as Pusher but with message history, delivery guarantees (QoS levels),
 **Fallback / long-term:** native SSE with Postgres `LISTEN/NOTIFY` requires no paid vendor and keeps everything inside the existing Postgres instance. Build this in Phase 9 (offline hardening) if the team wants to eliminate the Pusher dependency.
 
 WebSocket (self-hosted via Socket.io or Soketi) is **not compatible with Vercel** and should not be considered unless the hosting decision changes.
+
+---
+
+## Pusher-to-SSE migration: post-MVP
+
+> Added April 2026 (M-18 resolution). Migration from Pusher to native SSE + Postgres LISTEN/NOTIFY is a **post-MVP activity**. No task is allocated in the current project plan. The real-time abstraction layer (T098) ensures that this migration, when undertaken, requires changes only in `packages/realtime/` — not in consuming code.
