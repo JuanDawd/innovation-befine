@@ -73,6 +73,13 @@ The company currently tracks daily services, employee pay, and cloth production 
 
 > Full research and rationale for each decision: see `docs/research/`.
 
+**Explicit scope exclusions (MVP):**
+- File/image uploads (profile photos, cloth order reference images) — not supported in MVP
+- Tips, promotions, discount codes
+- Multi-branch / multi-location support
+- Guest-to-saved-client conversion (deferred to post-MVP)
+- Pusher-to-SSE real-time migration (post-MVP)
+
 ---
 
 ## Infrastructure costs (MVP — free tiers)

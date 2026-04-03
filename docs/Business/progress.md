@@ -9,29 +9,65 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 > **Updated after Senior Software Engineer review (April 2026).** See `docs/research/senior_software_engineer.md` for all findings. All 25 findings accepted. Net change: 94 → 103 tasks. T085 moved Phase 10 → Phase 0; T032 split into T032 (Phase 3) + T032b (Phase 5); new tasks: T094, T095, T097, T098, T099, T100, T101, T102. Multiple existing tasks received additional acceptance criteria (T002, T005, T006, T018, T025, T045, T049, T083).
 >
 > **Updated after Senior Designer review (April 2026).** See `docs/research/senior_designer.md` for all 26 findings. All accepted. Net change: 103 → 106 tasks. New tasks: T103 (design system), T104 (wireframes), T105 (brand identity). Multiple existing tasks received additional UX/design acceptance criteria (T002, T014, T021, T024, T027, T030, T035, T036, T038, T046, T048, T050, T052, T062, T069, T070, T072, T073, T074, T082, T083, T084, T088, T090, T092, T093, T099). Recharts and Lucide Icons added to tech stack.
+>
+> **Updated after two independent project assessments + QA review actions (April 2026).** Net change: 106 → 108 tasks. New tasks: T106 (UAT), T107 (performance testing). Phase 0 split into 0A (infrastructure) and 0B (standards & design). 17 stakeholder decisions resolved. Multiple existing tasks received additional ACs (T002, T006, T012, T019, T023, T032b, T049, T057, T065, T066, T083, T085, T089, T094, T095, T098, T099). 6 new docs created: data privacy compliance, front-end library rationale, 4 test plans + testing README + RBAC matrix + concurrency test plan. See `docs/issues-tracker.md` resolution log for full details.
 
 ---
 
-## Phase 0 — Foundation
+## Resolved decisions
+
+> All confirmed April 2026 (stakeholder decision session).
+
+| Decision | Resolution |
+| -------- | ---------- |
+| Currency | **COP** (Colombian Pesos) — no cents, integer storage = whole pesos |
+| Country | **Colombia** — Ley 1581 de 2012, timezone America/Bogota (UTC-5) |
+| Phase 0 scope | **Split into 0A** (infrastructure) **and 0B** (standards & design) |
+| Brand assets | **None exist** — create from scratch in T105 |
+| Employee schedules | **Part-time employees exist** — `expected_work_days` field added to T012 |
+| Client uniqueness | **No unique constraint** on phone/email — staff manages duplicates |
+| Business day reopen | **Yes** — admin can reopen most recently closed day with audit trail |
+| No-show decrement | **Yes** — decrement when no-show status is reversed |
+| Guest-to-client conversion | **Deferred** to post-MVP |
+| Payout audit trail | **Yes** — `original_computed_amount` + `adjustment_reason` on payouts |
+| Commission rounding | **Banker's rounding** (round half-even) everywhere |
+| Appointment-catalog link | **Add `service_variant_id` FK** (nullable) to appointments |
+| `deposit_paid` column | **Removed** — computed from payments table |
+| Pusher-to-SSE migration | **Post-MVP** documentation only, no task |
+| File/image storage | **Explicitly out of scope** for MVP |
+| Neon cold start | **Loading state** on "Open Day" action |
+
+---
+
+## Phase 0A — Foundation (Infrastructure)
+
+
+| ID   | Task                                                                | Status  | Dependencies |
+| ---- | ------------------------------------------------------------------- | ------- | ------------ |
+| T001 | Initialize Next.js monorepo with Turborepo                          | pending | —            |
+| T003 | Environment variable schema and runtime validation                  | pending | T001         |
+| T004 | Vercel project setup and staging deploys                            | pending | T001         |
+| T005 | Neon Postgres setup with dev and staging branches                   | pending | T004         |
+| T006 | Drizzle ORM setup and migration workflow                            | pending | T005         |
+| T007 | Better Auth spike and integration (RBAC + rate limiting validation) | pending | T006         |
+| T008 | Base UI (Base Web) spike for Next.js App Router                     | pending | T001         |
+| T009 | Pusher free tier spike for real-time events                         | pending | T001, T004   |
+| T010 | RBAC role definitions (roles + stylist subtypes)                    | pending | T007         |
+| T011 | Seed script for development (one user per role)                     | pending | T010         |
+| T085 | Sentry error tracking setup *(moved from Phase 10)*                 | pending | T004         |
+| T094 | Testing infrastructure (Vitest + Playwright) *(new)*                | pending | T001         |
+| T095 | CI/CD pipeline (GitHub Actions) *(new)*                             | pending | T094, T002   |
+
+
+---
+
+## Phase 0B — Foundation (Standards & Design)
 
 
 | ID   | Task                                                                 | Status  | Dependencies |
 | ---- | -------------------------------------------------------------------- | ------- | ------------ |
-| T001 | Initialize Next.js monorepo with Turborepo                           | pending | —            |
 | T002 | Configure code quality tooling (ESLint, Prettier, Husky, Zod policy) | pending | T001         |
-| T003 | Environment variable schema and runtime validation                   | pending | T001         |
-| T004 | Vercel project setup and staging deploys                             | pending | T001         |
-| T005 | Neon Postgres setup with dev and staging branches                    | pending | T004         |
-| T006 | Drizzle ORM setup and migration workflow                             | pending | T005         |
-| T007 | Better Auth spike and integration (RBAC + rate limiting validation)  | pending | T006         |
-| T008 | Base UI (Base Web) spike for Next.js App Router                      | pending | T001         |
-| T009 | Pusher free tier spike for real-time events                          | pending | T001, T004   |
-| T010 | RBAC role definitions (roles + stylist subtypes)                     | pending | T007         |
-| T011 | Seed script for development (one user per role)                      | pending | T010         |
 | T077 | Offline policy document *(moved from Phase 9)*                       | pending | —            |
-| T085 | Sentry error tracking setup *(moved from Phase 10)*                  | pending | T004         |
-| T094 | Testing infrastructure (Vitest + Playwright) *(new)*                 | pending | T001         |
-| T095 | CI/CD pipeline (GitHub Actions) *(new)*                              | pending | T094, T002   |
 | T097 | API design conventions document *(new)*                              | pending | T001         |
 | T098 | Real-time abstraction layer *(new)*                                  | pending | T009         |
 | T099 | Internationalization (i18n) setup *(new)*                            | pending | T001         |
@@ -197,6 +233,7 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | T074 | Per-employee performance views and drill-down         | pending | T071         |
 | T075 | Analytics database indexes and query optimization     | pending | T071         |
 | T101 | Analytics seed script (6 months of data) *(new)*      | pending | T071         |
+| T107 | Performance testing *(new — QA review Q11)*           | pending | T101         |
 | T076 | CSV export for accountant (stretch)                   | pending | T071         |
 
 
@@ -227,10 +264,11 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | T084 | Loading states and optimistic UI                     | pending | all phases                               |
 | T086 | Database backup policy and restore drill             | pending | T005                                     |
 | T087 | Uptime monitoring (`/api/health` endpoint + monitor) | pending | T004                                     |
-| T088 | Internal training guide (one page per role)          | pending | all phases                               |
-| T102 | Stale-tab version detection *(new)*                  | pending | T004                                     |
-| T100 | Data migration from existing spreadsheets *(new)*    | pending | T029, T030                               |
-| T089 | Production cutover checklist and go-live             | pending | T083, T084, T086, T087, T088, T100, T102 |
+| T088 | Internal training guide (one page per role)          | pending | all phases                                      |
+| T102 | Stale-tab version detection *(new)*                  | pending | T004                                            |
+| T100 | Data migration from existing spreadsheets *(new)*    | pending | T029, T030                                      |
+| T106 | User acceptance testing (UAT) *(new — QA review Q7)* | pending | T088                                            |
+| T089 | Production cutover checklist and go-live             | pending | T083, T084, T086, T087, T088, T100, T102, T106 |
 
 
 ---
@@ -240,7 +278,8 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 
 | Phase                     | Tasks   | Done  | In progress |
 | ------------------------- | ------- | ----- | ----------- |
-| 0 — Foundation            | 20      | 0     | 0           |
+| 0A — Foundation (Infra)   | 13      | 0     | 0           |
+| 0B — Foundation (Std/Dsg) | 7       | 0     | 0           |
 | 1 — Identity              | 13      | 0     | 0           |
 | 2 — Catalog               | 6       | 0     | 0           |
 | 3 — Clients               | 4       | 0     | 0           |
@@ -249,10 +288,10 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | 5 — Appointments          | 8       | 0     | 0           |
 | 6 — Large orders          | 6       | 0     | 0           |
 | 7 — Payroll               | 11      | 0     | 0           |
-| 8 — Analytics             | 7       | 0     | 0           |
+| 8 — Analytics             | 8       | 0     | 0           |
 | 9 — Offline               | 5       | 0     | 0           |
-| 10 — Polish               | 8       | 0     | 0           |
-| **Total**                 | **106** | **0** | **0**       |
+| 10 — Polish               | 9       | 0     | 0           |
+| **Total**                 | **108** | **0** | **0**       |
 
 
 ---
