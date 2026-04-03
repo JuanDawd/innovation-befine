@@ -6,24 +6,25 @@
 
 ## Summary table
 
-| | Auth.js (NextAuth v5) | Clerk | Better Auth |
-|--|----------------------|-------|------------|
-| **Type** | Self-hosted library | Managed SaaS | Self-hosted library |
-| **Cost** | Free | Free up to 10K MAU, then ~$0.02/MAU | Free |
-| **Setup speed** | 30–60 min (DB setup required) | 5–30 min (managed) | 20–40 min |
-| **Vendor lock-in** | None | High | None |
-| **Built-in 2FA** | No | Yes | Yes |
-| **Built-in RBAC** | No | Yes (organizations) | Yes |
-| **Passkeys** | No | Yes | Yes |
-| **Pre-built UI** | No (you build) | Yes (styled components) | No (you build) |
-| **Weekly downloads** | ~2.5M | ~1M | Growing rapidly |
-| **Maturity** | Very mature (v1 since 2020) | Mature | New (2024–2025) |
+|                      | Auth.js (NextAuth v5)         | Clerk                               | Better Auth         |
+| -------------------- | ----------------------------- | ----------------------------------- | ------------------- |
+| **Type**             | Self-hosted library           | Managed SaaS                        | Self-hosted library |
+| **Cost**             | Free                          | Free up to 10K MAU, then ~$0.02/MAU | Free                |
+| **Setup speed**      | 30–60 min (DB setup required) | 5–30 min (managed)                  | 20–40 min           |
+| **Vendor lock-in**   | None                          | High                                | None                |
+| **Built-in 2FA**     | No                            | Yes                                 | Yes                 |
+| **Built-in RBAC**    | No                            | Yes (organizations)                 | Yes                 |
+| **Passkeys**         | No                            | Yes                                 | Yes                 |
+| **Pre-built UI**     | No (you build)                | Yes (styled components)             | No (you build)      |
+| **Weekly downloads** | ~2.5M                         | ~1M                                 | Growing rapidly     |
+| **Maturity**         | Very mature (v1 since 2020)   | Mature                              | New (2024–2025)     |
 
 ---
 
 ## Auth.js (NextAuth v5)
 
 ### Pros
+
 - **Most adopted**: ~2.5M weekly downloads; huge community, tons of examples.
 - **80+ OAuth providers** (Google, GitHub, Facebook, Apple, etc.) out of the box.
 - **Works with standard Postgres** (or any DB); full data ownership.
@@ -31,6 +32,7 @@
 - Very well documented for Next.js.
 
 ### Cons
+
 - **Limited features**: no built-in 2FA, passkeys, RBAC, or impersonation — you build these yourself.
 - **v5 migration pain**: breaking changes from v4; some community resources are still on v4.
 - **You own the UI**: login page, password reset, profile — all custom.
@@ -41,6 +43,7 @@
 ## Clerk
 
 ### Pros
+
 - **Fastest to ship**: pre-built `<SignIn />`, `<UserButton />`, `<UserProfile />` components; minimal code.
 - **Feature-rich managed**: MFA, passkeys, magic links, social OAuth, session management, device tracking — all included.
 - **Multi-tenancy / organizations built-in**: close to the role model this app needs.
@@ -49,6 +52,7 @@
 - No database setup for auth.
 
 ### Cons
+
 - **Pricing scales**: free up to 10K MAU; then ~$0.02/MAU. An internal tool with few users stays free; if the product expands, cost grows.
 - **Vendor lock-in**: user records (passwords, sessions) live on Clerk's servers. Migrating away later is painful.
 - **Less customizable UI**: pre-built components are styled by Clerk; matching a custom design requires overriding styles.
@@ -60,6 +64,7 @@
 ## Better Auth
 
 ### Pros
+
 - **Best feature-to-cost ratio**: 2FA, passkeys, magic links, RBAC, organizations, impersonation — all built-in and free.
 - **No vendor lock-in**: fully self-hosted; all data stays in your Postgres DB.
 - **TypeScript-native**: great DX, strong typing.
@@ -68,6 +73,7 @@
 - Data sovereignty: credentials and sessions in your own DB.
 
 ### Cons
+
 - **Newest of the three** (2024–2025): smaller community, fewer production references, fewer StackOverflow answers.
 - **No pre-built UI**: you design and build every auth screen.
 - **Self-managed security updates**: you must apply library updates when vulnerabilities are patched.
@@ -79,15 +85,16 @@
 
 This app has a **non-trivial role system** (admin, secretary, stylists by subtype, clothier) and is **internal** (not a public SaaS with thousands of MAUs).
 
-| Criterion | Weight for this project |
-|-----------|------------------------|
-| Cost | Medium — few users, but internal tool budget matters |
-| RBAC | High — multiple roles with different screens and permissions |
-| Data ownership | Medium — internal company data |
-| Time to ship | High — MVP should come fast |
-| Vendor lock-in | Medium — small team, limited migration risk |
+| Criterion      | Weight for this project                                      |
+| -------------- | ------------------------------------------------------------ |
+| Cost           | Medium — few users, but internal tool budget matters         |
+| RBAC           | High — multiple roles with different screens and permissions |
+| Data ownership | Medium — internal company data                               |
+| Time to ship   | High — MVP should come fast                                  |
+| Vendor lock-in | Medium — small team, limited migration risk                  |
 
 **Better Auth** is the recommended choice:
+
 - Provides the RBAC model this app needs natively.
 - Free forever regardless of how many internal staff log in.
 - Data stays in the project's own Postgres instance (same DB as everything else).
@@ -135,6 +142,7 @@ The auth layer is **abstracted behind middleware** (T018). All route protection,
 ### Decision trigger
 
 Migrate if any of the following occur:
+
 - Better Auth session handling fails under concurrent users (> 10 simultaneous sessions)
 - RBAC plugin cannot support the permission model needed (e.g., "stylist can only see own tickets")
 - A critical security vulnerability is disclosed with no patch within 7 days

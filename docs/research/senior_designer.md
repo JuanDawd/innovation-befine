@@ -45,15 +45,15 @@ Every task with a UI deliverable (T016, T024, T030, T036, T050, T067, T072, etc.
 
 Key screens that urgently need layout direction:
 
-| Screen | Task | Why critical |
-|--------|------|-------------|
-| Cashier dashboard | T036 | Used all day; needs optimized card layout, grouping, and real-time update choreography |
-| Checkout flow | T038 | Financial transaction; must feel trustworthy and prevent errors |
-| Admin home | T093 | First screen after login; sets the tone for the whole app |
-| Login page | T016 | First impression; brand presence |
-| Appointment calendar | T052 | Complex visual layout; calendar UX varies wildly by implementation |
-| Payroll settlement | T067 | Data-dense; breakdown + confirmation flow |
-| Analytics dashboard | T072–T074 | Data visualization; charts, comparisons, drill-downs |
+| Screen               | Task      | Why critical                                                                           |
+| -------------------- | --------- | -------------------------------------------------------------------------------------- |
+| Cashier dashboard    | T036      | Used all day; needs optimized card layout, grouping, and real-time update choreography |
+| Checkout flow        | T038      | Financial transaction; must feel trustworthy and prevent errors                        |
+| Admin home           | T093      | First screen after login; sets the tone for the whole app                              |
+| Login page           | T016      | First impression; brand presence                                                       |
+| Appointment calendar | T052      | Complex visual layout; calendar UX varies wildly by implementation                     |
+| Payroll settlement   | T067      | Data-dense; breakdown + confirmation flow                                              |
+| Analytics dashboard  | T072–T074 | Data visualization; charts, comparisons, drill-downs                                   |
 
 **Recommendation:** Add a task to Phase 0 (or a new Phase 0.5 / design sprint) to create low-fidelity wireframes for the 7 key screens listed above. These don't need to be pixel-perfect — a shared Figma file with layout sketches, or even documented component layouts in Markdown, would eliminate 80% of visual inconsistency risk. At minimum, document the **layout patterns** (full-width list, card grid, sidebar+content, form page) and when to use each.
 
@@ -65,12 +65,12 @@ Key screens that urgently need layout direction:
 
 The business doc defines four roles with very different daily workflows:
 
-| Role | Primary action | Frequency | Primary device | UX priority |
-|------|---------------|-----------|----------------|-------------|
-| Cashier/admin | Checkout, review dashboard | Every few minutes | Desktop (POS station) | Speed, glanceability, keyboard efficiency |
-| Stylist | Log service, mark awaiting payment | Every 30–60 min | Phone (between clients) | One-handed, fast, minimal steps |
-| Clothier | View batch, mark piece done | Every few minutes | Phone (at workstation) | Tap-and-done, progress visibility |
-| Secretary | Book appointments, create batches | Every 15–30 min | Desktop or phone | Form efficiency, calendar usability |
+| Role          | Primary action                     | Frequency         | Primary device          | UX priority                               |
+| ------------- | ---------------------------------- | ----------------- | ----------------------- | ----------------------------------------- |
+| Cashier/admin | Checkout, review dashboard         | Every few minutes | Desktop (POS station)   | Speed, glanceability, keyboard efficiency |
+| Stylist       | Log service, mark awaiting payment | Every 30–60 min   | Phone (between clients) | One-handed, fast, minimal steps           |
+| Clothier      | View batch, mark piece done        | Every few minutes | Phone (at workstation)  | Tap-and-done, progress visibility         |
+| Secretary     | Book appointments, create batches  | Every 15–30 min   | Desktop or phone        | Form efficiency, calendar usability       |
 
 No task addresses these differences. The navigation shell (T090) mentions "role-aware nav items" but not role-optimized layouts. A clothier marking pieces done on a phone needs a fundamentally different screen than an admin reviewing payroll on a desktop.
 
@@ -91,13 +91,13 @@ No task addresses these differences. The navigation shell (T090) mentions "role-
 
 The app has status-driven entities:
 
-| Entity | Statuses |
-|--------|----------|
-| Tickets | `logged`, `awaiting_payment`, `closed`, `reopened` |
+| Entity       | Statuses                                                                  |
+| ------------ | ------------------------------------------------------------------------- |
+| Tickets      | `logged`, `awaiting_payment`, `closed`, `reopened`                        |
 | Appointments | `booked`, `confirmed`, `completed`, `cancelled`, `rescheduled`, `no_show` |
-| Batch pieces | `pending`, `done_pending_approval`, `approved` |
-| Large orders | `pending`, `in_production`, `ready`, `delivered`, `paid_in_full` |
-| Business day | open, closed |
+| Batch pieces | `pending`, `done_pending_approval`, `approved`                            |
+| Large orders | `pending`, `in_production`, `ready`, `delivered`, `paid_in_full`          |
+| Business day | open, closed                                                              |
 
 Without a unified colour-coding system, each screen will use arbitrary colours for statuses. Users won't develop intuition for "green = done, yellow = needs attention, red = problem."
 
@@ -535,34 +535,34 @@ T070 (unsettled earnings alert) and T093 (admin home) mention "badge" and "alert
 
 ## Summary of recommended changes
 
-| # | Severity | Recommendation | Affects | Status |
-|---|----------|---------------|---------|--------|
-| D1 | Critical | Add design system / design tokens task to Phase 0 | Phase 0 | **Requested** — T103 added |
-| D2 | Critical | Add wireframe / layout specification task (Phase 0) | Phase 0 | **Requested** — T104 added |
-| D3 | Critical | Add role-specific UX notes to primary-action tasks | T035, T036, T046, T050 | **Requested** — UX notes added to each task |
-| D4 | High | Define status colour system as part of design tokens | D1 task | **Requested** — included in T103 |
-| D5 | High | Add empty state AC to all list/dashboard tasks | Multiple tasks | **Requested** — AC added to T014, T024, T027, T030, T036, T046, T052, T062, T069, T070, T072, T092, T093 |
-| D6 | High | Add receipt / transaction confirmation to checkout flow | T038 | **Requested** — AC added to T038 |
-| D7 | High | Add data visualization library to tech stack; chart guidance to analytics tasks | T072–T074, tech stack | **Requested** — Recharts added to stack; chart guidance added to T072–T074 |
-| D8 | High | Expand notification UX in T048 (grouping, actions, persistence, push) | T048 | **Requested** — expanded ACs added to T048 |
-| D9 | High | Define confirmation dialog pattern for destructive actions | Design system | **Requested** — included in T103 |
-| D10 | High | Add mobile-first criteria for phone-primary roles (clothier, stylist) | T035, T046, T002 | **Requested** — mobile-first ACs added to T035, T046; policy added to T002 |
-| D11 | Medium | Define search/filter UX pattern | Design system | **Requested** — included in T103 |
-| D12 | Medium | Define form UX conventions (layout, validation, feedback) | T002 or design system | **Requested** — form conventions added to T002 |
-| D13 | Medium | Define calendar/scheduling UX for appointments and absences | T052, T021 | **Requested** — calendar UX guidance added to T052, T021; included in T104 |
-| D14 | Medium | Consider dark mode readiness in design tokens | D1 task | **Requested** — dark mode readiness in T103; stretch goal in T083 |
-| D15 | Medium | Choose and document icon library | Design system | **Requested** — Lucide Icons chosen; included in T103 |
-| D16 | Medium | Add keyboard shortcuts for cashier workflow | T036, T038 | **Requested** — keyboard shortcut stretch ACs added to T036, T038 |
-| D17 | Medium | Add brand identity / asset gathering task | Phase 1 | **Requested** — T105 added to Phase 1 |
-| D18 | Medium | Define loading/skeleton pattern in Phase 0, not Phase 10 | T084 concern, D1 task | **Requested** — loading patterns in T103; early application policy in T002 |
-| D19 | Medium | Add print stylesheet as stretch goal | T092, T072 | **Requested** — print stretch ACs added to T092, T072 |
-| D20 | Medium | Define real-time update animation choreography | T036 | **Requested** — animation patterns in T103; ACs added to T036 |
-| D21 | Low | Add numerical formatting utilities to T099 | T099 | **Requested** — utilities added to T099 ACs |
-| D22 | Low | Consider swipe/gesture interactions for mobile | Phase 10 stretch | **Requested** — stretch goal added to T083 |
-| D23 | Low | Add contextual help / onboarding as stretch goal | Phase 10 stretch | **Requested** — stretch goal added to T088 |
-| D24 | Low | Define table component pattern for data-dense screens | Design system | **Requested** — included in T103 |
-| D25 | Low | Add page transition design as stretch goal | Phase 10 stretch | **Requested** — stretch goal added to T083 |
-| D26 | Low | Define badge/indicator design variants | Design system | **Requested** — included in T103 |
+| #   | Severity | Recommendation                                                                  | Affects                | Status                                                                                                   |
+| --- | -------- | ------------------------------------------------------------------------------- | ---------------------- | -------------------------------------------------------------------------------------------------------- |
+| D1  | Critical | Add design system / design tokens task to Phase 0                               | Phase 0                | **Requested** — T103 added                                                                               |
+| D2  | Critical | Add wireframe / layout specification task (Phase 0)                             | Phase 0                | **Requested** — T104 added                                                                               |
+| D3  | Critical | Add role-specific UX notes to primary-action tasks                              | T035, T036, T046, T050 | **Requested** — UX notes added to each task                                                              |
+| D4  | High     | Define status colour system as part of design tokens                            | D1 task                | **Requested** — included in T103                                                                         |
+| D5  | High     | Add empty state AC to all list/dashboard tasks                                  | Multiple tasks         | **Requested** — AC added to T014, T024, T027, T030, T036, T046, T052, T062, T069, T070, T072, T092, T093 |
+| D6  | High     | Add receipt / transaction confirmation to checkout flow                         | T038                   | **Requested** — AC added to T038                                                                         |
+| D7  | High     | Add data visualization library to tech stack; chart guidance to analytics tasks | T072–T074, tech stack  | **Requested** — Recharts added to stack; chart guidance added to T072–T074                               |
+| D8  | High     | Expand notification UX in T048 (grouping, actions, persistence, push)           | T048                   | **Requested** — expanded ACs added to T048                                                               |
+| D9  | High     | Define confirmation dialog pattern for destructive actions                      | Design system          | **Requested** — included in T103                                                                         |
+| D10 | High     | Add mobile-first criteria for phone-primary roles (clothier, stylist)           | T035, T046, T002       | **Requested** — mobile-first ACs added to T035, T046; policy added to T002                               |
+| D11 | Medium   | Define search/filter UX pattern                                                 | Design system          | **Requested** — included in T103                                                                         |
+| D12 | Medium   | Define form UX conventions (layout, validation, feedback)                       | T002 or design system  | **Requested** — form conventions added to T002                                                           |
+| D13 | Medium   | Define calendar/scheduling UX for appointments and absences                     | T052, T021             | **Requested** — calendar UX guidance added to T052, T021; included in T104                               |
+| D14 | Medium   | Consider dark mode readiness in design tokens                                   | D1 task                | **Requested** — dark mode readiness in T103; stretch goal in T083                                        |
+| D15 | Medium   | Choose and document icon library                                                | Design system          | **Requested** — Lucide Icons chosen; included in T103                                                    |
+| D16 | Medium   | Add keyboard shortcuts for cashier workflow                                     | T036, T038             | **Requested** — keyboard shortcut stretch ACs added to T036, T038                                        |
+| D17 | Medium   | Add brand identity / asset gathering task                                       | Phase 1                | **Requested** — T105 added to Phase 1                                                                    |
+| D18 | Medium   | Define loading/skeleton pattern in Phase 0, not Phase 10                        | T084 concern, D1 task  | **Requested** — loading patterns in T103; early application policy in T002                               |
+| D19 | Medium   | Add print stylesheet as stretch goal                                            | T092, T072             | **Requested** — print stretch ACs added to T092, T072                                                    |
+| D20 | Medium   | Define real-time update animation choreography                                  | T036                   | **Requested** — animation patterns in T103; ACs added to T036                                            |
+| D21 | Low      | Add numerical formatting utilities to T099                                      | T099                   | **Requested** — utilities added to T099 ACs                                                              |
+| D22 | Low      | Consider swipe/gesture interactions for mobile                                  | Phase 10 stretch       | **Requested** — stretch goal added to T083                                                               |
+| D23 | Low      | Add contextual help / onboarding as stretch goal                                | Phase 10 stretch       | **Requested** — stretch goal added to T088                                                               |
+| D24 | Low      | Define table component pattern for data-dense screens                           | Design system          | **Requested** — included in T103                                                                         |
+| D25 | Low      | Add page transition design as stretch goal                                      | Phase 10 stretch       | **Requested** — stretch goal added to T083                                                               |
+| D26 | Low      | Define badge/indicator design variants                                          | Design system          | **Requested** — included in T103                                                                         |
 
 **All 26 findings accepted.** Task count: 103 → 106 (+T103, +T104, +T105). Multiple existing tasks received additional acceptance criteria (T002, T014, T021, T024, T027, T030, T035, T036, T038, T046, T048, T050, T052, T062, T069, T070, T072, T073, T074, T082, T083, T084, T088, T090, T092, T093, T099).
 

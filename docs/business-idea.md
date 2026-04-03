@@ -62,10 +62,10 @@ Innovation Befine needs a single place to know **what work was done today**, **w
 
 ## Client / customer model
 
-| Type | How stored | History |
-|------|------------|---------|
+| Type                        | How stored                             | History                                                          |
+| --------------------------- | -------------------------------------- | ---------------------------------------------------------------- |
 | **Frequent / saved client** | Name + ID + contact info (phone/email) | Full history: appointments, tickets, cloth orders, no-show count |
-| **Guest** | Name string only | No persistent record; ticket references name only |
+| **Guest**                   | Name string only                       | No persistent record; ticket references name only                |
 
 - The cashier or secretary chooses at ticket/appointment creation whether to link a saved client or use a guest name.
 - The same saved client can appear across multiple appointments, tickets, and large cloth orders.
@@ -130,6 +130,7 @@ logged (by stylist / secretary / cashier)
 ## Business day
 
 The business day is **not tied to the calendar date**. The admin/cashier:
+
 - Presses **"Open day"** to start accepting services.
 - Presses **"Close day"** to end the day.
 
@@ -139,13 +140,13 @@ All services, tickets, and clothier pieces created between Open and Close belong
 
 ## What is explicitly out of scope (for now)
 
-| Item | Reason |
-|------|--------|
-| Tips | Given directly employee-to-employee/customer; not tracked by the company |
-| Promotions / loyalty / seasonal discounts | May be added later |
-| Full legal payroll / tax filing | System tracks pay; external accountant handles legal payroll |
-| SMS/WhatsApp appointment reminders | External channel chosen when building that phase |
-| Multi-branch / multi-location | Single location for MVP; decision deferred |
+| Item                                      | Reason                                                                   |
+| ----------------------------------------- | ------------------------------------------------------------------------ |
+| Tips                                      | Given directly employee-to-employee/customer; not tracked by the company |
+| Promotions / loyalty / seasonal discounts | May be added later                                                       |
+| Full legal payroll / tax filing           | System tracks pay; external accountant handles legal payroll             |
+| SMS/WhatsApp appointment reminders        | External channel chosen when building that phase                         |
+| Multi-branch / multi-location             | Single location for MVP; decision deferred                               |
 
 ---
 

@@ -51,7 +51,7 @@ There is no GitHub Actions (or equivalent) workflow in the plan. Without CI:
 
 **Impact: high — cross-cutting decision that touches 6+ tables**
 
-T023 acceptance criteria say: *"customer_price is stored as integer cents (or numeric with 2 decimal places) — decide once and document."* This decision is deferred to Phase 2, but tables with money fields appear in Phase 2 (services, cloth pieces), Phase 4A (ticket items, payments), Phase 6 (large orders, order payments), and Phase 7 (payouts).
+T023 acceptance criteria say: _"customer_price is stored as integer cents (or numeric with 2 decimal places) — decide once and document."_ This decision is deferred to Phase 2, but tables with money fields appear in Phase 2 (services, cloth pieces), Phase 4A (ticket items, payments), Phase 6 (large orders, order payments), and Phase 7 (payouts).
 
 If this is decided wrong or inconsistently, every calculation (commissions, payroll, analytics) will produce rounding errors that are painful to fix retroactively.
 
@@ -87,7 +87,7 @@ The project plan references this file as a Phase 0 exit criterion (T077). It doe
 
 ### F6 — No real-time abstraction layer — Pusher is a migration risk
 
-The plan states: *"Start with Pusher; migrate to native SSE + Postgres LISTEN/NOTIFY later."* But there is no task to create an abstraction layer between the app and Pusher. If Pusher is used directly (importing `pusher-js` in components, calling `pusher.trigger()` in API routes), migrating later means touching every file that uses real-time features.
+The plan states: _"Start with Pusher; migrate to native SSE + Postgres LISTEN/NOTIFY later."_ But there is no task to create an abstraction layer between the app and Pusher. If Pusher is used directly (importing `pusher-js` in components, calling `pusher.trigger()` in API routes), migrating later means touching every file that uses real-time features.
 
 **Recommendation:** In T009 (Pusher spike) or as a separate task, create a thin wrapper:
 
@@ -108,11 +108,12 @@ Sentry (T085) is placed in Phase 10 — the last phase. Structured logging is no
 
 ### F8 — T032 (no-show count) is in Phase 3 but can't be tested until Phase 5
 
-T032 says: *"When an appointment is marked 'no-show' (Phase 5), increment clients.no_show_count."* But T032 is in Phase 3, and the appointment system that triggers no-shows doesn't exist until Phase 5 (T053).
+T032 says: _"When an appointment is marked 'no-show' (Phase 5), increment clients.no_show_count."_ But T032 is in Phase 3, and the appointment system that triggers no-shows doesn't exist until Phase 5 (T053).
 
 The no-show count column and display on the client profile can be built in Phase 3, but the increment trigger cannot be tested without appointments. This creates a task that looks "done" but is actually incomplete.
 
 **Recommendation:** Split T032:
+
 - Phase 3: add `no_show_count` column and display on client profile (already in T029)
 - Phase 5: add the increment logic and the warning badge, as part of T053's acceptance criteria
 
@@ -122,7 +123,7 @@ Or move T032 entirely to Phase 5 and add the column display to T030.
 
 ### F9 — Secretary financial restriction is undefined at the implementation level
 
-The business doc states: *"No access to financial data: cannot see revenue, employee pay, settlement records, or analytics."* But no task defines which routes, server actions, or UI sections must enforce this restriction. Individual tasks (T067, T069, T071–T076) implicitly assume admin-only access, but there's no explicit check.
+The business doc states: _"No access to financial data: cannot see revenue, employee pay, settlement records, or analytics."_ But no task defines which routes, server actions, or UI sections must enforce this restriction. Individual tasks (T067, T069, T071–T076) implicitly assume admin-only access, but there's no explicit check.
 
 **Recommendation:** Add secretary financial restriction as a cross-cutting acceptance criterion in T018 (session middleware). Define a list of route patterns that are admin-only and verify them in a single test.
 
@@ -189,7 +190,7 @@ T056 references recording `confirmation_sent_at` on the appointment record when 
 
 ### F15 — Business day enforcement is "DB constraint or app-level guard" — should be DB constraint
 
-T019 acceptance criteria say: *"Only one business day can be open at a time (DB constraint or app-level guard)."* For data integrity on a financial system, this must be a database constraint. App-level guards can be bypassed by bugs, race conditions, or direct DB access.
+T019 acceptance criteria say: _"Only one business day can be open at a time (DB constraint or app-level guard)."_ For data integrity on a financial system, this must be a database constraint. App-level guards can be bypassed by bugs, race conditions, or direct DB access.
 
 **Pattern:** A partial unique index on `business_days` where `closed_at IS NULL` — Postgres allows at most one row to match.
 
@@ -211,7 +212,7 @@ Neon's serverless driver handles connection pooling, but Vercel Edge Functions a
 
 ### F17 — Batch piece reassignment not handled
 
-The business doc says: *"Cannot partially complete a piece or reassign it mid-batch."* But if a clothier is absent, their assigned pieces can't be completed. There's no "reassign piece" action for the admin/secretary.
+The business doc says: _"Cannot partially complete a piece or reassign it mid-batch."_ But if a clothier is absent, their assigned pieces can't be completed. There's no "reassign piece" action for the admin/secretary.
 
 **Recommendation:** Add a note that reassignment could be achieved by creating a new batch with the unfinished pieces. Or add a "reassign" action to T045/T047 if the business needs it.
 
@@ -251,7 +252,7 @@ Some entities use `is_active` for soft-delete (services, clients, cloth pieces, 
 
 ### F21 — Cloth piece catalog audit log is indirect
 
-T027 acceptance criteria say: *"Audit log (T025 pattern) records price changes."* But T025 creates the `catalog_audit_log` table for services only. T027 would need to extend this table to also cover cloth pieces, or create a separate log. The dependency and shared table design should be explicit.
+T027 acceptance criteria say: _"Audit log (T025 pattern) records price changes."_ But T025 creates the `catalog_audit_log` table for services only. T027 would need to extend this table to also cover cloth pieces, or create a separate log. The dependency and shared table design should be explicit.
 
 **Recommendation:** Clarify in T025 that the audit log table is generic (covers services AND cloth pieces), or add a separate migration note to T027.
 
@@ -295,7 +296,7 @@ T011 creates one user per role. This is enough for development but not for testi
 
 ### F25 — No task for version management or deployment notifications
 
-The Senior PO review's risk register mentions: *"New app version deployed while cashier has an old tab open."* The Phase 10 mitigation ("version header + please refresh banner") is not captured as a numbered task. It should be.
+The Senior PO review's risk register mentions: _"New app version deployed while cashier has an old tab open."_ The Phase 10 mitigation ("version header + please refresh banner") is not captured as a numbered task. It should be.
 
 **Recommendation:** Add a task to Phase 10 (or assign to an existing task like T084) for version detection and stale-tab notification.
 
@@ -303,33 +304,33 @@ The Senior PO review's risk register mentions: *"New app version deployed while 
 
 ## Summary of recommended changes
 
-| # | Severity | Recommendation | Affects | Status |
-|---|----------|---------------|---------|--------|
-| F1 | Critical | Add testing infrastructure task to Phase 0 | Phase 0, all phases | **Requested** — T094 added |
-| F2 | Critical | Add CI/CD pipeline task to Phase 0 | Phase 0 | **Requested** — T095 added |
-| F3 | Critical | Decide money storage format in Phase 0 | Phase 0, T002 | **Requested** — integer cents; added to T002 |
-| F4 | Critical | Document API design conventions in Phase 0 | Phase 0 | **Requested** — T097 added (separate task) |
-| F5 | High | Reminder only — offline policy is already a Phase 0 exit criterion | — | Noted |
-| F6 | High | Add real-time abstraction layer to T009 or new task | Phase 0 | **Requested** — T098 added (separate task) |
-| F7 | High | Move Sentry to Phase 0/1; add structured logging | Phase 0, T085 | **Requested** — T085 moved to Phase 0 |
-| F8 | High | Move T032 to Phase 5 or split it | Phase 3, Phase 5 | **Requested** — split: column in Phase 3, logic as T032b in Phase 5 |
-| F9 | High | Define secretary financial restrictions in T018 | Phase 1, T018 | **Requested** — AC added to T018 |
-| F10 | High | Add data migration task for existing client records | Phase 10 | **Requested** — T100 added to Phase 10 |
-| F11 | Medium | Decide UI language and currency in Phase 0 | Phase 0 | **Requested** — bilingual (i18n); T099 added to Phase 0 |
-| F12 | Medium | Add a11y to code standards (T002) and QA (T083) | Phase 0, Phase 10 | **Requested** — a11y baseline added to T002 and T083 |
-| F13 | Medium | Fix dependency graph — remove P5 → P6 edge | project-plan.md | **Requested** — graph fixed |
-| F14 | Medium | Add `confirmation_sent_at` to T049 | Phase 5 | **Requested** — column added to T049 |
-| F15 | Medium | Change T019 AC to require DB constraint, not optional | Phase 1 | **Requested** — AC updated |
-| F16 | Medium | Document connection pooling strategy in T005 | Phase 0 | **Requested** — AC added to T005 |
-| F17 | Medium | Clarify batch piece reassignment policy | Phase 4B | **Requested** — reassignment note added to T045 |
-| F18 | Low | Add `.turbo/` to `.gitignore` | .gitignore | **Requested** — added to .gitignore |
-| F19 | Low | Document schema naming conventions in T006 | Phase 0 | **Requested** — AC added to T006 |
-| F20 | Low | Document soft-delete policy in T002 | Phase 0 | **Requested** — AC added to T002 |
-| F21 | Low | Clarify audit log scope in T025 | Phase 2 | **Requested** — T025 clarified as generic table |
-| F22 | Low | Add performance targets to standards | Phase 0 | **Requested** — AC added to T002 |
-| F23 | Low | Document error handling pattern in T002 | Phase 0 | **Requested** — AC added to T002 |
-| F24 | Low | Add analytics seed script to T071/T075 | Phase 8 | **Requested** — T101 added |
-| F25 | Low | Add stale-tab version detection task to Phase 10 | Phase 10 | **Requested** — T102 added |
+| #   | Severity | Recommendation                                                     | Affects             | Status                                                              |
+| --- | -------- | ------------------------------------------------------------------ | ------------------- | ------------------------------------------------------------------- |
+| F1  | Critical | Add testing infrastructure task to Phase 0                         | Phase 0, all phases | **Requested** — T094 added                                          |
+| F2  | Critical | Add CI/CD pipeline task to Phase 0                                 | Phase 0             | **Requested** — T095 added                                          |
+| F3  | Critical | Decide money storage format in Phase 0                             | Phase 0, T002       | **Requested** — integer cents; added to T002                        |
+| F4  | Critical | Document API design conventions in Phase 0                         | Phase 0             | **Requested** — T097 added (separate task)                          |
+| F5  | High     | Reminder only — offline policy is already a Phase 0 exit criterion | —                   | Noted                                                               |
+| F6  | High     | Add real-time abstraction layer to T009 or new task                | Phase 0             | **Requested** — T098 added (separate task)                          |
+| F7  | High     | Move Sentry to Phase 0/1; add structured logging                   | Phase 0, T085       | **Requested** — T085 moved to Phase 0                               |
+| F8  | High     | Move T032 to Phase 5 or split it                                   | Phase 3, Phase 5    | **Requested** — split: column in Phase 3, logic as T032b in Phase 5 |
+| F9  | High     | Define secretary financial restrictions in T018                    | Phase 1, T018       | **Requested** — AC added to T018                                    |
+| F10 | High     | Add data migration task for existing client records                | Phase 10            | **Requested** — T100 added to Phase 10                              |
+| F11 | Medium   | Decide UI language and currency in Phase 0                         | Phase 0             | **Requested** — bilingual (i18n); T099 added to Phase 0             |
+| F12 | Medium   | Add a11y to code standards (T002) and QA (T083)                    | Phase 0, Phase 10   | **Requested** — a11y baseline added to T002 and T083                |
+| F13 | Medium   | Fix dependency graph — remove P5 → P6 edge                         | project-plan.md     | **Requested** — graph fixed                                         |
+| F14 | Medium   | Add `confirmation_sent_at` to T049                                 | Phase 5             | **Requested** — column added to T049                                |
+| F15 | Medium   | Change T019 AC to require DB constraint, not optional              | Phase 1             | **Requested** — AC updated                                          |
+| F16 | Medium   | Document connection pooling strategy in T005                       | Phase 0             | **Requested** — AC added to T005                                    |
+| F17 | Medium   | Clarify batch piece reassignment policy                            | Phase 4B            | **Requested** — reassignment note added to T045                     |
+| F18 | Low      | Add `.turbo/` to `.gitignore`                                      | .gitignore          | **Requested** — added to .gitignore                                 |
+| F19 | Low      | Document schema naming conventions in T006                         | Phase 0             | **Requested** — AC added to T006                                    |
+| F20 | Low      | Document soft-delete policy in T002                                | Phase 0             | **Requested** — AC added to T002                                    |
+| F21 | Low      | Clarify audit log scope in T025                                    | Phase 2             | **Requested** — T025 clarified as generic table                     |
+| F22 | Low      | Add performance targets to standards                               | Phase 0             | **Requested** — AC added to T002                                    |
+| F23 | Low      | Document error handling pattern in T002                            | Phase 0             | **Requested** — AC added to T002                                    |
+| F24 | Low      | Add analytics seed script to T071/T075                             | Phase 8             | **Requested** — T101 added                                          |
+| F25 | Low      | Add stale-tab version detection task to Phase 10                   | Phase 10            | **Requested** — T102 added                                          |
 
 **All 25 findings accepted.** Task count: 94 → 103 (+T094, +T095, +T097, +T098, +T099, +T032b, +T100, +T101, +T102; T085 moved Phase 10 → Phase 0). Multiple existing tasks received additional acceptance criteria.
 
@@ -351,16 +352,16 @@ The T008 spike will surface these issues, but there should be a **documented fal
 
 **Recommended alternative: shadcn/ui + Tailwind CSS**
 
-| | Base Web | shadcn/ui |
-|--|----------|-----------|
-| **Architecture** | npm package (vendor-owned) | Copy-paste components (you own the code) |
-| **Styling** | Styletron (CSS-in-JS) | Tailwind CSS (utility classes) |
-| **RSC compatibility** | Uncertain (CSS-in-JS conflicts) | Excellent (no runtime CSS) |
-| **Accessibility** | Good (Uber's a11y team) | Excellent (built on Radix UI primitives) |
-| **Customization** | Theme overrides | Full source code ownership |
-| **App Router support** | Needs validation | Native — designed for App Router |
-| **Community** | Declining | Fastest-growing React component system |
-| **Lock-in** | Medium (npm dependency) | None (you own the components) |
+|                        | Base Web                        | shadcn/ui                                |
+| ---------------------- | ------------------------------- | ---------------------------------------- |
+| **Architecture**       | npm package (vendor-owned)      | Copy-paste components (you own the code) |
+| **Styling**            | Styletron (CSS-in-JS)           | Tailwind CSS (utility classes)           |
+| **RSC compatibility**  | Uncertain (CSS-in-JS conflicts) | Excellent (no runtime CSS)               |
+| **Accessibility**      | Good (Uber's a11y team)         | Excellent (built on Radix UI primitives) |
+| **Customization**      | Theme overrides                 | Full source code ownership               |
+| **App Router support** | Needs validation                | Native — designed for App Router         |
+| **Community**          | Declining                       | Fastest-growing React component system   |
+| **Lock-in**            | Medium (npm dependency)         | None (you own the components)            |
 
 **Action:** If the T008 spike reveals issues (hydration mismatches, build errors, excessive `"use client"` wrappers), switch to shadcn/ui + Tailwind CSS. Add this as the documented fallback in T008's acceptance criteria.
 
@@ -390,6 +391,7 @@ The app is heavily form-based (employee creation, catalog CRUD, checkout, payout
 ### Missing from stack: date/time library
 
 The app has extensive date handling:
+
 - Business days spanning midnight
 - Appointment scheduling with time slots and duration
 - Payroll periods by business day ranges
@@ -412,14 +414,14 @@ The plan mentions `next-pwa` for Phase 9 (offline/PWA). This package has had **m
 
 ### Summary of tech stack recommendations
 
-| Area | Current | Recommendation | Priority | Status |
-|------|---------|---------------|----------|--------|
-| UI components | Base Web (baseui) | Document shadcn/ui as T008 fallback | High | **Applied** — T008 updated with spike + fallback gate |
-| Server state | Not specified | TanStack Query | Medium | **Applied** — added to T002 standards + T097 |
-| UI state | Not specified | Zustand | Medium | **Applied** — added to T002 standards + T097 |
-| Forms | Not specified | React Hook Form + Zod | Medium | **Applied** — added to T002 standards + T097 |
-| Dates | Not specified | date-fns | Medium | **Applied** — added to T002 standards |
-| PWA wrapper | next-pwa | Evaluate @ducanh2912/next-pwa or custom Workbox | Low (Phase 9) | **Applied** — T081 updated |
+| Area          | Current           | Recommendation                                  | Priority      | Status                                                |
+| ------------- | ----------------- | ----------------------------------------------- | ------------- | ----------------------------------------------------- |
+| UI components | Base Web (baseui) | Document shadcn/ui as T008 fallback             | High          | **Applied** — T008 updated with spike + fallback gate |
+| Server state  | Not specified     | TanStack Query                                  | Medium        | **Applied** — added to T002 standards + T097          |
+| UI state      | Not specified     | Zustand                                         | Medium        | **Applied** — added to T002 standards + T097          |
+| Forms         | Not specified     | React Hook Form + Zod                           | Medium        | **Applied** — added to T002 standards + T097          |
+| Dates         | Not specified     | date-fns                                        | Medium        | **Applied** — added to T002 standards                 |
+| PWA wrapper   | next-pwa          | Evaluate @ducanh2912/next-pwa or custom Workbox | Low (Phase 9) | **Applied** — T081 updated                            |
 
 ---
 

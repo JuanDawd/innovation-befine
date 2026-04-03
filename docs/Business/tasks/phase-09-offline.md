@@ -13,12 +13,15 @@
 **Dependencies:** T033, T044
 
 ### What to do
+
 Create an `idempotency_keys` table: `key` (text, primary key), `route`, `response_body` (jsonb), `created_at`, `expires_at`. Modify the ticket creation and piece completion API routes to:
+
 1. Accept an `Idempotency-Key` header.
 2. Check if the key already exists → return cached response.
 3. Otherwise execute the operation and store the key + response in the same transaction.
 
 ### Acceptance criteria
+
 - [ ] `idempotency_keys` migration runs without errors
 - [ ] Ticket creation with the same key twice → second call returns the first response without creating a duplicate
 - [ ] Keys expire after 24 hours (a cron job or lazy cleanup on lookup)
@@ -33,9 +36,11 @@ Create an `idempotency_keys` table: `key` (text, primary key), `route`, `respons
 **Dependencies:** T078
 
 ### What to do
+
 Using the browser's IndexedDB API (or a thin wrapper like `idb`), create a mutation queue. When the user creates a ticket or marks a piece done while offline, the action is written to the queue with a client-generated UUID (used as the idempotency key). A background process flushes the queue when the network is available.
 
 ### Acceptance criteria
+
 - [ ] Ticket creation while offline queues the action in IndexedDB
 - [ ] On reconnect, queued actions are sent in order with their idempotency keys
 - [ ] Duplicate retry with the same key does not create a duplicate record (relies on T078)
@@ -51,13 +56,16 @@ Using the browser's IndexedDB API (or a thin wrapper like `idb`), create a mutat
 **Dependencies:** T079
 
 ### What to do
+
 Show a persistent sync indicator in the app header/nav:
+
 - **Online, synced:** neutral icon (or hidden)
 - **Online, syncing:** spinner with "Syncing…"
 - **Offline:** warning banner "You're offline — actions will sync when you reconnect"
 - **Sync failed:** error icon with count of failed items and a "Retry" button
 
 ### Acceptance criteria
+
 - [ ] Indicator updates within 1 second of connectivity change
 - [ ] Failed items show a count (not just an icon)
 - [ ] "Retry" manually triggers the flush
@@ -72,12 +80,15 @@ Show a persistent sync indicator in the app header/nav:
 **Dependencies:** T001
 
 ### What to do
+
 Add a service worker using Workbox. Evaluate the wrapper library: **`@ducanh2912/next-pwa`** (actively maintained fork) or a **custom Workbox config** (no wrapper). Do **not** use the original `next-pwa` without verifying it supports the project's Next.js version — it has had maintenance gaps. Strategy:
+
 - **App shell (JS/CSS/fonts):** Cache First
 - **API GET requests (catalog, clients, schedule):** Stale While Revalidate
 - **Mutating requests (POST/PUT):** NetworkOnly (handled by IndexedDB queue instead)
 
 ### Acceptance criteria
+
 - [ ] Service worker registered on production build
 - [ ] App shell loads offline (all role home screens accessible without network)
 - [ ] Catalog data (services, cloth pieces) served from cache when offline
@@ -92,9 +103,11 @@ Add a service worker using Workbox. Evaluate the wrapper library: **`@ducanh2912
 **Dependencies:** T081
 
 ### What to do
+
 Create `app/manifest.ts` (Next.js App Router manifest) with app name, icons (at least 192×192 and 512×512), theme color, background color, and `display: "standalone"`. Add an install prompt for mobile users.
 
 ### Acceptance criteria
+
 - [ ] Lighthouse PWA score ≥ 80 on production
 - [ ] Install prompt appears on Android Chrome after first visit
 - [ ] App name and icon appear correctly when installed to home screen

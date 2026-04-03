@@ -11,13 +11,16 @@
 **Dependencies:** T006
 
 ### What to do
+
 Create two tables:
+
 - `services`: `id`, `name`, `description` (nullable), `is_active`, `created_at`, `updated_at`
 - `service_variants`: `id`, `service_id` (FK), `name` (e.g. "Short", "Medium", "Long"), `customer_price`, `commission_pct` (numeric, 0–100), `is_active`, `created_at`, `updated_at`
 
 A service with no meaningful variants still has at least one default variant (named "Standard").
 
 ### Acceptance criteria
+
 - [ ] Migration runs without errors
 - [ ] `commission_pct` is `numeric(5,2)` with a check constraint (0 ≤ value ≤ 100). Precision is two decimal places (e.g. 33.33%, 15.50%). Rounding policy: banker's rounding (round half-even) — defined in `docs/standards.md`
 - [ ] `customer_price` is stored as **integer cents** (`bigint`) per the money storage convention decided in T002
@@ -32,9 +35,11 @@ A service with no meaningful variants still has at least one default variant (na
 **Dependencies:** T023
 
 ### What to do
+
 Build the admin service catalog screen: list all services with their variants, prices, and commission %. Admin can create, edit, and soft-delete services and variants.
 
 ### Acceptance criteria
+
 - [ ] Admin sees all services and their variants in one view
 - [ ] Can create a new service (with at least one variant)
 - [ ] Can add, edit, and soft-delete variants on an existing service
@@ -51,9 +56,11 @@ Build the admin service catalog screen: list all services with their variants, p
 **Dependencies:** T024
 
 ### What to do
+
 Create a **generic** `catalog_audit_log` table (`id`, `entity_type`, `entity_id`, `changed_by`, `changed_at`, `old_value` jsonb, `new_value` jsonb). The `entity_type` field supports multiple catalog types — both **services/variants** (this phase) and **cloth pieces** (T027 will also write to this table). On every create/edit of a service, variant, or cloth piece, insert a record. Display the log on each entity's detail view (admin only).
 
 ### Acceptance criteria
+
 - [ ] Every price or commission change creates an audit record
 - [ ] Audit log shows what changed, who changed it, and when
 - [ ] Audit log is append-only (no deletes from the admin UI)
@@ -68,9 +75,11 @@ Create a **generic** `catalog_audit_log` table (`id`, `entity_type`, `entity_id`
 **Dependencies:** T006
 
 ### What to do
+
 Create the `cloth_pieces` table: `id`, `name`, `description` (nullable), `sale_price`, `clothier_pay`, `is_active`, `created_at`, `updated_at`.
 
 ### Acceptance criteria
+
 - [ ] Migration runs without errors
 - [ ] Both price fields use the same numeric storage convention as T023
 - [ ] `is_active` for soft-deletion
@@ -84,9 +93,11 @@ Create the `cloth_pieces` table: `id`, `name`, `description` (nullable), `sale_p
 **Dependencies:** T026
 
 ### What to do
+
 Build the admin cloth piece catalog screen: list all piece types with sale price and clothier pay. Admin can create, edit, and soft-delete entries.
 
 ### Acceptance criteria
+
 - [ ] Admin can create a new cloth piece type
 - [ ] Admin can edit name, description, sale price, and clothier pay
 - [ ] Soft-delete hides the piece from batch creation for new batches (existing assignments unaffected)
@@ -102,9 +113,11 @@ Build the admin cloth piece catalog screen: list all piece types with sale price
 **Dependencies:** T024, T027
 
 ### What to do
+
 Expose read-only API endpoints (or server actions) that return active services/variants and active cloth pieces. These will be consumed in Phase 4 (ticket creation, batch creation).
 
 ### Acceptance criteria
+
 - [ ] Stylists and secretary can fetch the list of active services and variants
 - [ ] Secretary can fetch the list of active cloth piece types
 - [ ] Response includes `id`, `name`, `customer_price`, and `commission_pct` for services

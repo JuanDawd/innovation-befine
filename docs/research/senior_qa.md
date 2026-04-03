@@ -129,6 +129,7 @@ The documentation mentions optimistic locking for checkout (T038) and double-boo
 - **Concurrent piece approvals** — two admins approving the same batch piece simultaneously
 
 **Recommendation:** Create a dedicated "concurrency test plan" document. For each race condition scenario, define:
+
 1. The preconditions (system state)
 2. The concurrent actions (what two users do simultaneously)
 3. The expected outcome (which operation succeeds, which fails, what error the losing user sees)
@@ -161,6 +162,7 @@ The business day spans calendar boundaries (e.g., 6 AM to 2 AM). Edge cases nobo
 T088 (training guide) teaches staff how to use the app. T089 (production cutover) has a go-live checklist. But there is no task between them where **actual staff use the system in a realistic scenario and provide feedback** before go-live.
 
 Without UAT:
+
 - The cashier may find the checkout flow slower than their current process
 - A clothier may find the phone UI confusing
 - The secretary may discover a workflow gap not covered by the requirements
@@ -183,6 +185,7 @@ H-06 in the issues tracker flags the missing security audit on the go-live check
 - **Data exposure testing** — verify that API responses don't leak data the role shouldn't see (e.g., secretary receiving financial data in a nested object)
 
 **Recommendation:** Create `docs/testing/security-test-plan.md` with:
+
 1. RBAC negative test matrix: every role × every restricted endpoint
 2. Input validation tests for every mutation endpoint
 3. Session security checks (HttpOnly, Secure, SameSite cookie flags)
@@ -197,19 +200,19 @@ H-06 in the issues tracker flags the missing security audit on the go-live check
 
 Reviewing all 106 tasks, most ACs only describe what should happen when everything works. Missing edge cases across tasks:
 
-| Task | Missing edge case |
-|------|-------------------|
-| T013 | What if the email is already registered? What if Resend is down during account creation? |
-| T019 | What if the admin's session expires mid-day-close? What if there are open tickets when closing the day? |
-| T035 | What if the selected service variant is deactivated between form load and submit? |
+| Task | Missing edge case                                                                                                                    |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| T013 | What if the email is already registered? What if Resend is down during account creation?                                             |
+| T019 | What if the admin's session expires mid-day-close? What if there are open tickets when closing the day?                              |
+| T035 | What if the selected service variant is deactivated between form load and submit?                                                    |
 | T038 | What if the payment amount doesn't match the total (rounding)? What if the client was archived between ticket creation and checkout? |
-| T039 | What if split payment amounts use decimal cents (rounding to integer cents)? |
-| T050 | What if the stylist is deactivated between form load and booking submission? |
-| T056 | What if the client's email address is invalid (hard bounce)? What if Resend rate limit is hit? |
-| T063 | What if `commission_pct` is 0? What if `override_price` is 0 (free service)? |
-| T064 | What if a clothier has approved pieces in batches from different business days in the same payout range? |
-| T067 | What if the admin adjusts the payout to $0? Is that a valid payout? |
-| T100 | What if the CSV has UTF-8 encoding issues (accented names in Spanish)? What if phone format varies (with/without country code)? |
+| T039 | What if split payment amounts use decimal cents (rounding to integer cents)?                                                         |
+| T050 | What if the stylist is deactivated between form load and booking submission?                                                         |
+| T056 | What if the client's email address is invalid (hard bounce)? What if Resend rate limit is hit?                                       |
+| T063 | What if `commission_pct` is 0? What if `override_price` is 0 (free service)?                                                         |
+| T064 | What if a clothier has approved pieces in batches from different business days in the same payout range?                             |
+| T067 | What if the admin adjusts the payout to $0? Is that a valid payout?                                                                  |
+| T100 | What if the CSV has UTF-8 encoding issues (accented names in Spanish)? What if phone format varies (with/without country code)?      |
 
 **Recommendation:** For every task with business logic or user interaction, add an "Error cases and edge cases" section to the test plan. At minimum, cover: invalid input, stale data (entity changed between load and submit), service unavailability (Resend, Pusher, Neon), and boundary values (0, empty, max length).
 
@@ -230,6 +233,7 @@ T095 (CI/CD) runs lint, typecheck, and unit tests on every PR. But after deploym
 A successful CI check does not guarantee a successful deployment (env vars misconfigured, DB migration not applied, Pusher keys expired, etc.).
 
 **Recommendation:** Add a post-deployment smoke test to T095. After Vercel deploys the preview or production, run a minimal Playwright suite against the deployed URL:
+
 1. Load login page (app shell works)
 2. Log in as admin (auth works)
 3. Hit `/api/health` with DB ping (database works)
@@ -263,17 +267,17 @@ T002 defines performance targets. T075 optimizes analytics queries. But there is
 
 T018 mentions secretary financial restriction with "at least one integration test." But the full RBAC matrix has dozens of permission boundaries:
 
-| Action | Admin | Cashier | Secretary | Stylist | Clothier |
-|--------|-------|---------|-----------|---------|----------|
-| Open/close day | Yes | — | No | No | No |
-| Create employee | Yes | — | No | No | No |
-| Create ticket (any employee) | Yes | Yes | Yes | Own only | No |
-| Checkout | Yes | Yes | No | No | No |
-| View earnings (others) | Yes | — | No | No | No |
-| Access analytics | Yes | — | No | No | No |
-| Record payout | Yes | — | No | No | No |
-| Approve batch pieces | Yes | — | Yes | No | No |
-| Book appointments | — | Yes | Yes | No | No |
+| Action                       | Admin | Cashier | Secretary | Stylist  | Clothier |
+| ---------------------------- | ----- | ------- | --------- | -------- | -------- |
+| Open/close day               | Yes   | —       | No        | No       | No       |
+| Create employee              | Yes   | —       | No        | No       | No       |
+| Create ticket (any employee) | Yes   | Yes     | Yes       | Own only | No       |
+| Checkout                     | Yes   | Yes     | No        | No       | No       |
+| View earnings (others)       | Yes   | —       | No        | No       | No       |
+| Access analytics             | Yes   | —       | No        | No       | No       |
+| Record payout                | Yes   | —       | No        | No       | No       |
+| Approve batch pieces         | Yes   | —       | Yes       | No       | No       |
+| Book appointments            | —     | Yes     | Yes       | No       | No       |
 
 Each "No" in this matrix should have a test verifying that the role receives a 403 or is redirected, not silently allowed. The matrix above has 20+ negative test cases that should be automated.
 
@@ -308,6 +312,7 @@ T083 tests responsive layout but doesn't specify:
 - **Screen reader testing**: For the accessibility baseline (T002), which screen reader? (VoiceOver on iOS, NVDA on Windows, ChromeVox?)
 
 **Recommendation:** Define a minimum test matrix in T083:
+
 - Browsers: Chrome 120+, Firefox 120+, Safari 17+ (iOS and macOS), Edge 120+
 - Devices: iPhone 13+ (or equivalent screen size), Android phone with Chrome (mid-range), desktop 1920×1080, desktop 1366×768
 - Screen reader: VoiceOver on iOS (for clothier/stylist flows), keyboard navigation on desktop (for cashier/admin flows)
@@ -410,6 +415,7 @@ T089 says "rollback plan documented (revert to spreadsheets for X days if critic
 **Impact: low — T094 sets up testing infrastructure but doesn't require coverage tracking**
 
 Without coverage tracking:
+
 - There's no way to know which code paths are untested
 - New features could be merged with 0% test coverage
 - The "unit tests required for business logic" policy (T094) is unenforceable without a coverage tool
@@ -420,29 +426,29 @@ Without coverage tracking:
 
 ## Summary of recommended changes
 
-| # | Severity | Recommendation | Affects |
-|---|----------|---------------|---------|
-| Q1 | Critical | Create test plan documents for each phase with structured test scenarios | All phases |
-| Q2 | Critical | Define E2E test scenarios for financial flows (checkout, payroll, payments) | Phase 4A, 7 |
-| Q3 | Critical | Define regression testing strategy and automated regression suite | T094, T095 |
-| Q4 | Critical | Define test data management strategy (fixtures, isolation, environment parity) | T094 |
-| Q5 | High | Document race condition scenarios and concurrent access tests | T038, T051, T067, T068 |
-| Q6 | High | Define business day boundary edge case test scenarios | T019, Phase 1 |
-| Q7 | High | Add UAT task — real staff use staging for one full business day before go-live | Phase 10 |
-| Q8 | High | Create security testing plan (RBAC negatives, input validation, session security) | T018, T095 |
-| Q9 | High | Add error/edge case scenarios to all tasks with business logic | All tasks |
-| Q10 | High | Add post-deployment smoke test to CI/CD pipeline | T095 |
-| Q11 | High | Add performance testing plan with load and mobile benchmarks | Phase 8 |
-| Q12 | Medium | Create full RBAC permission matrix with automated negative tests | T018 |
-| Q13 | Medium | Add migration rollback testing and data integrity verification | T006 |
-| Q14 | Medium | Define cross-browser and cross-device testing matrix | T083 |
-| Q15 | Medium | Define financial calculation rounding policy with deterministic test cases | T002, T063–T065 |
-| Q16 | Medium | Add structured business logic logging beyond error tracking | T085, T002 |
-| Q17 | Medium | Define integration test scenarios at phase boundaries | All phases |
-| Q18 | Low | Add email deliverability testing notes | T054 |
-| Q19 | Low | Specify a11y testing tools (axe-core, eslint-plugin-jsx-a11y) | T094, T002 |
-| Q20 | Low | Include rollback drill in production cutover | T089 |
-| Q21 | Low | Add code coverage reporting and threshold for financial logic | T094 |
+| #   | Severity | Recommendation                                                                    | Affects                |
+| --- | -------- | --------------------------------------------------------------------------------- | ---------------------- |
+| Q1  | Critical | Create test plan documents for each phase with structured test scenarios          | All phases             |
+| Q2  | Critical | Define E2E test scenarios for financial flows (checkout, payroll, payments)       | Phase 4A, 7            |
+| Q3  | Critical | Define regression testing strategy and automated regression suite                 | T094, T095             |
+| Q4  | Critical | Define test data management strategy (fixtures, isolation, environment parity)    | T094                   |
+| Q5  | High     | Document race condition scenarios and concurrent access tests                     | T038, T051, T067, T068 |
+| Q6  | High     | Define business day boundary edge case test scenarios                             | T019, Phase 1          |
+| Q7  | High     | Add UAT task — real staff use staging for one full business day before go-live    | Phase 10               |
+| Q8  | High     | Create security testing plan (RBAC negatives, input validation, session security) | T018, T095             |
+| Q9  | High     | Add error/edge case scenarios to all tasks with business logic                    | All tasks              |
+| Q10 | High     | Add post-deployment smoke test to CI/CD pipeline                                  | T095                   |
+| Q11 | High     | Add performance testing plan with load and mobile benchmarks                      | Phase 8                |
+| Q12 | Medium   | Create full RBAC permission matrix with automated negative tests                  | T018                   |
+| Q13 | Medium   | Add migration rollback testing and data integrity verification                    | T006                   |
+| Q14 | Medium   | Define cross-browser and cross-device testing matrix                              | T083                   |
+| Q15 | Medium   | Define financial calculation rounding policy with deterministic test cases        | T002, T063–T065        |
+| Q16 | Medium   | Add structured business logic logging beyond error tracking                       | T085, T002             |
+| Q17 | Medium   | Define integration test scenarios at phase boundaries                             | All phases             |
+| Q18 | Low      | Add email deliverability testing notes                                            | T054                   |
+| Q19 | Low      | Specify a11y testing tools (axe-core, eslint-plugin-jsx-a11y)                     | T094, T002             |
+| Q20 | Low      | Include rollback drill in production cutover                                      | T089                   |
+| Q21 | Low      | Add code coverage reporting and threshold for financial logic                     | T094                   |
 
 ---
 
@@ -484,9 +490,9 @@ Before marking any phase as "done," verify:
 
 ### Test priority matrix
 
-| Priority | What to test | When |
-|----------|-------------|------|
-| P0 — Always | Financial calculations, RBAC boundaries, data integrity | Every PR |
-| P1 — Per phase | Feature-specific test scenarios, integration with prior phases | Phase completion |
-| P2 — Milestones | E2E financial flows, performance benchmarks, security scan | After Phase 4A, 7, 10 |
-| P3 — Pre-launch | UAT, cross-browser, accessibility audit, load testing | Phase 10 |
+| Priority        | What to test                                                   | When                  |
+| --------------- | -------------------------------------------------------------- | --------------------- |
+| P0 — Always     | Financial calculations, RBAC boundaries, data integrity        | Every PR              |
+| P1 — Per phase  | Feature-specific test scenarios, integration with prior phases | Phase completion      |
+| P2 — Milestones | E2E financial flows, performance benchmarks, security scan     | After Phase 4A, 7, 10 |
+| P3 — Pre-launch | UAT, cross-browser, accessibility audit, load testing          | Phase 10              |

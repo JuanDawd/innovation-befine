@@ -150,7 +150,6 @@ T043 says "confirm that the ticket creation flow (T035) supports walk-in custome
 
 ## Summary of all changes
 
-
 | #   | Change                                                   | Affected files                                                  |
 | --- | -------------------------------------------------------- | --------------------------------------------------------------- |
 | F1  | Move T054 (Resend setup) Phase 5 → Phase 1               | phase-01, phase-05                                              |
@@ -165,13 +164,11 @@ T043 says "confirm that the ticket creation flow (T035) supports walk-in custome
 | F10 | Fix Phase 0 acceptance criteria format                   | phase-00                                                        |
 | F11 | Merge T043 into T035                                     | phase-04a                                                       |
 
-
 **Task count delta:** 89 → 94 (+T022b, +T090, +T091, +T092, +T093; −T043 retired)
 
 ---
 
 ## Updated phase breakdown (post-changes)
-
 
 | Phase                     | Tasks  | Notes                                                                 |
 | ------------------------- | ------ | --------------------------------------------------------------------- |
@@ -189,13 +186,11 @@ T043 says "confirm that the ticket creation flow (T035) supports walk-in custome
 | 10 — Polish               | 7      | unchanged                                                             |
 | **Total**                 | **94** |                                                                       |
 
-
 ---
 
 ## What is still not answered (open risk register)
 
 These are risks or gaps the plan acknowledges but that require a business decision before they can be designed:
-
 
 | Risk                                                                   | Impact                                           | When to resolve                                                                                 |
 | ---------------------------------------------------------------------- | ------------------------------------------------ | ----------------------------------------------------------------------------------------------- |
@@ -204,5 +199,3 @@ These are risks or gaps the plan acknowledges but that require a business decisi
 | Rate limiting on auth endpoints (brute force login)                    | Security                                         | Phase 1 spike: verify Better Auth's built-in rate limiting covers this                          |
 | Input validation coverage                                              | Silent data corruption                           | Should be a standard in T002 (code standards): define Zod schema validation policy              |
 | Multi-day payroll period confusion: business day IDs vs calendar dates | Payroll errors                                   | Phase 7 design session: add a UI helper that shows calendar date alongside each business day ID |
-
-
