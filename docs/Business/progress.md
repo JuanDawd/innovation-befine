@@ -54,7 +54,7 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | T010 | RBAC role definitions (roles + stylist subtypes)                    | pending | T007         |
 | T011 | Seed script for development (one user per role)                     | pending | T010         |
 | T085 | Sentry error tracking setup _(moved from Phase 10)_                 | pending | T004         |
-| T094 | Testing infrastructure (Vitest + Playwright) _(new)_                | pending | T001         |
+| T094 | Testing infrastructure (Vitest + Playwright) _(new)_                | done    | T001         |
 | T095 | CI/CD pipeline (GitHub Actions) _(new)_                             | pending | T094, T002   |
 
 ---
@@ -64,11 +64,11 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | ID   | Task                                                                 | Status  | Dependencies |
 | ---- | -------------------------------------------------------------------- | ------- | ------------ |
 | T002 | Configure code quality tooling (ESLint, Prettier, Husky, Zod policy) | done    | T001         |
-| T077 | Offline policy document _(moved from Phase 9)_                       | pending | —            |
-| T097 | API design conventions document _(new)_                              | pending | T001         |
+| T077 | Offline policy document _(moved from Phase 9)_                       | done    | —            |
+| T097 | API design conventions document _(new)_                              | done    | T001         |
 | T098 | Real-time abstraction layer _(new)_                                  | pending | T009         |
-| T099 | Internationalization (i18n) setup _(new)_                            | pending | T001         |
-| T103 | Design system, design tokens, and component patterns _(new)_         | pending | T008         |
+| T099 | Internationalization (i18n) setup _(new)_                            | done    | T001         |
+| T103 | Design system, design tokens, and component patterns _(new)_         | done    | T008         |
 | T104 | Key screen wireframes and layout specification _(new)_               | pending | T103         |
 
 ---
@@ -251,8 +251,8 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 
 | Phase                     | Tasks   | Done  | In progress |
 | ------------------------- | ------- | ----- | ----------- |
-| 0A — Foundation (Infra)   | 13      | 3     | 0           |
-| 0B — Foundation (Std/Dsg) | 7       | 1     | 0           |
+| 0A — Foundation (Infra)   | 13      | 4     | 0           |
+| 0B — Foundation (Std/Dsg) | 7       | 4     | 0           |
 | 1 — Identity              | 13      | 0     | 0           |
 | 2 — Catalog               | 6       | 0     | 0           |
 | 3 — Clients               | 4       | 0     | 0           |
@@ -264,7 +264,7 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | 8 — Analytics             | 8       | 0     | 0           |
 | 9 — Offline               | 5       | 0     | 0           |
 | 10 — Polish               | 9       | 0     | 0           |
-| **Total**                 | **108** | **4** | **0**       |
+| **Total**                 | **108** | **9** | **0**       |
 
 ---
 

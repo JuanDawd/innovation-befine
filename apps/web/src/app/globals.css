@@ -7,6 +7,10 @@
 @theme inline {
   --font-heading: var(--font-sans);
   --font-sans: var(--font-sans);
+  --font-mono:
+    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+
+  /* Shadcn base colors */
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -38,6 +42,28 @@
   --color-card: var(--card);
   --color-foreground: var(--foreground);
   --color-background: var(--background);
+
+  /* Semantic status colors */
+  --color-status-initial: var(--status-initial);
+  --color-status-initial-foreground: var(--status-initial-foreground);
+  --color-status-progress: var(--status-progress);
+  --color-status-progress-foreground: var(--status-progress-foreground);
+  --color-status-attention: var(--status-attention);
+  --color-status-attention-foreground: var(--status-attention-foreground);
+  --color-status-success: var(--status-success);
+  --color-status-success-foreground: var(--status-success-foreground);
+  --color-status-negative: var(--status-negative);
+  --color-status-negative-foreground: var(--status-negative-foreground);
+
+  /* Semantic feedback colors */
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+
+  /* Border radius scale */
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -45,6 +71,12 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+  --radius-full: 9999px;
+
+  /* Shadow/elevation levels */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
 }
 
 :root {
@@ -80,6 +112,26 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* Status colors: grey=initial, blue=progress, amber=attention, green=success, red=negative */
+  --status-initial: oklch(0.925 0.005 264);
+  --status-initial-foreground: oklch(0.44 0.01 264);
+  --status-progress: oklch(0.91 0.045 240);
+  --status-progress-foreground: oklch(0.37 0.12 240);
+  --status-attention: oklch(0.92 0.07 85);
+  --status-attention-foreground: oklch(0.42 0.12 60);
+  --status-success: oklch(0.92 0.06 155);
+  --status-success-foreground: oklch(0.37 0.12 155);
+  --status-negative: oklch(0.93 0.05 25);
+  --status-negative-foreground: oklch(0.5 0.19 25);
+
+  /* Semantic feedback */
+  --success: oklch(0.6 0.16 155);
+  --success-foreground: oklch(0.98 0 0);
+  --warning: oklch(0.75 0.15 65);
+  --warning-foreground: oklch(0.2 0 0);
+  --info: oklch(0.6 0.12 240);
+  --info-foreground: oklch(0.98 0 0);
 }
 
 .dark {
@@ -114,6 +166,24 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+
+  --status-initial: oklch(0.3 0.005 264);
+  --status-initial-foreground: oklch(0.75 0.01 264);
+  --status-progress: oklch(0.3 0.04 240);
+  --status-progress-foreground: oklch(0.72 0.1 240);
+  --status-attention: oklch(0.32 0.06 85);
+  --status-attention-foreground: oklch(0.78 0.1 60);
+  --status-success: oklch(0.3 0.05 155);
+  --status-success-foreground: oklch(0.72 0.1 155);
+  --status-negative: oklch(0.3 0.04 25);
+  --status-negative-foreground: oklch(0.72 0.15 25);
+
+  --success: oklch(0.55 0.16 155);
+  --success-foreground: oklch(0.98 0 0);
+  --warning: oklch(0.7 0.15 65);
+  --warning-foreground: oklch(0.15 0 0);
+  --info: oklch(0.55 0.12 240);
+  --info-foreground: oklch(0.98 0 0);
 }
 
 @layer base {

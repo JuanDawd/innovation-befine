@@ -147,3 +147,16 @@ All screens must implement basic **loading states** (skeleton or spinner) from P
 **COP (Colombian Pesos)**. No cents — the smallest unit is 1 peso. Integer storage = whole pesos.
 
 Format: `$12.500` (dot as thousands separator, no decimal places, peso sign prefix). Use the `formatMoney()` utility from T099 i18n setup.
+
+---
+
+## Testing policy
+
+- **Unit tests required** for all business logic: earnings computation, commission calculations, status transitions, permission checks, double-pay prevention, and financial data integrity.
+- **E2E tests required** for critical flows starting in Phase 4A: checkout lifecycle, payroll settlement, appointment booking.
+- **Regression suite** runs on every PR via `turbo test`. No PR merges with a red suite.
+- **Code coverage**: 80% threshold enforced for `packages/db/src/queries/` (financial logic). No global coverage threshold — quality over quantity.
+- **Accessibility checks**: `@axe-core/playwright` runs on all E2E tests for automated a11y verification.
+- **Test data isolation**: every unit/integration test runs inside a DB transaction that rolls back. E2E tests use a dedicated seeded database.
+
+See `docs/testing/README.md` for the full testing strategy.
