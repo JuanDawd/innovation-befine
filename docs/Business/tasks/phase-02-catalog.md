@@ -19,7 +19,7 @@ A service with no meaningful variants still has at least one default variant (na
 
 ### Acceptance criteria
 - [ ] Migration runs without errors
-- [ ] `commission_pct` has a check constraint (0 ≤ value ≤ 100)
+- [ ] `commission_pct` is `numeric(5,2)` with a check constraint (0 ≤ value ≤ 100). Precision is two decimal places (e.g. 33.33%, 15.50%). Rounding policy: banker's rounding (round half-even) — defined in `docs/standards.md`
 - [ ] `customer_price` is stored as **integer cents** (`bigint`) per the money storage convention decided in T002
 - [ ] Both tables have `is_active` to allow soft-deletion
 

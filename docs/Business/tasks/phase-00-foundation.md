@@ -1,6 +1,11 @@
 # Phase 0 — Foundation
 
 > Goal: working repo, DB connected, offline policy decided, empty role-aware shell deployed to staging. Nothing user-visible beyond a login screen.
+>
+> **Split into two sub-phases** (H-01 resolution, April 2026):
+>
+> - **Phase 0A (Infrastructure):** T001, T003, T004, T005, T006, T007, T008, T009, T010, T011, T085, T094, T095 — core tooling, DB, auth, spikes, CI. Deliver first.
+> - **Phase 0B (Standards & Design):** T002, T077, T097, T098, T099, T103, T104 — conventions, design system, wireframes. Can begin once T001 and T008 are complete.
 
 ---
 
@@ -40,7 +45,10 @@ Add ESLint (Next.js config), Prettier, and a shared config package. Add a pre-co
 - [ ] `docs/standards.md` includes error handling pattern: server-side uses typed result objects (not thrown errors) for expected failures; financial operations wrapped in DB transactions; client-side shows toast notifications for action results and inline errors for form validation
 - [ ] `docs/standards.md` includes accessibility baseline: all form inputs must have associated labels; interactive elements must be keyboard-accessible; colour contrast must meet WCAG AA (4.5:1 for normal text); focus indicators must be visible
 - [ ] `docs/standards.md` includes performance targets: LCP < 2.5 s; API P95 < 500 ms; real-time event delivery < 2 s; client search < 300 ms; analytics queries < 500 ms (< 200 ms after index optimization in T075)
-- [ ] `docs/standards.md` includes standard libraries: **React Hook Form + Zod resolver** for all forms (same Zod schemas used for server-side validation); **TanStack Query** for server state caching and revalidation; **Zustand** for ephemeral client-side state (offline queue, notification count); **date-fns** for all date manipulation, formatting, and comparison (no native `Date` arithmetic)
+- [ ] `docs/standards.md` includes standard libraries: **React Hook Form + Zod resolver** for all forms (same Zod schemas used for server-side validation); **TanStack Query** for server state caching and revalidation; **Zustand** for ephemeral client-side state (offline queue, notification count); **date-fns** for all date manipulation, formatting, and comparison (no native `Date` arithmetic). See `docs/research/frontend-libraries.md` for full rationale.
+- [ ] `docs/standards.md` includes financial rounding policy: **banker's rounding (round half-even)** for all financial calculations. `commission_pct` precision = `numeric(5,2)`. All monetary values stored as integer pesos (COP has no cents).
+- [ ] `docs/standards.md` includes business timezone constant: **America/Bogota (UTC-5)**. All timestamps stored in UTC; all user-facing displays converted to business timezone regardless of device locale.
+- [ ] `eslint-plugin-jsx-a11y` added to ESLint configuration for automated accessibility linting
 - [ ] `docs/standards.md` includes form UX conventions: stacked labels (better for mobile and a11y); validate on blur for fields, on submit for full form; inline errors under each field (red text, aria-associated); required fields by default, mark optional with "(optional)" suffix; success feedback via toast + redirect
 - [ ] `docs/standards.md` includes mobile-first policy: **clothier and stylist screens must be designed and tested mobile-first** (phone is their primary device); desktop layout is the secondary adaptation for these roles. Admin and secretary screens may be desktop-first.
 - [ ] `docs/standards.md` includes loading pattern policy: all screens must implement basic loading states (skeleton or spinner) from Phase 1 onward — not deferred to Phase 10. Use the `LoadingSkeleton` component from T103.
@@ -113,6 +121,7 @@ Install and configure Drizzle ORM with the Neon serverless adapter. Set up `driz
 - [ ] An empty initial migration runs successfully against Neon
 - [ ] Schema naming conventions documented at the top of the first schema file: table names `snake_case` plural (e.g. `employees`); column names `snake_case`; enums named `{entity}_{field}_enum`; indexes named `idx_{table}_{columns}`; all timestamps use `timestamp with time zone`
 - [ ] Shared enums defined once and referenced by multiple tables: `payment_method_enum` (`cash` | `card` | `transfer`) used by `ticket_payments` (T039), `large_order_payments` (T057), and `payouts` (T066) — not redefined independently in each migration
+- [ ] Migration rollback testing: every migration must be verified as reversible (down migration exists and runs without errors). CI pipeline verifies that seed records survive a migrate-up → migrate-down → migrate-up cycle.
 
 ---
 
@@ -246,6 +255,7 @@ Install `@sentry/nextjs` and configure it for the Vercel deployment. Set up a fr
 - [ ] A test error (`throw new Error("test")`) appears in the Sentry dashboard
 - [ ] Source maps uploaded so stack traces show original TypeScript line numbers
 - [ ] PII (client names, emails) is scrubbed from Sentry events (configure `beforeSend`)
+- [ ] Structured business logic logging configured (pino or similar): every financial operation (ticket close, payout recording, payment recording) logs operation type, actor, amount in COP, affected entities, and timestamp. These logs are separate from error tracking — they serve as an audit trail for "things that worked but might be wrong."
 
 ---
 
@@ -264,6 +274,11 @@ Set up the testing stack: **Vitest** for unit and integration tests, **Playwrigh
 - [ ] `turbo test` runs all Vitest tests across the monorepo
 - [ ] `turbo test:e2e` runs Playwright tests against a local dev server
 - [ ] `docs/standards.md` includes testing policy: unit tests required for business logic; E2E tests required for checkout and payroll flows
+- [ ] Regression testing strategy defined: regression suite runs on every PR; regression scope documented per shared table (see `docs/testing/README.md`)
+- [ ] Test data management strategy defined: transaction-based isolation (rollback after each test); scenario-specific fixtures with pre-calculated expected results in COP (see `docs/testing/README.md`)
+- [ ] Code coverage reporting enabled via Vitest (c8/istanbul): 80% threshold enforced for `packages/db/src/queries/` (financial logic); no global coverage threshold
+- [ ] `axe-core` integrated with Playwright for automated accessibility checks on all E2E tests
+- [ ] `eslint-plugin-jsx-a11y` configured in the shared ESLint config (catches a11y issues at dev time)
 
 ---
 
@@ -282,6 +297,8 @@ Create a GitHub Actions workflow that runs on every pull request: `turbo lint`, 
 - [ ] PR merge is blocked if any check fails (branch protection configured)
 - [ ] Pipeline completes in < 5 minutes on a clean repo
 - [ ] Workflow uses caching for `node_modules` and Turborepo cache
+- [ ] Post-deployment smoke test: after Vercel deploys a preview or production build, a Playwright suite runs against the deployed URL — loads login page (app shell works), logs in as admin (auth works), hits `/api/health` (DB works). Once Phase 4A is complete, extends to: create and close a ticket (core flow works).
+- [ ] Security tests (RBAC negative tests from `docs/testing/rbac-matrix.md`) included in the PR check pipeline
 
 ---
 
@@ -322,6 +339,7 @@ Create a thin abstraction layer around the real-time transport (Pusher) so that 
 - [ ] All Phase 4A+ tasks use the abstraction, never Pusher SDK directly
 - [ ] Switching the underlying transport requires changes only in `packages/realtime/`, not in consuming code
 - [ ] Types for channel names and event names are centralized (string literal union or enum)
+- [ ] Abstraction includes a **30-second polling fallback** that activates automatically if the push transport fails or disconnects. The cashier dashboard never relies solely on push events for financial display — stale data is detected and refreshed via polling.
 
 ---
 
@@ -338,8 +356,8 @@ Set up `next-intl` (or equivalent) for bilingual support (Spanish + English). Sp
 - [ ] `next-intl` installed and configured with Next.js App Router
 - [ ] Translation files at `messages/es.json` and `messages/en.json` with a few sample keys
 - [ ] Locale switcher component exists (can be hidden for MVP if only Spanish is active)
-- [ ] Currency constant defined (confirm with stakeholder: COP, USD, or other)
-- [ ] Currency formatting utility: `formatMoney(cents: number)` → localized display string (e.g. "$12.500" for COP or "$125.00" for USD)
+- [ ] Currency constant defined: **COP (Colombian Pesos)**. No cents — integer storage = whole pesos.
+- [ ] Currency formatting utility: `formatMoney(pesos: number)` → localized display string using Colombian locale (e.g. `$12.500`). No decimal places.
 - [ ] Date formatting utility using the i18n locale (DD/MM/YYYY for Spanish)
 - [ ] Percentage formatting utility: `formatPercent(value: number)` → localized string (e.g. "15 %" or "+15 %↑" for deltas)
 - [ ] Count formatting utility: locale-aware number separators (e.g. "1.500" for Spanish, "1,500" for English)

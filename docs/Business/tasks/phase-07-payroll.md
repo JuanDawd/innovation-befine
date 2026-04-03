@@ -98,13 +98,14 @@ Create `computeClothierEarnings(employeeId, businessDayIds[])` that sums `cloth_
 **Dependencies:** T021, T020
 
 ### What to do
-Create `computeSecretaryEarnings(employeeId, businessDayIds[])` that counts business days the employee was expected to work (no `vacation` or `approved_absence` absence record for that date) and multiplies by `employees.daily_rate`.
+Create `computeSecretaryEarnings(employeeId, businessDayIds[])` that counts business days the employee was expected to work — respecting the employee's `expected_work_days` field (supports part-time employees). A full-time employee (expected_work_days = 6) is expected every business day except absences. A part-time employee (e.g. expected_work_days = 3) is expected on the first N business days of the week (or as defined by a schedule, MVP uses simple count). Multiply days worked by `employees.daily_rate`.
 
 ### Acceptance criteria
 - [ ] Missed days count (no absence record for the day → employee was expected; missed = still counts unless explicitly marked absent)
 - [ ] Vacation and approved_absence days excluded from the count
-- [ ] Returns total, day count, and daily rate
-- [ ] Unit-tested
+- [ ] Part-time support: `expected_work_days` from employee record determines how many business days per week the employee is expected. Days worked capped at `expected_work_days` per week.
+- [ ] Returns total, day count, daily rate, and expected_work_days
+- [ ] Unit-tested with scenarios: full-time (6 days), part-time (3 days), vacation deduction, missed day
 
 ---
 
@@ -115,7 +116,7 @@ Create `computeSecretaryEarnings(employeeId, businessDayIds[])` that counts busi
 **Dependencies:** T006
 
 ### What to do
-Create `payouts`: `id`, `employee_id` (FK), `amount`, `method` (`cash` | `card` | `transfer`), `paid_at`, `period_business_day_ids` (integer array — the business day IDs covered by this payout), `recorded_by`, `notes` (nullable), `created_at`.
+Create `payouts`: `id`, `employee_id` (FK), `amount`, `original_computed_amount` (integer — the system-computed amount before any admin adjustment), `adjustment_reason` (text, nullable — required when `amount` differs from `original_computed_amount`), `method` (`cash` | `card` | `transfer`), `paid_at`, `period_business_day_ids` (integer array — the business day IDs covered by this payout), `recorded_by`, `notes` (nullable), `created_at`.
 
 Also add `payout_ticket_items`: `payout_id`, `ticket_item_id` (for stylists — links payout to specific items; allows detecting conflicts on reopen). And `payout_batch_pieces`: `payout_id`, `batch_piece_id` (for clothiers).
 
@@ -123,6 +124,8 @@ Also add `payout_ticket_items`: `payout_id`, `ticket_item_id` (for stylists — 
 - [ ] Migrations run without errors
 - [ ] `period_business_day_ids` stored as a Postgres integer array
 - [ ] Junction tables exist for linking payouts to the specific work items they cover
+- [ ] `original_computed_amount` column exists and is populated automatically from the earnings computation
+- [ ] `adjustment_reason` column exists (text, nullable) and is required when the admin adjusts the payout amount away from the computed value
 
 ---
 

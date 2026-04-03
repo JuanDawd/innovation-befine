@@ -26,6 +26,7 @@ Flows to test per role:
 - [ ] Forms are fillable on a phone keyboard (no content covered by the virtual keyboard)
 - [ ] All critical actions reachable within 3 taps on mobile
 - [ ] Accessibility check: all form inputs have labels; keyboard navigation works for all primary flows; colour contrast meets WCAG AA (4.5:1); focus indicators visible on interactive elements
+- [ ] Cross-browser testing matrix verified: Chrome 120+, Firefox 120+, Safari 17+ (iOS and macOS), Edge 120+. Device matrix: iPhone 13+ (or equivalent), mid-range Android with Chrome, desktop 1920x1080, desktop 1366x768. Screen reader: VoiceOver on iOS for clothier/stylist mobile flows, keyboard navigation on desktop for cashier/admin flows.
 - [ ] **Stretch — Dark mode:** If design tokens (T103) were built dark-mode-aware, implement a dark theme toggle. Test all screens in dark mode.
 - [ ] **Stretch — Gesture support:** Evaluate swipe interactions for mobile-primary roles: swipe to mark done (clothier), swipe to dismiss notifications. Only add if gesture UX testing shows clear improvement over tap.
 - [ ] **Stretch — Page transitions:** Add subtle transitions between list → detail → edit navigations (e.g. slide-in for detail views, fade for tab switches). Ensure breadcrumbs or back-links are present on all detail/edit views regardless.
@@ -145,11 +146,29 @@ Create a migration script or admin UI to import existing client records from the
 
 ---
 
+## T106 — User acceptance testing (UAT)
+
+**Phase:** 10 — Polish *(new — QA review Q7)*
+**Status:** pending
+**Dependencies:** T088
+
+### What to do
+Before go-live, each role representative (admin, secretary, stylist, clothier) uses the staging environment for one full simulated business day with realistic data. This is the final quality gate: real staff perform real workflows and report usability issues, confusion points, and missing features. Capture feedback in a structured form.
+
+### Acceptance criteria
+- [ ] Staging environment populated with realistic data (clients, services, employees, historical tickets)
+- [ ] One representative per role completes their full daily workflow on staging
+- [ ] Structured feedback collected per participant: task completed (yes/no), time taken, confusion points, workflow gaps, missing features
+- [ ] All critical feedback items addressed before T089 (go-live). Non-critical items logged in `docs/issues-tracker.md` for post-launch.
+- [ ] UAT sign-off recorded: participant name, date, overall verdict (ready / not ready)
+
+---
+
 ## T089 — Production cutover checklist
 
 **Phase:** 10 — Polish
 **Status:** pending
-**Dependencies:** T083, T084, T086, T087, T088, T100, T102
+**Dependencies:** T083, T084, T086, T087, T088, T100, T102, T106
 
 ### What to do
 Create and execute the go-live checklist before switching staff from the old system (spreadsheets) to the app.
@@ -168,4 +187,5 @@ Checklist items:
 ### Acceptance criteria
 - [ ] Every item on the checklist above is ticked
 - [ ] **Security review completed**: CSRF protection verified, XSS prevention confirmed (CSP headers set), rate limiting active on all mutation endpoints (not just login), SQL injection prevention verified (all queries use parameterized statements via Drizzle), no PII leaked in API error responses
+- [ ] **Rollback drill completed**: deploy a test "bad" version to staging, verify Vercel rollback works within 5 minutes, confirm database restore process from T086 is viable
 - [ ] A "go / no-go" decision is made by the business owner before staff cutover

@@ -20,6 +20,7 @@ Implement the atomic increment of `clients.no_show_count` when an appointment is
 - [ ] Only saved clients are affected (guests have no client record)
 - [ ] Increment is idempotent — marking the same appointment as no-show twice does not double-count
 - [ ] Warning badge in client search (from T032) updates to reflect new count
+- [ ] When a no-show status is **reversed** (e.g. changed back to completed or confirmed), `no_show_count` is **decremented** atomically. Decrement does not go below zero.
 
 ---
 
@@ -30,13 +31,14 @@ Implement the atomic increment of `clients.no_show_count` when an appointment is
 **Dependencies:** T029, T012
 
 ### What to do
-Create the `appointments` table: `id`, `client_id` (FK nullable), `guest_name` (nullable), `stylist_employee_id` (FK), `service_summary` (text — free description for now), `scheduled_at` (timestamp with timezone), `duration_minutes` (default 60), `status` (`booked` | `confirmed` | `completed` | `cancelled` | `rescheduled` | `no_show`), `cancelled_at` (nullable), `cancellation_reason` (nullable), `confirmation_sent_at` (nullable timestamp — used by T056 to record when the confirmation email was sent), `created_by`, `created_at`, `updated_at`.
+Create the `appointments` table: `id`, `client_id` (FK nullable), `guest_name` (nullable), `stylist_employee_id` (FK), `service_variant_id` (FK nullable — links to catalog for automatic ticket pre-population; when null, falls back to `service_summary`), `service_summary` (text — free description, used when no catalog link exists), `scheduled_at` (timestamp with timezone), `duration_minutes` (default 60), `status` (`booked` | `confirmed` | `completed` | `cancelled` | `rescheduled` | `no_show`), `cancelled_at` (nullable), `cancellation_reason` (nullable), `confirmation_sent_at` (nullable timestamp — used by T056 to record when the confirmation email was sent), `created_by`, `created_at`, `updated_at`.
 
 ### Acceptance criteria
 - [ ] Migration runs without errors
 - [ ] `status` uses Drizzle `pgEnum`
 - [ ] Either `client_id` or `guest_name` must be present
 - [ ] `confirmation_sent_at` column exists (nullable timestamp) — used by T056
+- [ ] `service_variant_id` column exists (FK nullable, references `service_variants.id`) — when present, ticket creation from this appointment auto-populates the service. When null, `service_summary` text is used as a fallback.
 
 ---
 

@@ -130,3 +130,22 @@ Add a "Download CSV" button to the analytics screen that exports the selected pe
 - [ ] CSV includes: business day date, revenue, jobs count, per-employee earnings
 - [ ] File name includes the period (e.g. `innovation-befine-2026-03.csv`)
 - [ ] Download works on mobile (opens as a file, not a new tab)
+
+---
+
+## T107 — Performance testing
+
+**Phase:** 8 — Analytics *(new — QA review Q11)*
+**Status:** pending
+**Dependencies:** T101
+
+### What to do
+Using the analytics seed data (T101, 6 months of realistic data), run performance benchmarks and compare results against the targets defined in T002. Measure API response times, page load times on simulated mobile (4G throttling), and Pusher event delivery latency. Document results and flag any endpoints that exceed targets.
+
+### Acceptance criteria
+- [ ] All analytics queries (T071) complete in < 200 ms on seeded data (post-T075 indexes)
+- [ ] All non-analytics API endpoints respond in < 500 ms (P95) under normal load
+- [ ] LCP measured on simulated mid-range mobile (Chrome DevTools, 4G throttle) for: login page, cashier dashboard, checkout flow, analytics dashboard — all < 2.5 s
+- [ ] Pusher event delivery latency measured: < 2 s from server publish to client receipt
+- [ ] Results documented in `docs/testing/performance-results.md` with comparison to T002 targets
+- [ ] Any endpoint exceeding targets is flagged as an issue in `docs/issues-tracker.md`

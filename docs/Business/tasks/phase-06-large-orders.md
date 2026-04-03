@@ -11,7 +11,7 @@
 **Dependencies:** T029
 
 ### What to do
-Create `large_orders`: `id`, `client_id` (FK — must be a saved client, not guest), `description` (text), `total_price`, `deposit_paid`, `balance_due` (computed: `total_price - sum(payments)`), `status` (`pending` | `in_production` | `ready` | `delivered` | `paid_in_full` | `cancelled`), `estimated_delivery_at` (nullable), `notes` (nullable), `cancellation_reason` (nullable — required when status is `cancelled`), `cancelled_at` (nullable), `created_by`, `created_at`, `updated_at`.
+Create `large_orders`: `id`, `client_id` (FK — must be a saved client, not guest), `description` (text), `total_price`, `balance_due` (computed in queries: `total_price - sum(payments)` — not stored as a column), `status` (`pending` | `in_production` | `ready` | `delivered` | `paid_in_full` | `cancelled`), `estimated_delivery_at` (nullable), `notes` (nullable), `cancellation_reason` (nullable — required when status is `cancelled`), `cancelled_at` (nullable), `created_by`, `created_at`, `updated_at`. Note: `deposit_paid` column removed — deposit status is computed from the `large_order_payments` table to avoid dual source of truth (M-13 resolution).
 
 Also create `large_order_payments`: `id`, `order_id` (FK), `amount`, `method` (`cash` | `card` | `transfer`), `paid_at`, `recorded_by`.
 

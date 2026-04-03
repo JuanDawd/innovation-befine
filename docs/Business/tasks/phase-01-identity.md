@@ -11,12 +11,13 @@
 **Dependencies:** T006
 
 ### What to do
-Create the `employees` table in Drizzle schema and run the migration. Fields: `id`, `user_id` (FK to auth users), `role`, `stylist_subtype` (nullable), `daily_rate` (for secretary; nullable), `show_earnings` flag, `is_active`, `hired_at`, `deactivated_at` (nullable), `created_at`.
+Create the `employees` table in Drizzle schema and run the migration. Fields: `id`, `user_id` (FK to auth users), `role`, `stylist_subtype` (nullable), `daily_rate` (for secretary; nullable), `expected_work_days` (integer 1–7, default 6 — supports part-time employees), `show_earnings` flag, `is_active`, `hired_at`, `deactivated_at` (nullable), `created_at`.
 
 ### Acceptance criteria
 - [ ] Migration runs without errors on Neon dev branch
 - [ ] All fields present with correct types and constraints
 - [ ] `user_id` has a unique constraint (one employee record per user)
+- [ ] `expected_work_days` column exists (integer, default 6, check constraint 1–7) — used by T065 to compute secretary earnings for part-time employees
 
 ---
 
@@ -139,6 +140,8 @@ Create the `business_days` table (migration: `id`, `opened_at`, `closed_at` null
 - [ ] Open and close timestamps recorded with the acting user's ID
 - [ ] Current open business day ID is accessible in a shared server context (e.g. a helper function)
 - [ ] Admin home screen shows current day status (open / closed / last closed at)
+- [ ] "Open day" action includes a loading state (spinner or skeleton) to handle Neon cold start delay (~0.5–2s after inactivity). User sees clear feedback that the operation is in progress.
+- [ ] Admin can **reopen** the most recently closed business day (audit trail logged: who reopened, when, and reason). Only the single most recently closed day can be reopened — not arbitrary past days. Reopen action requires a confirmation dialog with a reason field.
 
 ---
 
