@@ -13,7 +13,7 @@ export default function HomePage() {
       <p className="text-muted-foreground">{t("home.subtitle")}</p>
       <div className="flex gap-2">
         {roles.map((role) => (
-          <Button key={role} variant="outline">
+          <Button key={role} variant="outline" aria-label={role}>
             {t(`roles.${role}`)}
           </Button>
         ))}
