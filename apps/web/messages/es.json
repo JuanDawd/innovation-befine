@@ -1,0 +1,87 @@
+{
+  "common": {
+    "appName": "Innovation Befine",
+    "loading": "Cargando…",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "create": "Crear",
+    "search": "Buscar…",
+    "clearFilters": "Limpiar filtros",
+    "clearSearch": "Limpiar búsqueda",
+    "noResults": "No se encontraron resultados.",
+    "back": "Volver",
+    "close": "Cerrar",
+    "optional": "(opcional)",
+    "required": "obligatorio",
+    "yes": "Sí",
+    "no": "No"
+  },
+  "roles": {
+    "admin": "Administrador",
+    "secretary": "Secretaria",
+    "stylist": "Estilista",
+    "clothier": "Confeccionista"
+  },
+  "stylistSubtypes": {
+    "manicurist": "Manicurista",
+    "spa_manager": "Encargada de spa",
+    "hairdresser": "Estilista",
+    "masseuse": "Masajista",
+    "makeup_artist": "Maquilladora"
+  },
+  "auth": {
+    "login": "Iniciar sesión",
+    "logout": "Cerrar sesión",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "resetPassword": "Restablecer contraseña",
+    "changePassword": "Cambiar contraseña"
+  },
+  "status": {
+    "logged": "Registrado",
+    "pending": "Pendiente",
+    "booked": "Reservado",
+    "awaiting_payment": "Esperando pago",
+    "in_production": "En producción",
+    "confirmed": "Confirmado",
+    "reopened": "Reabierto",
+    "done_pending_approval": "Hecho, pendiente aprobación",
+    "rescheduled": "Reprogramado",
+    "closed": "Cerrado",
+    "approved": "Aprobado",
+    "delivered": "Entregado",
+    "paid_in_full": "Pagado completo",
+    "completed": "Completado",
+    "cancelled": "Cancelado",
+    "no_show": "No se presentó"
+  },
+  "businessDay": {
+    "open": "Abrir día",
+    "close": "Cerrar día",
+    "reopen": "Reabrir día",
+    "dayOpen": "Día abierto",
+    "dayClosed": "Día cerrado"
+  },
+  "errors": {
+    "generic": "Ocurrió un error inesperado. Intenta de nuevo.",
+    "unauthorized": "No tienes permiso para realizar esta acción.",
+    "notFound": "El recurso solicitado no fue encontrado.",
+    "validation": "Por favor corrige los errores en el formulario.",
+    "networkError": "Error de conexión. Verifica tu internet.",
+    "rateLimited": "Demasiados intentos. Intenta de nuevo en {minutes} minutos."
+  },
+  "time": {
+    "justNow": "Justo ahora",
+    "minutesAgo": "Hace {count} {count, plural, one {minuto} other {minutos}}",
+    "hoursAgo": "Hace {count} {count, plural, one {hora} other {horas}}",
+    "daysAgo": "Hace {count} {count, plural, one {día} other {días}}"
+  },
+  "home": {
+    "title": "Innovation Befine",
+    "subtitle": "Plataforma de operaciones internas"
+  }
+}

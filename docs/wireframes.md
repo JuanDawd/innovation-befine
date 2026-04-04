@@ -1,0 +1,785 @@
+# Key screen wireframes — Innovation Befine
+
+> Defined in T104. Low-fidelity layout specifications for the 7 most critical screens.
+> These define structure, component placement, and information hierarchy — not pixel-perfect designs.
+>
+> **Design tokens and components** referenced here are from `docs/design-system.md` (T103).
+
+---
+
+## Layout patterns
+
+Use the appropriate pattern based on the screen's purpose:
+
+| Pattern               | When to use                                             | Examples                                           |
+| --------------------- | ------------------------------------------------------- | -------------------------------------------------- |
+| **Full-width list**   | Browse/manage homogeneous collections                   | Employee list, ticket history, client list         |
+| **Card grid**         | Dashboard overviews, batch/order summaries              | Cashier dashboard, admin home, batch list          |
+| **Sidebar + content** | Detail views with navigation or contextual info         | Employee profile, order detail, appointment detail |
+| **Full-page form**    | Creation/editing flows with multiple fields             | Employee creation, service catalog edit            |
+| **Stepped flow**      | Multi-step processes requiring validation between steps | Checkout, payout recording                         |
+| **Calendar**          | Time-based views with slots or date ranges              | Appointment calendar, absence calendar             |
+
+---
+
+## Responsive breakpoints
+
+| Breakpoint | Width      | Tailwind prefix | Primary users        |
+| ---------- | ---------- | --------------- | -------------------- |
+| Mobile     | < 768px    | (default)       | Stylist, Clothier    |
+| Tablet     | 768–1024px | `md:`           | Secretary            |
+| Desktop    | > 1024px   | `lg:`           | Admin, Cashier/Admin |
+
+**Mobile-first roles:** Stylist and Clothier screens are designed mobile-first. Admin and Secretary screens are desktop-first with mobile adaptation.
+
+---
+
+## App shell (T090)
+
+All authenticated screens share a common shell. The shell adapts by role.
+
+### Desktop (> 1024px)
+
+```
+┌──────────────────────────────────────────────────────────┐
+│  [Logo]  Innovation Befine          [🔔 3]  [User ▾]    │
+├────────────┬─────────────────────────────────────────────┤
+│            │                                             │
+│  Sidebar   │          Page content                       │
+│            │                                             │
+│  • Home    │                                             │
+│  • [role   │                                             │
+│    items]  │                                             │
+│            │                                             │
+│            │                                             │
+│            │                                             │
+│  ────────  │                                             │
+│  Settings  │                                             │
+│  Logout    │                                             │
+│            │                                             │
+├────────────┴─────────────────────────────────────────────┤
+```
+
+### Mobile (< 768px)
+
+```
+┌──────────────────────────┐
+│  [☰]  Innovation Befine  │
+├──────────────────────────┤
+│                          │
+│     Page content         │
+│     (full width)         │
+│                          │
+│                          │
+│                          │
+├──────────────────────────┤
+│  [🏠] [📋] [📊] [⚙️]    │
+│  Home  Tab2 Tab3 More    │
+└──────────────────────────┘
+```
+
+Bottom navigation items vary by role:
+
+| Role      | Tab 1 | Tab 2      | Tab 3        | Tab 4 |
+| --------- | ----- | ---------- | ------------ | ----- |
+| Admin     | Home  | Dashboard  | Employees    | More  |
+| Secretary | Home  | Tickets    | Appointments | More  |
+| Stylist   | Home  | My tickets | Appointments | More  |
+| Clothier  | Home  | My batches | —            | More  |
+
+---
+
+## 1. Login page (T016)
+
+**Layout:** Full-page centred form. No sidebar/nav — pre-authentication.
+**Primary viewport:** Desktop (admin opens the salon's device each morning).
+
+### Desktop
+
+```
+┌──────────────────────────────────────────────────────────┐
+│                                                          │
+│                                                          │
+│                    [Logo / Wordmark]                      │
+│                   Innovation Befine                       │
+│                                                          │
+│               ┌──────────────────────┐                   │
+│               │                      │                   │
+│               │  Correo electrónico  │                   │
+│               │  ┌────────────────┐  │                   │
+│               │  │                │  │                   │
+│               │  └────────────────┘  │                   │
+│               │                      │                   │
+│               │  Contraseña          │                   │
+│               │  ┌────────────────┐  │                   │
+│               │  │            [👁] │  │                   │
+│               │  └────────────────┘  │                   │
+│               │                      │                   │
+│               │  [¿Olvidaste tu      │                   │
+│               │   contraseña?]       │                   │
+│               │                      │                   │
+│               │  ┌────────────────┐  │                   │
+│               │  │ Iniciar sesión │  │                   │
+│               │  └────────────────┘  │                   │
+│               │                      │                   │
+│               └──────────────────────┘                   │
+│                                                          │
+│               [ES | EN] language toggle                   │
+│                                                          │
+└──────────────────────────────────────────────────────────┘
+```
+
+### Mobile
+
+Same layout, form takes full width with `px-4` padding. Logo smaller. Language toggle below the card.
+
+### Key decisions
+
+- Brand logo/wordmark prominently centered (T105 assets)
+- Single form card with `shadow-md`, `rounded-xl`
+- Password field has visibility toggle
+- "Forgot password?" link below password field, text-aligned right
+- Primary button full width
+- Error messages inline under each field (red text, `aria-describedby`)
+- Rate limit feedback: toast message "Demasiados intentos, intenta de nuevo en X minutos"
+- Language toggle at bottom — subtle, not prominent
+- No "remember me" checkbox (sessions managed by Better Auth)
+- Loading state: button shows `Spinner` + disabled during submit
+
+---
+
+## 2. Cashier dashboard (T036)
+
+**Layout:** Card grid (Kanban-style columns).
+**Primary viewport:** Desktop — cashier uses a fixed POS screen.
+**Real-time:** Live updates via `useRealtimeEvent`.
+
+### Desktop
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│  Sidebar  │  Dashboard del cajero              [🔔 2] [User ▾]  │
+│           ├──────────────────────────────────────────────────────┤
+│           │                                                      │
+│           │  Día: Lunes 14 Abril 2026    Estado: ● Abierto      │
+│           │  Ingresos del día: $1.250.000    Tickets: 12        │
+│           │                                                      │
+│           │  ┌─ Registrado ──┐ ┌─ Por pagar ───┐ ┌─ Cerrado ──┐│
+│           │  │               │ │               │ │             ││
+│           │  │ ┌───────────┐ │ │ ┌───────────┐ │ │ ┌─────────┐││
+│           │  │ │ María L.  │ │ │ │ Ana G.    │ │ │ │ Pedro M.│││
+│           │  │ │ Estilista │ │ │ │ Estilista │ │ │ │ $85.000 │││
+│           │  │ │ Corte +   │ │ │ │ Tinte +   │ │ │ │ Efectivo│││
+│           │  │ │ Manicure  │ │ │ │ Peinado   │ │ │ │ 2:30 PM │││
+│           │  │ │ $120.000  │ │ │ │ $185.000  │ │ │ └─────────┘││
+│           │  │ │ [Cobrar→] │ │ │ │ [Cobrar→] │ │ │             ││
+│           │  │ └───────────┘ │ │ └───────────┘ │ │ ┌─────────┐││
+│           │  │               │ │               │ │ │ Laura S.│││
+│           │  │ ┌───────────┐ │ │               │ │ │ $62.000 │││
+│           │  │ │ Juan P.   │ │ │               │ │ │ Tarjeta │││
+│           │  │ │ Modista   │ │ │               │ │ │ 1:15 PM │││
+│           │  │ │ 3 piezas  │ │ │               │ │ └─────────┘││
+│           │  │ │ $45.000   │ │ │               │ │             ││
+│           │  │ └───────────┘ │ │               │ │             ││
+│           │  │               │ │               │ │             ││
+│           │  │  + Nuevo      │ │               │ │             ││
+│           │  └───────────────┘ └───────────────┘ └─────────────┘│
+│           │                                                      │
+│           │  [SearchFilter: buscar ticket, cliente, empleado]    │
+│           │                                                      │
+└───────────┴──────────────────────────────────────────────────────┘
+```
+
+### Mobile
+
+Columns collapse to horizontal scroll tabs or a dropdown filter:
+
+```
+┌──────────────────────────┐
+│  ☰  Dashboard     🔔 2   │
+├──────────────────────────┤
+│ Día: Lun 14 Abr ● Abierto│
+│ Ingresos: $1.250.000     │
+├──────────────────────────┤
+│ [Registrado] Por pagar  Cerrado │ ← horizontal scroll tabs
+├──────────────────────────┤
+│ ┌──────────────────────┐ │
+│ │ María L. — Estilista │ │
+│ │ Corte + Manicure     │ │
+│ │ $120.000             │ │
+│ │ [Cobrar →]           │ │
+│ └──────────────────────┘ │
+│ ┌──────────────────────┐ │
+│ │ Juan P. — Modista    │ │
+│ │ 3 piezas             │ │
+│ │ $45.000              │ │
+│ └──────────────────────┘ │
+│                          │
+│ [+ Nuevo ticket]         │
+├──────────────────────────┤
+│  🏠  📋  📊  ⚙️          │
+└──────────────────────────┘
+```
+
+### Key decisions
+
+- **Three-column Kanban**: Registrado (logged) → Por pagar (awaiting_payment) → Cerrado (closed)
+- Ticket cards show: client name, employee name + role, services summary, total amount
+- "Cobrar" (checkout) CTA on cards in "Por pagar" column
+- Day summary bar at top: business day status, total revenue, ticket count
+- New tickets appear with `fade-in` + 2s highlight animation
+- Status changes animate with 300ms colour transition
+- Keyboard navigation: Tab through cards, Enter to open, Ctrl+N for new ticket
+- Search/filter bar at bottom — search by ticket, client, or employee name
+- Closed column cards are more subdued (`opacity-70`) with payment method and time
+
+---
+
+## 3. Checkout flow (T038)
+
+**Layout:** Stepped flow (3 steps). Full-page, no sidebar on mobile.
+**Primary viewport:** Desktop (cashier POS).
+
+### Step 1: Review items
+
+```
+┌──────────────────────────────────────────────────────────┐
+│  Sidebar  │  Cobrar ticket #1042          Paso 1 de 3    │
+│           ├──────────────────────────────────────────────┤
+│           │                                              │
+│           │  Cliente: Ana García                         │
+│           │  Estilista: María López (Estilista)          │
+│           │                                              │
+│           │  ┌────────────────────────────────────────┐  │
+│           │  │  Servicio              Precio          │  │
+│           │  ├────────────────────────────────────────┤  │
+│           │  │  Tinte (cabello largo)  $120.000       │  │
+│           │  │  Peinado                 $65.000       │  │
+│           │  ├────────────────────────────────────────┤  │
+│           │  │                   Total: $185.000      │  │
+│           │  └────────────────────────────────────────┘  │
+│           │                                              │
+│           │  [Modificar precio]  (cashier only, logs     │
+│           │                       override reason)       │
+│           │                                              │
+│           │            [Cancelar]  [Siguiente →]         │
+│           │                                              │
+└───────────┴──────────────────────────────────────────────┘
+```
+
+### Step 2: Payment
+
+```
+┌──────────────────────────────────────────────────────────┐
+│  Sidebar  │  Cobrar ticket #1042          Paso 2 de 3    │
+│           ├──────────────────────────────────────────────┤
+│           │                                              │
+│           │  Total a pagar: $185.000                     │
+│           │                                              │
+│           │  Método de pago:                             │
+│           │  ┌──────────┐ ┌──────────┐ ┌──────────┐     │
+│           │  │ Efectivo │ │ Tarjeta  │ │Transfer. │     │
+│           │  │    ✓     │ │          │ │          │     │
+│           │  └──────────┘ └──────────┘ └──────────┘     │
+│           │                                              │
+│           │  [+ Dividir pago]                            │
+│           │                                              │
+│           │  ── Cuando "Dividir pago" activo: ──         │
+│           │  Pago 1: [$120.000 ] [Efectivo ▾]            │
+│           │  Pago 2: [$ 65.000 ] [Tarjeta  ▾]            │
+│           │          Restante: $0                         │
+│           │                                              │
+│           │          [← Atrás]  [Siguiente →]            │
+│           │                                              │
+└───────────┴──────────────────────────────────────────────┘
+```
+
+### Step 3: Confirm
+
+```
+┌──────────────────────────────────────────────────────────┐
+│  Sidebar  │  Cobrar ticket #1042          Paso 3 de 3    │
+│           ├──────────────────────────────────────────────┤
+│           │                                              │
+│           │  ┌────────────────────────────────────────┐  │
+│           │  │          Resumen de cobro              │  │
+│           │  │                                        │  │
+│           │  │  Cliente: Ana García                   │  │
+│           │  │  Estilista: María López                │  │
+│           │  │                                        │  │
+│           │  │  Tinte (cabello largo)     $120.000    │  │
+│           │  │  Peinado                    $65.000    │  │
+│           │  │  ─────────────────────────────────     │  │
+│           │  │  Total                     $185.000    │  │
+│           │  │                                        │  │
+│           │  │  Pago: Efectivo $120.000               │  │
+│           │  │        Tarjeta   $65.000               │  │
+│           │  │                                        │  │
+│           │  └────────────────────────────────────────┘  │
+│           │                                              │
+│           │  ⚠ Esta acción no se puede deshacer          │
+│           │    fácilmente.                               │
+│           │                                              │
+│           │        [← Atrás]  [✓ Confirmar cobro]        │
+│           │                                              │
+│           │  (Confirmar uses ConfirmationDialog           │
+│           │   variant="destructive" with optimistic lock) │
+│           │                                              │
+└───────────┴──────────────────────────────────────────────┘
+```
+
+### Post-checkout confirmation
+
+```
+┌──────────────────────────────────────────────────────────┐
+│           │                                              │
+│           │           ✓ Cobro exitoso                    │
+│           │                                              │
+│           │     Ticket #1042 cerrado                     │
+│           │     Total: $185.000                          │
+│           │                                              │
+│           │   [🖨 Imprimir]   [Volver al dashboard]       │
+│           │                                              │
+└───────────┴──────────────────────────────────────────────┘
+```
+
+### Mobile
+
+Steps stack vertically. Step indicators become a compact progress bar at the top. Payment method buttons stack in a 2×2 grid. Split payment fields stack vertically.
+
+### Key decisions
+
+- 3-step flow: Review → Payment → Confirm — prevents accidental charges
+- Step indicator bar at top with current step highlighted
+- Price override: only on Step 1, cashier-only, reason field required
+- Split payment: starts as single payment, "Dividir pago" toggle reveals split fields
+- Split payment validation: all amounts must sum to total, no negative amounts
+- Confirmation step uses `ConfirmationDialog` with `variant="destructive"`
+- Optimistic lock: if ticket was modified between page load and confirm, show stale data warning
+- Post-checkout: confirmation screen with print option + return to dashboard
+- All monetary amounts use `font-mono tabular-nums` for alignment
+
+---
+
+## 4. Admin home (T093)
+
+**Layout:** Card grid (dashboard).
+**Primary viewport:** Desktop.
+
+### Desktop
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│  Sidebar  │  Panel de administración          [🔔 2] [User ▾]   │
+│           ├──────────────────────────────────────────────────────┤
+│           │                                                      │
+│           │  ┌─ Día de trabajo ──────────────────────────────┐   │
+│           │  │  Lunes 14 Abril 2026       ● Abierto          │   │
+│           │  │  Abierto hace 6 horas                         │   │
+│           │  │                          [Cerrar día]          │   │
+│           │  └───────────────────────────────────────────────┘   │
+│           │                                                      │
+│           │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌────────┐  │
+│           │  │ Ingresos │ │ Tickets  │ │ Tickets  │ │ Citas  │  │
+│           │  │ del día  │ │ abiertos │ │ cerrados │ │  hoy   │  │
+│           │  │          │ │          │ │          │ │        │  │
+│           │  │$1.250.000│ │    5     │ │    12    │ │   8    │  │
+│           │  │ +15% ↑   │ │          │ │          │ │ 3 conf.│  │
+│           │  └──────────┘ └──────────┘ └──────────┘ └────────┘  │
+│           │                                                      │
+│           │  ┌─ Alertas ─────────────────────────────────────┐   │
+│           │  │  ⚠ 3 empleados con pagos pendientes           │   │
+│           │  │  ⚠ 1 solicitud de edición sin revisar         │   │
+│           │  └───────────────────────────────────────────────┘   │
+│           │                                                      │
+│           │  ┌─ Acciones rápidas ─────────────────────────────┐  │
+│           │  │  [+ Nuevo ticket]  [👥 Empleados]  [📋 Catálogo]│  │
+│           │  │  [📊 Reportes]     [💰 Liquidar]   [📅 Citas]   │  │
+│           │  └───────────────────────────────────────────────┘   │
+│           │                                                      │
+└───────────┴──────────────────────────────────────────────────────┘
+```
+
+### Mobile
+
+```
+┌──────────────────────────┐
+│  ☰  Admin         🔔 2   │
+├──────────────────────────┤
+│ Lun 14 Abr   ● Abierto  │
+│            [Cerrar día]  │
+├──────────────────────────┤
+│ ┌──────────┐┌──────────┐ │
+│ │ Ingresos ││ Tickets  │ │
+│ │$1.250.000││ abiertos │ │
+│ │ +15% ↑   ││    5     │ │
+│ └──────────┘└──────────┘ │
+│ ┌──────────┐┌──────────┐ │
+│ │ Cerrados ││ Citas    │ │
+│ │   12     ││   8      │ │
+│ └──────────┘└──────────┘ │
+├──────────────────────────┤
+│ ⚠ 3 pagos pendientes    │
+│ ⚠ 1 edición sin revisar │
+├──────────────────────────┤
+│ [+ Ticket] [Empleados]  │
+│ [Reportes] [Liquidar]   │
+├──────────────────────────┤
+│  🏠  📋  📊  ⚙️          │
+└──────────────────────────┘
+```
+
+### Key decisions
+
+- Business day status is the most prominent element — admin opens/closes the day here
+- KPI cards: 2×2 grid on desktop, stacked pairs on mobile
+- Revenue KPI shows delta vs same day last week (e.g., "+15% ↑" with green text)
+- "Cerrar día" uses `ConfirmationDialog` with `variant="destructive"`
+- Alerts section: amber background, links to relevant screens
+- Quick actions: 6 buttons in a 3×2 grid (desktop) or 2×3 grid (mobile)
+- KPI values use `font-mono tabular-nums` and `text-2xl font-bold`
+- Loading state: `PageSkeleton` with card-shaped placeholders
+- Empty state (no business day open): prominent "Abrir día" CTA with `EmptyState` component
+
+---
+
+## 5. Appointment calendar (T052)
+
+**Layout:** Calendar (day view default).
+**Primary viewport:** Desktop for secretary; mobile for stylist viewing own schedule.
+
+### Desktop — Day view (time slots × stylists)
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│  Sidebar  │  Citas                            [🔔] [User ▾]     │
+│           ├──────────────────────────────────────────────────────┤
+│           │                                                      │
+│           │  [← Ayer]  Lunes 14 Abril 2026  [Mañana →]          │
+│           │                          [📅 Ir a fecha]             │
+│           │                                                      │
+│           │       │ María L.  │ Ana G.    │ Laura S.  │          │
+│           │  ─────┼───────────┼───────────┼───────────┤          │
+│           │  8:00 │           │ ░░░░░░░░░ │           │          │
+│           │       │           │ Corte     │           │          │
+│           │       │           │ Sra. Díaz │           │          │
+│           │  ─────┼───────────┼───────────┼───────────┤          │
+│           │  9:00 │ ░░░░░░░░░ │           │           │          │
+│           │       │ Tinte     │           │           │          │
+│           │       │ Sr. Ruiz  │           │           │          │
+│           │  9:30 │ ░░░░░░░░░ │           │           │          │
+│           │       │ (cont.)   │           │           │          │
+│           │  ─────┼───────────┼───────────┼───────────┤          │
+│           │ 10:00 │           │           │ ░░░░░░░░░ │          │
+│           │       │           │           │ Manicure  │          │
+│           │       │           │           │ Sra. Peña │          │
+│           │  ─────┼───────────┼───────────┼───────────┤          │
+│           │ 10:30 │           │           │           │          │
+│           │       │           │           │           │          │
+│           │  ...  │           │           │           │          │
+│           │                                                      │
+│           │  [+ Nueva cita]                                      │
+│           │                                                      │
+│           │  Legend: ● Confirmada  ○ Reservada  ⊘ Cancelada      │
+│           │                                                      │
+└───────────┴──────────────────────────────────────────────────────┘
+```
+
+### Mobile — Stacked list
+
+```
+┌──────────────────────────┐
+│  ☰  Citas         🔔     │
+├──────────────────────────┤
+│ [←] Lun 14 Abr [→] [📅] │
+├──────────────────────────┤
+│                          │
+│ 8:00 AM                  │
+│ ┌──────────────────────┐ │
+│ │ Corte — Sra. Díaz    │ │
+│ │ Ana G. (Estilista)   │ │
+│ │ ● Confirmada         │ │
+│ └──────────────────────┘ │
+│                          │
+│ 9:00 AM                  │
+│ ┌──────────────────────┐ │
+│ │ Tinte — Sr. Ruiz     │ │
+│ │ María L. (Estilista) │ │
+│ │ ○ Reservada          │ │
+│ └──────────────────────┘ │
+│                          │
+│ 10:00 AM                 │
+│ ┌──────────────────────┐ │
+│ │ Manicure — Sra. Peña │ │
+│ │ Laura S. (Manicurista)│ │
+│ │ ● Confirmada         │ │
+│ └──────────────────────┘ │
+│                          │
+│ [+ Nueva cita]           │
+├──────────────────────────┤
+│  🏠  📋  📅  ⚙️          │
+└──────────────────────────┘
+```
+
+### Key decisions
+
+- **Default view: day** — salon needs to see today's schedule at a glance
+- Desktop: time-slot grid with stylists as columns — shows gaps and conflicts visually
+- Mobile: stacked chronological list — touch-friendly cards
+- Day navigation: arrows for prev/next day + date picker for jumping to specific date
+- Appointment cards show: service, client name, stylist, status badge
+- Appointment statuses use `StatusBadge`: booked (grey), confirmed (blue), completed (green), cancelled (red), no-show (red), rescheduled (amber)
+- Click/tap on appointment → detail sheet/modal with actions (confirm, cancel, mark no-show)
+- "+ Nueva cita" FAB on mobile, button on desktop
+- Double-booking: when booking, conflicting time slots highlighted red with disabled state
+- Empty time slots are clickable to create a new appointment at that time
+- Week view available as a secondary toggle (shows day headers with appointment counts)
+
+---
+
+## 6. Payroll settlement (T067)
+
+**Layout:** Stepped flow (sidebar + content).
+**Primary viewport:** Desktop (admin-only screen).
+
+### Main view: Employee selector + date range
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│  Sidebar  │  Liquidación de pagos             [🔔] [User ▾]     │
+│           ├──────────────────────────────────────────────────────┤
+│           │                                                      │
+│           │  Periodo: [07 Abr 2026] — [13 Abr 2026]  [Aplicar]  │
+│           │                                                      │
+│           │  ┌────────────────────────────────────────────────┐   │
+│           │  │  Empleado       │ Rol       │ Ganancia │ Estado│   │
+│           │  ├────────────────────────────────────────────────┤   │
+│           │  │  María López    │ Estilista │ $485.000 │ ⚠ Pend│   │
+│           │  │  Ana García     │ Estilista │ $320.000 │ ⚠ Pend│   │
+│           │  │  Juan Pérez     │ Modista   │ $180.000 │ ⚠ Pend│   │
+│           │  │  Laura Sánchez  │ Secretaria│ $360.000 │ ✓ Pago│   │
+│           │  │  Pedro Martínez │ Estilista │ $275.000 │ ⚠ Pend│   │
+│           │  └────────────────────────────────────────────────┘   │
+│           │                                                      │
+│           │  Resumen: 4 pendientes ($1.260.000)                  │
+│           │           1 liquidado  ($360.000)                    │
+│           │                                                      │
+│           │  [Filter: Pendientes | Liquidados | Todos]            │
+│           │                                                      │
+└───────────┴──────────────────────────────────────────────────────┘
+```
+
+### Detail: Earnings breakdown + payout form
+
+When a row is clicked:
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│  Sidebar  │  Liquidar — María López            [← Volver]       │
+│           ├──────────────────────────────────────────────────────┤
+│           │                                                      │
+│           │  Período: 07 Abr — 13 Abr 2026                      │
+│           │  Rol: Estilista (Estilista de cabello)               │
+│           │                                                      │
+│           │  ┌─ Desglose de ganancias ───────────────────────┐   │
+│           │  │                                               │   │
+│           │  │  Fecha  │ Ticket │ Servicio       │ Comisión  │   │
+│           │  │  07 Abr │ #1030  │ Tinte largo    │  $48.000  │   │
+│           │  │  07 Abr │ #1031  │ Corte medio    │  $18.000  │   │
+│           │  │  08 Abr │ #1035  │ Alisado        │  $72.000  │   │
+│           │  │  09 Abr │ #1038  │ Tinte corto    │  $36.000  │   │
+│           │  │  ...    │        │                │           │   │
+│           │  │─────────┴────────┴────────────────┴───────────│   │
+│           │  │                      Total ganado: $485.000   │   │
+│           │  └───────────────────────────────────────────────┘   │
+│           │                                                      │
+│           │  ┌─ Registrar pago ──────────────────────────────┐   │
+│           │  │                                               │   │
+│           │  │  Monto calculado:  $485.000                   │   │
+│           │  │  Monto a pagar:    [$485.000      ]           │   │
+│           │  │                                               │   │
+│           │  │  Razón del ajuste: [________________]          │   │
+│           │  │  (requerido si el monto difiere del calculado) │   │
+│           │  │                                               │   │
+│           │  │  Método de pago:                              │   │
+│           │  │  [Efectivo ▾]                                 │   │
+│           │  │                                               │   │
+│           │  │              [Cancelar]  [Confirmar pago]     │   │
+│           │  └───────────────────────────────────────────────┘   │
+│           │                                                      │
+│           │  (Confirmar uses ConfirmationDialog                  │
+│           │   variant="destructive" — stores                     │
+│           │   original_computed_amount + adjustment_reason)      │
+│           │                                                      │
+└───────────┴──────────────────────────────────────────────────────┘
+```
+
+### Key decisions
+
+- Two-panel approach: employee list → click → earnings detail + payout form
+- Date range picker at top — defaults to current week
+- Employee table sortable by name, role, earnings amount
+- Status: "Pendiente" (amber) vs "Liquidado" (green) using `StatusBadge`
+- Summary bar shows total pending vs paid
+- Earnings breakdown: full audit trail — every ticket/piece that generated earnings
+- Payout form shows computed amount pre-filled; admin can adjust with required reason
+- `original_computed_amount` stored alongside actual payout for audit
+- "Confirmar pago" uses `ConfirmationDialog` with `variant="destructive"`
+- Double-pay prevention: if period is already settled, payout form is disabled with explanation
+- All amounts `font-mono tabular-nums`, right-aligned in tables
+
+---
+
+## 7. Analytics dashboard (T072–T074)
+
+**Layout:** Card grid with charts.
+**Primary viewport:** Desktop (admin-only).
+
+### Desktop
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│  Sidebar  │  Reportes y analíticas            [🔔] [User ▾]     │
+│           ├──────────────────────────────────────────────────────┤
+│           │                                                      │
+│           │  [Hoy]  [Esta semana]  [Este mes]   [Rango ▾]       │
+│           │                                                      │
+│           │  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐  │
+│           │  │   Ingresos   │ │   Tickets    │ │  Servicios   │  │
+│           │  │  $8.450.000  │ │     142      │ │     189      │  │
+│           │  │  +12% ↑      │ │  +8% ↑       │ │  +5% ↑       │  │
+│           │  │  vs semana   │ │  vs semana   │ │  vs semana   │  │
+│           │  │  anterior    │ │  anterior    │ │  anterior    │  │
+│           │  └──────────────┘ └──────────────┘ └──────────────┘  │
+│           │                                                      │
+│           │  ┌─ Ingresos diarios ────────────────────────────┐   │
+│           │  │                                               │   │
+│           │  │   █                                           │   │
+│           │  │   █  █     █                                  │   │
+│           │  │   █  █  █  █  █                               │   │
+│           │  │   █  █  █  █  █  █                            │   │
+│           │  │  ─── ── ── ── ── ── ──  ← previous period    │   │
+│           │  │  Lun Mar Mié Jue Vie Sáb Dom                 │   │
+│           │  │                                               │   │
+│           │  │  ■ Esta semana  --- Semana anterior           │   │
+│           │  └───────────────────────────────────────────────┘   │
+│           │                                                      │
+│           │  ┌─ Rendimiento por empleado ─────────────────────┐  │
+│           │  │                                                │  │
+│           │  │  Empleado       │ Trabajos │ Ganancia │ Δ vs   │  │
+│           │  │  María López    │    28    │ $985.000 │ +18% ↑ │  │
+│           │  │  Ana García     │    24    │ $780.000 │  +5% ↑ │  │
+│           │  │  Pedro Martínez │    22    │ $650.000 │  -3% ↓ │  │
+│           │  │  Laura Sánchez  │    19    │ $520.000 │ +12% ↑ │  │
+│           │  │  Juan Pérez     │   145 pz │ $435.000 │  +8% ↑ │  │
+│           │  │                                                │  │
+│           │  │  [Ver detalle →] on each row                   │  │
+│           │  └────────────────────────────────────────────────┘  │
+│           │                                                      │
+│           │  [📥 Exportar CSV]                                   │
+│           │                                                      │
+└───────────┴──────────────────────────────────────────────────────┘
+```
+
+### Mobile
+
+KPI cards stack in 1-column. Chart scrolls horizontally or simplifies to a spark line. Employee table converts to cards (DataTable mobile transform).
+
+```
+┌──────────────────────────┐
+│  ☰  Reportes      🔔     │
+├──────────────────────────┤
+│ [Hoy] [Semana] [Mes] [▾]│
+├──────────────────────────┤
+│ ┌──────────────────────┐ │
+│ │ Ingresos  $8.450.000 │ │
+│ │ +12% ↑ vs anterior   │ │
+│ └──────────────────────┘ │
+│ ┌──────────┐┌──────────┐ │
+│ │ Tickets  ││Servicios │ │
+│ │   142    ││   189    │ │
+│ │  +8% ↑   ││  +5% ↑   │ │
+│ └──────────┘└──────────┘ │
+├──────────────────────────┤
+│ ┌──────────────────────┐ │
+│ │  [Chart — scrollable]│ │
+│ └──────────────────────┘ │
+├──────────────────────────┤
+│  María López    $985.000 │
+│  28 trabajos     +18% ↑  │
+│  ────────────────────    │
+│  Ana García     $780.000 │
+│  24 trabajos      +5% ↑  │
+│  ────────────────────    │
+│  ...                     │
+├──────────────────────────┤
+│  🏠  📋  📊  ⚙️          │
+└──────────────────────────┘
+```
+
+### Key decisions
+
+- Period tabs at top: Today, This week, This month, Custom range
+- KPI cards with delta comparison (percentage change vs previous period)
+- Delta indicators: green text + "↑" for positive, red text + "↓" for negative
+- Bar chart (Recharts `BarChart`): current period bars + previous period as dashed line overlay
+- Employee performance table: sortable by name, jobs count, earnings, delta
+- Clothier row shows piece count instead of ticket count
+- Click on employee row → drill-down to individual analytics (separate page)
+- CSV export button (stretch goal T076)
+- Charts use design tokens for colours (primary for current, muted for comparison)
+- All monetary values use `font-mono tabular-nums`
+- Loading: `PageSkeleton` with chart-height placeholder blocks
+
+---
+
+## Calendar UX guidance
+
+### Appointment calendar (T052)
+
+| Aspect             | Desktop                                   | Mobile                        |
+| ------------------ | ----------------------------------------- | ----------------------------- |
+| Default view       | Day                                       | Day                           |
+| Layout             | Time slots in rows, stylists in columns   | Stacked chronological list    |
+| Time slot height   | 48px per 30 minutes                       | Auto (card height)            |
+| Navigation         | ← → arrows + date picker icon             | ← → arrows + date picker icon |
+| New appointment    | Click empty slot → form modal             | FAB → form as full page       |
+| Appointment detail | Click appointment → side sheet            | Click → full page             |
+| Week view          | Toggle available; day headers with counts | Not available (too dense)     |
+
+### Absence calendar (T021)
+
+| Aspect        | Desktop                                     | Mobile                           |
+| ------------- | ------------------------------------------- | -------------------------------- |
+| Default view  | Month grid                                  | List grouped by date             |
+| Layout        | Calendar grid with coloured dots            | Cards with date headers          |
+| Dot colours   | Red = absence, blue = vacation, grey = sick | Same                             |
+| Navigation    | ← → month arrows                            | ← → month arrows                 |
+| Add absence   | Click date → form modal                     | "+ Registrar" button → form page |
+| Month summary | Sidebar: total days off per employee        | Collapsible summary at top       |
+
+---
+
+## Shared interaction patterns
+
+### Navigation transitions
+
+- Page transitions: no full-page reloads. Use Next.js App Router `loading.tsx` with `PageSkeleton`.
+- Sheet/modal open: slide-in from right (desktop side sheets), fade-in + scale (modals).
+- Tab switching: instant content swap, no animation needed.
+
+### Touch targets
+
+- Minimum touch target: 44×44px for all interactive elements on mobile.
+- Card tap areas: full card is tappable, not just the text.
+- Swipe gestures: not implemented for MVP. All actions via explicit buttons.
+
+### Keyboard shortcuts (desktop)
+
+| Shortcut | Action                   | Context             |
+| -------- | ------------------------ | ------------------- |
+| `Ctrl+N` | New ticket / appointment | Dashboard, calendar |
+| `Escape` | Close modal / sheet      | Any modal           |
+| `Tab`    | Navigate between cards   | Dashboard           |
+| `Enter`  | Open selected item       | Any list/grid       |
+| `Ctrl+F` | Focus search bar         | List screens        |

@@ -12,12 +12,12 @@ The app is used exclusively by company staff on desktop PCs and mobile phones; i
 
 **Single client:** Innovation Befine (the company itself).
 
-| Who uses it | How |
-|-------------|-----|
+| Who uses it     | How                                                                                  |
+| --------------- | ------------------------------------------------------------------------------------ |
 | Cashier / admin | Checkout, catalog management, payroll settlement, analytics, business day open/close |
-| Stylists | Log completed services; view own earnings |
-| Clothiers | View assigned batches; mark pieces done |
-| Secretary | Book and confirm appointments; create cloth batches |
+| Stylists        | Log completed services; view own earnings                                            |
+| Clothiers       | View assigned batches; mark pieces done                                              |
+| Secretary       | Book and confirm appointments; create cloth batches                                  |
 
 ---
 
@@ -35,45 +35,46 @@ The company currently tracks daily services, employee pay, and cloth production 
 
 ## What the app does (feature summary)
 
-| Area | Key features |
-|------|-------------|
-| **Services & checkout** | Stylist logs a service → cashier dashboard updates live → cashier charges customer (cash/card/transfer) → ticket closed |
-| **Catalog** | Admin defines service types, variants (e.g. haircut by hair length), prices, commission %, cloth piece types and clothier pay |
-| **Client records** | Saved clients (name, contact, history, no-show count) or one-time guests |
-| **Appointments** | Timed bookings per stylist, double-booking prevention, confirmation email, no-show tracking |
-| **Cloth batches** | Secretary assigns pieces to clothiers; clothiers mark done; admin/secretary approves |
-| **Large cloth orders** | Client order with deposit, balance owed, status flow, linked to batches for ETA tracking |
-| **Payroll** | Earnings computed per model (commission %, per-piece, fixed daily); payout recorded with amount, date, and method |
-| **Business day** | Admin opens and closes the day (can span midnight); all records belong to the open business day |
-| **Analytics** | Revenue and employee earnings by day / week / month with period-over-period comparison |
-| **Offline** | Local queue for service logs; safe replay on reconnect; no duplicate charges |
+| Area                    | Key features                                                                                                                  |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| **Services & checkout** | Stylist logs a service → cashier dashboard updates live → cashier charges customer (cash/card/transfer) → ticket closed       |
+| **Catalog**             | Admin defines service types, variants (e.g. haircut by hair length), prices, commission %, cloth piece types and clothier pay |
+| **Client records**      | Saved clients (name, contact, history, no-show count) or one-time guests                                                      |
+| **Appointments**        | Timed bookings per stylist, double-booking prevention, confirmation email, no-show tracking                                   |
+| **Cloth batches**       | Secretary assigns pieces to clothiers; clothiers mark done; admin/secretary approves                                          |
+| **Large cloth orders**  | Client order with deposit, balance owed, status flow, linked to batches for ETA tracking                                      |
+| **Payroll**             | Earnings computed per model (commission %, per-piece, fixed daily); payout recorded with amount, date, and method             |
+| **Business day**        | Admin opens and closes the day (can span midnight); all records belong to the open business day                               |
+| **Analytics**           | Revenue and employee earnings by day / week / month with period-over-period comparison                                        |
+| **Offline**             | Local queue for service logs; safe replay on reconnect; no duplicate charges                                                  |
 
 ---
 
 ## Tech stack
 
-| Layer | Technology | Decision basis |
-|-------|-----------|----------------|
-| Framework | Next.js (App Router) + Turborepo monorepo | SSR, API routes, server actions; monorepo for shared types |
-| UI | React + Base UI (Base Web by Uber); **shadcn/ui + Tailwind CSS** as fallback | Primary requested by client; fallback if Base Web fails App Router spike |
-| Hosting | Vercel | Seamless Next.js deploy; free tier sufficient for MVP |
-| Database | PostgreSQL via **Neon** | Serverless, Vercel-native integration, usage-based pricing, free in development |
-| ORM | Drizzle ORM | TypeScript-native, lightweight, works well with Neon's serverless driver |
-| Auth | **Better Auth** | Self-hosted, free, built-in RBAC + 2FA; no vendor lock-in; data stays in own DB |
-| Real-time | **Pusher** (free tier) → native SSE + Postgres LISTEN/NOTIFY later | Live cashier dashboard; Pusher free tier covers MVP; migrate when ready |
-| Email | **Resend** (free tier) | Appointment confirmation emails; React Email templates; 100 emails/day free |
-| Error tracking | Sentry (free tier) | Phase 0 |
-| Forms | React Hook Form + Zod resolver | Shared validation schemas between client and server |
-| Server state | TanStack Query (React Query) | Caching, revalidation, and server state management |
-| Client state | Zustand | Ephemeral UI state (offline queue, notification count) |
-| Dates | date-fns | All date manipulation, formatting, timezone-aware comparisons |
-| Charts | **Recharts** | Data visualization for analytics dashboards (Phase 8) |
-| Icons | **Lucide Icons** | Consistent iconography across all UI; default icon set for shadcn/ui |
-| PWA / offline | Workbox + IndexedDB | Phase 9 — service worker caching + local mutation queue |
+| Layer          | Technology                                                                   | Decision basis                                                                  |
+| -------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Framework      | Next.js (App Router) + Turborepo monorepo                                    | SSR, API routes, server actions; monorepo for shared types                      |
+| UI             | React + Base UI (Base Web by Uber); **shadcn/ui + Tailwind CSS** as fallback | Primary requested by client; fallback if Base Web fails App Router spike        |
+| Hosting        | Vercel                                                                       | Seamless Next.js deploy; free tier sufficient for MVP                           |
+| Database       | PostgreSQL via **Neon**                                                      | Serverless, Vercel-native integration, usage-based pricing, free in development |
+| ORM            | Drizzle ORM                                                                  | TypeScript-native, lightweight, works well with Neon's serverless driver        |
+| Auth           | **Better Auth**                                                              | Self-hosted, free, built-in RBAC + 2FA; no vendor lock-in; data stays in own DB |
+| Real-time      | **Pusher** (free tier) → native SSE + Postgres LISTEN/NOTIFY later           | Live cashier dashboard; Pusher free tier covers MVP; migrate when ready         |
+| Email          | **Resend** (free tier)                                                       | Appointment confirmation emails; React Email templates; 100 emails/day free     |
+| Error tracking | Sentry (free tier)                                                           | Phase 0                                                                         |
+| Forms          | React Hook Form + Zod resolver                                               | Shared validation schemas between client and server                             |
+| Server state   | TanStack Query (React Query)                                                 | Caching, revalidation, and server state management                              |
+| Client state   | Zustand                                                                      | Ephemeral UI state (offline queue, notification count)                          |
+| Dates          | date-fns                                                                     | All date manipulation, formatting, timezone-aware comparisons                   |
+| Charts         | **Recharts**                                                                 | Data visualization for analytics dashboards (Phase 8)                           |
+| Icons          | **Lucide Icons**                                                             | Consistent iconography across all UI; default icon set for shadcn/ui            |
+| PWA / offline  | Workbox + IndexedDB                                                          | Phase 9 — service worker caching + local mutation queue                         |
 
 > Full research and rationale for each decision: see `docs/research/`.
 
 **Explicit scope exclusions (MVP):**
+
 - File/image uploads (profile photos, cloth order reference images) — not supported in MVP
 - Tips, promotions, discount codes
 - Multi-branch / multi-location support
@@ -86,14 +87,14 @@ The company currently tracks daily services, employee pay, and cloth production 
 
 All services listed below are used on their **free tier** during MVP. Paid plans will be reviewed after 1–2 months of production use.
 
-| Service | Free tier limits | First paid plan |
-|---------|-----------------|----------------|
-| **Vercel** | Unlimited personal projects, 100 GB bandwidth/mo | $20/mo (Pro) |
-| **Neon** | 0.5 GB storage, 100 CU-h/mo, 10 branches | Usage-based, no minimum |
-| **Better Auth** | Free — self-hosted, no usage cap | Free forever |
-| **Pusher** | 200 concurrent connections, 200K messages/day | $49/mo (Startup) |
-| **Resend** | 100 emails/day, 1 domain | $20/mo (Pro) |
-| **Sentry** | 5K errors/mo, 10K transactions | $26/mo (Team) |
+| Service         | Free tier limits                                 | First paid plan         |
+| --------------- | ------------------------------------------------ | ----------------------- |
+| **Vercel**      | Unlimited personal projects, 100 GB bandwidth/mo | $20/mo (Pro)            |
+| **Neon**        | 0.5 GB storage, 100 CU-h/mo, 10 branches         | Usage-based, no minimum |
+| **Better Auth** | Free — self-hosted, no usage cap                 | Free forever            |
+| **Pusher**      | 200 concurrent connections, 200K messages/day    | $49/mo (Startup)        |
+| **Resend**      | 100 emails/day, 1 domain                         | $20/mo (Pro)            |
+| **Sentry**      | 5K errors/mo, 10K transactions                   | $26/mo (Team)           |
 
 **MVP infrastructure cost: $0/month.**
 

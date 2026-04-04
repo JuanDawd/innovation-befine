@@ -1,0 +1,87 @@
+{
+  "common": {
+    "appName": "Innovation Befine",
+    "loading": "Loading…",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "search": "Search…",
+    "clearFilters": "Clear filters",
+    "clearSearch": "Clear search",
+    "noResults": "No results found.",
+    "back": "Back",
+    "close": "Close",
+    "optional": "(optional)",
+    "required": "required",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "roles": {
+    "admin": "Administrator",
+    "secretary": "Secretary",
+    "stylist": "Stylist",
+    "clothier": "Clothier"
+  },
+  "stylistSubtypes": {
+    "manicurist": "Manicurist",
+    "spa_manager": "Spa manager",
+    "hairdresser": "Hairdresser",
+    "masseuse": "Masseuse",
+    "makeup_artist": "Makeup artist"
+  },
+  "auth": {
+    "login": "Sign in",
+    "logout": "Sign out",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot your password?",
+    "resetPassword": "Reset password",
+    "changePassword": "Change password"
+  },
+  "status": {
+    "logged": "Logged",
+    "pending": "Pending",
+    "booked": "Booked",
+    "awaiting_payment": "Awaiting payment",
+    "in_production": "In production",
+    "confirmed": "Confirmed",
+    "reopened": "Reopened",
+    "done_pending_approval": "Done, pending approval",
+    "rescheduled": "Rescheduled",
+    "closed": "Closed",
+    "approved": "Approved",
+    "delivered": "Delivered",
+    "paid_in_full": "Paid in full",
+    "completed": "Completed",
+    "cancelled": "Cancelled",
+    "no_show": "No-show"
+  },
+  "businessDay": {
+    "open": "Open day",
+    "close": "Close day",
+    "reopen": "Reopen day",
+    "dayOpen": "Day open",
+    "dayClosed": "Day closed"
+  },
+  "errors": {
+    "generic": "An unexpected error occurred. Please try again.",
+    "unauthorized": "You don't have permission to perform this action.",
+    "notFound": "The requested resource was not found.",
+    "validation": "Please fix the errors in the form.",
+    "networkError": "Connection error. Check your internet.",
+    "rateLimited": "Too many attempts. Try again in {minutes} minutes."
+  },
+  "time": {
+    "justNow": "Just now",
+    "minutesAgo": "{count} {count, plural, one {minute} other {minutes}} ago",
+    "hoursAgo": "{count} {count, plural, one {hour} other {hours}} ago",
+    "daysAgo": "{count} {count, plural, one {day} other {days}} ago"
+  },
+  "home": {
+    "title": "Innovation Befine",
+    "subtitle": "Internal operations platform"
+  }
+}

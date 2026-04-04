@@ -11,15 +11,18 @@
 **Dependencies:** all previous phases
 
 ### What to do
+
 Test every role's primary flows on both a mobile device (or browser DevTools mobile emulation) and a desktop browser. Document any layout issues and fix them.
 
 Flows to test per role:
+
 - **Admin:** open/close day, catalog edit, checkout, payroll settlement, analytics.
 - **Stylist:** log service, view own tickets, view earnings.
 - **Clothier:** view batch, mark piece done.
 - **Secretary:** book appointment, create batch, confirm appointment.
 
 ### Acceptance criteria
+
 - [ ] No horizontal scroll on mobile for any primary flow
 - [ ] All touch targets ≥ 44×44 px
 - [ ] Text is legible at default mobile font size (no sub-12px text)
@@ -40,12 +43,15 @@ Flows to test per role:
 **Dependencies:** all previous phases
 
 ### What to do
+
 Audit every user action that triggers a server call. Add:
+
 - Skeleton loaders or spinners on initial data loads.
 - Button disabled state + spinner while a form is submitting.
 - Optimistic updates for ticket status changes (update UI immediately, revert on error).
 
 ### Acceptance criteria
+
 - [ ] No "blank flash" on page load for any primary screen
 - [ ] Submit buttons cannot be double-clicked (disabled after first click)
 - [ ] Optimistic ticket status update reverts to previous state on API error
@@ -61,9 +67,11 @@ Audit every user action that triggers a server call. Add:
 **Dependencies:** T005
 
 ### What to do
+
 Verify and document Neon's built-in backup behavior. Neon free tier provides point-in-time restore for 24 hours; paid plans extend this. Document the backup policy and test a restore drill on the staging branch.
 
 ### Acceptance criteria
+
 - [ ] Backup retention window documented in `docs/research/` or a runbook
 - [ ] Restore drill performed on staging: drop a table, restore to a prior point
 - [ ] Admin is notified if the Neon project approaches storage limits (set up a Neon alert)
@@ -77,9 +85,11 @@ Verify and document Neon's built-in backup behavior. Neon free tier provides poi
 **Dependencies:** T004
 
 ### What to do
+
 Set up a free uptime monitor (e.g. Better Uptime free tier, UptimeRobot, or Vercel's built-in checks) to ping the app's health endpoint every 5 minutes and alert via email if it goes down.
 
 ### Acceptance criteria
+
 - [ ] A `/api/health` endpoint returns `{ status: "ok", db: "ok" }` with a 200 response; the endpoint includes a lightweight DB connectivity check (`SELECT 1`) — if the DB is unreachable, it returns `{ status: "degraded", db: "unreachable" }` with a 503
 - [ ] Monitor configured to check the endpoint every 5 minutes
 - [ ] Alert email sent within 5 minutes of a downtime event (tested by temporarily returning 500)
@@ -93,15 +103,18 @@ Set up a free uptime monitor (e.g. Better Uptime free tier, UptimeRobot, or Verc
 **Dependencies:** all previous phases
 
 ### What to do
+
 Write a short guide (Markdown or PDF) for each role explaining their daily workflow in the app. Focus on the most frequent tasks; do not explain every setting.
 
 Sections:
+
 - **Cashier / admin:** open day, checkout flow, end-of-day payroll, close day.
 - **Stylist:** log a service, mark awaiting payment, view earnings.
 - **Clothier:** view batch, mark piece done.
 - **Secretary:** book appointment, send confirmation, create batch.
 
 ### Acceptance criteria
+
 - [ ] One page per role (concise — staff should be able to read their section in < 5 minutes)
 - [ ] Includes screenshots or screen recordings for the 2–3 most confusing steps
 - [ ] Stored in `docs/training/` and accessible to the client
@@ -111,14 +124,16 @@ Sections:
 
 ## T102 — Stale-tab version detection
 
-**Phase:** 10 — Polish *(new — Senior SWE review F25)*
+**Phase:** 10 — Polish _(new — Senior SWE review F25)_
 **Status:** pending
 **Dependencies:** T004
 
 ### What to do
+
 When a new version of the app is deployed, users with stale browser tabs should see a non-blocking "A new version is available — please refresh" banner. Implement by including a build-time version identifier (e.g. git commit hash or build timestamp) in the app. Periodically check the deployed version via a lightweight API endpoint or header. If the versions differ, show the banner.
 
 ### Acceptance criteria
+
 - [ ] Version identifier embedded at build time (e.g. `NEXT_PUBLIC_BUILD_ID`)
 - [ ] Client polls `/api/version` (or reads a response header) every 5 minutes
 - [ ] If deployed version differs from the client's version, a non-blocking banner appears at the top of the screen
@@ -129,14 +144,16 @@ When a new version of the app is deployed, users with stale browser tabs should 
 
 ## T100 — Data migration from existing spreadsheets
 
-**Phase:** 10 — Polish *(new — Senior SWE review F10)*
+**Phase:** 10 — Polish _(new — Senior SWE review F10)_
 **Status:** pending
 **Dependencies:** T029, T030
 
 ### What to do
+
 Create a migration script or admin UI to import existing client records from the company's current spreadsheets into the `clients` table. At minimum, import: client name, phone number, and email. This ensures the app doesn't start from zero on day one — staff can search for existing clients immediately.
 
 ### Acceptance criteria
+
 - [ ] Import script accepts a CSV file with columns: name, phone, email
 - [ ] Duplicate detection by phone or email (skip or flag duplicates)
 - [ ] Import summary: X imported, Y skipped (duplicates), Z errors
@@ -148,14 +165,16 @@ Create a migration script or admin UI to import existing client records from the
 
 ## T106 — User acceptance testing (UAT)
 
-**Phase:** 10 — Polish *(new — QA review Q7)*
+**Phase:** 10 — Polish _(new — QA review Q7)_
 **Status:** pending
 **Dependencies:** T088
 
 ### What to do
+
 Before go-live, each role representative (admin, secretary, stylist, clothier) uses the staging environment for one full simulated business day with realistic data. This is the final quality gate: real staff perform real workflows and report usability issues, confusion points, and missing features. Capture feedback in a structured form.
 
 ### Acceptance criteria
+
 - [ ] Staging environment populated with realistic data (clients, services, employees, historical tickets)
 - [ ] One representative per role completes their full daily workflow on staging
 - [ ] Structured feedback collected per participant: task completed (yes/no), time taken, confusion points, workflow gaps, missing features
@@ -171,9 +190,11 @@ Before go-live, each role representative (admin, secretary, stylist, clothier) u
 **Dependencies:** T083, T084, T086, T087, T088, T100, T102, T106
 
 ### What to do
+
 Create and execute the go-live checklist before switching staff from the old system (spreadsheets) to the app.
 
 Checklist items:
+
 - [ ] All environment variables set in Vercel production
 - [ ] Neon production branch migrated to latest schema
 - [ ] Seed script NOT run on production (or run with production-safe data only)
@@ -185,6 +206,7 @@ Checklist items:
 - [ ] Rollback plan documented (revert to spreadsheets for X days if critical bug found)
 
 ### Acceptance criteria
+
 - [ ] Every item on the checklist above is ticked
 - [ ] **Security review completed**: CSRF protection verified, XSS prevention confirmed (CSP headers set), rate limiting active on all mutation endpoints (not just login), SQL injection prevention verified (all queries use parameterized statements via Drizzle), no PII leaked in API error responses
 - [ ] **Rollback drill completed**: deploy a test "bad" version to staging, verify Vercel rollback works within 5 minutes, confirm database restore process from T086 is viable

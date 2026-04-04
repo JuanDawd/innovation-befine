@@ -1,0 +1,17 @@
+---
+description: Each task (T001–T108) must have its own separate git commit
+alwaysApply: true
+---
+
+# One commit per task
+
+When completing tasks from the project progress tracker (`docs/Business/progress.md`):
+
+- **Commit immediately** after finishing each task — do not batch multiple tasks into one commit.
+- **Commit message format**: `feat(T0XX): short description of what was done`
+  - Example: `feat(T095): add GitHub Actions CI pipeline`
+  - Example: `feat(T104): add key screen wireframes`
+  - Example: `feat(T004): configure Vercel project and staging deploys`
+- **Include in each commit**: all files created or modified for that task, plus the `progress.md` status update.
+- If a task requires modifying shared config (e.g. `turbo.json`, `package.json`), include those changes in that task's commit.
+- Never move on to the next task without committing the current one first.

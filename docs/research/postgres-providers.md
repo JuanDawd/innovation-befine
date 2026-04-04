@@ -6,22 +6,23 @@
 
 ## Summary table
 
-| | Neon | Supabase | AWS RDS |
-|--|------|----------|---------|
-| **Type** | Serverless Postgres | BaaS platform (Postgres + extras) | Managed instance-based Postgres |
-| **Free tier** | Yes — 0.5 GB storage, 100 CU-h/mo | Yes — limited project | No meaningful free tier |
-| **Starting paid price** | Usage-based, no minimum (pay only what you use) | ~$25/month flat | ~$50+/month (single AZ); $550+/month (Multi-AZ production) |
-| **Scale to zero** | Yes — auto-suspends after inactivity | No | No |
-| **DB branching** | Instant copy-on-write (sub-second, 10 free branches) | Slower (provisions new DB) | Manual |
-| **Vercel integration** | Native — official Vercel Postgres integration | Works but not native | Works, extra config |
-| **Bundled extras** | None (pure Postgres) | Auth, Realtime, Storage, Edge Functions | None (DB only) |
-| **Vendor lock-in** | Low (standard Postgres) | Medium (extras tie you to platform) | Low (standard Postgres) |
+|                         | Neon                                                 | Supabase                                | AWS RDS                                                    |
+| ----------------------- | ---------------------------------------------------- | --------------------------------------- | ---------------------------------------------------------- |
+| **Type**                | Serverless Postgres                                  | BaaS platform (Postgres + extras)       | Managed instance-based Postgres                            |
+| **Free tier**           | Yes — 0.5 GB storage, 100 CU-h/mo                    | Yes — limited project                   | No meaningful free tier                                    |
+| **Starting paid price** | Usage-based, no minimum (pay only what you use)      | ~$25/month flat                         | ~$50+/month (single AZ); $550+/month (Multi-AZ production) |
+| **Scale to zero**       | Yes — auto-suspends after inactivity                 | No                                      | No                                                         |
+| **DB branching**        | Instant copy-on-write (sub-second, 10 free branches) | Slower (provisions new DB)              | Manual                                                     |
+| **Vercel integration**  | Native — official Vercel Postgres integration        | Works but not native                    | Works, extra config                                        |
+| **Bundled extras**      | None (pure Postgres)                                 | Auth, Realtime, Storage, Edge Functions | None (DB only)                                             |
+| **Vendor lock-in**      | Low (standard Postgres)                              | Medium (extras tie you to platform)     | Low (standard Postgres)                                    |
 
 ---
 
 ## Neon
 
 ### Pros
+
 - **Best Vercel fit**: official Vercel Postgres integration; serverless driver optimized for edge/serverless.
 - **Scale to zero**: auto-suspends after 5 minutes of inactivity — no idle cost.
 - **Instant branching**: copy-on-write branches in <1 second; great for CI and staging environments. Only the diff is billed.
@@ -30,11 +31,13 @@
 - **Free tier** is generous enough to develop and test for free.
 
 ### Cons
+
 - **No bundled extras**: no built-in auth, realtime subscriptions, storage — you assemble those separately.
 - **Relatively newer** than RDS; smaller track record at very high production volume.
 - **Cold start latency**: auto-suspend means the first query after inactivity takes slightly longer (typically <1 second).
 
 ### Pricing summary
+
 - Free: 0.5 GB storage, 100 CU-h/month.
 - Paid: $0.106/CU-h (Launch) or $0.222/CU-h (Scale) + $0.35/GB-month storage.
 
@@ -43,6 +46,7 @@
 ## Supabase
 
 ### Pros
+
 - **Full platform**: Postgres + built-in auth, realtime subscriptions, file storage, edge functions — one product to set up.
 - If we were not already choosing separate services for auth and realtime, Supabase could replace multiple vendors.
 - **Dashboard and studio**: good visual UI for browsing data in development.
@@ -50,6 +54,7 @@
 - Free tier available.
 
 ### Cons
+
 - **Platform coupling**: if you use their auth, realtime, and storage, migrating later becomes complex.
 - **No scale to zero**: instances run 24/7, so idle cost is constant.
 - **More expensive at the floor**: $25/month flat for the first paid plan.
@@ -57,6 +62,7 @@
 - **Realtime is good but proprietary**: uses their own pub/sub layer on top of Postgres WAL; you would still need a real-time service for Vercel (SSE or managed).
 
 ### Pricing summary
+
 - Free: limited (1 project actively, pauses after inactivity).
 - Pro: ~$25/month.
 
@@ -65,12 +71,14 @@
 ## AWS RDS (PostgreSQL)
 
 ### Pros
+
 - **Battle-tested**: most proven at enterprise scale and multi-region setups.
 - **Full control**: instance size, storage type, I/O, multi-AZ, read replicas — all configurable.
 - **No cold start**: always on; consistent latency.
 - Integrates with entire AWS ecosystem.
 
 ### Cons
+
 - **Expensive**: no meaningful free tier; $50+/month for a small single-AZ instance; $550+/month for production-grade Multi-AZ before storage and I/O charges.
 - **No scale to zero**: you pay whether the DB is in use or not.
 - **Operational overhead**: you manage instance sizing, patching schedules, backup windows.
@@ -109,27 +117,27 @@ Supabase is worth revisiting only if the team later wants to consolidate realtim
 
 ### Row estimates (6 months)
 
-| Table | Rows | Avg row size | Estimated size |
-|-------|------|-------------|---------------|
-| `employees` | 20 | 200 B | ~4 KB |
-| `clients` | 500 | 150 B | ~75 KB |
-| `business_days` | 156 | 100 B | ~16 KB |
-| `tickets` | 7,800 | 200 B | ~1.5 MB |
-| `ticket_items` | 23,400 | 250 B | ~5.6 MB |
-| `ticket_payments` | 7,800 | 150 B | ~1.1 MB |
-| `appointments` | 4,680 | 300 B | ~1.4 MB |
-| `cloth_batches` | 780 | 200 B | ~150 KB |
-| `batch_pieces` | 7,800 | 200 B | ~1.5 MB |
-| `large_orders` | 50 | 400 B | ~20 KB |
-| `large_order_payments` | 150 | 150 B | ~22 KB |
-| `payouts` | 240 | 250 B | ~60 KB |
-| `payout_ticket_items` | 23,400 | 50 B | ~1.1 MB |
-| `payout_batch_pieces` | 7,800 | 50 B | ~380 KB |
-| `employee_absences` | 500 | 100 B | ~50 KB |
-| `catalog_audit_log` | 200 | 500 B | ~100 KB |
-| Auth tables (users, sessions) | 500 | 300 B | ~150 KB |
-| **Indexes** (estimated) | — | — | ~15 MB |
-| **Total estimated** | — | — | **~28 MB** |
+| Table                         | Rows   | Avg row size | Estimated size |
+| ----------------------------- | ------ | ------------ | -------------- |
+| `employees`                   | 20     | 200 B        | ~4 KB          |
+| `clients`                     | 500    | 150 B        | ~75 KB         |
+| `business_days`               | 156    | 100 B        | ~16 KB         |
+| `tickets`                     | 7,800  | 200 B        | ~1.5 MB        |
+| `ticket_items`                | 23,400 | 250 B        | ~5.6 MB        |
+| `ticket_payments`             | 7,800  | 150 B        | ~1.1 MB        |
+| `appointments`                | 4,680  | 300 B        | ~1.4 MB        |
+| `cloth_batches`               | 780    | 200 B        | ~150 KB        |
+| `batch_pieces`                | 7,800  | 200 B        | ~1.5 MB        |
+| `large_orders`                | 50     | 400 B        | ~20 KB         |
+| `large_order_payments`        | 150    | 150 B        | ~22 KB         |
+| `payouts`                     | 240    | 250 B        | ~60 KB         |
+| `payout_ticket_items`         | 23,400 | 50 B         | ~1.1 MB        |
+| `payout_batch_pieces`         | 7,800  | 50 B         | ~380 KB        |
+| `employee_absences`           | 500    | 100 B        | ~50 KB         |
+| `catalog_audit_log`           | 200    | 500 B        | ~100 KB        |
+| Auth tables (users, sessions) | 500    | 300 B        | ~150 KB        |
+| **Indexes** (estimated)       | —      | —            | ~15 MB         |
+| **Total estimated**           | —      | —            | **~28 MB**     |
 
 ### Verdict
 

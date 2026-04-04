@@ -8,7 +8,6 @@
 
 ## Severity definitions
 
-
 | Severity     | Meaning                                                                                     |
 | ------------ | ------------------------------------------------------------------------------------------- |
 | **Critical** | Blocks delivery or could cause data loss, financial errors, or security breaches            |
@@ -16,9 +15,7 @@
 | **Medium**   | Important improvement that should be addressed but won't block progress                     |
 | **Low**      | Minor polish, documentation cleanup, or edge case worth noting                              |
 
-
 ## Status definitions
-
 
 | Status          | Meaning                                                |
 | --------------- | ------------------------------------------------------ |
@@ -26,7 +23,6 @@
 | **In progress** | Actively being addressed                               |
 | **Resolved**    | Fix applied; reference the commit or task              |
 | **Won't fix**   | Consciously decided not to address; document rationale |
-
 
 ---
 
@@ -490,14 +486,12 @@
 
 > This section is populated during development. Each entry documents what went wrong, the root cause, and how to prevent it in the future.
 
-
-| Date | Phase | Issue | Root cause | Prevention |
-| ---- | ----- | ----- | ---------- | ---------- |
-| 2026-04-02 | Pre-dev | 12 issues fixable by documentation update were left open | Issues identified but fixes deferred — no process to batch-resolve documentation-only issues | Schedule a documentation fix sweep after each review round; don't wait for development to start |
-| 2026-04-02 | Pre-dev | No test plans, QA strategy, or edge case scenarios existed despite 106 well-specified tasks | Acceptance criteria were treated as sufficient for testing; no QA perspective in review cycle | Include a QA review as a standard step after every major planning document is created; ACs define _what_ to verify, test plans define _how_ and _what else_ to try breaking |
-| 2026-04-02 | Pre-dev | Two independent project assessments found the same gaps — confirming they are real, not reviewer opinion | Both reviews converged on: currency decision, data privacy, test plans, auth fallback, Pusher reliability, Neon storage/cold-start | When multiple reviewers agree on a gap, prioritize it immediately — convergence is a strong signal |
-| 2026-04-02 | Pre-dev | 17 stakeholder decisions were needed before development could start | Decisions accumulated across 4 review rounds without a resolution session | Schedule a dedicated decision session after each review round — don't let open questions pile up |
-
+| Date       | Phase   | Issue                                                                                                    | Root cause                                                                                                                         | Prevention                                                                                                                                                                  |
+| ---------- | ------- | -------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-04-02 | Pre-dev | 12 issues fixable by documentation update were left open                                                 | Issues identified but fixes deferred — no process to batch-resolve documentation-only issues                                       | Schedule a documentation fix sweep after each review round; don't wait for development to start                                                                             |
+| 2026-04-02 | Pre-dev | No test plans, QA strategy, or edge case scenarios existed despite 106 well-specified tasks              | Acceptance criteria were treated as sufficient for testing; no QA perspective in review cycle                                      | Include a QA review as a standard step after every major planning document is created; ACs define _what_ to verify, test plans define _how_ and _what else_ to try breaking |
+| 2026-04-02 | Pre-dev | Two independent project assessments found the same gaps — confirming they are real, not reviewer opinion | Both reviews converged on: currency decision, data privacy, test plans, auth fallback, Pusher reliability, Neon storage/cold-start | When multiple reviewers agree on a gap, prioritize it immediately — convergence is a strong signal                                                                          |
+| 2026-04-02 | Pre-dev | 17 stakeholder decisions were needed before development could start                                      | Decisions accumulated across 4 review rounds without a resolution session                                                          | Schedule a dedicated decision session after each review round — don't let open questions pile up                                                                            |
 
 ---
 
@@ -505,43 +499,40 @@
 
 > When an issue is resolved, update its status above and add an entry here.
 
-
-| Issue ID | Date resolved | Resolution | Commit/PR |
-| -------- | ------------- | ---------- | --------- |
-| C-01     | 2026-04-02    | Added `appointment_id (FK nullable)` to T033 schema in `phase-04a-tickets-checkout.md` | Senior QA review |
-| C-02     | 2026-04-02    | Added `P4B --> P7` edge to mermaid dependency graph in `project-plan.md` | Senior QA review |
-| H-02     | 2026-04-02    | Updated `business.md` Sentry entry from "Phase 10" to "Phase 0" | Senior QA review |
-| H-03     | 2026-04-02    | Added manual password fallback to T013 AC when Resend is unavailable | Senior QA review |
-| H-06     | 2026-04-02    | Added security review checklist to T089 acceptance criteria | Senior QA review |
-| H-08     | 2026-04-02    | Added shared `payment_method_enum` definition to T006 acceptance criteria | Senior QA review |
-| H-09     | 2026-04-02    | Resolved via C-01 fix (same `appointment_id` column) | Senior QA review |
-| H-10     | 2026-04-02    | Added `cancelled` status to large order enum in T057 and T059 with cancellation reason | Senior QA review |
-| H-11     | 2026-04-02    | Added rate limiting policy to T097 acceptance criteria covering all mutation endpoints | Senior QA review |
-| M-11     | 2026-04-02    | Added T061 to T062 dependency list in task file and progress.md | Senior QA review |
-| L-10     | 2026-04-02    | Updated `postgres-providers.md` to reference only Drizzle ORM | Senior QA review |
-| L-12     | 2026-04-02    | Updated T087 health endpoint AC to include DB connectivity check (`SELECT 1`) | Senior QA review |
-| C-03     | 2026-04-02    | Currency confirmed as COP (Colombian Pesos). T099 ACs updated. | Stakeholder decision session |
-| C-04     | 2026-04-02    | Created `docs/research/data-privacy-compliance.md` (Colombian Ley 1581 de 2012) | Stakeholder decision session |
-| H-01     | 2026-04-02    | Phase 0 split into 0A (Infrastructure) and 0B (Standards & Design) | Stakeholder decision session |
+| Issue ID | Date resolved | Resolution                                                                                       | Commit/PR                    |
+| -------- | ------------- | ------------------------------------------------------------------------------------------------ | ---------------------------- |
+| C-01     | 2026-04-02    | Added `appointment_id (FK nullable)` to T033 schema in `phase-04a-tickets-checkout.md`           | Senior QA review             |
+| C-02     | 2026-04-02    | Added `P4B --> P7` edge to mermaid dependency graph in `project-plan.md`                         | Senior QA review             |
+| H-02     | 2026-04-02    | Updated `business.md` Sentry entry from "Phase 10" to "Phase 0"                                  | Senior QA review             |
+| H-03     | 2026-04-02    | Added manual password fallback to T013 AC when Resend is unavailable                             | Senior QA review             |
+| H-06     | 2026-04-02    | Added security review checklist to T089 acceptance criteria                                      | Senior QA review             |
+| H-08     | 2026-04-02    | Added shared `payment_method_enum` definition to T006 acceptance criteria                        | Senior QA review             |
+| H-09     | 2026-04-02    | Resolved via C-01 fix (same `appointment_id` column)                                             | Senior QA review             |
+| H-10     | 2026-04-02    | Added `cancelled` status to large order enum in T057 and T059 with cancellation reason           | Senior QA review             |
+| H-11     | 2026-04-02    | Added rate limiting policy to T097 acceptance criteria covering all mutation endpoints           | Senior QA review             |
+| M-11     | 2026-04-02    | Added T061 to T062 dependency list in task file and progress.md                                  | Senior QA review             |
+| L-10     | 2026-04-02    | Updated `postgres-providers.md` to reference only Drizzle ORM                                    | Senior QA review             |
+| L-12     | 2026-04-02    | Updated T087 health endpoint AC to include DB connectivity check (`SELECT 1`)                    | Senior QA review             |
+| C-03     | 2026-04-02    | Currency confirmed as COP (Colombian Pesos). T099 ACs updated.                                   | Stakeholder decision session |
+| C-04     | 2026-04-02    | Created `docs/research/data-privacy-compliance.md` (Colombian Ley 1581 de 2012)                  | Stakeholder decision session |
+| H-01     | 2026-04-02    | Phase 0 split into 0A (Infrastructure) and 0B (Standards & Design)                               | Stakeholder decision session |
 | H-04     | 2026-04-02    | Added "Migration Path" section to `docs/research/auth-providers.md` with Auth.js and Clerk steps | Stakeholder decision session |
-| H-05     | 2026-04-02    | Added 30-second polling fallback to T098 ACs | Stakeholder decision session |
-| H-07     | 2026-04-02    | Added storage capacity estimate to `docs/research/postgres-providers.md` (~28 MB for 6 months) | Stakeholder decision session |
-| H-12     | 2026-04-02    | Added loading state to T019 "Open Day" and cold start documentation to postgres-providers.md | Stakeholder decision session |
-| H-13     | 2026-04-02    | Created `docs/testing/concurrency-test-plan.md` with 8 race condition scenarios | QA review action |
-| H-14     | 2026-04-02    | Business day boundary tests added to phase-04a test plan; timezone constant defined | QA review action |
-| H-15     | 2026-04-02    | Added T106 (UAT) to Phase 10 between T088 and T089 | QA review action |
-| H-16     | 2026-04-02    | Added post-deployment smoke test AC to T095 | QA review action |
-| M-01     | 2026-04-02    | Added no-show decrement logic to T032b ACs | Stakeholder decision session |
-| M-03     | 2026-04-02    | Added `service_variant_id` FK to T049 appointments table | Stakeholder decision session |
-| M-06     | 2026-04-02    | Added reopen day capability to T019 ACs (admin only, audit trail, most recent day only) | Stakeholder decision session |
-| M-07     | 2026-04-02    | Added `expected_work_days` to T012 employees table; T065 updated for part-time | Stakeholder decision session |
-| M-08     | 2026-04-02    | Added `original_computed_amount` and `adjustment_reason` to T066 payouts table | Stakeholder decision session |
-| M-13     | 2026-04-02    | Removed `deposit_paid` column from T057; computed from payments table | Stakeholder decision session |
-| M-14     | 2026-04-02    | Business timezone constant `America/Bogota` added to T002 standards | Stakeholder decision session |
-| M-15     | 2026-04-02    | Created `docs/research/frontend-libraries.md` | Stakeholder decision session |
-| M-17     | 2026-04-02    | `commission_pct` precision set to `numeric(5,2)` in T023; banker's rounding in T002 | Stakeholder decision session |
-| M-19     | 2026-04-02    | Added structured business logic logging AC to T085 | QA review action |
-| M-20     | 2026-04-02    | Integration test approach documented in `docs/testing/README.md` | QA review action |
-| L-15     | 2026-04-02    | Rounding policy (banker's rounding) and precision defined in T002 standards | Stakeholder decision session |
-
-
+| H-05     | 2026-04-02    | Added 30-second polling fallback to T098 ACs                                                     | Stakeholder decision session |
+| H-07     | 2026-04-02    | Added storage capacity estimate to `docs/research/postgres-providers.md` (~28 MB for 6 months)   | Stakeholder decision session |
+| H-12     | 2026-04-02    | Added loading state to T019 "Open Day" and cold start documentation to postgres-providers.md     | Stakeholder decision session |
+| H-13     | 2026-04-02    | Created `docs/testing/concurrency-test-plan.md` with 8 race condition scenarios                  | QA review action             |
+| H-14     | 2026-04-02    | Business day boundary tests added to phase-04a test plan; timezone constant defined              | QA review action             |
+| H-15     | 2026-04-02    | Added T106 (UAT) to Phase 10 between T088 and T089                                               | QA review action             |
+| H-16     | 2026-04-02    | Added post-deployment smoke test AC to T095                                                      | QA review action             |
+| M-01     | 2026-04-02    | Added no-show decrement logic to T032b ACs                                                       | Stakeholder decision session |
+| M-03     | 2026-04-02    | Added `service_variant_id` FK to T049 appointments table                                         | Stakeholder decision session |
+| M-06     | 2026-04-02    | Added reopen day capability to T019 ACs (admin only, audit trail, most recent day only)          | Stakeholder decision session |
+| M-07     | 2026-04-02    | Added `expected_work_days` to T012 employees table; T065 updated for part-time                   | Stakeholder decision session |
+| M-08     | 2026-04-02    | Added `original_computed_amount` and `adjustment_reason` to T066 payouts table                   | Stakeholder decision session |
+| M-13     | 2026-04-02    | Removed `deposit_paid` column from T057; computed from payments table                            | Stakeholder decision session |
+| M-14     | 2026-04-02    | Business timezone constant `America/Bogota` added to T002 standards                              | Stakeholder decision session |
+| M-15     | 2026-04-02    | Created `docs/research/frontend-libraries.md`                                                    | Stakeholder decision session |
+| M-17     | 2026-04-02    | `commission_pct` precision set to `numeric(5,2)` in T023; banker's rounding in T002              | Stakeholder decision session |
+| M-19     | 2026-04-02    | Added structured business logic logging AC to T085                                               | QA review action             |
+| M-20     | 2026-04-02    | Integration test approach documented in `docs/testing/README.md`                                 | QA review action             |
+| L-15     | 2026-04-02    | Rounding policy (banker's rounding) and precision defined in T002 standards                      | Stakeholder decision session |

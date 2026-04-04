@@ -18,67 +18,62 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 
 > All confirmed April 2026 (stakeholder decision session).
 
-| Decision | Resolution |
-| -------- | ---------- |
-| Currency | **COP** (Colombian Pesos) — no cents, integer storage = whole pesos |
-| Country | **Colombia** — Ley 1581 de 2012, timezone America/Bogota (UTC-5) |
-| Phase 0 scope | **Split into 0A** (infrastructure) **and 0B** (standards & design) |
-| Brand assets | **None exist** — create from scratch in T105 |
-| Employee schedules | **Part-time employees exist** — `expected_work_days` field added to T012 |
-| Client uniqueness | **No unique constraint** on phone/email — staff manages duplicates |
-| Business day reopen | **Yes** — admin can reopen most recently closed day with audit trail |
-| No-show decrement | **Yes** — decrement when no-show status is reversed |
-| Guest-to-client conversion | **Deferred** to post-MVP |
-| Payout audit trail | **Yes** — `original_computed_amount` + `adjustment_reason` on payouts |
-| Commission rounding | **Banker's rounding** (round half-even) everywhere |
-| Appointment-catalog link | **Add `service_variant_id` FK** (nullable) to appointments |
-| `deposit_paid` column | **Removed** — computed from payments table |
-| Pusher-to-SSE migration | **Post-MVP** documentation only, no task |
-| File/image storage | **Explicitly out of scope** for MVP |
-| Neon cold start | **Loading state** on "Open Day" action |
+| Decision                   | Resolution                                                               |
+| -------------------------- | ------------------------------------------------------------------------ |
+| Currency                   | **COP** (Colombian Pesos) — no cents, integer storage = whole pesos      |
+| Country                    | **Colombia** — Ley 1581 de 2012, timezone America/Bogota (UTC-5)         |
+| Phase 0 scope              | **Split into 0A** (infrastructure) **and 0B** (standards & design)       |
+| Brand assets               | **None exist** — create from scratch in T105                             |
+| Employee schedules         | **Part-time employees exist** — `expected_work_days` field added to T012 |
+| Client uniqueness          | **No unique constraint** on phone/email — staff manages duplicates       |
+| Business day reopen        | **Yes** — admin can reopen most recently closed day with audit trail     |
+| No-show decrement          | **Yes** — decrement when no-show status is reversed                      |
+| Guest-to-client conversion | **Deferred** to post-MVP                                                 |
+| Payout audit trail         | **Yes** — `original_computed_amount` + `adjustment_reason` on payouts    |
+| Commission rounding        | **Banker's rounding** (round half-even) everywhere                       |
+| Appointment-catalog link   | **Add `service_variant_id` FK** (nullable) to appointments               |
+| `deposit_paid` column      | **Removed** — computed from payments table                               |
+| Pusher-to-SSE migration    | **Post-MVP** documentation only, no task                                 |
+| File/image storage         | **Explicitly out of scope** for MVP                                      |
+| Neon cold start            | **Loading state** on "Open Day" action                                   |
 
 ---
 
 ## Phase 0A — Foundation (Infrastructure)
 
-
 | ID   | Task                                                                | Status  | Dependencies |
 | ---- | ------------------------------------------------------------------- | ------- | ------------ |
-| T001 | Initialize Next.js monorepo with Turborepo                          | pending | —            |
-| T003 | Environment variable schema and runtime validation                  | pending | T001         |
-| T004 | Vercel project setup and staging deploys                            | pending | T001         |
-| T005 | Neon Postgres setup with dev and staging branches                   | pending | T004         |
-| T006 | Drizzle ORM setup and migration workflow                            | pending | T005         |
+| T001 | Initialize Next.js monorepo with Turborepo                          | done    | —            |
+| T003 | Environment variable schema and runtime validation                  | done    | T001         |
+| T004 | Vercel project setup and staging deploys                            | done    | T001         |
+| T005 | Neon Postgres setup with dev and staging branches                   | done    | T004         |
+| T006 | Drizzle ORM setup and migration workflow                            | done    | T005         |
 | T007 | Better Auth spike and integration (RBAC + rate limiting validation) | pending | T006         |
-| T008 | Base UI (Base Web) spike for Next.js App Router                     | pending | T001         |
+| T008 | UI library spike (shadcn/ui chosen, Base Web failed)                | done    | T001         |
 | T009 | Pusher free tier spike for real-time events                         | pending | T001, T004   |
 | T010 | RBAC role definitions (roles + stylist subtypes)                    | pending | T007         |
 | T011 | Seed script for development (one user per role)                     | pending | T010         |
-| T085 | Sentry error tracking setup *(moved from Phase 10)*                 | pending | T004         |
-| T094 | Testing infrastructure (Vitest + Playwright) *(new)*                | pending | T001         |
-| T095 | CI/CD pipeline (GitHub Actions) *(new)*                             | pending | T094, T002   |
-
+| T085 | Sentry error tracking setup _(moved from Phase 10)_                 | pending | T004         |
+| T094 | Testing infrastructure (Vitest + Playwright) _(new)_                | done    | T001         |
+| T095 | CI/CD pipeline (GitHub Actions) _(new)_                             | done    | T094, T002   |
 
 ---
 
 ## Phase 0B — Foundation (Standards & Design)
 
-
 | ID   | Task                                                                 | Status  | Dependencies |
 | ---- | -------------------------------------------------------------------- | ------- | ------------ |
-| T002 | Configure code quality tooling (ESLint, Prettier, Husky, Zod policy) | pending | T001         |
-| T077 | Offline policy document *(moved from Phase 9)*                       | pending | —            |
-| T097 | API design conventions document *(new)*                              | pending | T001         |
-| T098 | Real-time abstraction layer *(new)*                                  | pending | T009         |
-| T099 | Internationalization (i18n) setup *(new)*                            | pending | T001         |
-| T103 | Design system, design tokens, and component patterns *(new)*         | pending | T008         |
-| T104 | Key screen wireframes and layout specification *(new)*               | pending | T103         |
-
+| T002 | Configure code quality tooling (ESLint, Prettier, Husky, Zod policy) | done    | T001         |
+| T077 | Offline policy document _(moved from Phase 9)_                       | done    | —            |
+| T097 | API design conventions document _(new)_                              | done    | T001         |
+| T098 | Real-time abstraction layer _(new)_                                  | pending | T009         |
+| T099 | Internationalization (i18n) setup _(new)_                            | done    | T001         |
+| T103 | Design system, design tokens, and component patterns _(new)_         | done    | T008         |
+| T104 | Key screen wireframes and layout specification _(new)_               | done    | T103         |
 
 ---
 
 ## Phase 1 — Identity, employees, and business day
-
 
 | ID    | Task                                            | Status  | Dependencies |
 | ----- | ----------------------------------------------- | ------- | ------------ |
@@ -90,17 +85,15 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | T017  | Password reset flow                             | pending | T016, T054   |
 | T018  | Session middleware and route protection         | pending | T010         |
 | T019  | Business day open/close (table + admin action)  | pending | T012         |
-| T022a | Basic employee deactivation *(split from T022)* | pending | T014         |
-| T054  | Resend email integration *(moved from Phase 5)* | pending | T003         |
-| T090  | App navigation / layout shell *(new)*           | pending | T010         |
-| T091  | Employee self-service password change *(new)*   | pending | T016         |
-| T105  | Brand identity and asset gathering *(new)*      | pending | T103         |
-
+| T022a | Basic employee deactivation _(split from T022)_ | pending | T014         |
+| T054  | Resend email integration _(moved from Phase 5)_ | pending | T003         |
+| T090  | App navigation / layout shell _(new)_           | pending | T010         |
+| T091  | Employee self-service password change _(new)_   | pending | T016         |
+| T105  | Brand identity and asset gathering _(new)_      | pending | T103         |
 
 ---
 
 ## Phase 2 — Catalog and pricing
-
 
 | ID   | Task                                                    | Status  | Dependencies |
 | ---- | ------------------------------------------------------- | ------- | ------------ |
@@ -111,11 +104,9 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | T027 | Cloth piece catalog CRUD UI (admin)                     | pending | T026         |
 | T028 | Catalog read access for non-admin roles (API endpoints) | pending | T024, T027   |
 
-
 ---
 
 ## Phase 3 — Client records
-
 
 | ID   | Task                                                | Status  | Dependencies |
 | ---- | --------------------------------------------------- | ------- | ------------ |
@@ -124,11 +115,9 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | T031 | Guest client flow (name only, no record)            | pending | T030         |
 | T032 | No-show count display                               | pending | T029         |
 
-
 ---
 
 ## Phase 4A — Tickets and checkout
-
 
 | ID   | Task                                                                 | Status  | Dependencies     |
 | ---- | -------------------------------------------------------------------- | ------- | ---------------- |
@@ -143,9 +132,8 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | T041 | Edit approval flow (secretary/stylist → cashier)                     | pending | T035, T048       |
 | T042 | Ticket reopen and earnings recompute flag                            | pending | T038             |
 | T048 | In-app notification system (MVP)                                     | pending | T098             |
-| T092 | Closed ticket history view (admin / cashier) *(new)*                 | pending | T038             |
-| T093 | Admin home / day-at-a-glance screen *(new)*                          | pending | T036, T038       |
-
+| T092 | Closed ticket history view (admin / cashier) _(new)_                 | pending | T038             |
+| T093 | Admin home / day-at-a-glance screen _(new)_                          | pending | T036, T038       |
 
 > T043 (walk-in flow) retired — merged into T035 acceptance criteria.
 
@@ -155,7 +143,6 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 
 > Can run in parallel with Phase 5 once Phase 4A is complete.
 
-
 | ID   | Task                                           | Status  | Dependencies |
 | ---- | ---------------------------------------------- | ------- | ------------ |
 | T044 | Cloth batches and batch_pieces table migration | pending | T019, T026   |
@@ -163,17 +150,15 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | T046 | Clothier batch view and piece completion       | pending | T045         |
 | T047 | Piece approval flow (secretary / admin)        | pending | T046         |
 
-
 ---
 
 ## Phase 5 — Appointments
 
 > Can run in parallel with Phase 4B once Phase 4A is complete.
 
-
 | ID    | Task                                                           | Status  | Dependencies |
 | ----- | -------------------------------------------------------------- | ------- | ------------ |
-| T032b | No-show count increment logic *(split from T032)*              | pending | T032, T053   |
+| T032b | No-show count increment logic _(split from T032)_              | pending | T032, T053   |
 | T049  | Appointments table migration                                   | pending | T029, T012   |
 | T050  | Appointment booking UI (secretary / cashier)                   | pending | T049, T030   |
 | T051  | Double-booking prevention (DB-level)                           | pending | T050         |
@@ -182,11 +167,9 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | T055  | Appointment confirmation email template (React Email)          | pending | T054         |
 | T056  | "Send confirmation email" action on appointment                | pending | T055, T053   |
 
-
 ---
 
 ## Phase 6 — Large cloth orders
-
 
 | ID   | Task                                                  | Status  | Dependencies |
 | ---- | ----------------------------------------------------- | ------- | ------------ |
@@ -197,19 +180,17 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | T061 | Additional payment recording on large orders          | pending | T058         |
 | T062 | Large orders list view                                | pending | T059, T061   |
 
-
 ---
 
 ## Phase 7 — Payroll settlement and audit
 
 > Includes absence tracking (T020, T021) and deactivation guard (T022b) — moved here because they are only consumed by payroll logic.
 
-
 | ID    | Task                                                              | Status  | Dependencies           |
 | ----- | ----------------------------------------------------------------- | ------- | ---------------------- |
-| T020  | Absences and vacation table migration *(moved from Phase 1)*      | pending | T012                   |
-| T021  | Vacation and absence management UI (admin) *(moved from Phase 1)* | pending | T020                   |
-| T022b | Deactivation guard + termination payment *(split from T022)*      | pending | T022a, T067            |
+| T020  | Absences and vacation table migration _(moved from Phase 1)_      | pending | T012                   |
+| T021  | Vacation and absence management UI (admin) _(moved from Phase 1)_ | pending | T020                   |
+| T022b | Deactivation guard + termination payment _(split from T022)_      | pending | T022a, T067            |
 | T063  | Earnings computation: stylists (commission %)                     | pending | T038                   |
 | T064  | Earnings computation: clothiers (per-piece)                       | pending | T047                   |
 | T065  | Earnings computation: secretary (daily rate × days)               | pending | T021, T020             |
@@ -219,11 +200,9 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | T069  | Employee earnings view (own earnings, gated by flag)              | pending | T063, T064, T065, T015 |
 | T070  | Unsettled earnings alert on admin dashboard                       | pending | T067                   |
 
-
 ---
 
 ## Phase 8 — Analytics
-
 
 | ID   | Task                                                  | Status  | Dependencies |
 | ---- | ----------------------------------------------------- | ------- | ------------ |
@@ -232,17 +211,15 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | T073 | Weekly and monthly revenue dashboards with comparison | pending | T071         |
 | T074 | Per-employee performance views and drill-down         | pending | T071         |
 | T075 | Analytics database indexes and query optimization     | pending | T071         |
-| T101 | Analytics seed script (6 months of data) *(new)*      | pending | T071         |
-| T107 | Performance testing *(new — QA review Q11)*           | pending | T101         |
+| T101 | Analytics seed script (6 months of data) _(new)_      | pending | T071         |
+| T107 | Performance testing _(new — QA review Q11)_           | pending | T101         |
 | T076 | CSV export for accountant (stretch)                   | pending | T071         |
-
 
 ---
 
 ## Phase 9 — Offline / sync hardening
 
 > T077 (offline policy) moved to Phase 0. The `idempotency_key` column is added to tickets in T033 (Phase 4A).
-
 
 | ID   | Task                                              | Status  | Dependencies |
 | ---- | ------------------------------------------------- | ------- | ------------ |
@@ -252,56 +229,48 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | T081 | Service worker with Workbox (caching strategies)  | pending | T001         |
 | T082 | Web App Manifest and PWA install prompt           | pending | T081         |
 
-
 ---
 
 ## Phase 10 — Polish and rollout
 
-
-| ID   | Task                                                 | Status  | Dependencies                             |
-| ---- | ---------------------------------------------------- | ------- | ---------------------------------------- |
-| T083 | Responsive QA pass (mobile + desktop, all roles)     | pending | all phases                               |
-| T084 | Loading states and optimistic UI                     | pending | all phases                               |
-| T086 | Database backup policy and restore drill             | pending | T005                                     |
-| T087 | Uptime monitoring (`/api/health` endpoint + monitor) | pending | T004                                     |
-| T088 | Internal training guide (one page per role)          | pending | all phases                                      |
-| T102 | Stale-tab version detection *(new)*                  | pending | T004                                            |
-| T100 | Data migration from existing spreadsheets *(new)*    | pending | T029, T030                                      |
-| T106 | User acceptance testing (UAT) *(new — QA review Q7)* | pending | T088                                            |
+| ID   | Task                                                 | Status  | Dependencies                                   |
+| ---- | ---------------------------------------------------- | ------- | ---------------------------------------------- |
+| T083 | Responsive QA pass (mobile + desktop, all roles)     | pending | all phases                                     |
+| T084 | Loading states and optimistic UI                     | pending | all phases                                     |
+| T086 | Database backup policy and restore drill             | pending | T005                                           |
+| T087 | Uptime monitoring (`/api/health` endpoint + monitor) | pending | T004                                           |
+| T088 | Internal training guide (one page per role)          | pending | all phases                                     |
+| T102 | Stale-tab version detection _(new)_                  | pending | T004                                           |
+| T100 | Data migration from existing spreadsheets _(new)_    | pending | T029, T030                                     |
+| T106 | User acceptance testing (UAT) _(new — QA review Q7)_ | pending | T088                                           |
 | T089 | Production cutover checklist and go-live             | pending | T083, T084, T086, T087, T088, T100, T102, T106 |
-
 
 ---
 
 ## Totals
 
-
-| Phase                     | Tasks   | Done  | In progress |
-| ------------------------- | ------- | ----- | ----------- |
-| 0A — Foundation (Infra)   | 13      | 0     | 0           |
-| 0B — Foundation (Std/Dsg) | 7       | 0     | 0           |
-| 1 — Identity              | 13      | 0     | 0           |
-| 2 — Catalog               | 6       | 0     | 0           |
-| 3 — Clients               | 4       | 0     | 0           |
-| 4A — Tickets and checkout | 13      | 0     | 0           |
-| 4B — Cloth batches        | 4       | 0     | 0           |
-| 5 — Appointments          | 8       | 0     | 0           |
-| 6 — Large orders          | 6       | 0     | 0           |
-| 7 — Payroll               | 11      | 0     | 0           |
-| 8 — Analytics             | 8       | 0     | 0           |
-| 9 — Offline               | 5       | 0     | 0           |
-| 10 — Polish               | 9       | 0     | 0           |
-| **Total**                 | **108** | **0** | **0**       |
-
+| Phase                     | Tasks   | Done   | In progress |
+| ------------------------- | ------- | ------ | ----------- |
+| 0A — Foundation (Infra)   | 13      | 8      | 0           |
+| 0B — Foundation (Std/Dsg) | 7       | 5      | 0           |
+| 1 — Identity              | 13      | 0      | 0           |
+| 2 — Catalog               | 6       | 0      | 0           |
+| 3 — Clients               | 4       | 0      | 0           |
+| 4A — Tickets and checkout | 13      | 0      | 0           |
+| 4B — Cloth batches        | 4       | 0      | 0           |
+| 5 — Appointments          | 8       | 0      | 0           |
+| 6 — Large orders          | 6       | 0      | 0           |
+| 7 — Payroll               | 11      | 0      | 0           |
+| 8 — Analytics             | 8       | 0      | 0           |
+| 9 — Offline               | 5       | 0      | 0           |
+| 10 — Polish               | 9       | 0      | 0           |
+| **Total**                 | **108** | **14** | **0**       |
 
 ---
 
 ## Retired task IDs (do not reuse)
 
-
 | ID   | Reason                                              |
 | ---- | --------------------------------------------------- |
 | T043 | Walk-in flow — merged into T035 acceptance criteria |
 | T022 | Split into T022a (Phase 1) and T022b (Phase 7)      |
-
-

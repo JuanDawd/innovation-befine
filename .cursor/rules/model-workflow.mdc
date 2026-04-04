@@ -1,0 +1,54 @@
+---
+description: Two-model workflow — Sonnet for task development, Opus for phase reviews
+alwaysApply: true
+---
+
+# Model workflow: Sonnet → develop, Opus → review
+
+## During task development (Sonnet)
+
+All individual task work (T001–T108) must be done using the **Sonnet** model:
+
+- Implementing features, writing migrations, building UI, writing tests
+- Running the per-task QA gate (see `qa-after-task` rule)
+- Committing per task (see `commit-per-task` rule)
+- When using the Task tool for subagents, set `model: "fast"`
+
+## Phase completion review (Opus)
+
+When the **last task in a phase** is marked `done`, stop development and switch to the **Opus** model. Prompt it with:
+
+> "Phase [N] is complete. Run the phase completion review."
+
+### What Opus does
+
+1. **Full audit** — re-read every task's acceptance criteria in the phase and verify each AC is actually met in code
+2. **Cross-task integration check** — verify tasks that depend on each other within the phase work together end-to-end
+3. **Regression sweep** — run `turbo test` and confirm no regressions from the phase's work
+4. **Security & edge-case scan** — review endpoints, permissions, input validation, and error handling across the phase
+5. **Code quality review** — check for dead code, inconsistent patterns, missing types, and duplicated logic introduced during the phase
+6. **Issue consolidation** — review all issues logged in `docs/issues-tracker.md` during this phase and verify open ones are still valid
+
+### Remediation sub-phase
+
+After the audit, Opus creates a **remediation sub-phase** in `docs/Business/progress.md`:
+
+```
+## Phase [N]R — Remediation
+
+| ID      | Task                          | Status  | Source         |
+| ------- | ----------------------------- | ------- | -------------- |
+| T0XX-R1 | Fix: [description]            | pending | Opus audit     |
+| T0XX-R2 | Fix: [description]            | pending | Opus audit     |
+| ...     | ...                           | ...     | ...            |
+```
+
+- IDs use the format `T0XX-R#` where `XX` is the phase number and `#` is sequential
+- Each remediation task must have clear acceptance criteria
+- Severity (Critical/High/Medium/Low) must be noted — Critical and High are **blocking**
+
+### Gating rule
+
+- **Do NOT start the next phase** until all Critical and High remediation tasks are `done`
+- Medium and Low remediation tasks may be deferred (log them in `docs/issues-tracker.md`)
+- Once the remediation sub-phase passes, switch back to **Sonnet** for the next phase's task development

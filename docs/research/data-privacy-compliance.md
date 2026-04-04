@@ -18,7 +18,6 @@ The enforcement body is the **Superintendencia de Industria y Comercio (SIC)**.
 
 ## Key principles
 
-
 | Principle           | Requirement                                                   | Impact on this app                                                                           |
 | ------------------- | ------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
 | **Legality**        | Data processing must have a lawful basis                      | Employment relationship (employees) and legitimate interest (clients)                        |
@@ -29,11 +28,9 @@ The enforcement body is the **Superintendencia de Industria y Comercio (SIC)**.
 | **Security**        | Adequate technical and organizational measures                | Encryption in transit (HTTPS), access controls (RBAC), audit logs                            |
 | **Confidentiality** | Duty of confidentiality for data processors                   | Only authorized roles can access specific data                                               |
 
-
 ---
 
 ## PII inventory
-
 
 | Data category               | Entities                             | Fields                                         | Sensitivity |
 | --------------------------- | ------------------------------------ | ---------------------------------------------- | ----------- |
@@ -42,7 +39,6 @@ The enforcement body is the **Superintendencia de Industria y Comercio (SIC)**.
 | **Employee personal data**  | `employees`, `users`                 | name, email, phone, hired_at                   | Medium      |
 | **Employee financial data** | `payouts`, `ticket_items` (earnings) | daily_rate, commission amounts, payout amounts | High        |
 | **Authentication data**     | `users`, `sessions`                  | hashed passwords, session tokens               | High        |
-
 
 ---
 
@@ -90,7 +86,6 @@ This approach satisfies the privacy requirement (PII is purged) while maintainin
 
 ## Data retention policy
 
-
 | Data type                                          | Retention period                                 | Basis                                                                                         |
 | -------------------------------------------------- | ------------------------------------------------ | --------------------------------------------------------------------------------------------- |
 | **Financial records** (tickets, payouts, payments) | 10 years minimum                                 | Colombian tax law (Estatuto Tributario, Art. 632) requires preservation of accounting records |
@@ -98,7 +93,6 @@ This approach satisfies the privacy requirement (PII is purged) while maintainin
 | **Client personal data**                           | Until purpose is fulfilled or deletion requested | Ley 1581                                                                                      |
 | **Authentication logs**                            | 6 months                                         | Security best practice                                                                        |
 | **Audit logs**                                     | Same as underlying financial record              | Financial audit requirements                                                                  |
-
 
 ---
 
@@ -130,7 +124,6 @@ The SIC maintains a **National Database Registry (RNBD)**. Organizations that pr
 
 ## Security measures required
 
-
 | Measure                             | Status in project                                            |
 | ----------------------------------- | ------------------------------------------------------------ |
 | Encryption in transit (HTTPS)       | Covered — Vercel enforces HTTPS                              |
@@ -142,7 +135,6 @@ The SIC maintains a **National Database Registry (RNBD)**. Organizations that pr
 | Data anonymization on deletion      | **Needs implementation** — add to a Phase 3 or Phase 10 task |
 | Privacy notice in emails            | **Needs implementation** — add to T055 AC                    |
 | Cross-border transfer documentation | **Needs documentation** — employee contracts                 |
-
 
 ---
 
@@ -156,7 +148,6 @@ This is enforced via a `BUSINESS_TIMEZONE` constant defined in `docs/standards.m
 
 ## Action items
 
-
 | #   | Action                                                    | Owner          | Phase               |
 | --- | --------------------------------------------------------- | -------------- | ------------------- |
 | 1   | Add data processing clause to employee contracts          | Business owner | Pre-Phase 0         |
@@ -165,5 +156,3 @@ This is enforced via a `BUSINESS_TIMEZONE` constant defined in `docs/standards.m
 | 4   | Register databases with SIC (RNBD)                        | Business owner | Pre-go-live         |
 | 5   | Select Neon EU region if available                        | Dev            | Phase 0 (T005)      |
 | 6   | Document cross-border transfer in client/employee notices | Business owner | Pre-go-live         |
-
-
