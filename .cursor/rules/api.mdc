@@ -1,0 +1,87 @@
+---
+description: Server Actions, API routes, RBAC enforcement, and financial mutation safety
+globs:
+  - "**/app/api/**"
+  - "**/actions/**"
+  - "**/server/**"
+  - "**/*.action.ts"
+  - "**/*.actions.ts"
+---
+
+# API and server action conventions
+
+## Server Actions vs API routes
+
+| Pattern | When to use |
+| --- | --- |
+| **Server Actions** | All mutations triggered by user interaction (create, update, delete) |
+| **API Route Handlers** | Webhooks (Pusher, Resend), health check, external callbacks |
+
+Prefer Server Actions for mutations — they integrate with `useActionState`/`useFormStatus` and inherit session context automatically.
+
+## RBAC — required on every server action and API route
+
+Roles: `cashier_admin` | `secretary` | `stylist` | `clothier`
+
+**Mandatory pattern:**
+
+1. Validate session (Better Auth)
+2. Extract role from session — **never trust role from client payload**
+3. Gate: check role against the required permission for this action
+4. Proceed only if authorized; return `FORBIDDEN` error otherwise
+
+```typescript
+const session = await auth.api.getSession({ headers: await headers() });
+if (!session) return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
+if (!hasRole(session.user, "cashier_admin")) return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
+```
+
+No server action or API route may skip the role check. Even read-only actions must verify the user is authenticated.
+
+## Input validation
+
+- Every server action validates input with a **Zod schema** before business logic
+- Schemas live in `packages/types/src/schemas/` — shared between client and server
+- Never access raw `formData` or `req.body` past the validation boundary
+
+## Error response shape
+
+All server functions return `ActionResult<T>`:
+
+```typescript
+type ActionResult<T> =
+  | { success: true; data: T }
+  | { success: false; error: { code: string; message: string; details?: ValidationError[] } };
+```
+
+Error codes: `VALIDATION_ERROR` | `UNAUTHORIZED` | `FORBIDDEN` | `NOT_FOUND` | `CONFLICT` | `STALE_DATA` | `RATE_LIMITED` | `INTERNAL_ERROR`
+
+## Financial mutations — mandatory checklist
+
+Every mutation that creates or modifies money movement **must**:
+
+1. Include an `idempotency_key` (client-generated UUID) to prevent duplicate charges
+2. Run inside a database transaction — all-or-nothing
+3. Use optimistic locking (`version` column or `SELECT ... FOR UPDATE`) to prevent race conditions
+4. Log the mutation to Sentry breadcrumbs for audit trail
+
+### Checkout-specific
+
+- Checkout endpoint **must** verify ticket status is `awaiting_payment` before processing
+- After successful payment, transition ticket to `closed` atomically within the same transaction
+- Never expose `price_override` logic to non-cashier/admin roles
+
+### Settlement/payout-specific
+
+- **Must** check for existing payout record covering the same employee + period before creating a new one
+- Return `CONFLICT` if a duplicate payout is attempted
+- Settlement amounts must be recomputed server-side from source records — never trust client-submitted totals
+
+## Rate limiting
+
+Apply rate limiting before business logic. Use `@upstash/ratelimit`. Key limits:
+
+- Ticket creation: 30/min per user
+- Payout recording: 5/min per admin
+- Catalog edits: 20/min per admin
+- General mutations: 60/min per user

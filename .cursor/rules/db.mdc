@@ -1,0 +1,61 @@
+---
+description: Drizzle ORM conventions, money storage, and database patterns
+globs:
+  - "**/db/**"
+  - "**/schema/**"
+  - "**/migrations/**"
+  - "**/drizzle/**"
+  - "**/queries/**"
+---
+
+# Database conventions
+
+## Drizzle ORM only
+
+- All schema definitions use Drizzle's `pgTable` helpers — never write raw DDL outside migration files.
+- Use Drizzle's query builder for all application queries. Raw SQL (`sql` template tag) is acceptable only for complex CTEs, window functions, or migration scripts.
+
+## Money columns
+
+- Type: `bigint` (Drizzle: `bigint('column_name', { mode: 'number' })`)
+- Represents whole Colombian Pesos (COP has no cents)
+- **Never** use `numeric`, `decimal`, `real`, `float`, or `doublePrecision` for monetary values
+- Commission percentage: `numeric(5,2)` is acceptable — it's a rate, not money
+- Financial rounding: banker's rounding (round half-even) when computing commission amounts
+
+## Idempotency
+
+- Every mutation that creates or modifies a financial record **must** accept an `idempotency_key` (UUID, client-generated)
+- The `idempotency_key` column has a unique constraint — duplicate submissions return the existing result instead of creating a new record
+- Pattern: `INSERT ... ON CONFLICT (idempotency_key) DO NOTHING RETURNING *`, then fetch if nothing returned
+
+## Soft-delete policy
+
+| Entity type | Strategy | Examples |
+| --- | --- | --- |
+| Selector entities | `is_active` boolean | services, clients, employees, cloth pieces |
+| Lifecycle entities | Status enum column | tickets, appointments, batches |
+| Financial records | **Never delete** | payments, payouts, ticket items |
+
+## Timestamps
+
+- All tables include `created_at` and `updated_at` columns (`timestamp with time zone`, default `now()`)
+- `updated_at` uses a Postgres trigger or Drizzle `.$onUpdate()` to auto-refresh
+- Store as UTC; display layer converts to America/Bogota
+
+## Primary keys
+
+- Use `uuid` primary keys (Drizzle: `uuid('id').primaryKey().defaultRandom()`)
+- Never use auto-increment integers for primary keys
+
+## Optimistic locking
+
+- Tables involved in concurrent mutations (tickets, business_days, batches) include a `version` integer column
+- Updates must include `WHERE version = $expected` and check affected rows — return `STALE_DATA` error if zero rows updated
+
+## Naming conventions
+
+- Table names: `snake_case`, plural (e.g. `tickets`, `service_variants`, `cloth_pieces`)
+- Column names: `snake_case` (e.g. `business_day_id`, `price_override`, `commission_pct`)
+- Index names: `idx_{table}_{columns}` (e.g. `idx_tickets_business_day_id`)
+- Foreign key names: `fk_{table}_{referenced_table}` (e.g. `fk_tickets_business_days`)

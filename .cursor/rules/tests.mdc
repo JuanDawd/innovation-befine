@@ -1,0 +1,66 @@
+---
+description: Testing conventions — Vitest for unit/integration, Playwright for E2E
+globs:
+  - "**/*.test.ts"
+  - "**/*.test.tsx"
+  - "**/*.spec.ts"
+  - "**/*.spec.tsx"
+  - "**/e2e/**"
+  - "**/tests/**"
+  - "**/__tests__/**"
+---
+
+# Testing conventions
+
+## Frameworks
+
+- **Vitest** for unit and integration tests — never use Jest
+- **Playwright** for E2E tests — never use Cypress
+- **@axe-core/playwright** for automated accessibility checks in E2E tests
+
+## What requires tests
+
+| Code area | Required test type |
+| --- | --- |
+| Earnings computation (commission, piece_rate, daily_rate) | Unit tests (mandatory) |
+| Commission calculations and rounding | Unit tests (mandatory) |
+| Status transitions (ticket, appointment, batch) | Unit tests (mandatory) |
+| Permission / role checks | Unit tests (mandatory) |
+| Double-pay / duplicate prevention | Unit tests (mandatory) |
+| Financial data integrity | Unit tests (mandatory) |
+| Checkout lifecycle | E2E (from Phase 4A) |
+| Payroll settlement | E2E (from Phase 7) |
+| Appointment booking | E2E (from Phase 5) |
+
+## Coverage
+
+- **80% threshold** enforced for `packages/db/src/queries/` (financial logic)
+- No global coverage threshold — quality over quantity
+- All financial calculation functions must have 100% branch coverage
+
+## Test isolation
+
+- Unit/integration tests run inside a database transaction that rolls back after each test
+- E2E tests use a dedicated seeded database — never share state between test runs
+- Each test file is independent — no reliance on execution order
+
+## Financial test conventions
+
+- Always test with known inputs and pre-calculated expected outputs
+- Test boundary cases: $0 amount, override to $0, 100% commission, 0% commission
+- Verify banker's rounding (round half-even) behavior
+- Verify integer peso storage — no floating point artifacts
+- Test idempotency: submitting the same `idempotency_key` twice must return the same result without side effects
+
+## Naming convention
+
+- Test files: `{module}.test.ts` or `{module}.spec.ts` (colocated with source)
+- E2E files: `e2e/{feature}.spec.ts`
+- Describe blocks: noun (the module/function under test)
+- Test names: should describe the behavior, not the implementation (e.g. "returns FORBIDDEN when stylist attempts payout" not "checks role is cashier_admin")
+
+## Running tests
+
+- `turbo test` runs the full suite
+- CI pipeline (GitHub Actions) runs lint + typecheck + test on every PR
+- No PR merges with a red test suite

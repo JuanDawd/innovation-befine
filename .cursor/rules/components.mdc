@@ -1,0 +1,74 @@
+---
+description: UI component conventions — i18n, icons, loading states, accessibility, design system
+globs:
+  - "**/components/**"
+  - "**/*.tsx"
+  - "**/app/**/page.tsx"
+  - "**/app/**/layout.tsx"
+---
+
+# Component conventions
+
+## Internationalization
+
+- All user-facing strings go through `next-intl` — never hardcode Spanish or English text in components
+- Use `useTranslations('namespace')` hook in client components, `getTranslations('namespace')` in server components
+- Spanish is the primary locale; English is secondary
+
+## Icons
+
+- Use **Lucide Icons** exclusively — never import from heroicons, react-icons, or fontawesome
+- Import pattern: `import { IconName } from 'lucide-react'`
+- Icon-only buttons **must** have `aria-label`
+
+## Loading states
+
+- Every page that fetches data must show a loading skeleton while data loads (use `LoadingSkeleton` from the design system)
+- Buttons triggering async operations must show a spinner and be disabled during the operation
+- Use `React.Suspense` with skeleton fallbacks for server component boundaries
+
+## Empty states
+
+- Every list/table view must handle zero records gracefully with a descriptive empty state
+- Empty states should include an icon, a message, and a call-to-action when applicable
+- Pattern: `<EmptyState icon={IconName} title="..." description="..." action={<Button>...</Button>} />`
+
+## Error feedback
+
+- **Toast notifications** for mutation results (success or failure) — never silently swallow errors
+- **Inline errors** below form fields for validation failures: red text, associated via `aria-describedby`
+- Destructive actions require a `ConfirmationDialog` before executing
+
+## Accessibility baseline
+
+- Every `<input>` has an associated `<label>` (or `aria-label` for icon-only controls)
+- All interactive elements are keyboard-accessible (focusable, Enter/Space activatable)
+- Colour contrast: WCAG AA minimum (4.5:1 normal text, 3:1 large text)
+- Focus indicators always visible — never `outline: none` without a replacement
+- `eslint-plugin-jsx-a11y` enforces rules at lint time
+
+## Mobile-first policy
+
+- Stylist and clothier screens: mobile-first design (phone is primary device)
+- Admin and secretary screens: desktop-first but must remain usable on mobile
+- Breakpoints: mobile (`< 768px`), tablet (`768–1024px`), desktop (`> 1024px`)
+
+## Design system usage
+
+- Use design tokens from `globals.css` via Tailwind classes (e.g. `bg-primary`, `text-muted-foreground`)
+- Status badges use the `StatusBadge` component with the status colour mapping from `docs/design-system.md`
+- Monetary amounts use `font-mono tabular-nums` for alignment
+- Typography scale: H1 `text-4xl font-bold`, H2 `text-2xl font-semibold`, H3 `text-lg font-semibold`, Body `text-sm`
+- Font: Geist (`--font-sans`)
+
+## Form UX
+
+- Stacked labels (label above input) for mobile friendliness
+- Validate on blur for individual fields; validate on submit for the full form
+- Required by default — mark optional fields with "(optional)" suffix
+- Success: toast notification + redirect to relevant list/dashboard
+
+## Zustand — client state only
+
+- Zustand is for ephemeral UI state only (sidebar open, offline queue count, notification badge)
+- **Never** put server-derived data in Zustand — use TanStack Query for that

@@ -1,0 +1,56 @@
+---
+description: Locked technology stack and domain vocabulary — prevents wrong library suggestions
+alwaysApply: true
+---
+
+# Locked stack
+
+| Purpose | Technology | Never suggest |
+| --- | --- | --- |
+| Framework | Next.js **App Router** | Pages Router |
+| ORM | Drizzle ORM | Prisma, raw SQL outside migrations |
+| Auth | Better Auth with RBAC plugin | next-auth, clerk, lucia |
+| Server state | TanStack Query | SWR, Apollo, trpc-react |
+| Client state | Zustand (ephemeral UI only) | Redux, Jotai, Recoil |
+| Forms | React Hook Form + Zod resolver | Formik, final-form |
+| Realtime | `packages/realtime` (Pusher abstraction) | Pusher SDK directly in app code |
+| UI | shadcn/ui + Tailwind CSS (T008 spike result) | Material UI, Chakra, Mantine |
+| Charts | Recharts | Chart.js, D3 directly, Nivo |
+| Icons | Lucide Icons | heroicons, react-icons, fontawesome |
+| Email | Resend + React Email | nodemailer, sendgrid |
+| Error tracking | Sentry | bugsnag, logrocket |
+| i18n | next-intl — Spanish primary, English secondary | react-i18next, next-translate |
+| Dates | date-fns + date-fns-tz | dayjs, moment, luxon |
+| Money | integer pesos (`bigint` column) | float, numeric, decimal, real |
+| DB | PostgreSQL via Neon (serverless driver) | MySQL, SQLite, Supabase |
+| Hosting | Vercel | Netlify, AWS Amplify |
+| Monorepo | Turborepo | Nx, Lerna |
+| Testing | Vitest (unit/integration) + Playwright (E2E) | Jest, Cypress, Testing Library alone |
+| Rate limiting | @upstash/ratelimit | express-rate-limit |
+
+## Domain terms — use exactly these, no synonyms
+
+| Correct term | Never use |
+| --- | --- |
+| `business_day` | workday, shift, session, operating_day |
+| `ticket` | order, job_card, appointment_ticket, invoice |
+| `checkout` | payment, close_ticket, charge |
+| `batch` (cloth batch) | order, job, production_order |
+| `piece` (cloth piece) | item, unit, garment |
+| `settlement` / `payout` | salary, paycheck, wage |
+| `commission` | stylist earnings model — percentage of service price |
+| `piece_rate` | clothier earnings model — fixed amount per piece |
+| `daily_rate` | secretary earnings model — fixed amount per business day |
+| `saved_client` | registered_user, member, customer |
+| `guest` | anonymous, walk_in, unregistered |
+| `service_variant` | service_option, sku |
+| `price_override` | discount, adjustment |
+| `business_day_id` | date, calendar_date (records belong to business day, not calendar date) |
+
+## Currency
+
+**COP (Colombian Pesos)** — no cents, 1 peso is the smallest unit. Format: `$12.500` (dot as thousands separator, no decimals, peso sign prefix).
+
+## Timezone
+
+**America/Bogota (UTC-5)** — fixed, no DST. Store timestamps as UTC; display in business timezone.
