@@ -23,6 +23,8 @@ export const env = createEnv({
   client: {
     // App URL for client-side references
     NEXT_PUBLIC_APP_URL: z.string().url(),
+    // Sentry DSN (public — safe to expose) — T085
+    NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional(),
   },
 
   runtimeEnv: {
@@ -34,6 +36,7 @@ export const env = createEnv({
     SENTRY_DSN: process.env.SENTRY_DSN,
     SENTRY_AUTH_TOKEN: process.env.SENTRY_AUTH_TOKEN,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+    NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
   },
 
   skipValidation: process.env.SKIP_ENV_VALIDATION === "1",
