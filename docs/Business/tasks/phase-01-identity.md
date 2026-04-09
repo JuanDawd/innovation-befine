@@ -259,3 +259,25 @@ Add a "Change password" option inside the user's profile or settings screen. The
 - [ ] Current password is verified server-side before accepting the new password
 - [ ] Weak passwords (< 8 characters) are rejected with a clear message
 - [ ] On success: session remains active; no logout required
+
+---
+
+## T108 — Business settings table migration
+
+**Phase:** 1 — Identity _(new — design grilling session)_
+**Status:** pending
+**Dependencies:** T006
+
+### What to do
+
+Create a `business_settings` table with a single row for the business. This table holds admin-configurable behavior flags. Start with `enforce_subtype_service_restriction` — when enabled, stylists can only log services that match their subtype. When disabled (default), all services are available but the UI prioritizes subtype-matching services in the selector.
+
+Design as typed columns (not key-value) since the set of settings is small and known. New columns are added via migrations as features require them.
+
+### Acceptance criteria
+
+- [ ] Migration creates `business_settings` table: `id` (uuid, pk), `enforce_subtype_service_restriction` (boolean, default false), `created_at`, `updated_at`
+- [ ] A seed row is inserted automatically on first migration (single-row pattern with a check constraint ensuring at most one row exists)
+- [ ] A server utility `getBusinessSettings()` returns the settings object (cached per request)
+- [ ] Admin UI toggle for `enforce_subtype_service_restriction` on the settings screen (can be a stub screen for now — wired to the actual service selector in T035/T028)
+- [ ] When `enforce_subtype_service_restriction = true`, T028 catalog read endpoint filters services to those matching the requesting stylist's subtype

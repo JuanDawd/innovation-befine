@@ -14,17 +14,21 @@
 
 ### What to do
 
-Create the `tickets` table: `id`, `business_day_id` (FK), `employee_id` (FK — the performing stylist), `client_id` (FK nullable), `guest_name` (nullable), `appointment_id` (FK nullable — links to appointments table when ticket is created from an appointment; set automatically in Phase 5), `status` (`logged` | `awaiting_payment` | `closed` | `reopened`), `closed_at` (nullable), `closed_by` (nullable), `created_at`, `created_by`.
+Create the `tickets` table: `id`, `business_day_id` (FK), `employee_id` (FK — the performing stylist), `client_id` (FK nullable), `guest_name` (nullable), `appointment_id` (FK nullable — links to appointments table when ticket is created from an appointment; set automatically in Phase 5), `checkout_session_id` (FK nullable — set when the ticket is closed as part of a batch checkout; references `checkout_sessions.id`), `status` (`logged` | `awaiting_payment` | `closed` | `reopened` | `paid_offline`), `closed_at` (nullable), `closed_by` (nullable), `created_at`, `created_by`.
 
 Add `idempotency_key` (text, nullable, unique) now — the offline policy (T077) decided this must be present from the start, not retrofitted.
 
+Also create the `checkout_sessions` table: `id`, `business_day_id` (FK), `cashier_id` (FK — employee who processed the checkout), `client_id` (FK nullable — the client who paid; set when all tickets in the session belong to the same saved client), `total_amount` (bigint — sum of all ticket totals in the session), `is_partially_reopened` (boolean, default false — set when one or more tickets in the session are reopened after checkout), `created_at`.
+
 ### Acceptance criteria
 
-- [ ] Migration runs without errors
-- [ ] Either `client_id` or `guest_name` must be present (check constraint or app-level)
-- [ ] `status` uses a Drizzle `pgEnum`
+- [ ] Both migrations run without errors
+- [ ] Either `client_id` or `guest_name` must be present on tickets (check constraint or app-level)
+- [ ] `status` uses a Drizzle `pgEnum` including `paid_offline`
 - [ ] `idempotency_key` column exists and has a unique index
 - [ ] `appointment_id` column exists as a nullable FK (populated in Phase 5 when a ticket is opened from an appointment)
+- [ ] `checkout_session_id` column exists as a nullable FK referencing `checkout_sessions`
+- [ ] `checkout_sessions` table created with all required columns
 - [ ] Requires an open business day (enforced at app level)
 
 ---
@@ -124,7 +128,7 @@ Implement the allowed status transitions and who can trigger each:
 
 ---
 
-## T038 — Checkout flow (cashier)
+## T038 — Checkout flow (cashier) — batch checkout
 
 **Phase:** 4A — Tickets and checkout
 **Status:** pending
@@ -132,20 +136,29 @@ Implement the allowed status transitions and who can trigger each:
 
 ### What to do
 
-Build the cashier checkout screen for a ticket: show line items with prices, subtotal, and a payment section. Cashier selects payment method(s) and confirms. On confirm: record payment, mark ticket `closed`.
+Build the cashier checkout screen with **batch checkout** support: the cashier selects one or more `awaiting_payment` tickets (typically all tickets for the same customer visit) and checks them out together in a single payment transaction.
 
-Add optimistic lock: if another session has already closed the ticket, return a conflict error rather than silently double-closing.
+On submit: create a `checkout_session` record, record payment(s) via `ticket_payments` (referencing the session), and mark all selected tickets `closed` — all in a single DB transaction.
+
+Add optimistic lock: if another session has already closed any ticket in the batch, return a conflict error.
+
+**Offline checkout:** if the cashier is offline, they can mark selected tickets as `paid_offline` (records method and amount locally). On reconnect, the sync process closes the tickets and creates the checkout_session server-side. Cashier's version always wins on sync conflict.
 
 ### Acceptance criteria
 
-- [ ] Line items shown with snapshotted prices
-- [ ] Subtotal computed correctly (including any override prices)
-- [ ] Payment method required before closing (cash / card / bank transfer)
+- [ ] Cashier can select multiple `awaiting_payment` tickets for batch checkout (default: all tickets for the same client currently awaiting payment)
+- [ ] Single-ticket checkout works as a degenerate case of batch checkout
+- [ ] Line items shown per ticket with snapshotted prices
+- [ ] Batch total computed correctly across all selected tickets (including any override prices)
+- [ ] Payment method(s) apply to the batch total (not per-ticket)
+- [ ] A `checkout_session` record is created atomically with all ticket closures
 - [ ] Concurrent checkout attempt on the same ticket → one succeeds, one receives a clear conflict error
-- [ ] On close: ticket status → `closed`, `closed_at` and `closed_by` set
-- [ ] Real-time event fires on close so the board removes the ticket
-- [ ] **Post-checkout confirmation screen:** After closing, show a transaction summary (service, client, amount, payment method, time). Include a "Print receipt" button (browser print dialog with receipt-formatted view) and optionally "Email receipt" if the client has an email on file.
-- [ ] **Confirmation dialog:** Closing a ticket uses the destructive confirmation pattern (prominent warning before finalizing the financial transaction)
+- [ ] On close: all ticket statuses → `closed`, `closed_at` and `closed_by` set; `checkout_session_id` set on each ticket
+- [ ] Real-time event fires on close so the board removes all closed tickets
+- [ ] **Offline checkout:** when offline, cashier can set tickets to `paid_offline` status with payment method. On sync, checkout_session is created server-side; cashier's version always wins
+- [ ] **Ticket reopen from batch:** reopening one ticket detaches it from its `checkout_session` (sets `checkout_session_id = null`, status → `reopened`); the session's `is_partially_reopened` flag is set to true
+- [ ] **Post-checkout confirmation screen:** transaction summary (services, client, total, payment breakdown, time). "Print receipt" button (browser print dialog). "Email receipt" if client has email
+- [ ] **Confirmation dialog:** uses the destructive confirmation pattern before finalizing
 - [ ] **Stretch:** `Enter` key confirms payment on the active dialog; `Escape` cancels/closes modals
 
 ---
@@ -158,14 +171,17 @@ Add optimistic lock: if another session has already closed the ticket, return a 
 
 ### What to do
 
-Allow the cashier to record more than one payment method on a single ticket. Create a `ticket_payments` table: `id`, `ticket_id` (FK), `method` (`cash` | `card` | `transfer`), `amount`, `created_at`. The sum of amounts must equal the ticket subtotal.
+Allow the cashier to record more than one payment method for a checkout session. Create a `ticket_payments` table: `id`, `checkout_session_id` (FK — references `checkout_sessions.id`), `method` (`cash` | `card` | `transfer`), `amount`, `created_at`. The sum of amounts must equal the session total.
+
+Note: payment is recorded at the **session level** (not per-ticket), since batch checkout groups multiple tickets under one payment transaction.
 
 ### Acceptance criteria
 
-- [ ] `ticket_payments` migration runs without errors
+- [ ] `ticket_payments` migration runs without errors with `checkout_session_id` FK
 - [ ] Cashier can add multiple payment rows before confirming
-- [ ] Submit blocked if payment amounts do not sum to the ticket total
+- [ ] Submit blocked if payment amounts do not sum to the session total
 - [ ] Single-method payment works as a special case (one row)
+- [ ] `payment_method_enum` reused from T006 shared enum definition
 
 ---
 
@@ -185,6 +201,7 @@ Allow the cashier to override the price of any line item at checkout. A reason t
 - [ ] Reason text stored in DB
 - [ ] Override reason not rendered in any non-admin view
 - [ ] Override triggers commission recalculation based on override price
+- [ ] **Admin override history view:** admin can see a paginated list of all price overrides across all tickets — columns: ticket ID, service, original price, override price, delta (COP), reason, cashier, date. Accessible from the admin settings or reports section
 
 ---
 

@@ -17,13 +17,15 @@
 Create:
 
 - `cloth_batches`: `id`, `business_day_id` (FK), `created_by`, `notes` (nullable), `large_order_id` (FK nullable — linked in Phase 6), `created_at`
-- `batch_pieces`: `id`, `batch_id` (FK), `cloth_piece_id` (FK), `assigned_to_employee_id` (FK nullable), `status` (`pending` | `done_pending_approval` | `approved`), `completed_at` (nullable), `approved_at` (nullable), `approved_by` (nullable)
+- `batch_pieces`: `id`, `batch_id` (FK), `cloth_piece_id` (FK), `assigned_to_employee_id` (FK nullable — null = unassigned, claimable by any clothier), `claim_source` (`assigned` | `self_claimed` | null — set on assignment), `claimed_at` (nullable timestamp), `status` (`pending` | `done_pending_approval` | `approved`), `completed_at` (nullable), `approved_at` (nullable), `approved_by` (nullable)
 
 ### Acceptance criteria
 
 - [ ] Both migrations run without errors
 - [ ] `status` uses Drizzle `pgEnum`
 - [ ] `large_order_id` is nullable (standalone batches are allowed)
+- [ ] `claim_source` and `claimed_at` columns exist to audit how each piece was assigned
+- [ ] Self-claim uses optimistic locking (`version` column on `batch_pieces`) to prevent two clothiers claiming the same piece simultaneously — one wins, one receives a conflict error
 
 ---
 
@@ -60,12 +62,15 @@ Build the clothier's home screen: list of batch pieces assigned to them (or unas
 
 ### Acceptance criteria
 
-- [ ] Clothier sees only pieces assigned to them (or unassigned)
+- [ ] Clothier sees only pieces assigned to them AND unassigned pieces (not pieces assigned to other clothiers)
+- [ ] Unassigned pieces are visually distinct (e.g. "Available to claim" section) with a "Claim" button
+- [ ] **Self-claim:** clothier can claim an unassigned piece; claim is silent (no notification). Uses optimistic locking — if two clothiers claim simultaneously, one wins and the other sees a "already claimed" message
+- [ ] Successful self-claim sets `assigned_to_employee_id`, `claim_source = self_claimed`, and `claimed_at` on the piece (audit trail for admin)
 - [ ] "Mark as done" button transitions piece to `done_pending_approval`
 - [ ] In-app notification (T048) sent to secretary/admin when a piece is marked done
 - [ ] Screen is responsive — primary use is on a phone
-- [ ] **Clothier UX:** Designed and tested **mobile-first** (phone is the primary device). Large tap targets for "Mark as done" buttons. Checklist-style UI with progress bar showing batch completion (e.g. "4/10 pieces done"). One-handed phone use optimized — actions reachable in the lower half of the screen.
-- [ ] Empty state shown when no pieces are assigned to the clothier today (message: "No pieces assigned — new assignments will appear here")
+- [ ] **Clothier UX:** Designed and tested **mobile-first** (phone is the primary device). Large tap targets for "Mark as done" and "Claim" buttons. Checklist-style UI with progress bar showing batch completion (e.g. "4/10 pieces done"). One-handed phone use optimized — actions reachable in the lower half of the screen.
+- [ ] Empty state shown when no pieces are assigned/available to the clothier today (message: "No pieces assigned — new assignments will appear here")
 
 ---
 

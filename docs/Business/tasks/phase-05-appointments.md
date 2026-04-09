@@ -34,7 +34,7 @@ Implement the atomic increment of `clients.no_show_count` when an appointment is
 
 ### What to do
 
-Create the `appointments` table: `id`, `client_id` (FK nullable), `guest_name` (nullable), `stylist_employee_id` (FK), `service_variant_id` (FK nullable — links to catalog for automatic ticket pre-population; when null, falls back to `service_summary`), `service_summary` (text — free description, used when no catalog link exists), `scheduled_at` (timestamp with timezone), `duration_minutes` (default 60), `status` (`booked` | `confirmed` | `completed` | `cancelled` | `rescheduled` | `no_show`), `cancelled_at` (nullable), `cancellation_reason` (nullable), `confirmation_sent_at` (nullable timestamp — used by T056 to record when the confirmation email was sent), `created_by`, `created_at`, `updated_at`.
+Create the `appointments` table: `id`, `client_id` (FK nullable), `guest_name` (nullable), `stylist_employee_id` (FK), `service_variant_id` (FK nullable — links to catalog for automatic ticket pre-population; when null, falls back to `service_summary`), `service_summary` (text — free description, used when no catalog link exists), `scheduled_at` (timestamp with timezone), `duration_minutes` (default 60), `status` (`booked` | `confirmed` | `completed` | `cancelled` | `rescheduled` | `no_show`), `cancelled_at` (nullable), `cancellation_reason` (nullable), `confirmation_sent_at` (nullable timestamp — used by T056 to record when the confirmation email was sent), `price_change_acknowledged` (boolean, default false — set by secretary after notifying client of a catalog price change), `created_by`, `created_at`, `updated_at`.
 
 ### Acceptance criteria
 
@@ -42,7 +42,8 @@ Create the `appointments` table: `id`, `client_id` (FK nullable), `guest_name` (
 - [ ] `status` uses Drizzle `pgEnum`
 - [ ] Either `client_id` or `guest_name` must be present
 - [ ] `confirmation_sent_at` column exists (nullable timestamp) — used by T056
-- [ ] `service_variant_id` column exists (FK nullable, references `service_variants.id`) — when present, ticket creation from this appointment auto-populates the service. When null, `service_summary` text is used as a fallback.
+- [ ] `service_variant_id` column exists (FK nullable, references `service_variants.id`) — when present, ticket creation from this appointment auto-populates the service. When null, `service_summary` text is used as a fallback
+- [ ] `price_change_acknowledged` column exists (boolean, default false) — used by T109 to track secretary acknowledgement after a catalog price change
 
 ---
 
@@ -145,11 +146,13 @@ Build a React Email template for appointment confirmations. Template includes: c
 
 ---
 
-## T056 — "Send confirmation email" action
+## T056 — "Send confirmation email" action _(low priority — MVP)_
 
 **Phase:** 5 — Appointments
 **Status:** pending
 **Dependencies:** T055, T053
+
+> **Note:** Low priority for MVP. Most clients do not have email addresses — secretary confirms appointments by phone/WhatsApp. This feature is ready when clients provide emails. The in-app confirmation flag (T053) is what matters for day-to-day operation.
 
 ### What to do
 
@@ -161,3 +164,32 @@ Add a "Send confirmation email" button on appointment cards (visible when status
 - [ ] Email delivered within 30 seconds in staging
 - [ ] `confirmation_sent_at` recorded after successful send
 - [ ] Button disabled after first send (re-send requires a second explicit click with a confirmation prompt)
+
+---
+
+## T109 — Price change notification to secretary
+
+**Phase:** 5 — Appointments _(new — design grilling session)_
+**Status:** pending
+**Dependencies:** T025, T049, T048
+
+### What to do
+
+When an admin changes the price of a `service_variant` (recorded in T025 catalog audit log), find all future appointments that reference that `service_variant_id` and:
+1. Send an in-app notification to the secretary for each affected appointment
+2. Set `price_change_acknowledged = false` on each affected appointment
+3. Surface unacknowledged price changes visually in the appointments list/calendar
+
+The secretary marks `price_change_acknowledged = true` after notifying the client of the new price.
+
+**Ticket price:** When a ticket is created from an appointment, it always uses the **current catalog price** at creation time — not the price at booking time. T109 ensures the secretary knows to inform the client before they arrive.
+
+### Acceptance criteria
+
+- [ ] When a `service_variant` price or commission changes (T025 logs it), a server-side hook queries all future `booked` or `confirmed` appointments with that `service_variant_id`
+- [ ] An in-app notification (T048) is sent to the secretary for each affected appointment: "Price changed for [service] — notify client [name] (appointment: [date/time])"
+- [ ] `price_change_acknowledged` is reset to `false` on all affected appointments
+- [ ] Appointments with `price_change_acknowledged = false` are visually flagged in the calendar and list views (warning badge or amber highlight)
+- [ ] Secretary can click "Acknowledge" on each flagged appointment to set `price_change_acknowledged = true`
+- [ ] If multiple price changes happen for the same appointment before the secretary acknowledges, only one notification is sent (deduplicated)
+- [ ] Guest appointments are also flagged (even though there's no client record, the secretary still needs to be aware)

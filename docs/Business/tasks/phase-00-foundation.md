@@ -4,7 +4,7 @@
 >
 > **Split into two sub-phases** (H-01 resolution, April 2026):
 >
-> - **Phase 0A (Infrastructure):** T001, T003, T004, T005, T006, T007, T008, T009, T010, T011, T085, T094, T095 — core tooling, DB, auth, spikes, CI. Deliver first.
+> - **Phase 0A (Infrastructure):** T001, T003, T004, T005, T006, T007, T008, T009, T010, T011, T085, T094, T095 — core tooling, DB, auth, spikes (SSE), CI. Deliver first.
 > - **Phase 0B (Standards & Design):** T002, T077, T097, T098, T099, T103, T104 — conventions, design system, wireframes. Can begin once T001 and T008 are complete.
 
 ---
@@ -184,7 +184,7 @@ Evaluate the UI component library. **Primary candidate:** Base Web (`baseui`) + 
 
 ---
 
-## T009 — Pusher free tier spike
+## T009 — SSE (Server-Sent Events) spike
 
 **Phase:** 0 — Foundation
 **Status:** pending
@@ -192,14 +192,16 @@ Evaluate the UI component library. **Primary candidate:** Base Web (`baseui`) + 
 
 ### What to do
 
-Create a Pusher account (free tier). Install `pusher` (server SDK) and `pusher-js` (client). Trigger a test event from a Next.js API route and receive it in a React component. Confirm it works on a Vercel preview deploy.
+Validate that native SSE works end-to-end in Next.js App Router on Vercel. Create a Route Handler that streams `text/event-stream` responses. Subscribe in a React component using the browser's native `EventSource` API. Confirm reconnection behavior when the connection drops. **Pusher is not used** — SSE is the chosen real-time transport (free, no third-party service, sufficient for one-way server→client push).
 
 ### Acceptance criteria
 
-- [ ] Server can publish an event via Pusher in a Route Handler
-- [ ] Client receives the event in real time without page refresh
+- [ ] Route Handler streams SSE events (`text/event-stream`) from the server
+- [ ] React component receives events via `EventSource` without page refresh
+- [ ] Automatic reconnection works when the connection drops (browser `EventSource` built-in)
 - [ ] Works on a Vercel preview deploy (not just local) — requires T004 to be complete
-- [ ] Pusher keys stored in environment variables (not hardcoded)
+- [ ] Vercel SSE timeout behavior documented: Vercel Functions have a max duration; strategy for long-lived connections documented (e.g. client reconnects every N minutes)
+- [ ] No environment variables needed (no third-party service)
 
 ---
 
@@ -357,7 +359,7 @@ Write `docs/standards-api.md` defining the API conventions used throughout the p
 
 ---
 
-## T098 — Real-time abstraction layer
+## T098 — Real-time abstraction layer (SSE)
 
 **Phase:** 0 — Foundation _(new — Senior SWE review F6)_
 **Status:** pending
@@ -365,16 +367,19 @@ Write `docs/standards-api.md` defining the API conventions used throughout the p
 
 ### What to do
 
-Create a thin abstraction layer around the real-time transport (Pusher) so that migrating to native SSE + Postgres LISTEN/NOTIFY later does not require touching every file that uses real-time events. The abstraction lives in `packages/realtime/`.
+Create a thin abstraction layer around the SSE transport so that switching to a different mechanism later does not require touching every consuming file. The abstraction lives in `packages/realtime/`.
+
+**Scope:** Only two screens use real-time push — the cashier dashboard (ticket status changes) and the clothier view (batch/piece assignments). All other screens (secretary appointment list, admin analytics) are refresh-on-demand.
 
 ### Acceptance criteria
 
-- [ ] Server export: `publishEvent(channel: string, event: string, data: unknown)` — calls Pusher internally
-- [ ] Client export: `useRealtimeEvent(channel: string, event: string, callback: (data) => void)` — subscribes via Pusher internally
-- [ ] All Phase 4A+ tasks use the abstraction, never Pusher SDK directly
+- [ ] Server export: `publishEvent(channel: string, event: string, data: unknown)` — writes to a server-side event emitter or Postgres NOTIFY
+- [ ] Client export: `useRealtimeEvent(channel: string, event: string, callback: (data) => void)` — subscribes via `EventSource` internally
+- [ ] All Phase 4A+ tasks use the abstraction, never `EventSource` directly
 - [ ] Switching the underlying transport requires changes only in `packages/realtime/`, not in consuming code
 - [ ] Types for channel names and event names are centralized (string literal union or enum)
-- [ ] Abstraction includes a **30-second polling fallback** that activates automatically if the push transport fails or disconnects. The cashier dashboard never relies solely on push events for financial display — stale data is detected and refreshed via polling.
+- [ ] Abstraction includes a **30-second polling fallback** that activates automatically if the SSE connection fails. The cashier dashboard never relies solely on push events — stale data is detected and refreshed via polling
+- [ ] No Pusher SDK, no Pusher environment variables
 
 ---
 

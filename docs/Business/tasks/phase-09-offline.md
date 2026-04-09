@@ -39,10 +39,14 @@ Create an `idempotency_keys` table: `key` (text, primary key), `route`, `respons
 
 Using the browser's IndexedDB API (or a thin wrapper like `idb`), create a mutation queue. When the user creates a ticket or marks a piece done while offline, the action is written to the queue with a client-generated UUID (used as the idempotency key). A background process flushes the queue when the network is available.
 
+**Offline checkout (cashier):** When the cashier is offline and needs to process payment, they mark tickets as `paid_offline` with the payment method. This action is queued in IndexedDB. On reconnect, the sync process creates the `checkout_session` server-side and transitions tickets to `closed`. Cashier's offline version always wins on conflict — no manual resolution needed.
+
 ### Acceptance criteria
 
 - [ ] Ticket creation while offline queues the action in IndexedDB
+- [ ] `paid_offline` checkout while offline queues: ticket IDs, payment method, amount, cashier ID, and client-generated idempotency key
 - [ ] On reconnect, queued actions are sent in order with their idempotency keys
+- [ ] For `paid_offline` sync: server creates `checkout_session` and closes all tickets atomically; cashier's version overwrites any conflicting edits made by other roles while the cashier was offline
 - [ ] Duplicate retry with the same key does not create a duplicate record (relies on T078)
 - [ ] Queue persists across page reloads and browser restarts
 - [ ] Queue works in the Next.js App Router client context (no SSR issues)
@@ -61,8 +65,10 @@ Show a persistent sync indicator in the app header/nav:
 
 - **Online, synced:** neutral icon (or hidden)
 - **Online, syncing:** spinner with "Syncing…"
-- **Offline:** warning banner "You're offline — actions will sync when you reconnect"
+- **Offline:** warning banner "Estás sin conexión — las acciones se sincronizarán cuando vuelva la conexión"
+- **Offline (cashier):** additional note "Puedes marcar pagos como 'pagado sin conexión' — se sincronizarán automáticamente"
 - **Sync failed:** error icon with count of failed items and a "Retry" button
+- **`paid_offline` tickets pending sync:** specific badge showing count of unsynced checkouts (visually distinct — these represent unconfirmed money movement)
 
 ### Acceptance criteria
 
