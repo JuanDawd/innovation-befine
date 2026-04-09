@@ -2,7 +2,7 @@ import type { AppRole } from "@befine/types";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 
-const roles: AppRole[] = ["admin", "secretary", "stylist", "clothier"];
+const roles: AppRole[] = ["cashier_admin", "secretary", "stylist", "clothier"];
 
 export default function HomePage() {
   const t = useTranslations();

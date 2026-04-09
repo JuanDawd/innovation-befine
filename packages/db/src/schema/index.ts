@@ -14,3 +14,4 @@
  */
 
 export { paymentMethodEnum } from "./enums";
+export { users, sessions, accounts, verifications } from "./auth";
