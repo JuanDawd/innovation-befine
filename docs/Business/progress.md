@@ -60,21 +60,21 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 
 ## Phase 0A — Foundation (Infrastructure)
 
-| ID   | Task                                                                | Status  | Dependencies |
-| ---- | ------------------------------------------------------------------- | ------- | ------------ |
-| T001 | Initialize Next.js monorepo with Turborepo                          | done    | —            |
-| T003 | Environment variable schema and runtime validation                  | done    | T001         |
-| T004 | Vercel project setup and staging deploys                            | done    | T001         |
-| T005 | Neon Postgres setup with dev and staging branches                   | done    | T004         |
-| T006 | Drizzle ORM setup and migration workflow                            | done    | T005         |
-| T007 | Better Auth spike and integration (RBAC + rate limiting validation) | done    | T006         |
-| T008 | UI library spike (shadcn/ui chosen, Base Web failed)                | done    | T001         |
-| T009 | SSE (Server-Sent Events) spike for real-time events                 | pending | T001, T004   |
-| T010 | RBAC role definitions (roles + stylist subtypes)                    | done    | T007         |
-| T011 | Seed script for development (one user per role)                     | done    | T010         |
-| T085 | Sentry error tracking setup _(moved from Phase 10)_                 | pending | T004         |
-| T094 | Testing infrastructure (Vitest + Playwright) _(new)_                | done    | T001         |
-| T095 | CI/CD pipeline (GitHub Actions) _(new)_                             | done    | T094, T002   |
+| ID   | Task                                                                | Status | Dependencies |
+| ---- | ------------------------------------------------------------------- | ------ | ------------ |
+| T001 | Initialize Next.js monorepo with Turborepo                          | done   | —            |
+| T003 | Environment variable schema and runtime validation                  | done   | T001         |
+| T004 | Vercel project setup and staging deploys                            | done   | T001         |
+| T005 | Neon Postgres setup with dev and staging branches                   | done   | T004         |
+| T006 | Drizzle ORM setup and migration workflow                            | done   | T005         |
+| T007 | Better Auth spike and integration (RBAC + rate limiting validation) | done   | T006         |
+| T008 | UI library spike (shadcn/ui chosen, Base Web failed)                | done   | T001         |
+| T009 | SSE (Server-Sent Events) spike for real-time events                 | done   | T001, T004   |
+| T010 | RBAC role definitions (roles + stylist subtypes)                    | done   | T007         |
+| T011 | Seed script for development (one user per role)                     | done   | T010         |
+| T085 | Sentry error tracking setup _(moved from Phase 10)_                 | done   | T004         |
+| T094 | Testing infrastructure (Vitest + Playwright) _(new)_                | done   | T001         |
+| T095 | CI/CD pipeline (GitHub Actions) _(new)_                             | done   | T094, T002   |
 
 ---
 
