@@ -71,7 +71,7 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | T008 | UI library spike (shadcn/ui chosen, Base Web failed)                | done    | T001         |
 | T009 | SSE (Server-Sent Events) spike for real-time events                 | pending | T001, T004   |
 | T010 | RBAC role definitions (roles + stylist subtypes)                    | done    | T007         |
-| T011 | Seed script for development (one user per role)                     | pending | T010         |
+| T011 | Seed script for development (one user per role)                     | done    | T010         |
 | T085 | Sentry error tracking setup _(moved from Phase 10)_                 | pending | T004         |
 | T094 | Testing infrastructure (Vitest + Playwright) _(new)_                | done    | T001         |
 | T095 | CI/CD pipeline (GitHub Actions) _(new)_                             | done    | T094, T002   |
@@ -272,7 +272,7 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 
 | Phase                     | Tasks   | Done   | In progress |
 | ------------------------- | ------- | ------ | ----------- |
-| 0A — Foundation (Infra)   | 13      | 10     | 0           |
+| 0A — Foundation (Infra)   | 13      | 11     | 0           |
 | 0B — Foundation (Std/Dsg) | 7       | 6      | 0           |
 | 1 — Identity              | 14      | 0      | 0           |
 | 2 — Catalog               | 6       | 0      | 0           |
@@ -285,7 +285,7 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | 8 — Analytics             | 8       | 0      | 0           |
 | 9 — Offline               | 5       | 0      | 0           |
 | 10 — Polish               | 9       | 0      | 0           |
-| **Total**                 | **109** | **16** | **0**       |
+| **Total**                 | **109** | **17** | **0**       |
 
 ---
 

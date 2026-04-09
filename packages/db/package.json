@@ -15,16 +15,19 @@
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "db:check": "drizzle-kit check",
+    "db:seed": "node --import tsx/esm src/seed.ts",
     "lint": "eslint .",
     "format": "prettier --check .",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@better-auth/utils": "^0.4.0",
     "@neondatabase/serverless": "^1.0.2",
     "drizzle-orm": "^0.44.0"
   },
   "devDependencies": {
     "drizzle-kit": "^0.31.0",
+    "tsx": "^4.21.0",
     "typescript": "^5"
   }
 }
