@@ -20,7 +20,7 @@
     "no": "No"
   },
   "roles": {
-    "admin": "Administrator",
+    "cashier_admin": "Administrator",
     "secretary": "Secretary",
     "stylist": "Stylist",
     "clothier": "Clothier"
