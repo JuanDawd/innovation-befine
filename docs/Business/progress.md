@@ -18,43 +18,43 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 
 > All confirmed April 2026 (stakeholder decision session + design grilling session).
 
-| Decision                          | Resolution                                                                                                                                              |
-| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Currency                          | **COP** (Colombian Pesos) — no cents, integer storage = whole pesos                                                                                     |
-| Country                           | **Colombia** — Ley 1581 de 2012, timezone America/Bogota (UTC-5)                                                                                        |
-| Phase 0 scope                     | **Split into 0A** (infrastructure) **and 0B** (standards & design)                                                                                      |
-| Brand assets                      | **None exist** — create from scratch in T105                                                                                                            |
-| Employee schedules                | **Part-time employees exist** — `expected_work_days` field added to T012                                                                                |
-| Client uniqueness                 | **No unique constraint** on phone/email — staff manages duplicates                                                                                      |
-| Business day reopen               | **Yes** — admin can reopen most recently closed day with audit trail                                                                                    |
-| No-show decrement                 | **Yes** — decrement when no-show status is reversed; `CHECK (no_show_count >= 0)` prevents negative values                                              |
-| Guest-to-client conversion        | **Deferred** to post-MVP                                                                                                                                |
-| Payout audit trail                | **Yes** — `original_computed_amount` + `adjustment_reason` on payouts                                                                                   |
-| Commission rounding               | **Banker's rounding** (round half-even) everywhere                                                                                                      |
-| Appointment-catalog link          | **Add `service_variant_id` FK** (nullable) to appointments                                                                                              |
-| `deposit_paid` column             | **Removed** — computed from payments table                                                                                                              |
-| Real-time transport               | **Native SSE** (Server-Sent Events) — replaces Pusher entirely. Free, no third-party service. T009 updated to SSE spike; T098 updated to SSE abstraction |
-| File/image storage                | **Explicitly out of scope** for MVP                                                                                                                     |
-| Neon cold start                   | **Loading state** on "Open Day" action                                                                                                                  |
-| Batch checkout                    | **Supported** via `checkout_sessions` table — multiple tickets for one customer can be paid in a single transaction. See T038/T039                      |
-| Appointment date ownership        | **Calendar date + time** (not business day) — appointments are future-scheduled events. Tickets created from appointments belong to the open business day at arrival time |
-| Ticket reopen in batch            | Reopening one ticket in a batch **detaches** it from its `checkout_session`. Session stays intact for remaining tickets; flagged "partially reopened"   |
-| Price override visibility         | **Admin-only history view** — admin sees all overrides with delta, reason, cashier, and date. Non-admin roles never see override reasons                 |
-| Appointment price at booking      | **Current catalog price** at ticket creation time (not booking time). When price changes, secretary is notified to inform client. See T109              |
-| Price change notifications        | Catalog price change → in-app notification to secretary + `price_change_acknowledged` flag per affected appointment. See T109                           |
-| Stylist subtype                   | **Metadata only** — no permission differences. UI prioritizes subtype-matching services. Admin toggle (`enforce_subtype_service_restriction`) can make this a hard restriction. See T108 |
-| Unassigned piece claiming         | **Clothiers can self-claim** unassigned pieces (first-come-first-served with optimistic locking). Silent — no notification — but audit trail recorded on `batch_pieces` |
-| Secretary pay computation         | **Days present only** — business days open + secretary not absent. Vacation days excluded (handled by external accountant)                              |
-| Analytics revenue attribution     | **Business day** — all revenue attributed to the open business day, not calendar date                                                                    |
-| Analytics comparison periods      | Daily = same weekday last week; weekly = previous calendar week (Mon–Sun); monthly = previous calendar month                                            |
-| Deactivation with open tickets    | **Blocked** until all tickets are resolved. Cashier can either **close** or **reassign** blocking tickets before deactivation proceeds                  |
-| Offline checkout                  | **Supported** — cashier marks tickets `paid_offline` when internet is down. Syncs on reconnect. Cashier's version always wins on conflict               |
-| Secretary appointment list        | **Refresh-on-demand** — no real-time push. Only cashier dashboard and clothier view use SSE                                                             |
-| Clothier piece visibility         | Clothiers see **own assigned pieces + unassigned claimable pieces only**. Full batch view reserved for secretary and admin                              |
-| Large order client requirement    | **Saved client required** — large orders cannot be linked to a guest. Staff creates a saved client record first                                         |
-| Large order payments              | **Multiple partial payments** from day one — no single deposit column. `large_order_payments` is a running ledger                                       |
-| Data migration scope              | **Clients, employees, and catalog only** — no historical tickets or payouts. Analytics baseline starts from go-live                                     |
-| Training guide audience           | **Cashier_admin, secretary, admin** roles only — stylists and clothiers have simple enough interfaces                                                    |
+| Decision                       | Resolution                                                                                                                                                                               |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Currency                       | **COP** (Colombian Pesos) — no cents, integer storage = whole pesos                                                                                                                      |
+| Country                        | **Colombia** — Ley 1581 de 2012, timezone America/Bogota (UTC-5)                                                                                                                         |
+| Phase 0 scope                  | **Split into 0A** (infrastructure) **and 0B** (standards & design)                                                                                                                       |
+| Brand assets                   | **None exist** — create from scratch in T105                                                                                                                                             |
+| Employee schedules             | **Part-time employees exist** — `expected_work_days` field added to T012                                                                                                                 |
+| Client uniqueness              | **No unique constraint** on phone/email — staff manages duplicates                                                                                                                       |
+| Business day reopen            | **Yes** — admin can reopen most recently closed day with audit trail                                                                                                                     |
+| No-show decrement              | **Yes** — decrement when no-show status is reversed; `CHECK (no_show_count >= 0)` prevents negative values                                                                               |
+| Guest-to-client conversion     | **Deferred** to post-MVP                                                                                                                                                                 |
+| Payout audit trail             | **Yes** — `original_computed_amount` + `adjustment_reason` on payouts                                                                                                                    |
+| Commission rounding            | **Banker's rounding** (round half-even) everywhere                                                                                                                                       |
+| Appointment-catalog link       | **Add `service_variant_id` FK** (nullable) to appointments                                                                                                                               |
+| `deposit_paid` column          | **Removed** — computed from payments table                                                                                                                                               |
+| Real-time transport            | **Native SSE** (Server-Sent Events) — replaces Pusher entirely. Free, no third-party service. T009 updated to SSE spike; T098 updated to SSE abstraction                                 |
+| File/image storage             | **Explicitly out of scope** for MVP                                                                                                                                                      |
+| Neon cold start                | **Loading state** on "Open Day" action                                                                                                                                                   |
+| Batch checkout                 | **Supported** via `checkout_sessions` table — multiple tickets for one customer can be paid in a single transaction. See T038/T039                                                       |
+| Appointment date ownership     | **Calendar date + time** (not business day) — appointments are future-scheduled events. Tickets created from appointments belong to the open business day at arrival time                |
+| Ticket reopen in batch         | Reopening one ticket in a batch **detaches** it from its `checkout_session`. Session stays intact for remaining tickets; flagged "partially reopened"                                    |
+| Price override visibility      | **Admin-only history view** — admin sees all overrides with delta, reason, cashier, and date. Non-admin roles never see override reasons                                                 |
+| Appointment price at booking   | **Current catalog price** at ticket creation time (not booking time). When price changes, secretary is notified to inform client. See T109                                               |
+| Price change notifications     | Catalog price change → in-app notification to secretary + `price_change_acknowledged` flag per affected appointment. See T109                                                            |
+| Stylist subtype                | **Metadata only** — no permission differences. UI prioritizes subtype-matching services. Admin toggle (`enforce_subtype_service_restriction`) can make this a hard restriction. See T108 |
+| Unassigned piece claiming      | **Clothiers can self-claim** unassigned pieces (first-come-first-served with optimistic locking). Silent — no notification — but audit trail recorded on `batch_pieces`                  |
+| Secretary pay computation      | **Days present only** — business days open + secretary not absent. Vacation days excluded (handled by external accountant)                                                               |
+| Analytics revenue attribution  | **Business day** — all revenue attributed to the open business day, not calendar date                                                                                                    |
+| Analytics comparison periods   | Daily = same weekday last week; weekly = previous calendar week (Mon–Sun); monthly = previous calendar month                                                                             |
+| Deactivation with open tickets | **Blocked** until all tickets are resolved. Cashier can either **close** or **reassign** blocking tickets before deactivation proceeds                                                   |
+| Offline checkout               | **Supported** — cashier marks tickets `paid_offline` when internet is down. Syncs on reconnect. Cashier's version always wins on conflict                                                |
+| Secretary appointment list     | **Refresh-on-demand** — no real-time push. Only cashier dashboard and clothier view use SSE                                                                                              |
+| Clothier piece visibility      | Clothiers see **own assigned pieces + unassigned claimable pieces only**. Full batch view reserved for secretary and admin                                                               |
+| Large order client requirement | **Saved client required** — large orders cannot be linked to a guest. Staff creates a saved client record first                                                                          |
+| Large order payments           | **Multiple partial payments** from day one — no single deposit column. `large_order_payments` is a running ledger                                                                        |
+| Data migration scope           | **Clients, employees, and catalog only** — no historical tickets or payouts. Analytics baseline starts from go-live                                                                      |
+| Training guide audience        | **Cashier_admin, secretary, admin** roles only — stylists and clothiers have simple enough interfaces                                                                                    |
 
 ---
 
@@ -67,7 +67,7 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | T004 | Vercel project setup and staging deploys                            | done    | T001         |
 | T005 | Neon Postgres setup with dev and staging branches                   | done    | T004         |
 | T006 | Drizzle ORM setup and migration workflow                            | done    | T005         |
-| T007 | Better Auth spike and integration (RBAC + rate limiting validation) | pending | T006         |
+| T007 | Better Auth spike and integration (RBAC + rate limiting validation) | done    | T006         |
 | T008 | UI library spike (shadcn/ui chosen, Base Web failed)                | done    | T001         |
 | T009 | SSE (Server-Sent Events) spike for real-time events                 | pending | T001, T004   |
 | T010 | RBAC role definitions (roles + stylist subtypes)                    | pending | T007         |
@@ -94,22 +94,22 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 
 ## Phase 1 — Identity, employees, and business day
 
-| ID    | Task                                            | Status  | Dependencies |
-| ----- | ----------------------------------------------- | ------- | ------------ |
-| T012  | Employees table migration                       | pending | T006         |
-| T013  | Employee account creation UI (admin)            | pending | T012, T010   |
-| T014  | Employee list and profile view (admin)          | pending | T013         |
-| T015  | Employee earnings visibility flag               | pending | T014         |
-| T016  | Login page                                      | pending | T007, T008   |
-| T017  | Password reset flow                             | pending | T016, T054   |
-| T018  | Session middleware and route protection         | pending | T010         |
-| T019  | Business day open/close (table + admin action)  | pending | T012         |
-| T022a | Basic employee deactivation _(split from T022)_ | pending | T014         |
-| T054  | Resend email integration _(moved from Phase 5)_            | pending | T003     |
-| T090  | App navigation / layout shell _(new)_                      | pending | T010     |
-| T091  | Employee self-service password change _(new)_               | pending | T016     |
-| T105  | Brand identity and asset gathering _(new)_                  | pending | T103     |
-| T108  | Business settings table migration _(new — grilling)_        | pending | T006     |
+| ID    | Task                                                 | Status  | Dependencies |
+| ----- | ---------------------------------------------------- | ------- | ------------ |
+| T012  | Employees table migration                            | pending | T006         |
+| T013  | Employee account creation UI (admin)                 | pending | T012, T010   |
+| T014  | Employee list and profile view (admin)               | pending | T013         |
+| T015  | Employee earnings visibility flag                    | pending | T014         |
+| T016  | Login page                                           | pending | T007, T008   |
+| T017  | Password reset flow                                  | pending | T016, T054   |
+| T018  | Session middleware and route protection              | pending | T010         |
+| T019  | Business day open/close (table + admin action)       | pending | T012         |
+| T022a | Basic employee deactivation _(split from T022)_      | pending | T014         |
+| T054  | Resend email integration _(moved from Phase 5)_      | pending | T003         |
+| T090  | App navigation / layout shell _(new)_                | pending | T010         |
+| T091  | Employee self-service password change _(new)_        | pending | T016         |
+| T105  | Brand identity and asset gathering _(new)_           | pending | T103         |
+| T108  | Business settings table migration _(new — grilling)_ | pending | T006         |
 
 ---
 
@@ -176,17 +176,17 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 
 > Can run in parallel with Phase 4B once Phase 4A is complete.
 
-| ID    | Task                                                           | Status  | Dependencies |
-| ----- | -------------------------------------------------------------- | ------- | ------------ |
-| T032b | No-show count increment logic _(split from T032)_                       | pending | T032, T053         |
-| T049  | Appointments table migration                                            | pending | T029, T012         |
-| T050  | Appointment booking UI (secretary / cashier)                            | pending | T049, T030         |
-| T051  | Double-booking prevention (DB-level)                                    | pending | T050               |
-| T052  | Appointment list and calendar view                                      | pending | T050               |
-| T053  | Appointment status management (confirm, cancel, no-show, etc.)          | pending | T050               |
-| T055  | Appointment confirmation email template (React Email)                   | pending | T054               |
-| T056  | "Send confirmation email" action on appointment _(low priority — MVP)_  | pending | T055, T053         |
-| T109  | Price change notification to secretary _(new — grilling)_               | pending | T025, T049, T048   |
+| ID    | Task                                                                   | Status  | Dependencies     |
+| ----- | ---------------------------------------------------------------------- | ------- | ---------------- |
+| T032b | No-show count increment logic _(split from T032)_                      | pending | T032, T053       |
+| T049  | Appointments table migration                                           | pending | T029, T012       |
+| T050  | Appointment booking UI (secretary / cashier)                           | pending | T049, T030       |
+| T051  | Double-booking prevention (DB-level)                                   | pending | T050             |
+| T052  | Appointment list and calendar view                                     | pending | T050             |
+| T053  | Appointment status management (confirm, cancel, no-show, etc.)         | pending | T050             |
+| T055  | Appointment confirmation email template (React Email)                  | pending | T054             |
+| T056  | "Send confirmation email" action on appointment _(low priority — MVP)_ | pending | T055, T053       |
+| T109  | Price change notification to secretary _(new — grilling)_              | pending | T025, T049, T048 |
 
 ---
 
@@ -272,7 +272,7 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 
 | Phase                     | Tasks   | Done   | In progress |
 | ------------------------- | ------- | ------ | ----------- |
-| 0A — Foundation (Infra)   | 13      | 8      | 0           |
+| 0A — Foundation (Infra)   | 13      | 9      | 0           |
 | 0B — Foundation (Std/Dsg) | 7       | 6      | 0           |
 | 1 — Identity              | 14      | 0      | 0           |
 | 2 — Catalog               | 6       | 0      | 0           |
@@ -285,7 +285,7 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | 8 — Analytics             | 8       | 0      | 0           |
 | 9 — Offline               | 5       | 0      | 0           |
 | 10 — Polish               | 9       | 0      | 0           |
-| **Total**                 | **109** | **14** | **0**       |
+| **Total**                 | **109** | **15** | **0**       |
 
 ---
 

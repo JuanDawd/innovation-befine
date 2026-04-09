@@ -7,28 +7,28 @@ It consolidates all project rules (originally in `.cursor/rules/`).
 
 ## Locked stack
 
-| Purpose        | Technology                                     | Never suggest                        |
-| -------------- | ---------------------------------------------- | ------------------------------------ |
-| Framework      | Next.js **App Router**                         | Pages Router                         |
-| ORM            | Drizzle ORM                                    | Prisma, raw SQL outside migrations   |
-| Auth           | Better Auth with RBAC plugin                   | next-auth, clerk, lucia              |
-| Server state   | TanStack Query                                 | SWR, Apollo, trpc-react              |
-| Client state   | Zustand (ephemeral UI only)                    | Redux, Jotai, Recoil                 |
-| Forms          | React Hook Form + Zod resolver                 | Formik, final-form                   |
-| Realtime       | `packages/realtime` (Pusher abstraction)       | Pusher SDK directly in app code      |
-| UI             | shadcn/ui + Tailwind CSS                       | Material UI, Chakra, Mantine         |
-| Charts         | Recharts                                       | Chart.js, D3 directly, Nivo          |
-| Icons          | Lucide Icons                                   | heroicons, react-icons, fontawesome  |
-| Email          | Resend + React Email                           | nodemailer, sendgrid                 |
-| Error tracking | Sentry                                         | bugsnag, logrocket                   |
-| i18n           | next-intl — Spanish primary, English secondary | react-i18next, next-translate        |
-| Dates          | date-fns + date-fns-tz                         | dayjs, moment, luxon                 |
-| Money          | integer pesos (`bigint` column)                | float, numeric, decimal, real        |
-| DB             | PostgreSQL via Neon (serverless driver)        | MySQL, SQLite, Supabase              |
-| Hosting        | Vercel                                         | Netlify, AWS Amplify                 |
-| Monorepo       | Turborepo                                      | Nx, Lerna                            |
-| Testing        | Vitest (unit/integration) + Playwright (E2E)   | Jest, Cypress, Testing Library alone |
-| Rate limiting  | @upstash/ratelimit                             | express-rate-limit                   |
+| Purpose        | Technology                                     | Never suggest                                       |
+| -------------- | ---------------------------------------------- | --------------------------------------------------- |
+| Framework      | Next.js **App Router**                         | Pages Router                                        |
+| ORM            | Drizzle ORM                                    | Prisma, raw SQL outside migrations                  |
+| Auth           | Better Auth with RBAC plugin                   | next-auth, clerk, lucia                             |
+| Server state   | TanStack Query                                 | SWR, Apollo, trpc-react                             |
+| Client state   | Zustand (ephemeral UI only)                    | Redux, Jotai, Recoil                                |
+| Forms          | React Hook Form + Zod resolver                 | Formik, final-form                                  |
+| Realtime       | `packages/realtime` (SSE abstraction)          | Pusher, socket.io, any third-party realtime service |
+| UI             | shadcn/ui + Tailwind CSS                       | Material UI, Chakra, Mantine                        |
+| Charts         | Recharts                                       | Chart.js, D3 directly, Nivo                         |
+| Icons          | Lucide Icons                                   | heroicons, react-icons, fontawesome                 |
+| Email          | Resend + React Email                           | nodemailer, sendgrid                                |
+| Error tracking | Sentry                                         | bugsnag, logrocket                                  |
+| i18n           | next-intl — Spanish primary, English secondary | react-i18next, next-translate                       |
+| Dates          | date-fns + date-fns-tz                         | dayjs, moment, luxon                                |
+| Money          | integer pesos (`bigint` column)                | float, numeric, decimal, real                       |
+| DB             | PostgreSQL via Neon (serverless driver)        | MySQL, SQLite, Supabase                             |
+| Hosting        | Vercel                                         | Netlify, AWS Amplify                                |
+| Monorepo       | Turborepo                                      | Nx, Lerna                                           |
+| Testing        | Vitest (unit/integration) + Playwright (E2E)   | Jest, Cypress, Testing Library alone                |
+| Rate limiting  | @upstash/ratelimit                             | express-rate-limit                                  |
 
 ## Domain terms — use exactly these, no synonyms
 
