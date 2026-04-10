@@ -118,7 +118,7 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | T013  | Employee account creation UI (admin)                 | pending | T012, T010   |
 | T014  | Employee list and profile view (admin)               | pending | T013         |
 | T015  | Employee earnings visibility flag                    | pending | T014         |
-| T016  | Login page                                           | pending | T007, T008   |
+| T016  | Login page                                           | done    | T007, T008   |
 | T017  | Password reset flow                                  | pending | T016, T054   |
 | T018  | Session middleware and route protection              | pending | T010         |
 | T019  | Business day open/close (table + admin action)       | pending | T012         |

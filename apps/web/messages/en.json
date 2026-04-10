@@ -39,7 +39,13 @@
     "password": "Password",
     "forgotPassword": "Forgot your password?",
     "resetPassword": "Reset password",
-    "changePassword": "Change password"
+    "changePassword": "Change password",
+    "emailRequired": "Email is required",
+    "emailInvalid": "Enter a valid email address",
+    "passwordRequired": "Password is required",
+    "invalidCredentials": "Incorrect email or password",
+    "tooManyAttempts": "Too many attempts. Please try again later.",
+    "loginError": "Could not sign in. Please try again."
   },
   "status": {
     "logged": "Logged",

@@ -39,7 +39,13 @@
     "password": "Contraseña",
     "forgotPassword": "¿Olvidaste tu contraseña?",
     "resetPassword": "Restablecer contraseña",
-    "changePassword": "Cambiar contraseña"
+    "changePassword": "Cambiar contraseña",
+    "emailRequired": "El correo electrónico es obligatorio",
+    "emailInvalid": "Ingresa un correo electrónico válido",
+    "passwordRequired": "La contraseña es obligatoria",
+    "invalidCredentials": "Correo o contraseña incorrectos",
+    "tooManyAttempts": "Demasiados intentos. Intenta de nuevo más tarde.",
+    "loginError": "No se pudo iniciar sesión. Intenta de nuevo."
   },
   "status": {
     "logged": "Registrado",
