@@ -59,6 +59,9 @@ importers:
       '@befine/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@befine/realtime':
+        specifier: workspace:*
+        version: link:../../packages/realtime
       '@befine/types':
         specifier: workspace:*
         version: link:../../packages/types
@@ -178,6 +181,22 @@ importers:
       tsx:
         specifier: ^4.21.0
         version: 4.21.0
+      typescript:
+        specifier: ^5
+        version: 5.9.3
+
+  packages/realtime:
+    dependencies:
+      react:
+        specifier: ^19
+        version: 19.2.4
+    devDependencies:
+      '@types/node':
+        specifier: ^22.19.15
+        version: 22.19.15
+      '@types/react':
+        specifier: ^19.2.14
+        version: 19.2.14
       typescript:
         specifier: ^5
         version: 5.9.3

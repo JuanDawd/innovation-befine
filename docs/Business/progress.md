@@ -93,15 +93,15 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 
 ## Phase 0B — Foundation (Standards & Design)
 
-| ID   | Task                                                                 | Status  | Dependencies |
-| ---- | -------------------------------------------------------------------- | ------- | ------------ |
-| T002 | Configure code quality tooling (ESLint, Prettier, Husky, Zod policy) | done    | T001         |
-| T077 | Offline policy document _(moved from Phase 9)_                       | done    | —            |
-| T097 | API design conventions document _(new)_                              | done    | T001         |
-| T098 | Real-time abstraction layer _(new)_                                  | pending | T009         |
-| T099 | Internationalization (i18n) setup _(new)_                            | done    | T001         |
-| T103 | Design system, design tokens, and component patterns _(new)_         | done    | T008         |
-| T104 | Key screen wireframes and layout specification _(new)_               | done    | T103         |
+| ID   | Task                                                                 | Status | Dependencies |
+| ---- | -------------------------------------------------------------------- | ------ | ------------ |
+| T002 | Configure code quality tooling (ESLint, Prettier, Husky, Zod policy) | done   | T001         |
+| T077 | Offline policy document _(moved from Phase 9)_                       | done   | —            |
+| T097 | API design conventions document _(new)_                              | done   | T001         |
+| T098 | Real-time abstraction layer _(new)_                                  | done   | T009         |
+| T099 | Internationalization (i18n) setup _(new)_                            | done   | T001         |
+| T103 | Design system, design tokens, and component patterns _(new)_         | done   | T008         |
+| T104 | Key screen wireframes and layout specification _(new)_               | done   | T103         |
 
 ---
 
@@ -287,7 +287,7 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | ------------------------- | ------- | ------ | ----------- |
 | 0A — Foundation (Infra)   | 13      | 13     | 0           |
 | 0AR — Remediation         | 4       | 4      | 0           |
-| 0B — Foundation (Std/Dsg) | 7       | 6      | 0           |
+| 0B — Foundation (Std/Dsg) | 7       | 7      | 0           |
 | 1 — Identity              | 14      | 0      | 0           |
 | 2 — Catalog               | 6       | 0      | 0           |
 | 3 — Clients               | 4       | 0      | 0           |
@@ -299,7 +299,7 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | 8 — Analytics             | 8       | 0      | 0           |
 | 9 — Offline               | 5       | 0      | 0           |
 | 10 — Polish               | 9       | 0      | 0           |
-| **Total**                 | **113** | **23** | **0**       |
+| **Total**                 | **113** | **24** | **0**       |
 
 ---
 
