@@ -89,5 +89,16 @@
   "home": {
     "title": "Innovation Befine",
     "subtitle": "Plataforma de operaciones internas"
+  },
+  "nav": {
+    "dashboard": "Tablero",
+    "employees": "Empleados",
+    "settings": "Configuración",
+    "appointments": "Citas",
+    "clients": "Clientes",
+    "myTickets": "Mis tickets",
+    "myWork": "Mi trabajo",
+    "openMenu": "Abrir menú",
+    "closeMenu": "Cerrar menú"
   }
 }

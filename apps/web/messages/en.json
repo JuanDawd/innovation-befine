@@ -89,5 +89,16 @@
   "home": {
     "title": "Innovation Befine",
     "subtitle": "Internal operations platform"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "employees": "Employees",
+    "settings": "Settings",
+    "appointments": "Appointments",
+    "clients": "Clients",
+    "myTickets": "My tickets",
+    "myWork": "My work",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
   }
 }

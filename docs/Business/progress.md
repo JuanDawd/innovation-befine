@@ -124,7 +124,7 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | T019  | Business day open/close (table + admin action)       | pending | T012         |
 | T022a | Basic employee deactivation _(split from T022)_      | pending | T014         |
 | T054  | Resend email integration _(moved from Phase 5)_      | pending | T003         |
-| T090  | App navigation / layout shell _(new)_                | pending | T010         |
+| T090  | App navigation / layout shell _(new)_                | done    | T010         |
 | T091  | Employee self-service password change _(new)_        | pending | T016         |
 | T105  | Brand identity and asset gathering _(new)_           | pending | T103         |
 | T108  | Business settings table migration _(new — grilling)_ | done    | T006         |
