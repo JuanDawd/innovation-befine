@@ -15,3 +15,4 @@
 
 export { paymentMethodEnum } from "./enums";
 export { users, sessions, accounts, verifications } from "./auth";
+export { stylistSubtypeEnum, employees } from "./employees";

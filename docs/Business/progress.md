@@ -114,7 +114,7 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 
 | ID    | Task                                                 | Status  | Dependencies |
 | ----- | ---------------------------------------------------- | ------- | ------------ |
-| T012  | Employees table migration                            | pending | T006         |
+| T012  | Employees table migration                            | done    | T006         |
 | T013  | Employee account creation UI (admin)                 | pending | T012, T010   |
 | T014  | Employee list and profile view (admin)               | pending | T013         |
 | T015  | Employee earnings visibility flag                    | pending | T014         |

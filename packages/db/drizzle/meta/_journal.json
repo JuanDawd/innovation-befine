@@ -15,6 +15,13 @@
       "when": 1775768381846,
       "tag": "0001_smooth_mephisto",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1775783774732,
+      "tag": "0002_outgoing_rawhide_kid",
+      "breakpoints": true
     }
   ]
 }
