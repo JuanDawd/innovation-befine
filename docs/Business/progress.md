@@ -58,6 +58,11 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 
 ---
 
+> **Phase 0 completion review — Opus audit 2026-04-09**
+> All 24 tasks (0A × 13, 0AR × 4, 0B × 7) pass acceptance criteria. Regression: 19 tests pass, lint and typecheck clean. No Critical or High issues found. Two Low items logged (L-16, L-17). **Phase 1 is unblocked.**
+
+---
+
 ## Phase 0A — Foundation (Infrastructure)
 
 | ID   | Task                                                                | Status | Dependencies |

@@ -512,6 +512,22 @@
 - **Description:** `beforeSend` only scrubbed `event.request.data`. PII could also appear in exception messages, breadcrumbs, and extra data.
 - **Fix:** Extended `beforeSend` to scrub exception messages (email regex), breadcrumb messages/data, and extra data on both client and server configs. Tracked as T0AR-R4.
 
+### L-16 — `use-sse.ts` is dead code superseded by T098 abstraction
+
+- **Severity:** Low
+- **Status:** Resolved
+- **Affected:** `apps/web/src/hooks/use-sse.ts`, T009, T098
+- **Description:** T098's `useRealtimeEvent` creates its own `EventSource` directly rather than delegating to `useSSE`. The spike hook's comment claimed it would be "the underlying primitive" but T098 was implemented independently. Any Phase 4A+ code accidentally importing `useSSE` would bypass the abstraction.
+- **Fix:** Added `@deprecated` JSDoc to `use-sse.ts` directing developers to `useRealtimeEvent`. Hook kept for spike reference.
+
+### L-17 — `useRealtimeEvent` ref updates use `useEffect` instead of `useLayoutEffect`
+
+- **Severity:** Low
+- **Status:** Open
+- **Affected:** `packages/realtime/src/client.ts`
+- **Description:** Callback refs (`onDataRef`, `onPollRef`) are updated in a `useEffect` (runs after paint), not `useLayoutEffect` (runs synchronously after DOM mutation). There is a one-render window where refs could be stale. In practice this is benign — callbacks only fire from async sources (SSE messages, polling timers) — but it's inconsistent with the pattern used in `use-sse.ts`.
+- **Fix:** Low priority. Switch ref update to `useLayoutEffect` if stale-callback bugs surface in Phase 4A.
+
 ---
 
 ## Lessons learned
@@ -575,3 +591,4 @@
 | M-22     | 2026-04-09    | Seed script user+account inserts wrapped in `db.transaction()`                                   | T0AR-R2                      |
 | M-23     | 2026-04-09    | Middleware `roleCanAccess()` added — each role restricted to its path prefix                     | T0AR-R3                      |
 | M-24     | 2026-04-09    | Sentry `beforeSend` extended to scrub exception messages, breadcrumbs, and extra data            | T0AR-R4                      |
+| L-16     | 2026-04-09    | `@deprecated` JSDoc added to `use-sse.ts`; developers directed to `useRealtimeEvent`             | Phase 0 Opus audit           |

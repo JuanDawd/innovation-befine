@@ -1,15 +1,14 @@
 "use client";
 
 /**
- * useSSE — thin wrapper around the browser EventSource API — T009
+ * useSSE — thin wrapper around the browser EventSource API — T009 spike artifact
  *
- * Handles:
- * - Connection lifecycle (open, error, close)
- * - Automatic reconnection (built into EventSource — no extra code needed)
- * - Cleanup on unmount
+ * @deprecated Do not use in Phase 4A+ feature code.
+ * Use `useRealtimeEvent` from `@befine/realtime/client` instead.
+ * T098 created its own EventSource wrapper rather than delegating here,
+ * so this hook is now superseded by the abstraction layer.
  *
- * Production use is via the packages/realtime abstraction (T098).
- * This hook is the underlying primitive that abstraction will use.
+ * Kept for reference — the spike proved SSE works end-to-end.
  */
 
 import { useEffect, useLayoutEffect, useRef } from "react";
