@@ -94,14 +94,42 @@ async function seed() {
   let skipped = 0;
 
   for (const seedUser of seedUsers) {
-    const existing = await db
+    // Check user existence
+    const existingUser = await db
       .select({ id: users.id })
       .from(users)
       .where(eq(users.email, seedUser.email));
 
-    if (existing.length > 0) {
-      console.log(`  skip  ${seedUser.email} (already exists)`);
-      skipped++;
+    // neon-http doesn't support transactions, so we use fine-grained idempotency:
+    // check both tables independently so a partial prior failure is recoverable.
+    if (existingUser.length > 0) {
+      const userId = existingUser[0]!.id;
+      // Ensure account row also exists (handles orphaned-user recovery)
+      const existingAccount = await db
+        .select({ id: accounts.id })
+        .from(accounts)
+        .where(eq(accounts.userId, userId));
+
+      if (existingAccount.length > 0) {
+        console.log(`  skip  ${seedUser.email} (already exists)`);
+        skipped++;
+        continue;
+      }
+
+      // User exists but account is missing — insert account only
+      const hashedPassword = await hashPassword(seedUser.password);
+      const now = new Date();
+      await db.insert(accounts).values({
+        id: crypto.randomUUID(),
+        userId,
+        accountId: userId,
+        providerId: "credential",
+        password: hashedPassword,
+        createdAt: now,
+        updatedAt: now,
+      });
+      console.log(`  repaired  ${seedUser.email} (account was missing)`);
+      created++;
       continue;
     }
 
@@ -109,28 +137,24 @@ async function seed() {
     const hashedPassword = await hashPassword(seedUser.password);
     const now = new Date();
 
-    // Wrap both inserts in a transaction — partial failure would leave an
-    // orphaned user row that idempotency checks would then permanently skip.
-    await db.transaction(async (tx) => {
-      await tx.insert(users).values({
-        id,
-        name: seedUser.name,
-        email: seedUser.email,
-        emailVerified: true,
-        role: seedUser.role,
-        createdAt: now,
-        updatedAt: now,
-      });
+    await db.insert(users).values({
+      id,
+      name: seedUser.name,
+      email: seedUser.email,
+      emailVerified: true,
+      role: seedUser.role,
+      createdAt: now,
+      updatedAt: now,
+    });
 
-      await tx.insert(accounts).values({
-        id: crypto.randomUUID(),
-        userId: id,
-        accountId: id,
-        providerId: "credential",
-        password: hashedPassword,
-        createdAt: now,
-        updatedAt: now,
-      });
+    await db.insert(accounts).values({
+      id: crypto.randomUUID(),
+      userId: id,
+      accountId: id,
+      providerId: "credential",
+      password: hashedPassword,
+      createdAt: now,
+      updatedAt: now,
     });
 
     const subtypeNote = seedUser.stylistSubtype ? ` [${seedUser.stylistSubtype}]` : "";
