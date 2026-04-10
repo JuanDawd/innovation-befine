@@ -127,7 +127,7 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | T090  | App navigation / layout shell _(new)_                | pending | T010         |
 | T091  | Employee self-service password change _(new)_        | pending | T016         |
 | T105  | Brand identity and asset gathering _(new)_           | pending | T103         |
-| T108  | Business settings table migration _(new — grilling)_ | pending | T006         |
+| T108  | Business settings table migration _(new — grilling)_ | done    | T006         |
 
 ---
 

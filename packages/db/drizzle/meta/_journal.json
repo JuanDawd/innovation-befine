@@ -22,6 +22,13 @@
       "when": 1775783774732,
       "tag": "0002_outgoing_rawhide_kid",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1775783922056,
+      "tag": "0003_optimal_green_goblin",
+      "breakpoints": true
     }
   ]
 }
