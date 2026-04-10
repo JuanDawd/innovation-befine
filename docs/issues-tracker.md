@@ -483,7 +483,7 @@
 ### M-21 — `pino-pretty` referenced but not installed
 
 - **Severity:** Medium
-- **Status:** Open
+- **Status:** Resolved
 - **Affected:** T085 (Sentry / logger), `apps/web/src/lib/logger.ts`
 - **Description:** `logger.ts` uses `pino-pretty` as a dev transport, but the package is not in `apps/web/package.json`. Importing the logger in development will crash with a module-not-found error.
 - **Fix:** `pnpm add -D pino-pretty --filter @befine/web`. Tracked as T0AR-R1.
@@ -491,26 +491,26 @@
 ### M-22 — Seed script inserts are not transactional
 
 - **Severity:** Medium
-- **Status:** Open
+- **Status:** Resolved
 - **Affected:** T011 (seed script), `packages/db/src/seed.ts`
 - **Description:** User and account rows are inserted with separate `db.insert()` calls. If the account insert fails (e.g. network error), the user row remains but has no credentials. Re-running the seed won't fix it because the email check skips existing users.
-- **Fix:** Wrap both inserts in a `db.transaction()` block. Tracked as T0AR-R2.
+- **Fix:** Wrapped both inserts in `db.transaction()`. Tracked as T0AR-R2.
 
 ### M-23 — Middleware allows cross-role page access
 
 - **Severity:** Medium
-- **Status:** Open
+- **Status:** Resolved
 - **Affected:** T010 (RBAC), `apps/web/src/middleware.ts`
-- **Description:** Middleware checks authentication only — any authenticated user can navigate to any role's page (e.g. a stylist can access `/cashier`). Currently benign (placeholder pages), but will expose unauthorized data once Phase 1 adds real content.
-- **Fix:** Add role-path gating in middleware: verify `session.user.role` matches the path prefix. Tracked as T0AR-R3.
+- **Description:** Middleware checked authentication only — any authenticated user could navigate to any role's page (e.g. a stylist accessing `/cashier`). Would have exposed unauthorized data once Phase 1 added real content.
+- **Fix:** Added `roleCanAccess()` gating — each role restricted to its own path prefix; unauthorized access redirects to role home. Tracked as T0AR-R3.
 
 ### M-24 — Sentry PII scrubbing covers only request data
 
 - **Severity:** Medium
-- **Status:** Open
+- **Status:** Resolved
 - **Affected:** T085 (Sentry), `sentry.client.config.ts`, `sentry.server.config.ts`
-- **Description:** `beforeSend` only scrubs `event.request.data`. PII can also appear in `event.exception.values[].value` (error messages like "User john@example.com not found"), `event.breadcrumbs`, and `event.extra`. Must be expanded before production data flows through.
-- **Fix:** Add PII scrubbing for exception messages, breadcrumbs, and extra data. Tracked as T0AR-R4.
+- **Description:** `beforeSend` only scrubbed `event.request.data`. PII could also appear in exception messages, breadcrumbs, and extra data.
+- **Fix:** Extended `beforeSend` to scrub exception messages (email regex), breadcrumb messages/data, and extra data on both client and server configs. Tracked as T0AR-R4.
 
 ---
 
@@ -571,3 +571,7 @@
 | M-20     | 2026-04-02    | Integration test approach documented in `docs/testing/README.md`                                 | QA review action             |
 | L-15     | 2026-04-02    | Rounding policy (banker's rounding) and precision defined in T002 standards                      | Stakeholder decision session |
 | M-16     | 2026-04-09    | Stale — Pusher replaced by SSE; no third-party message volume limits apply                       | Phase 0A Opus audit          |
+| M-21     | 2026-04-09    | `pino-pretty` installed as dev dep in `apps/web`                                                 | T0AR-R1                      |
+| M-22     | 2026-04-09    | Seed script user+account inserts wrapped in `db.transaction()`                                   | T0AR-R2                      |
+| M-23     | 2026-04-09    | Middleware `roleCanAccess()` added — each role restricted to its path prefix                     | T0AR-R3                      |
+| M-24     | 2026-04-09    | Sentry `beforeSend` extended to scrub exception messages, breadcrumbs, and extra data            | T0AR-R4                      |

@@ -109,24 +109,28 @@ async function seed() {
     const hashedPassword = await hashPassword(seedUser.password);
     const now = new Date();
 
-    await db.insert(users).values({
-      id,
-      name: seedUser.name,
-      email: seedUser.email,
-      emailVerified: true,
-      role: seedUser.role,
-      createdAt: now,
-      updatedAt: now,
-    });
+    // Wrap both inserts in a transaction — partial failure would leave an
+    // orphaned user row that idempotency checks would then permanently skip.
+    await db.transaction(async (tx) => {
+      await tx.insert(users).values({
+        id,
+        name: seedUser.name,
+        email: seedUser.email,
+        emailVerified: true,
+        role: seedUser.role,
+        createdAt: now,
+        updatedAt: now,
+      });
 
-    await db.insert(accounts).values({
-      id: crypto.randomUUID(),
-      userId: id,
-      accountId: id,
-      providerId: "credential",
-      password: hashedPassword,
-      createdAt: now,
-      updatedAt: now,
+      await tx.insert(accounts).values({
+        id: crypto.randomUUID(),
+        userId: id,
+        accountId: id,
+        providerId: "credential",
+        password: hashedPassword,
+        createdAt: now,
+        updatedAt: now,
+      });
     });
 
     const subtypeNote = seedUser.stylistSubtype ? ` [${seedUser.stylistSubtype}]` : "";
