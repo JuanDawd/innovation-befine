@@ -1,0 +1,136 @@
+import { describe, it, expect } from "vitest";
+import {
+  isPublic,
+  isShared,
+  roleCanAccess,
+  isFinancialBlockedForSecretary,
+  ROLE_HOME,
+} from "../middleware-helpers";
+
+describe("isPublic", () => {
+  it("allows /login without auth", () => {
+    expect(isPublic("/login")).toBe(true);
+  });
+
+  it("allows /reset-password without auth", () => {
+    expect(isPublic("/reset-password")).toBe(true);
+  });
+
+  it("allows /api/auth/* without auth", () => {
+    expect(isPublic("/api/auth/sign-in")).toBe(true);
+    expect(isPublic("/api/auth/get-session")).toBe(true);
+  });
+
+  it("allows /403 without auth", () => {
+    expect(isPublic("/403")).toBe(true);
+  });
+
+  it("requires auth for protected routes", () => {
+    expect(isPublic("/cashier")).toBe(false);
+    expect(isPublic("/secretary")).toBe(false);
+    expect(isPublic("/admin/employees")).toBe(false);
+  });
+});
+
+describe("isShared", () => {
+  it("allows /api/realtime for any authenticated role", () => {
+    expect(isShared("/api/realtime/cashier")).toBe(true);
+    expect(isShared("/api/realtime/clothier")).toBe(true);
+  });
+
+  it("does not treat generic /api as shared", () => {
+    expect(isShared("/api/analytics")).toBe(false);
+    expect(isShared("/api/payouts")).toBe(false);
+  });
+});
+
+describe("roleCanAccess", () => {
+  it("cashier_admin can access /cashier routes", () => {
+    expect(roleCanAccess("cashier_admin", "/cashier")).toBe(true);
+    expect(roleCanAccess("cashier_admin", "/cashier/tickets")).toBe(true);
+  });
+
+  it("cashier_admin can access /admin routes", () => {
+    expect(roleCanAccess("cashier_admin", "/admin/employees")).toBe(true);
+    expect(roleCanAccess("cashier_admin", "/admin/settings")).toBe(true);
+  });
+
+  it("secretary can access /secretary routes", () => {
+    expect(roleCanAccess("secretary", "/secretary")).toBe(true);
+    expect(roleCanAccess("secretary", "/secretary/appointments")).toBe(true);
+  });
+
+  it("secretary cannot access /cashier routes", () => {
+    expect(roleCanAccess("secretary", "/cashier")).toBe(false);
+    expect(roleCanAccess("secretary", "/cashier/tickets")).toBe(false);
+  });
+
+  it("secretary cannot access /admin routes", () => {
+    expect(roleCanAccess("secretary", "/admin/employees")).toBe(false);
+    expect(roleCanAccess("secretary", "/admin/settings")).toBe(false);
+  });
+
+  it("stylist can access /stylist routes", () => {
+    expect(roleCanAccess("stylist", "/stylist")).toBe(true);
+    expect(roleCanAccess("stylist", "/stylist/tickets")).toBe(true);
+  });
+
+  it("stylist cannot access other role routes", () => {
+    expect(roleCanAccess("stylist", "/cashier")).toBe(false);
+    expect(roleCanAccess("stylist", "/secretary")).toBe(false);
+    expect(roleCanAccess("stylist", "/clothier")).toBe(false);
+  });
+
+  it("clothier can access /clothier routes", () => {
+    expect(roleCanAccess("clothier", "/clothier")).toBe(true);
+    expect(roleCanAccess("clothier", "/clothier/pieces")).toBe(true);
+  });
+
+  it("clothier cannot access other role routes", () => {
+    expect(roleCanAccess("clothier", "/cashier")).toBe(false);
+    expect(roleCanAccess("clothier", "/secretary")).toBe(false);
+  });
+
+  it("undefined role cannot access any route", () => {
+    expect(roleCanAccess(undefined, "/cashier")).toBe(false);
+    expect(roleCanAccess(undefined, "/secretary")).toBe(false);
+  });
+});
+
+describe("isFinancialBlockedForSecretary", () => {
+  it("blocks secretary from analytics API", () => {
+    expect(isFinancialBlockedForSecretary("/api/analytics")).toBe(true);
+    expect(isFinancialBlockedForSecretary("/api/analytics/revenue")).toBe(true);
+  });
+
+  it("blocks secretary from payout API", () => {
+    expect(isFinancialBlockedForSecretary("/api/payouts")).toBe(true);
+    expect(isFinancialBlockedForSecretary("/api/payouts/123")).toBe(true);
+  });
+
+  it("blocks secretary from settlement API", () => {
+    expect(isFinancialBlockedForSecretary("/api/settlements")).toBe(true);
+  });
+
+  it("blocks secretary from secretary-prefixed financial routes", () => {
+    expect(isFinancialBlockedForSecretary("/secretary/analytics")).toBe(true);
+    expect(isFinancialBlockedForSecretary("/secretary/revenue")).toBe(true);
+    expect(isFinancialBlockedForSecretary("/secretary/settlements")).toBe(true);
+    expect(isFinancialBlockedForSecretary("/secretary/payouts")).toBe(true);
+  });
+
+  it("does not block secretary from legitimate routes", () => {
+    expect(isFinancialBlockedForSecretary("/secretary/appointments")).toBe(false);
+    expect(isFinancialBlockedForSecretary("/secretary/clients")).toBe(false);
+    expect(isFinancialBlockedForSecretary("/api/realtime/cashier")).toBe(false);
+  });
+});
+
+describe("ROLE_HOME", () => {
+  it("maps all four roles to their home paths", () => {
+    expect(ROLE_HOME.cashier_admin).toBe("/cashier");
+    expect(ROLE_HOME.secretary).toBe("/secretary");
+    expect(ROLE_HOME.stylist).toBe("/stylist");
+    expect(ROLE_HOME.clothier).toBe("/clothier");
+  });
+});

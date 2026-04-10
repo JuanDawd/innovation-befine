@@ -78,7 +78,10 @@
     "notFound": "The requested resource was not found.",
     "validation": "Please fix the errors in the form.",
     "networkError": "Connection error. Check your internet.",
-    "rateLimited": "Too many attempts. Try again in {minutes} minutes."
+    "rateLimited": "Too many attempts. Try again in {minutes} minutes.",
+    "forbidden": "Access denied",
+    "forbiddenDescription": "You don't have permission to view this page.",
+    "goHome": "Go to my dashboard"
   },
   "time": {
     "justNow": "Just now",

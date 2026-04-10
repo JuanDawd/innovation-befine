@@ -1,0 +1,68 @@
+/**
+ * Middleware logic helpers — T018
+ *
+ * Pure functions with no Next.js or external dependencies so they can be
+ * imported and unit-tested directly in Vitest (jsdom environment).
+ * The middleware.ts file uses these and remains a thin orchestration layer.
+ */
+
+import type { AppRole } from "@befine/types";
+
+/** Routes that bypass the session check entirely */
+export const PUBLIC_PATHS = ["/login", "/reset-password", "/api/auth", "/403"];
+
+/** API paths any authenticated role may call */
+export const SHARED_PATHS = ["/api/realtime"];
+
+/** Where each role is redirected after login; also the route prefix they own */
+export const ROLE_HOME: Record<AppRole, string> = {
+  cashier_admin: "/cashier",
+  secretary: "/secretary",
+  stylist: "/stylist",
+  clothier: "/clothier",
+};
+
+/**
+ * Financial route patterns the secretary role must never access.
+ * Enforced as a defence-in-depth layer on top of the base role-path check.
+ * When financial screens are built they should land under /cashier or /admin —
+ * these patterns act as an explicit safeguard if routing changes.
+ */
+export const SECRETARY_FINANCIAL_BLOCKED: string[] = [
+  // Future API endpoints for financial data
+  "/api/analytics",
+  "/api/payouts",
+  "/api/settlements",
+  "/api/revenue",
+  // Secretary-prefixed routes that must never expose financial data
+  "/secretary/analytics",
+  "/secretary/revenue",
+  "/secretary/settlements",
+  "/secretary/payouts",
+];
+
+export function isPublic(pathname: string): boolean {
+  return PUBLIC_PATHS.some((p) => pathname.startsWith(p));
+}
+
+export function isShared(pathname: string): boolean {
+  return SHARED_PATHS.some((p) => pathname.startsWith(p));
+}
+
+/**
+ * Returns true if the role is permitted to access the path.
+ * Each role owns its own prefix; cashier_admin also owns /admin.
+ */
+export function roleCanAccess(role: AppRole | undefined, pathname: string): boolean {
+  if (!role) return false;
+  const home = ROLE_HOME[role];
+  return pathname.startsWith(home) || (role === "cashier_admin" && pathname.startsWith("/admin"));
+}
+
+/**
+ * Returns true if the path is a financial route that the secretary role
+ * must never access, regardless of other checks.
+ */
+export function isFinancialBlockedForSecretary(pathname: string): boolean {
+  return SECRETARY_FINANCIAL_BLOCKED.some((p) => pathname.startsWith(p));
+}
