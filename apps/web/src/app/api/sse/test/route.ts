@@ -51,7 +51,8 @@ export async function GET() {
       "Content-Type": "text/event-stream",
       "Cache-Control": "no-cache",
       Connection: "keep-alive",
-      // Allow cross-origin SSE if needed (e.g. Vercel preview domains)
+      // ⚠ Wildcard CORS — acceptable for this test-only route.
+      // Production SSE routes (T098) MUST restrict to the app's origin.
       "Access-Control-Allow-Origin": "*",
     },
   });

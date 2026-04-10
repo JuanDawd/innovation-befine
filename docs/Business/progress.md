@@ -78,6 +78,19 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 
 ---
 
+## Phase 0AR — Remediation (Opus audit, 2026-04-09)
+
+> Created by Phase 0A completion review. Critical and High items block Phase 1. Medium items should be resolved before production data flows. Low items deferred to issues tracker.
+
+| ID      | Task                                                                | Severity | Status  | Source     |
+| ------- | ------------------------------------------------------------------- | -------- | ------- | ---------- |
+| T0AR-R1 | Install `pino-pretty` as dev dependency in `apps/web`               | Medium   | pending | Opus audit |
+| T0AR-R2 | Wrap seed script user+account inserts in a DB transaction           | Medium   | pending | Opus audit |
+| T0AR-R3 | Add role-path enforcement to middleware (before Phase 1)            | Medium   | pending | Opus audit |
+| T0AR-R4 | Expand Sentry PII scrubbing to cover error messages and breadcrumbs | Medium   | pending | Opus audit |
+
+---
+
 ## Phase 0B — Foundation (Standards & Design)
 
 | ID   | Task                                                                 | Status  | Dependencies |
@@ -272,7 +285,8 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 
 | Phase                     | Tasks   | Done   | In progress |
 | ------------------------- | ------- | ------ | ----------- |
-| 0A — Foundation (Infra)   | 13      | 11     | 0           |
+| 0A — Foundation (Infra)   | 13      | 13     | 0           |
+| 0AR — Remediation         | 4       | 0      | 0           |
 | 0B — Foundation (Std/Dsg) | 7       | 6      | 0           |
 | 1 — Identity              | 14      | 0      | 0           |
 | 2 — Catalog               | 6       | 0      | 0           |
@@ -285,7 +299,7 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | 8 — Analytics             | 8       | 0      | 0           |
 | 9 — Offline               | 5       | 0      | 0           |
 | 10 — Polish               | 9       | 0      | 0           |
-| **Total**                 | **109** | **17** | **0**       |
+| **Total**                 | **113** | **19** | **0**       |
 
 ---
 

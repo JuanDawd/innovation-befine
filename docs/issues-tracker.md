@@ -287,10 +287,10 @@
 ### M-16 — Pusher free-tier message volume not estimated
 
 - **Severity:** Medium
-- **Status:** Open
+- **Status:** Resolved (Won't fix)
 - **Affected:** T009 (Pusher spike), T098 (real-time abstraction)
 - **Description:** Pusher free tier allows 200K messages/day. No estimate calculates expected daily message volume based on tickets, status changes, notifications, and connected clients. Without this, the team doesn't know when to plan migration.
-- **Fix:** Add a message volume estimate to `docs/research/realtime-transport.md`.
+- **Fix:** **Stale** — Pusher was replaced by native SSE (April 2026 grilling session). No third-party service, no message volume limits. Issue no longer applies.
 
 ### M-17 — `commission_pct` precision not specified
 
@@ -480,6 +480,38 @@
 - **Description:** Task dependencies are documented, but no integration test verifies that deliverables from Phase N-1 work correctly with Phase N's code (e.g., a client created in Phase 3 links to a ticket in Phase 4A, earnings from Phase 4A aggregate in Phase 7 payroll).
 - **Fix:** Integration test approach documented in `docs/testing/README.md`. When starting Phase N, the first task includes an integration test verifying Phase N-1 deliverables.
 
+### M-21 — `pino-pretty` referenced but not installed
+
+- **Severity:** Medium
+- **Status:** Open
+- **Affected:** T085 (Sentry / logger), `apps/web/src/lib/logger.ts`
+- **Description:** `logger.ts` uses `pino-pretty` as a dev transport, but the package is not in `apps/web/package.json`. Importing the logger in development will crash with a module-not-found error.
+- **Fix:** `pnpm add -D pino-pretty --filter @befine/web`. Tracked as T0AR-R1.
+
+### M-22 — Seed script inserts are not transactional
+
+- **Severity:** Medium
+- **Status:** Open
+- **Affected:** T011 (seed script), `packages/db/src/seed.ts`
+- **Description:** User and account rows are inserted with separate `db.insert()` calls. If the account insert fails (e.g. network error), the user row remains but has no credentials. Re-running the seed won't fix it because the email check skips existing users.
+- **Fix:** Wrap both inserts in a `db.transaction()` block. Tracked as T0AR-R2.
+
+### M-23 — Middleware allows cross-role page access
+
+- **Severity:** Medium
+- **Status:** Open
+- **Affected:** T010 (RBAC), `apps/web/src/middleware.ts`
+- **Description:** Middleware checks authentication only — any authenticated user can navigate to any role's page (e.g. a stylist can access `/cashier`). Currently benign (placeholder pages), but will expose unauthorized data once Phase 1 adds real content.
+- **Fix:** Add role-path gating in middleware: verify `session.user.role` matches the path prefix. Tracked as T0AR-R3.
+
+### M-24 — Sentry PII scrubbing covers only request data
+
+- **Severity:** Medium
+- **Status:** Open
+- **Affected:** T085 (Sentry), `sentry.client.config.ts`, `sentry.server.config.ts`
+- **Description:** `beforeSend` only scrubs `event.request.data`. PII can also appear in `event.exception.values[].value` (error messages like "User john@example.com not found"), `event.breadcrumbs`, and `event.extra`. Must be expanded before production data flows through.
+- **Fix:** Add PII scrubbing for exception messages, breadcrumbs, and extra data. Tracked as T0AR-R4.
+
 ---
 
 ## Lessons learned
@@ -492,6 +524,8 @@
 | 2026-04-02 | Pre-dev | No test plans, QA strategy, or edge case scenarios existed despite 106 well-specified tasks              | Acceptance criteria were treated as sufficient for testing; no QA perspective in review cycle                                      | Include a QA review as a standard step after every major planning document is created; ACs define _what_ to verify, test plans define _how_ and _what else_ to try breaking |
 | 2026-04-02 | Pre-dev | Two independent project assessments found the same gaps — confirming they are real, not reviewer opinion | Both reviews converged on: currency decision, data privacy, test plans, auth fallback, Pusher reliability, Neon storage/cold-start | When multiple reviewers agree on a gap, prioritize it immediately — convergence is a strong signal                                                                          |
 | 2026-04-02 | Pre-dev | 17 stakeholder decisions were needed before development could start                                      | Decisions accumulated across 4 review rounds without a resolution session                                                          | Schedule a dedicated decision session after each review round — don't let open questions pile up                                                                            |
+| 2026-04-09 | 0A      | Dev dependencies (`pino-pretty`) referenced in code but never installed; would crash on first import     | Package was assumed to be a transitive dep or was forgotten during implementation                                                  | After adding any `import` or `require` for a new package, verify it's in the relevant `package.json` before committing                                                      |
+| 2026-04-09 | 0A      | Seed script non-transactional inserts could leave orphaned user rows                                     | Two related inserts (user + account) were written sequentially without a transaction wrapper                                       | Any multi-row insert that must succeed or fail together must use `db.transaction()` — especially when idempotency checks skip existing records                              |
 
 ---
 
@@ -536,3 +570,4 @@
 | M-19     | 2026-04-02    | Added structured business logic logging AC to T085                                               | QA review action             |
 | M-20     | 2026-04-02    | Integration test approach documented in `docs/testing/README.md`                                 | QA review action             |
 | L-15     | 2026-04-02    | Rounding policy (banker's rounding) and precision defined in T002 standards                      | Stakeholder decision session |
+| M-16     | 2026-04-09    | Stale — Pusher replaced by SSE; no third-party message volume limits apply                       | Phase 0A Opus audit          |

@@ -10,12 +10,12 @@
     "./schema": "./src/schema/index.ts"
   },
   "scripts": {
-    "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
-    "db:push": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio",
-    "db:check": "drizzle-kit check",
-    "db:seed": "node --import tsx/esm src/seed.ts",
+    "db:generate": "dotenv -e ../../.env.local -- drizzle-kit generate",
+    "db:migrate": "dotenv -e ../../.env.local -- drizzle-kit migrate",
+    "db:push": "dotenv -e ../../.env.local -- drizzle-kit push",
+    "db:studio": "dotenv -e ../../.env.local -- drizzle-kit studio",
+    "db:check": "dotenv -e ../../.env.local -- drizzle-kit check",
+    "db:seed": "dotenv -e ../../.env.local -- node --import tsx/esm src/seed.ts",
     "lint": "eslint .",
     "format": "prettier --check .",
     "typecheck": "tsc --noEmit"
