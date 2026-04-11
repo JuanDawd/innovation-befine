@@ -171,11 +171,11 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 
 > Created by Phase 2 completion review. High items block Phase 3. Medium items should be resolved before Phase 3 ships.
 
-| ID      | Task                                                                                         | Severity | Status  | Source     |
-| ------- | -------------------------------------------------------------------------------------------- | -------- | ------- | ---------- |
-| T02R-R1 | Fix: Add audit log display UI to catalog admin screens                                       | High     | pending | Opus audit |
-| T02R-R2 | Fix: Add `restoreVariant` server action for variant restoration                              | Medium   | pending | Opus audit |
-| T02R-R3 | Fix: Clarify cloth piece schema — spec requires `sale_price`; implement or document decision | Medium   | pending | Opus audit |
+| ID      | Task                                                                                         | Severity | Status | Source     |
+| ------- | -------------------------------------------------------------------------------------------- | -------- | ------ | ---------- |
+| T02R-R1 | Fix: Add audit log display UI to catalog admin screens                                       | High     | done   | Opus audit |
+| T02R-R2 | Fix: Add `restoreVariant` server action for variant restoration                              | Medium   | done   | Opus audit |
+| T02R-R3 | Fix: Clarify cloth piece schema — spec requires `sale_price`; implement or document decision | Medium   | done   | Opus audit |
 
 ---
 
@@ -331,7 +331,7 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | 1 — Identity              | 14      | 14     | 0           |
 | 1R — Remediation          | 4       | 4      | 0           |
 | 2 — Catalog               | 6       | 6      | 0           |
-| 2R — Remediation          | 3       | 0      | 0           |
+| 2R — Remediation          | 3       | 3      | 0           |
 | 3 — Clients               | 4       | 0      | 0           |
 | 4A — Tickets and checkout | 13      | 0      | 0           |
 | 4B — Cloth batches        | 4       | 0      | 0           |

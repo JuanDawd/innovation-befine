@@ -76,12 +76,14 @@ Create a **generic** `catalog_audit_log` table (`id`, `entity_type`, `entity_id`
 
 ### What to do
 
-Create the `cloth_pieces` table: `id`, `name`, `description` (nullable), `sale_price`, `clothier_pay`, `is_active`, `created_at`, `updated_at`.
+Create the `cloth_pieces` table: `id`, `name`, `description` (nullable), `piece_rate`, `is_active`, `created_at`, `updated_at`.
+
+> **Decision (2026-04-11):** The original spec listed `sale_price` + `clothier_pay` as two separate fields. After review, cloth pieces are internal production units — they are not sold directly to customers, so there is no customer-facing sale price at the piece level. Large-order pricing (Phase 6) is handled at the order level, not the cloth piece level. The implementation uses a single `piece_rate` column (the fixed COP amount paid to the clothier per piece), which aligns with the domain term `piece_rate` in CLAUDE.md. The spec's `sale_price` field was an artifact and has been removed.
 
 ### Acceptance criteria
 
 - [ ] Migration runs without errors
-- [ ] Both price fields use the same numeric storage convention as T023
+- [ ] `piece_rate` is `bigint` (integer COP pesos) with a check constraint `>= 0`
 - [ ] `is_active` for soft-deletion
 
 ---
@@ -94,12 +96,12 @@ Create the `cloth_pieces` table: `id`, `name`, `description` (nullable), `sale_p
 
 ### What to do
 
-Build the admin cloth piece catalog screen: list all piece types with sale price and clothier pay. Admin can create, edit, and soft-delete entries.
+Build the admin cloth piece catalog screen: list all piece types with their clothier piece rate. Admin can create, edit, and soft-delete entries.
 
 ### Acceptance criteria
 
 - [ ] Admin can create a new cloth piece type
-- [ ] Admin can edit name, description, sale price, and clothier pay
+- [ ] Admin can edit name, description, and piece rate
 - [ ] Soft-delete hides the piece from batch creation for new batches (existing assignments unaffected)
 - [ ] Audit log (T025 pattern) records price changes
 - [ ] Empty state shown when no cloth pieces exist yet (message + "Create piece type" CTA)
