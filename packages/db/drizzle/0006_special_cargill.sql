@@ -1,0 +1,2 @@
+ALTER TABLE "business_days" ADD COLUMN "updated_at" timestamp with time zone DEFAULT now() NOT NULL;--> statement-breakpoint
+ALTER TABLE "employees" ADD COLUMN "updated_at" timestamp with time zone DEFAULT now() NOT NULL;

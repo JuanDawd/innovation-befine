@@ -51,6 +51,7 @@ export const employees = pgTable(
     hiredAt: timestamp("hired_at", { mode: "date", withTimezone: true }).notNull().defaultNow(),
     deactivatedAt: timestamp("deactivated_at", { mode: "date", withTimezone: true }),
     createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
     unique("uq_employees_user_id").on(table.userId),
