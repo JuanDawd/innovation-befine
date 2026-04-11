@@ -11,7 +11,7 @@
 
 import { hashPassword } from "@better-auth/utils/password";
 import { eq } from "drizzle-orm";
-import { accounts, users } from "./schema";
+import { accounts, users, employees } from "./schema";
 import { createDb } from "./index";
 
 type SeedUser = {
@@ -19,7 +19,9 @@ type SeedUser = {
   name: string;
   role: string;
   password: string;
-  stylistSubtype?: string; // informational only — stored on employees table (T012)
+  stylistSubtype?: string;
+  dailyRate?: number; // secretaries only
+  expectedWorkDays?: number;
 };
 
 function getEnv(key: string, fallback: string): string {
@@ -38,6 +40,7 @@ const seedUsers: SeedUser[] = [
     name: "Secretaria",
     role: "secretary",
     password: getEnv("SEED_SECRETARY_PASSWORD", "Secretary123!"),
+    dailyRate: 50000,
   },
   {
     email: "manicurist@befine.dev",
@@ -111,12 +114,33 @@ async function seed() {
         .where(eq(accounts.userId, userId));
 
       if (existingAccount.length > 0) {
-        console.log(`  skip  ${seedUser.email} (already exists)`);
+        // Both user and account exist — check employee row too
+        const existingEmployee = await db
+          .select({ id: employees.id })
+          .from(employees)
+          .where(eq(employees.userId, userId));
+
+        if (existingEmployee.length === 0) {
+          // Backfill missing employee row
+          const now = new Date();
+          await db.insert(employees).values({
+            userId,
+            role: seedUser.role,
+            stylistSubtype:
+              seedUser.stylistSubtype as (typeof employees.$inferInsert)["stylistSubtype"],
+            dailyRate: seedUser.dailyRate ?? null,
+            expectedWorkDays: seedUser.expectedWorkDays ?? 5,
+            hiredAt: now,
+          });
+          console.log(`  repaired  ${seedUser.email} (employee row was missing)`);
+        } else {
+          console.log(`  skip  ${seedUser.email} (already exists)`);
+        }
         skipped++;
         continue;
       }
 
-      // User exists but account is missing — insert account only
+      // User exists but account is missing — insert account + employee
       const hashedPassword = await hashPassword(seedUser.password);
       const now = new Date();
       await db.insert(accounts).values({
@@ -128,7 +152,16 @@ async function seed() {
         createdAt: now,
         updatedAt: now,
       });
-      console.log(`  repaired  ${seedUser.email} (account was missing)`);
+      await db.insert(employees).values({
+        userId,
+        role: seedUser.role,
+        stylistSubtype:
+          seedUser.stylistSubtype as (typeof employees.$inferInsert)["stylistSubtype"],
+        dailyRate: seedUser.dailyRate ?? null,
+        expectedWorkDays: seedUser.expectedWorkDays ?? 5,
+        hiredAt: now,
+      });
+      console.log(`  repaired  ${seedUser.email} (account + employee were missing)`);
       created++;
       continue;
     }
@@ -155,6 +188,15 @@ async function seed() {
       password: hashedPassword,
       createdAt: now,
       updatedAt: now,
+    });
+
+    await db.insert(employees).values({
+      userId: id,
+      role: seedUser.role,
+      stylistSubtype: seedUser.stylistSubtype as (typeof employees.$inferInsert)["stylistSubtype"],
+      dailyRate: seedUser.dailyRate ?? null,
+      expectedWorkDays: seedUser.expectedWorkDays ?? 5,
+      hiredAt: now,
     });
 
     const subtypeNote = seedUser.stylistSubtype ? ` [${seedUser.stylistSubtype}]` : "";
