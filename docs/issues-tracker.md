@@ -316,9 +316,41 @@
 - **Description:** The research file says "Build this in Phase 9" but Phase 9 is specifically about offline/PWA. No actual task covers migrating from Pusher to SSE + Postgres LISTEN/NOTIFY.
 - **Fix:** Documented as a post-MVP activity in `docs/research/realtime-transport.md`. No task allocated. The real-time abstraction layer (T098) ensures migration requires changes only in `packages/realtime/`.
 
+### H-18 — `editClient` allows editing archived clients
+
+- **Severity:** High
+- **Status:** Resolved
+- **Affected:** T030 (client CRUD)
+- **Description:** The `editClient` server action does not check `isActive` before allowing edits. An archived client can be edited via a direct API call (the UI hides the edit button, but the server-side guard is missing). This violates the soft-delete semantics — archived records should be immutable until unarchived.
+- **Fix:** Add `eq(clients.isActive, true)` to the `editClient` WHERE clause. Return `NOT_FOUND` or `CONFLICT` if the client is archived. Tracked as T03R-R1.
+
+### M-26 — Hardcoded strings in `client-search-widget.tsx`
+
+- **Severity:** Medium
+- **Status:** Resolved
+- **Affected:** T031 (guest flow), T099 (i18n)
+- **Description:** Three hardcoded strings bypass i18n: two `aria-label="Quitar selección"` (lines 282, 304) and one `OK` button label (line 336). All user-facing strings must use `next-intl` per CLAUDE.md conventions.
+- **Fix:** Add i18n keys (`clients.clearSelection`, `common.ok`) and replace hardcoded strings. Tracked as T03R-R2.
+
+### M-27 — `clientId` parameter not validated as UUID
+
+- **Severity:** Medium
+- **Status:** Resolved
+- **Affected:** T030 (client CRUD)
+- **Description:** The `editClient`, `archiveClient`, and `unarchiveClient` server actions accept `clientId: string` without validating it's a valid UUID. While Drizzle parameterizes the query (no SQL injection), a malformed ID causes an unnecessary DB round-trip and a generic `NOT_FOUND` error instead of a clear `VALIDATION_ERROR`.
+- **Fix:** Add `z.string().uuid()` validation on `clientId` at the top of each action. Tracked as T03R-R3.
+
 ---
 
 ## Low-priority issues
+
+### L-20 — T032 work bundled into T030/T031 commits
+
+- **Severity:** Low
+- **Status:** Open
+- **Affected:** T032 (no-show display), commit convention
+- **Description:** T032 (no-show count display) has no dedicated commit. The implementation was bundled into the T030 and T031 commits. CLAUDE.md requires one commit per task (`feat(T0XX): ...`). The work is complete and correct, but the git history doesn't reflect the task boundary.
+- **Fix:** Process note — not worth rebasing. Future tasks must follow the one-commit-per-task convention.
 
 ### L-01 — T016 — No account lockout UX after rate limiting
 
@@ -584,6 +616,9 @@
 | 2026-04-09 | 0A      | Seed script non-transactional inserts could leave orphaned user rows                                     | Two related inserts (user + account) were written sequentially without a transaction wrapper                                       | Any multi-row insert that must succeed or fail together must use `db.transaction()` — especially when idempotency checks skip existing records                              |
 | 2026-04-11 | 1       | Deactivating an employee only revoked sessions but didn't ban the user — they could log back in          | `revokeUserSessions` clears active sessions but doesn't prevent new ones; Better Auth's `banUser` API was not called               | When implementing "block access" features, verify both existing sessions AND future login attempts are blocked — revocation alone is never sufficient                       |
 | 2026-04-11 | 1       | Two tables missing `updated_at` despite CLAUDE.md requiring it on all tables                             | Convention was followed for newer tables (business_settings) but missed on earlier ones (employees, business_days)                 | After creating a table schema, run a checklist: uuid PK, created_at, updated_at, correct naming convention, FK naming. Automate this check if possible.                     |
+| 2026-04-11 | 3       | `editClient` allows editing archived clients — UI hides button but server has no guard                   | Soft-delete enforcement was only implemented on the UI layer, not the server action                                                | Soft-delete guards must be enforced server-side, not just by hiding UI controls. Any action on a soft-deleted record should check `isActive` in the WHERE clause.           |
+| 2026-04-11 | 3       | Hardcoded aria-label and button text bypassed i18n                                                       | Quick implementation shortcuts — easy to miss non-visible strings like aria-labels                                                 | After implementing any component, grep for hardcoded strings (quotes around Spanish/English text). aria-labels and button text are user-facing and must go through `t()`.   |
+| 2026-04-11 | 3       | T032 work bundled into T030/T031 commits instead of a dedicated commit                                   | No-show display was simple enough to implement alongside the component it lives in, leading to skipping the separate commit        | Follow the one-commit-per-task rule even for small tasks. The git history should mirror the task list. Small tasks get small commits — that's fine.                         |
 
 ---
 
@@ -591,46 +626,49 @@
 
 > When an issue is resolved, update its status above and add an entry here.
 
-| Issue ID | Date resolved | Resolution                                                                                       | Commit/PR                    |
-| -------- | ------------- | ------------------------------------------------------------------------------------------------ | ---------------------------- |
-| C-01     | 2026-04-02    | Added `appointment_id (FK nullable)` to T033 schema in `phase-04a-tickets-checkout.md`           | Senior QA review             |
-| C-02     | 2026-04-02    | Added `P4B --> P7` edge to mermaid dependency graph in `project-plan.md`                         | Senior QA review             |
-| H-02     | 2026-04-02    | Updated `business.md` Sentry entry from "Phase 10" to "Phase 0"                                  | Senior QA review             |
-| H-03     | 2026-04-02    | Added manual password fallback to T013 AC when Resend is unavailable                             | Senior QA review             |
-| H-06     | 2026-04-02    | Added security review checklist to T089 acceptance criteria                                      | Senior QA review             |
-| H-08     | 2026-04-02    | Added shared `payment_method_enum` definition to T006 acceptance criteria                        | Senior QA review             |
-| H-09     | 2026-04-02    | Resolved via C-01 fix (same `appointment_id` column)                                             | Senior QA review             |
-| H-10     | 2026-04-02    | Added `cancelled` status to large order enum in T057 and T059 with cancellation reason           | Senior QA review             |
-| H-11     | 2026-04-02    | Added rate limiting policy to T097 acceptance criteria covering all mutation endpoints           | Senior QA review             |
-| M-11     | 2026-04-02    | Added T061 to T062 dependency list in task file and progress.md                                  | Senior QA review             |
-| L-10     | 2026-04-02    | Updated `postgres-providers.md` to reference only Drizzle ORM                                    | Senior QA review             |
-| L-12     | 2026-04-02    | Updated T087 health endpoint AC to include DB connectivity check (`SELECT 1`)                    | Senior QA review             |
-| C-03     | 2026-04-02    | Currency confirmed as COP (Colombian Pesos). T099 ACs updated.                                   | Stakeholder decision session |
-| C-04     | 2026-04-02    | Created `docs/research/data-privacy-compliance.md` (Colombian Ley 1581 de 2012)                  | Stakeholder decision session |
-| H-01     | 2026-04-02    | Phase 0 split into 0A (Infrastructure) and 0B (Standards & Design)                               | Stakeholder decision session |
-| H-04     | 2026-04-02    | Added "Migration Path" section to `docs/research/auth-providers.md` with Auth.js and Clerk steps | Stakeholder decision session |
-| H-05     | 2026-04-02    | Added 30-second polling fallback to T098 ACs                                                     | Stakeholder decision session |
-| H-07     | 2026-04-02    | Added storage capacity estimate to `docs/research/postgres-providers.md` (~28 MB for 6 months)   | Stakeholder decision session |
-| H-12     | 2026-04-02    | Added loading state to T019 "Open Day" and cold start documentation to postgres-providers.md     | Stakeholder decision session |
-| H-13     | 2026-04-02    | Created `docs/testing/concurrency-test-plan.md` with 8 race condition scenarios                  | QA review action             |
-| H-14     | 2026-04-02    | Business day boundary tests added to phase-04a test plan; timezone constant defined              | QA review action             |
-| H-15     | 2026-04-02    | Added T106 (UAT) to Phase 10 between T088 and T089                                               | QA review action             |
-| H-16     | 2026-04-02    | Added post-deployment smoke test AC to T095                                                      | QA review action             |
-| M-01     | 2026-04-02    | Added no-show decrement logic to T032b ACs                                                       | Stakeholder decision session |
-| M-03     | 2026-04-02    | Added `service_variant_id` FK to T049 appointments table                                         | Stakeholder decision session |
-| M-06     | 2026-04-02    | Added reopen day capability to T019 ACs (admin only, audit trail, most recent day only)          | Stakeholder decision session |
-| M-07     | 2026-04-02    | Added `expected_work_days` to T012 employees table; T065 updated for part-time                   | Stakeholder decision session |
-| M-08     | 2026-04-02    | Added `original_computed_amount` and `adjustment_reason` to T066 payouts table                   | Stakeholder decision session |
-| M-13     | 2026-04-02    | Removed `deposit_paid` column from T057; computed from payments table                            | Stakeholder decision session |
-| M-14     | 2026-04-02    | Business timezone constant `America/Bogota` added to T002 standards                              | Stakeholder decision session |
-| M-15     | 2026-04-02    | Created `docs/research/frontend-libraries.md`                                                    | Stakeholder decision session |
-| M-17     | 2026-04-02    | `commission_pct` precision set to `numeric(5,2)` in T023; banker's rounding in T002              | Stakeholder decision session |
-| M-19     | 2026-04-02    | Added structured business logic logging AC to T085                                               | QA review action             |
-| M-20     | 2026-04-02    | Integration test approach documented in `docs/testing/README.md`                                 | QA review action             |
-| L-15     | 2026-04-02    | Rounding policy (banker's rounding) and precision defined in T002 standards                      | Stakeholder decision session |
-| M-16     | 2026-04-09    | Stale — Pusher replaced by SSE; no third-party message volume limits apply                       | Phase 0A Opus audit          |
-| M-21     | 2026-04-09    | `pino-pretty` installed as dev dep in `apps/web`                                                 | T0AR-R1                      |
-| M-22     | 2026-04-09    | Seed script user+account inserts wrapped in `db.transaction()`                                   | T0AR-R2                      |
-| M-23     | 2026-04-09    | Middleware `roleCanAccess()` added — each role restricted to its path prefix                     | T0AR-R3                      |
-| M-24     | 2026-04-09    | Sentry `beforeSend` extended to scrub exception messages, breadcrumbs, and extra data            | T0AR-R4                      |
-| L-16     | 2026-04-09    | `@deprecated` JSDoc added to `use-sse.ts`; developers directed to `useRealtimeEvent`             | Phase 0 Opus audit           |
+| Issue ID | Date resolved | Resolution                                                                                          | Commit/PR                    |
+| -------- | ------------- | --------------------------------------------------------------------------------------------------- | ---------------------------- |
+| C-01     | 2026-04-02    | Added `appointment_id (FK nullable)` to T033 schema in `phase-04a-tickets-checkout.md`              | Senior QA review             |
+| C-02     | 2026-04-02    | Added `P4B --> P7` edge to mermaid dependency graph in `project-plan.md`                            | Senior QA review             |
+| H-02     | 2026-04-02    | Updated `business.md` Sentry entry from "Phase 10" to "Phase 0"                                     | Senior QA review             |
+| H-03     | 2026-04-02    | Added manual password fallback to T013 AC when Resend is unavailable                                | Senior QA review             |
+| H-06     | 2026-04-02    | Added security review checklist to T089 acceptance criteria                                         | Senior QA review             |
+| H-08     | 2026-04-02    | Added shared `payment_method_enum` definition to T006 acceptance criteria                           | Senior QA review             |
+| H-09     | 2026-04-02    | Resolved via C-01 fix (same `appointment_id` column)                                                | Senior QA review             |
+| H-10     | 2026-04-02    | Added `cancelled` status to large order enum in T057 and T059 with cancellation reason              | Senior QA review             |
+| H-11     | 2026-04-02    | Added rate limiting policy to T097 acceptance criteria covering all mutation endpoints              | Senior QA review             |
+| M-11     | 2026-04-02    | Added T061 to T062 dependency list in task file and progress.md                                     | Senior QA review             |
+| L-10     | 2026-04-02    | Updated `postgres-providers.md` to reference only Drizzle ORM                                       | Senior QA review             |
+| L-12     | 2026-04-02    | Updated T087 health endpoint AC to include DB connectivity check (`SELECT 1`)                       | Senior QA review             |
+| C-03     | 2026-04-02    | Currency confirmed as COP (Colombian Pesos). T099 ACs updated.                                      | Stakeholder decision session |
+| C-04     | 2026-04-02    | Created `docs/research/data-privacy-compliance.md` (Colombian Ley 1581 de 2012)                     | Stakeholder decision session |
+| H-01     | 2026-04-02    | Phase 0 split into 0A (Infrastructure) and 0B (Standards & Design)                                  | Stakeholder decision session |
+| H-04     | 2026-04-02    | Added "Migration Path" section to `docs/research/auth-providers.md` with Auth.js and Clerk steps    | Stakeholder decision session |
+| H-05     | 2026-04-02    | Added 30-second polling fallback to T098 ACs                                                        | Stakeholder decision session |
+| H-07     | 2026-04-02    | Added storage capacity estimate to `docs/research/postgres-providers.md` (~28 MB for 6 months)      | Stakeholder decision session |
+| H-12     | 2026-04-02    | Added loading state to T019 "Open Day" and cold start documentation to postgres-providers.md        | Stakeholder decision session |
+| H-13     | 2026-04-02    | Created `docs/testing/concurrency-test-plan.md` with 8 race condition scenarios                     | QA review action             |
+| H-14     | 2026-04-02    | Business day boundary tests added to phase-04a test plan; timezone constant defined                 | QA review action             |
+| H-15     | 2026-04-02    | Added T106 (UAT) to Phase 10 between T088 and T089                                                  | QA review action             |
+| H-16     | 2026-04-02    | Added post-deployment smoke test AC to T095                                                         | QA review action             |
+| M-01     | 2026-04-02    | Added no-show decrement logic to T032b ACs                                                          | Stakeholder decision session |
+| M-03     | 2026-04-02    | Added `service_variant_id` FK to T049 appointments table                                            | Stakeholder decision session |
+| M-06     | 2026-04-02    | Added reopen day capability to T019 ACs (admin only, audit trail, most recent day only)             | Stakeholder decision session |
+| M-07     | 2026-04-02    | Added `expected_work_days` to T012 employees table; T065 updated for part-time                      | Stakeholder decision session |
+| M-08     | 2026-04-02    | Added `original_computed_amount` and `adjustment_reason` to T066 payouts table                      | Stakeholder decision session |
+| M-13     | 2026-04-02    | Removed `deposit_paid` column from T057; computed from payments table                               | Stakeholder decision session |
+| M-14     | 2026-04-02    | Business timezone constant `America/Bogota` added to T002 standards                                 | Stakeholder decision session |
+| M-15     | 2026-04-02    | Created `docs/research/frontend-libraries.md`                                                       | Stakeholder decision session |
+| M-17     | 2026-04-02    | `commission_pct` precision set to `numeric(5,2)` in T023; banker's rounding in T002                 | Stakeholder decision session |
+| M-19     | 2026-04-02    | Added structured business logic logging AC to T085                                                  | QA review action             |
+| M-20     | 2026-04-02    | Integration test approach documented in `docs/testing/README.md`                                    | QA review action             |
+| L-15     | 2026-04-02    | Rounding policy (banker's rounding) and precision defined in T002 standards                         | Stakeholder decision session |
+| M-16     | 2026-04-09    | Stale — Pusher replaced by SSE; no third-party message volume limits apply                          | Phase 0A Opus audit          |
+| M-21     | 2026-04-09    | `pino-pretty` installed as dev dep in `apps/web`                                                    | T0AR-R1                      |
+| M-22     | 2026-04-09    | Seed script user+account inserts wrapped in `db.transaction()`                                      | T0AR-R2                      |
+| M-23     | 2026-04-09    | Middleware `roleCanAccess()` added — each role restricted to its path prefix                        | T0AR-R3                      |
+| M-24     | 2026-04-09    | Sentry `beforeSend` extended to scrub exception messages, breadcrumbs, and extra data               | T0AR-R4                      |
+| L-16     | 2026-04-09    | `@deprecated` JSDoc added to `use-sse.ts`; developers directed to `useRealtimeEvent`                | Phase 0 Opus audit           |
+| H-18     | 2026-04-11    | Added `eq(clients.isActive, true)` guard to `editClient` WHERE clause                               | T03R-R1                      |
+| M-26     | 2026-04-11    | Added `clients.clearSelection` i18n key; replaced hardcoded aria-labels and "OK" button             | T03R-R2                      |
+| M-27     | 2026-04-11    | Added `clientIdSchema = z.string().uuid()` validation to editClient, archiveClient, unarchiveClient | T03R-R3                      |

@@ -190,6 +190,23 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 
 ---
 
+> **Phase 3 completion review — Opus audit 2026-04-11**
+> All 4 tasks pass acceptance criteria. Regression: 45 tests pass, lint and typecheck clean. One High issue (H-18: `editClient` allows editing archived clients). Two Medium issues (M-26: hardcoded i18n strings, M-27: `clientId` not validated as UUID). One Low item (L-20: T032 bundled into T030/T031 commits). **Phase 4A unblocked pending T03R-R1 (High) resolution.**
+
+---
+
+## Phase 3R — Remediation (Opus audit, 2026-04-11)
+
+> Created by Phase 3 completion review. High items block Phase 4A. Medium items should be resolved before Phase 4A ships.
+
+| ID      | Task                                                                        | Severity | Status | Source     |
+| ------- | --------------------------------------------------------------------------- | -------- | ------ | ---------- |
+| T03R-R1 | Fix: Guard `editClient` against archived clients                            | High     | done   | Opus audit |
+| T03R-R2 | Fix: Replace hardcoded strings in `client-search-widget.tsx` with i18n keys | Medium   | done   | Opus audit |
+| T03R-R3 | Fix: Validate `clientId` as UUID in client server actions                   | Medium   | done   | Opus audit |
+
+---
+
 ## Phase 4A — Tickets and checkout
 
 | ID   | Task                                                                 | Status  | Dependencies     |
@@ -332,7 +349,8 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | 1R — Remediation          | 4       | 4      | 0           |
 | 2 — Catalog               | 6       | 6      | 0           |
 | 2R — Remediation          | 3       | 3      | 0           |
-| 3 — Clients               | 4       | 0      | 0           |
+| 3 — Clients               | 4       | 4      | 0           |
+| 3R — Remediation          | 3       | 3      | 0           |
 | 4A — Tickets and checkout | 13      | 0      | 0           |
 | 4B — Cloth batches        | 4       | 0      | 0           |
 | 5 — Appointments          | 9       | 0      | 0           |
@@ -341,7 +359,7 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | 8 — Analytics             | 8       | 0      | 0           |
 | 9 — Offline               | 5       | 0      | 0           |
 | 10 — Polish               | 9       | 0      | 0           |
-| **Total**                 | **120** | **44** | **0**       |
+| **Total**                 | **123** | **51** | **0**       |
 
 ---
 

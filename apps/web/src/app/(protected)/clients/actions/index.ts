@@ -10,12 +10,15 @@
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { eq, ilike, or, and } from "drizzle-orm";
+import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { clients } from "@befine/db/schema";
 import { createClientSchema, editClientSchema } from "@befine/types";
 import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
+
+const clientIdSchema = z.string().uuid();
 
 export type ClientRow = {
   id: string;
@@ -135,6 +138,12 @@ export async function editClient(
   clientId: string,
   rawInput: unknown,
 ): Promise<ActionResult<ClientRow>> {
+  if (!clientIdSchema.safeParse(clientId).success)
+    return {
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "ID de cliente inválido" },
+    };
+
   const session = await getClientSession();
   if (!session) {
     const s = await auth.api.getSession({ headers: await headers() });
@@ -166,11 +175,14 @@ export async function editClient(
       notes: notes || null,
       updatedAt: new Date(),
     })
-    .where(eq(clients.id, clientId))
+    .where(and(eq(clients.id, clientId), eq(clients.isActive, true)))
     .returning();
 
   if (!row)
-    return { success: false, error: { code: "NOT_FOUND", message: "Cliente no encontrado" } };
+    return {
+      success: false,
+      error: { code: "NOT_FOUND", message: "Cliente no encontrado o archivado" },
+    };
 
   revalidatePath("/cashier/clients");
   revalidatePath("/secretary/clients");
@@ -180,6 +192,12 @@ export async function editClient(
 // ─── Archive client (T030) ────────────────────────────────────────────────────
 
 export async function archiveClient(clientId: string): Promise<ActionResult<null>> {
+  if (!clientIdSchema.safeParse(clientId).success)
+    return {
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "ID de cliente inválido" },
+    };
+
   const session = await getClientSession();
   if (!session) {
     const s = await auth.api.getSession({ headers: await headers() });
@@ -208,6 +226,12 @@ export async function archiveClient(clientId: string): Promise<ActionResult<null
 // ─── Unarchive client (T030) ──────────────────────────────────────────────────
 
 export async function unarchiveClient(clientId: string): Promise<ActionResult<null>> {
+  if (!clientIdSchema.safeParse(clientId).success)
+    return {
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "ID de cliente inválido" },
+    };
+
   const session = await getClientSession();
   if (!session) {
     const s = await auth.api.getSession({ headers: await headers() });
