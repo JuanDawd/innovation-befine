@@ -21,6 +21,7 @@ import { getDb } from "@/lib/db";
 import { employees } from "@befine/db/schema";
 import { createEmployeeSchema } from "@befine/types";
 import type { ActionResult } from "@/lib/action-result";
+import { hasRole } from "@/lib/middleware-helpers";
 
 export type CreatedEmployee = {
   userId: string;
@@ -35,7 +36,7 @@ export async function createEmployee(rawInput: unknown): Promise<ActionResult<Cr
   if (!session) {
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
   }
-  if (session.user.role !== "cashier_admin") {
+  if (!hasRole(session.user, "cashier_admin")) {
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
   }
 

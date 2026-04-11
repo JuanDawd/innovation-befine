@@ -17,10 +17,7 @@ import { businessDays } from "@befine/db/schema";
 import { reopenBusinessDaySchema } from "@befine/types";
 import type { ActionResult } from "@/lib/action-result";
 import type { BusinessDay } from "@/lib/business-day";
-
-function isCashierAdmin(role: string | null | undefined): boolean {
-  return role === "cashier_admin";
-}
+import { hasRole } from "@/lib/middleware-helpers";
 
 // ---------------------------------------------------------------------------
 // Open business day
@@ -31,7 +28,7 @@ export async function openBusinessDay(): Promise<ActionResult<BusinessDay>> {
   if (!session) {
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
   }
-  if (!isCashierAdmin(session.user.role)) {
+  if (!hasRole(session.user, "cashier_admin")) {
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
   }
 
@@ -76,7 +73,7 @@ export async function closeBusinessDay(businessDayId: string): Promise<ActionRes
   if (!session) {
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
   }
-  if (!isCashierAdmin(session.user.role)) {
+  if (!hasRole(session.user, "cashier_admin")) {
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
   }
 
@@ -109,7 +106,7 @@ export async function reopenBusinessDay(rawInput: unknown): Promise<ActionResult
   if (!session) {
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
   }
-  if (!isCashierAdmin(session.user.role)) {
+  if (!hasRole(session.user, "cashier_admin")) {
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
   }
 

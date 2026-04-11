@@ -16,6 +16,7 @@ import { getDb } from "@/lib/db";
 import { clothPieces, catalogAuditLog } from "@befine/db/schema";
 import { createClothPieceSchema, editClothPieceSchema } from "@befine/types";
 import type { ActionResult } from "@/lib/action-result";
+import { hasRole } from "@/lib/middleware-helpers";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -34,7 +35,7 @@ export type ClothPieceRow = {
 async function getAdminSession() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) return null;
-  if (session.user.role !== "cashier_admin") return null;
+  if (!hasRole(session.user, "cashier_admin")) return null;
   return session;
 }
 
@@ -69,8 +70,7 @@ export async function listActiveClothPieces(): Promise<ActionResult<ClothPieceRo
   if (!session)
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
 
-  const ALLOWED_ROLES = ["cashier_admin", "secretary"];
-  if (!ALLOWED_ROLES.includes(session.user.role ?? "")) {
+  if (!hasRole(session.user, "cashier_admin", "secretary")) {
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
   }
 
@@ -90,7 +90,7 @@ export async function listAllClothPieces(): Promise<ActionResult<ClothPieceRow[]
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session)
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
-  if (session.user.role !== "cashier_admin") {
+  if (!hasRole(session.user, "cashier_admin")) {
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
   }
 

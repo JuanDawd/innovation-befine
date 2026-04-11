@@ -75,3 +75,14 @@ export function roleCanAccess(role: AppRole | undefined, pathname: string): bool
 export function isFinancialBlockedForSecretary(pathname: string): boolean {
   return SECRETARY_FINANCIAL_BLOCKED.some((p) => pathname.startsWith(p));
 }
+
+/**
+ * Type-safe role check for use in server actions.
+ * Accepts the user object (or any object with a `role` property) from a Better Auth session.
+ *
+ * @example
+ *   if (!hasRole(session.user, "cashier_admin")) return FORBIDDEN;
+ */
+export function hasRole(user: { role?: string | null }, ...roles: AppRole[]): boolean {
+  return roles.includes(user.role as AppRole);
+}

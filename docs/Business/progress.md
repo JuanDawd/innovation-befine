@@ -140,12 +140,12 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 
 > Created by Phase 1 completion review. Critical and High items block Phase 3. Medium and Low items deferred to issues tracker.
 
-| ID      | Task                                                                            | Severity | Status  | Source     |
-| ------- | ------------------------------------------------------------------------------- | -------- | ------- | ---------- |
-| T01R-R1 | Fix: Ban deactivated employees in Better Auth to block login                    | Critical | pending | Opus audit |
-| T01R-R2 | Fix: Add `updated_at` column to `employees` and `business_days` tables          | High     | pending | Opus audit |
-| T01R-R3 | Fix: Deduplicate `ROLE_HOME` constant between middleware-helpers and login-form | Medium   | pending | Opus audit |
-| T01R-R4 | Fix: Standardize role-check pattern with shared `hasRole` helper                | Low      | pending | Opus audit |
+| ID      | Task                                                                            | Severity | Status | Source     |
+| ------- | ------------------------------------------------------------------------------- | -------- | ------ | ---------- |
+| T01R-R1 | Fix: Ban deactivated employees in Better Auth to block login                    | Critical | done   | Opus audit |
+| T01R-R2 | Fix: Add `updated_at` column to `employees` and `business_days` tables          | High     | done   | Opus audit |
+| T01R-R3 | Fix: Deduplicate `ROLE_HOME` constant between middleware-helpers and login-form | Medium   | done   | Opus audit |
+| T01R-R4 | Fix: Standardize role-check pattern with shared `hasRole` helper                | Low      | done   | Opus audit |
 
 ---
 
@@ -312,7 +312,7 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | 0AR — Remediation         | 4       | 4      | 0           |
 | 0B — Foundation (Std/Dsg) | 7       | 7      | 0           |
 | 1 — Identity              | 14      | 14     | 0           |
-| 1R — Remediation          | 4       | 0      | 0           |
+| 1R — Remediation          | 4       | 4      | 0           |
 | 2 — Catalog               | 6       | 6      | 0           |
 | 3 — Clients               | 4       | 0      | 0           |
 | 4A — Tickets and checkout | 13      | 0      | 0           |

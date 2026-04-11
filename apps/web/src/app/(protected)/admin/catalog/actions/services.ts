@@ -21,6 +21,7 @@ import {
   addVariantSchema,
 } from "@befine/types";
 import type { ActionResult } from "@/lib/action-result";
+import { hasRole } from "@/lib/middleware-helpers";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -50,7 +51,7 @@ export type ServiceRow = {
 async function getAdminSession() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) return null;
-  if (session.user.role !== "cashier_admin") return null;
+  if (!hasRole(session.user, "cashier_admin")) return null;
   return session;
 }
 
@@ -115,7 +116,7 @@ export async function listAllServices(): Promise<ActionResult<ServiceRow[]>> {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session)
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
-  if (session.user.role !== "cashier_admin") {
+  if (!hasRole(session.user, "cashier_admin")) {
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
   }
 
