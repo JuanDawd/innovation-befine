@@ -15,6 +15,7 @@ import { getDb } from "@/lib/db";
 import { employees, users } from "@befine/db/schema";
 import type { ActionResult } from "@/lib/action-result";
 import type { EmployeeListItem } from "./list-employees";
+import { hasRole } from "@/lib/middleware-helpers";
 
 // ---------------------------------------------------------------------------
 // Edit employee (name, role, subtype, daily rate) — T014
@@ -39,7 +40,7 @@ export async function editEmployee(
   if (!session) {
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
   }
-  if (session.user.role !== "cashier_admin") {
+  if (!hasRole(session.user, "cashier_admin")) {
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
   }
 
@@ -129,7 +130,7 @@ export async function setShowEarnings(
   if (!session) {
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
   }
-  if (session.user.role !== "cashier_admin") {
+  if (!hasRole(session.user, "cashier_admin")) {
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
   }
 
@@ -160,7 +161,7 @@ export async function deactivateEmployee(
   if (!session) {
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
   }
-  if (session.user.role !== "cashier_admin") {
+  if (!hasRole(session.user, "cashier_admin")) {
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
   }
 
@@ -181,7 +182,13 @@ export async function deactivateEmployee(
     };
   }
 
-  // Invalidate all sessions for the deactivated user (T022a AC: session invalidated)
+  // Ban the user in Better Auth so future login attempts are rejected (T01R-R1)
+  await auth.api.banUser({
+    body: { userId: emp.userId, reason: "Employee deactivated" },
+    headers: await headers(),
+  });
+
+  // Invalidate all active sessions for the deactivated user (T022a AC: session invalidated)
   await auth.api.revokeUserSessions({
     body: { userId: emp.userId },
     headers: await headers(),
