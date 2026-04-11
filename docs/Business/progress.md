@@ -215,7 +215,7 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | T034 | Ticket items table migration (with price/commission snapshot)        | done    | T033, T023       |
 | T035 | Ticket creation — stylist / secretary / cashier (incl. walk-in flow) | done    | T034, T031, T028 |
 | T036 | Cashier dashboard with live updates                                  | done    | T035, T098       |
-| T037 | Ticket status transitions and permissions                            | pending | T035             |
+| T037 | Ticket status transitions and permissions                            | done    | T035             |
 | T038 | Checkout flow (optimistic lock, payment method, close ticket)        | pending | T037             |
 | T039 | Split payment at checkout (ticket_payments table)                    | pending | T038             |
 | T040 | Price override at checkout (cashier only)                            | pending | T038             |
