@@ -35,6 +35,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import type { ServiceRow } from "@/app/(protected)/admin/catalog/actions/services";
+import { CatalogAuditLog } from "@/components/catalog-audit-log";
 import {
   createService,
   editService,
@@ -43,6 +44,7 @@ import {
   deactivateService,
   restoreService,
   deactivateVariant,
+  restoreVariant,
 } from "@/app/(protected)/admin/catalog/actions/services";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -580,6 +582,18 @@ function ServiceCard({
     });
   }
 
+  function handleRestoreVariant(variantId: string) {
+    startTransition(async () => {
+      const result = await restoreVariant(variantId);
+      if (result.success) {
+        setLocalService((prev) => ({
+          ...prev,
+          variants: prev.variants.map((v) => (v.id === variantId ? { ...v, isActive: true } : v)),
+        }));
+      }
+    });
+  }
+
   return (
     <div className={`rounded-xl border ${localService.isActive ? "" : "opacity-60"}`}>
       {/* Service header */}
@@ -666,7 +680,7 @@ function ServiceCard({
                     <span className="text-xs text-muted-foreground">
                       {parseFloat(v.commissionPct).toFixed(1)}%
                     </span>
-                    {v.isActive && (
+                    {v.isActive ? (
                       <>
                         <VariantDialog
                           config={{
@@ -701,6 +715,15 @@ function ServiceCard({
                           onConfirm={() => handleDeactivateVariant(v.id)}
                         />
                       </>
+                    ) : (
+                      <button
+                        onClick={() => handleRestoreVariant(v.id)}
+                        disabled={isPending}
+                        className="text-muted-foreground hover:text-foreground"
+                        aria-label={t("restore")}
+                      >
+                        <RotateCcwIcon className="size-3.5" />
+                      </button>
                     )}
                   </div>
                 </div>
@@ -720,6 +743,8 @@ function ServiceCard({
               onSuccess={onChange}
             />
           )}
+
+          <CatalogAuditLog entityId={localService.id} />
         </div>
       )}
     </div>

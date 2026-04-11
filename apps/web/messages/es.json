@@ -225,7 +225,9 @@
     "emptyServicesDescription": "Crea el primer servicio para comenzar.",
     "emptyClothPiecesTitle": "Sin piezas todavía",
     "emptyClothPiecesDescription": "Crea el primer tipo de pieza para comenzar.",
-    "standardVariantName": "Estándar"
+    "standardVariantName": "Estándar",
+    "auditLogLabel": "Historial de cambios",
+    "auditLogEmpty": "Sin cambios registrados"
   },
   "nav": {
     "dashboard": "Tablero",

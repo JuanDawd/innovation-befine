@@ -225,7 +225,9 @@
     "emptyServicesDescription": "Create the first service to get started.",
     "emptyClothPiecesTitle": "No pieces yet",
     "emptyClothPiecesDescription": "Create the first piece type to get started.",
-    "standardVariantName": "Standard"
+    "standardVariantName": "Standard",
+    "auditLogLabel": "Change history",
+    "auditLogEmpty": "No changes recorded"
   },
   "nav": {
     "dashboard": "Dashboard",

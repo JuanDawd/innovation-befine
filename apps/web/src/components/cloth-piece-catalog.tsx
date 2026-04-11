@@ -26,6 +26,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import type { ClothPieceRow } from "@/app/(protected)/admin/catalog/actions/cloth-pieces";
+import { CatalogAuditLog } from "@/components/catalog-audit-log";
 import {
   createClothPiece,
   editClothPiece,
@@ -233,66 +234,70 @@ function PieceRow({
   }
 
   return (
-    <div
-      className={`flex items-center justify-between rounded-xl border p-4 ${localPiece.isActive ? "" : "opacity-60"}`}
-    >
-      <div>
-        <div className="flex items-center gap-2">
-          <p className="text-sm font-medium">{localPiece.name}</p>
-          {!localPiece.isActive && (
-            <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-              {t("inactive")}
-            </span>
+    <div className={`rounded-xl border ${localPiece.isActive ? "" : "opacity-60"}`}>
+      <div className="flex items-center justify-between p-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <p className="text-sm font-medium">{localPiece.name}</p>
+            {!localPiece.isActive && (
+              <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                {t("inactive")}
+              </span>
+            )}
+          </div>
+          {localPiece.description && (
+            <p className="text-xs text-muted-foreground">{localPiece.description}</p>
           )}
         </div>
-        {localPiece.description && (
-          <p className="text-xs text-muted-foreground">{localPiece.description}</p>
-        )}
+
+        <div className="flex items-center gap-3">
+          <span className="font-mono tabular-nums text-sm">{formatCOP(localPiece.pieceRate)}</span>
+
+          <PieceDialog
+            config={{ mode: "edit", piece: localPiece }}
+            trigger={
+              <span className="text-muted-foreground hover:text-foreground cursor-pointer">
+                <PencilIcon className="size-4" aria-label={t("editClothPiece")} />
+              </span>
+            }
+            onSuccess={(updated) => {
+              setLocalPiece(updated);
+              onChange(updated);
+            }}
+          />
+
+          {localPiece.isActive ? (
+            <ConfirmationDialog
+              trigger={
+                <button
+                  className="text-muted-foreground hover:text-destructive"
+                  aria-label={t("deactivate")}
+                  disabled={isPending}
+                >
+                  <TrashIcon className="size-4" />
+                </button>
+              }
+              title={t("deactivateClothPieceConfirm", { name: localPiece.name })}
+              description={t("deactivateClothPieceDescription")}
+              confirmLabel={t("deactivate")}
+              variant="destructive"
+              onConfirm={handleDeactivate}
+            />
+          ) : (
+            <button
+              onClick={handleRestore}
+              disabled={isPending}
+              className="text-muted-foreground hover:text-foreground"
+              aria-label={t("restore")}
+            >
+              <RotateCcwIcon className="size-4" />
+            </button>
+          )}
+        </div>
       </div>
 
-      <div className="flex items-center gap-3">
-        <span className="font-mono tabular-nums text-sm">{formatCOP(localPiece.pieceRate)}</span>
-
-        <PieceDialog
-          config={{ mode: "edit", piece: localPiece }}
-          trigger={
-            <span className="text-muted-foreground hover:text-foreground cursor-pointer">
-              <PencilIcon className="size-4" aria-label={t("editClothPiece")} />
-            </span>
-          }
-          onSuccess={(updated) => {
-            setLocalPiece(updated);
-            onChange(updated);
-          }}
-        />
-
-        {localPiece.isActive ? (
-          <ConfirmationDialog
-            trigger={
-              <button
-                className="text-muted-foreground hover:text-destructive"
-                aria-label={t("deactivate")}
-                disabled={isPending}
-              >
-                <TrashIcon className="size-4" />
-              </button>
-            }
-            title={t("deactivateClothPieceConfirm", { name: localPiece.name })}
-            description={t("deactivateClothPieceDescription")}
-            confirmLabel={t("deactivate")}
-            variant="destructive"
-            onConfirm={handleDeactivate}
-          />
-        ) : (
-          <button
-            onClick={handleRestore}
-            disabled={isPending}
-            className="text-muted-foreground hover:text-foreground"
-            aria-label={t("restore")}
-          >
-            <RotateCcwIcon className="size-4" />
-          </button>
-        )}
+      <div className="px-4 pb-4">
+        <CatalogAuditLog entityId={localPiece.id} />
       </div>
     </div>
   );
