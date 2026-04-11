@@ -5,9 +5,12 @@
  * Full dashboard implemented in T036 and T093.
  */
 
+import Link from "next/link";
 import { getTranslations } from "next-intl/server";
+import { PlusIcon } from "lucide-react";
 import { getCurrentBusinessDay, getLastClosedBusinessDay } from "@/lib/business-day";
 import { BusinessDayPanel } from "@/components/business-day-panel";
+import { buttonVariants } from "@/components/ui/button";
 
 export default async function CashierHomePage() {
   const t = await getTranslations();
@@ -26,6 +29,13 @@ export default async function CashierHomePage() {
 
       <div className="max-w-sm">
         <BusinessDayPanel currentDay={currentDay} lastClosedDay={lastClosedDay} />
+      </div>
+
+      <div>
+        <Link href="/cashier/tickets/new" className={buttonVariants()}>
+          <PlusIcon className="mr-2 size-4" />
+          {t("tickets.logService")}
+        </Link>
       </div>
     </div>
   );

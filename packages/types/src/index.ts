@@ -22,3 +22,4 @@ export {
   type CreateClothPieceInput,
   type EditClothPieceInput,
 } from "./schemas/catalog";
+export { createTicketSchema, type CreateTicketInput } from "./schemas/ticket";

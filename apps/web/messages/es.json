@@ -269,6 +269,26 @@
     "guestNamePlaceholder": "Ej: Juan Pérez",
     "clearSelection": "Quitar selección"
   },
+  "tickets": {
+    "logService": "Registrar servicio",
+    "logServiceDescription": "Selecciona el servicio y el cliente para registrar el ticket.",
+    "employee": "Empleado",
+    "employeePlaceholder": "Selecciona un estilista…",
+    "service": "Servicio",
+    "servicePlaceholder": "Selecciona un servicio…",
+    "variant": "Variante",
+    "variantPlaceholder": "Selecciona una opción…",
+    "client": "Cliente",
+    "quantity": "Cantidad",
+    "submit": "Registrar ticket",
+    "submitSuccess": "Ticket registrado correctamente",
+    "submitError": "No se pudo registrar el ticket",
+    "noOpenDay": "No hay un día laboral abierto. Pide al administrador que abra el día.",
+    "noCatalog": "No hay servicios activos en el catálogo.",
+    "noStylists": "No hay estilistas activos.",
+    "price": "Precio",
+    "commission": "Comisión"
+  },
   "nav": {
     "dashboard": "Tablero",
     "employees": "Empleados",

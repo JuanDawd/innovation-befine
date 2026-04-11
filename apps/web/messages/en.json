@@ -269,6 +269,26 @@
     "guestNamePlaceholder": "e.g. Juan Pérez",
     "clearSelection": "Remove selection"
   },
+  "tickets": {
+    "logService": "Log service",
+    "logServiceDescription": "Select the service and client to create a ticket.",
+    "employee": "Employee",
+    "employeePlaceholder": "Select a stylist…",
+    "service": "Service",
+    "servicePlaceholder": "Select a service…",
+    "variant": "Variant",
+    "variantPlaceholder": "Select an option…",
+    "client": "Client",
+    "quantity": "Quantity",
+    "submit": "Log ticket",
+    "submitSuccess": "Ticket logged successfully",
+    "submitError": "Could not log the ticket",
+    "noOpenDay": "No business day is open. Ask an admin to open the day.",
+    "noCatalog": "No active services in the catalog.",
+    "noStylists": "No active stylists.",
+    "price": "Price",
+    "commission": "Commission"
+  },
   "nav": {
     "dashboard": "Dashboard",
     "employees": "Employees",
