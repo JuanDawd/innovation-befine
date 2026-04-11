@@ -9,17 +9,13 @@ import pino from "pino";
  * Usage:
  *   logger.info({ ticketId, action: "checkout" }, "Ticket checked out");
  *   logger.warn({ employeeId }, "Payout duplicate attempt blocked");
+ *
+ * Note: pino-pretty uses thread-stream (worker threads) which breaks under
+ * Next.js / Turbopack due to path rewriting. In dev we use plain JSON output
+ * to stdout instead — readable enough, no worker threads.
  */
 export const logger = pino({
   level: process.env.NODE_ENV === "production" ? "info" : "debug",
-  // In production (Vercel), emit JSON for log aggregators
-  // In dev, emit readable output
-  ...(process.env.NODE_ENV !== "production" && {
-    transport: {
-      target: "pino-pretty",
-      options: { colorize: true },
-    },
-  }),
   redact: {
     // Never log PII — client names, emails, phones
     paths: ["*.email", "*.phone", "*.name", "*.guest_name", "*.client_name"],

@@ -4,8 +4,15 @@ import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
   transpilePackages: ["@befine/types", "@befine/db", "@befine/realtime"],
-  // Required by Sentry's OpenTelemetry instrumentation
-  serverExternalPackages: ["import-in-the-middle", "require-in-the-middle"],
+  // Required by Sentry's OpenTelemetry instrumentation.
+  // pino + thread-stream must be external to avoid Turbopack mangling worker paths.
+  serverExternalPackages: [
+    "import-in-the-middle",
+    "require-in-the-middle",
+    "pino",
+    "pino-pretty",
+    "thread-stream",
+  ],
 };
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
