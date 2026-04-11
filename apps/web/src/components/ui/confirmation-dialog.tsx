@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import React from "react";
 import { AlertTriangleIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -42,7 +43,7 @@ function ConfirmationDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger render={<>{trigger}</>} />
+      <DialogTrigger render={trigger as React.ReactElement} />
       <DialogContent showCloseButton={false}>
         <DialogHeader>
           <div className="flex items-start gap-3">
