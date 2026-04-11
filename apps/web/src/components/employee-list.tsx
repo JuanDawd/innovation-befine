@@ -18,7 +18,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/ui/empty-state";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import {
   Dialog,
   DialogContent,
@@ -77,6 +76,7 @@ export function EmployeeList({ initialEmployees }: EmployeeListProps) {
   const [editTarget, setEditTarget] = useState<EmployeeListItem | null>(null);
   const [editOpen, setEditOpen] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
+  const [confirmDeactivate, setConfirmDeactivate] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [toastMsg, setToastMsg] = useState<string | null>(null);
 
@@ -93,6 +93,7 @@ export function EmployeeList({ initialEmployees }: EmployeeListProps) {
   function openEdit(emp: EmployeeListItem) {
     setEditTarget(emp);
     setEditError(null);
+    setConfirmDeactivate(false);
     reset({
       name: emp.name,
       role: emp.role as (typeof APP_ROLES)[number],
@@ -396,29 +397,46 @@ export function EmployeeList({ initialEmployees }: EmployeeListProps) {
             )}
 
             <DialogFooter className="flex-col gap-2 sm:flex-row">
-              {/* T022a — deactivate */}
-              {editTarget?.isActive && (
-                <ConfirmationDialog
-                  trigger={
+              {/* T022a — deactivate (inline confirmation to avoid nested dialogs) */}
+              {editTarget?.isActive && !confirmDeactivate && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  disabled={isPending}
+                  className="sm:mr-auto"
+                  onClick={() => setConfirmDeactivate(true)}
+                >
+                  {t("deactivate")}
+                </Button>
+              )}
+              {editTarget?.isActive && confirmDeactivate && (
+                <div className="flex flex-col gap-2 sm:mr-auto sm:flex-row">
+                  <p className="self-center text-sm text-destructive">
+                    {t("deactivateConfirm", { name: editTarget.name })}
+                  </p>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setConfirmDeactivate(false)}
+                    >
+                      {tCommon("cancel")}
+                    </Button>
                     <Button
                       type="button"
                       variant="destructive"
+                      size="sm"
                       disabled={isPending}
-                      className="sm:mr-auto"
+                      onClick={() => {
+                        handleDeactivate(editTarget);
+                        setEditOpen(false);
+                      }}
                     >
                       {t("deactivate")}
                     </Button>
-                  }
-                  title={t("deactivateConfirm", { name: editTarget.name })}
-                  description={t("deactivateDescription")}
-                  confirmLabel={t("deactivate")}
-                  cancelLabel={tCommon("cancel")}
-                  variant="destructive"
-                  onConfirm={() => {
-                    handleDeactivate(editTarget);
-                    setEditOpen(false);
-                  }}
-                />
+                  </div>
+                </div>
               )}
 
               <Button type="submit" disabled={isSubmitting || isPending}>

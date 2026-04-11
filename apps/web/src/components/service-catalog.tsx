@@ -7,7 +7,7 @@
  * Lists all services with variants, allows create/edit/deactivate/restore.
  */
 
-import { useState, useTransition } from "react";
+import React, { useState, useTransition } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
@@ -437,9 +437,11 @@ function VariantDialog({
 
   return (
     <>
-      <button onClick={handleOpen} className="contents">
-        {trigger}
-      </button>
+      {React.isValidElement(trigger)
+        ? React.cloneElement(trigger as React.ReactElement<{ onClick?: () => void }>, {
+            onClick: handleOpen,
+          })
+        : trigger}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>

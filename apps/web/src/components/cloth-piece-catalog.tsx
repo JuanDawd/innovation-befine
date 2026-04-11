@@ -6,7 +6,7 @@
  * Admin-only component to manage cloth piece types and their rates.
  */
 
-import { useState, useTransition } from "react";
+import React, { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
@@ -119,9 +119,11 @@ function PieceDialog({
 
   return (
     <>
-      <button onClick={handleOpen} className="contents">
-        {trigger}
-      </button>
+      {React.isValidElement(trigger)
+        ? React.cloneElement(trigger as React.ReactElement<{ onClick?: () => void }>, {
+            onClick: handleOpen,
+          })
+        : trigger}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
