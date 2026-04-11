@@ -14,6 +14,9 @@ export const PUBLIC_PATHS = ["/login", "/reset-password", "/api/auth", "/403"];
 /** API paths any authenticated role may call */
 export const SHARED_PATHS = ["/api/realtime"];
 
+/** App paths any authenticated role may access (regardless of role prefix) */
+export const SHARED_APP_PATHS = ["/profile"];
+
 /** Where each role is redirected after login; also the route prefix they own */
 export const ROLE_HOME: Record<AppRole, string> = {
   cashier_admin: "/cashier",
@@ -49,12 +52,18 @@ export function isShared(pathname: string): boolean {
   return SHARED_PATHS.some((p) => pathname.startsWith(p));
 }
 
+export function isSharedApp(pathname: string): boolean {
+  return SHARED_APP_PATHS.some((p) => pathname.startsWith(p));
+}
+
 /**
  * Returns true if the role is permitted to access the path.
  * Each role owns its own prefix; cashier_admin also owns /admin.
+ * All authenticated roles can access SHARED_APP_PATHS (e.g. /profile).
  */
 export function roleCanAccess(role: AppRole | undefined, pathname: string): boolean {
   if (!role) return false;
+  if (isSharedApp(pathname)) return true;
   const home = ROLE_HOME[role];
   return pathname.startsWith(home) || (role === "cashier_admin" && pathname.startsWith("/admin"));
 }

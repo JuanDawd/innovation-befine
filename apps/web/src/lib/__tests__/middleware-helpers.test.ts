@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   isPublic,
   isShared,
+  isSharedApp,
   roleCanAccess,
   isFinancialBlockedForSecretary,
   ROLE_HOME,
@@ -41,6 +42,18 @@ describe("isShared", () => {
   it("does not treat generic /api as shared", () => {
     expect(isShared("/api/analytics")).toBe(false);
     expect(isShared("/api/payouts")).toBe(false);
+  });
+});
+
+describe("isSharedApp", () => {
+  it("allows /profile for any authenticated role", () => {
+    expect(isSharedApp("/profile")).toBe(true);
+    expect(isSharedApp("/profile/settings")).toBe(true);
+  });
+
+  it("does not treat arbitrary paths as shared app", () => {
+    expect(isSharedApp("/cashier")).toBe(false);
+    expect(isSharedApp("/admin")).toBe(false);
   });
 });
 
@@ -94,6 +107,13 @@ describe("roleCanAccess", () => {
   it("undefined role cannot access any route", () => {
     expect(roleCanAccess(undefined, "/cashier")).toBe(false);
     expect(roleCanAccess(undefined, "/secretary")).toBe(false);
+  });
+
+  it("all roles can access /profile (shared app path)", () => {
+    expect(roleCanAccess("cashier_admin", "/profile")).toBe(true);
+    expect(roleCanAccess("secretary", "/profile")).toBe(true);
+    expect(roleCanAccess("stylist", "/profile")).toBe(true);
+    expect(roleCanAccess("clothier", "/profile")).toBe(true);
   });
 });
 

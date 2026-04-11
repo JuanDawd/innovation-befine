@@ -246,10 +246,14 @@ export function AppShell({ role, userName, children }: AppShellProps) {
 
         {/* Desktop header (hidden on mobile — sidebar handles identity there) */}
         <header className="hidden h-14 shrink-0 items-center justify-end border-b border-border bg-background px-4 md:flex">
-          <div className="flex items-center gap-2">
+          <Link
+            href="/profile"
+            className="flex items-center gap-2 rounded-lg px-2 py-1 transition-colors hover:bg-muted"
+            aria-label={t("nav.settings")}
+          >
             <UserInitials name={userName} />
             <span className="text-sm text-foreground">{userName}</span>
-          </div>
+          </Link>
         </header>
 
         {/* Page content */}
