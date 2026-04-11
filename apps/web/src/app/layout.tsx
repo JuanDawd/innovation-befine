@@ -9,8 +9,14 @@ import { getLocale, getMessages } from "next-intl/server";
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
-  title: "Innovation Befine",
-  description: "Internal operations platform",
+  title: "Befine",
+  description: "Plataforma de operaciones internas — Innovation Befine",
+  themeColor: "#8B3A62",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Befine",
+  },
 };
 
 export default async function RootLayout({ children }: { children: ReactNode }) {

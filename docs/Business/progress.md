@@ -112,22 +112,22 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 
 ## Phase 1 — Identity, employees, and business day
 
-| ID    | Task                                                 | Status  | Dependencies |
-| ----- | ---------------------------------------------------- | ------- | ------------ |
-| T012  | Employees table migration                            | done    | T006         |
-| T013  | Employee account creation UI (admin)                 | done    | T012, T010   |
-| T014  | Employee list and profile view (admin)               | done    | T013         |
-| T015  | Employee earnings visibility flag                    | done    | T014         |
-| T016  | Login page                                           | done    | T007, T008   |
-| T017  | Password reset flow                                  | done    | T016, T054   |
-| T018  | Session middleware and route protection              | done    | T010         |
-| T019  | Business day open/close (table + admin action)       | done    | T012         |
-| T022a | Basic employee deactivation _(split from T022)_      | done    | T014         |
-| T054  | Resend email integration _(moved from Phase 5)_      | done    | T003         |
-| T090  | App navigation / layout shell _(new)_                | done    | T010         |
-| T091  | Employee self-service password change _(new)_        | done    | T016         |
-| T105  | Brand identity and asset gathering _(new)_           | pending | T103         |
-| T108  | Business settings table migration _(new — grilling)_ | done    | T006         |
+| ID    | Task                                                 | Status | Dependencies |
+| ----- | ---------------------------------------------------- | ------ | ------------ |
+| T012  | Employees table migration                            | done   | T006         |
+| T013  | Employee account creation UI (admin)                 | done   | T012, T010   |
+| T014  | Employee list and profile view (admin)               | done   | T013         |
+| T015  | Employee earnings visibility flag                    | done   | T014         |
+| T016  | Login page                                           | done   | T007, T008   |
+| T017  | Password reset flow                                  | done   | T016, T054   |
+| T018  | Session middleware and route protection              | done   | T010         |
+| T019  | Business day open/close (table + admin action)       | done   | T012         |
+| T022a | Basic employee deactivation _(split from T022)_      | done   | T014         |
+| T054  | Resend email integration _(moved from Phase 5)_      | done   | T003         |
+| T090  | App navigation / layout shell _(new)_                | done   | T010         |
+| T091  | Employee self-service password change _(new)_        | done   | T016         |
+| T105  | Brand identity and asset gathering _(new)_           | done   | T103         |
+| T108  | Business settings table migration _(new — grilling)_ | done   | T006         |
 
 ---
 
@@ -293,8 +293,8 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | 0A — Foundation (Infra)   | 13      | 13     | 0           |
 | 0AR — Remediation         | 4       | 4      | 0           |
 | 0B — Foundation (Std/Dsg) | 7       | 7      | 0           |
-| 1 — Identity              | 14      | 0      | 0           |
-| 2 — Catalog               | 6       | 0      | 0           |
+| 1 — Identity              | 14      | 14     | 0           |
+| 2 — Catalog               | 6       | 6      | 0           |
 | 3 — Clients               | 4       | 0      | 0           |
 | 4A — Tickets and checkout | 13      | 0      | 0           |
 | 4B — Cloth batches        | 4       | 0      | 0           |
@@ -304,7 +304,7 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | 8 — Analytics             | 8       | 0      | 0           |
 | 9 — Offline               | 5       | 0      | 0           |
 | 10 — Polish               | 9       | 0      | 0           |
-| **Total**                 | **113** | **24** | **0**       |
+| **Total**                 | **113** | **44** | **0**       |
 
 ---
 

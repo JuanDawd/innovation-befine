@@ -8,6 +8,7 @@ import { Menu, X, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { signOut } from "@/lib/auth-client";
 import { NAV_ITEMS, MOBILE_BOTTOM_NAV_ROLES, type NavItem } from "./nav-config";
+import { BrandLogo } from "./brand-logo";
 import type { AppRole } from "@befine/types";
 
 type AppShellProps = {
@@ -106,7 +107,7 @@ export function AppShell({ role, userName, children }: AppShellProps) {
       <aside className="hidden md:flex md:w-56 md:flex-col md:border-r md:border-sidebar-border md:bg-sidebar">
         {/* Wordmark */}
         <div className="flex h-14 items-center border-b border-sidebar-border px-4">
-          <span className="text-sm font-bold text-sidebar-foreground">{t("common.appName")}</span>
+          <BrandLogo />
         </div>
 
         {/* Nav items */}
@@ -157,9 +158,7 @@ export function AppShell({ role, userName, children }: AppShellProps) {
             aria-label="Menú de navegación"
           >
             <div className="flex h-14 items-center justify-between border-b border-sidebar-border px-4">
-              <span className="text-sm font-bold text-sidebar-foreground">
-                {t("common.appName")}
-              </span>
+              <BrandLogo />
               <button
                 onClick={() => setDrawerOpen(false)}
                 className="rounded-md p-1.5 text-sidebar-foreground opacity-60 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
@@ -208,7 +207,7 @@ export function AppShell({ role, userName, children }: AppShellProps) {
         <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-background px-4 md:hidden">
           {usesBottomNav ? (
             /* Stylist / clothier: just the wordmark, no hamburger */
-            <span className="text-sm font-bold">{t("common.appName")}</span>
+            <BrandLogo />
           ) : (
             /* Admin / secretary: hamburger to open drawer */
             <>
@@ -221,7 +220,7 @@ export function AppShell({ role, userName, children }: AppShellProps) {
               >
                 <Menu className="size-5" aria-hidden="true" />
               </button>
-              <span className="text-sm font-bold">{t("common.appName")}</span>
+              <BrandLogo />
               {/* Logout on the right for mobile header */}
               <button
                 onClick={handleLogout}

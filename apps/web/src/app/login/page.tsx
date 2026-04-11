@@ -6,6 +6,7 @@
  */
 import { getTranslations } from "next-intl/server";
 import { LoginForm } from "@/components/login-form";
+import { BrandLogo } from "@/components/brand-logo";
 
 export default async function LoginPage() {
   const t = await getTranslations();
@@ -14,8 +15,8 @@ export default async function LoginPage() {
     <main className="flex min-h-screen items-center justify-center p-4">
       <div className="w-full max-w-sm space-y-6">
         {/* Header */}
-        <div className="space-y-1 text-center">
-          <h1 className="text-2xl font-bold">{t("common.appName")}</h1>
+        <div className="flex flex-col items-center gap-2">
+          <BrandLogo className="scale-150" />
           <p className="text-sm text-muted-foreground">{t("auth.login")}</p>
         </div>
 
