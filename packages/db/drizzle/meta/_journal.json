@@ -50,6 +50,13 @@
       "when": 1775919684202,
       "tag": "0006_special_cargill",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1775923249628,
+      "tag": "0007_worthless_scarlet_spider",
+      "breakpoints": true
     }
   ]
 }

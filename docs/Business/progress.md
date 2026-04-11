@@ -183,7 +183,7 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 
 | ID   | Task                                                | Status  | Dependencies |
 | ---- | --------------------------------------------------- | ------- | ------------ |
-| T029 | Clients table migration                             | pending | T006         |
+| T029 | Clients table migration                             | done    | T006         |
 | T030 | Saved client CRUD and search UI (cashier/secretary) | pending | T029         |
 | T031 | Guest client flow (name only, no record)            | pending | T030         |
 | T032 | No-show count display                               | pending | T029         |
