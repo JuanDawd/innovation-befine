@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { loginSchema, type LoginInput } from "@befine/types";
 import type { AppRole } from "@befine/types";
@@ -113,6 +114,12 @@ export function LoginForm() {
       <Button type="submit" className="w-full" disabled={isSubmitting}>
         {isSubmitting ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : t("login")}
       </Button>
+
+      <p className="text-center text-sm text-muted-foreground">
+        <Link href="/reset-password" className="underline-offset-4 hover:underline">
+          {t("forgotPassword")}
+        </Link>
+      </p>
     </form>
   );
 }
