@@ -29,6 +29,20 @@
       "when": 1775783922056,
       "tag": "0003_optimal_green_goblin",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1775868305958,
+      "tag": "0004_fearless_power_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1775870995825,
+      "tag": "0005_whole_terror",
+      "breakpoints": true
     }
   ]
 }

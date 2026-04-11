@@ -18,3 +18,6 @@ export { users, sessions, accounts, verifications } from "./auth";
 export { stylistSubtypeEnum, employees } from "./employees";
 export { businessSettings, BUSINESS_SETTINGS_ID } from "./business-settings";
 export { businessDays } from "./business-days";
+export { services, serviceVariants } from "./services";
+export { clothPieces } from "./cloth-pieces";
+export { catalogEntityTypeEnum, catalogActionEnum, catalogAuditLog } from "./catalog-audit-log";
