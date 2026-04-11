@@ -162,6 +162,23 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 
 ---
 
+> **Phase 2 completion review — Opus audit 2026-04-11**
+> All 6 tasks pass acceptance criteria. Regression: 45 tests pass, lint and typecheck clean. Three findings logged (H-18, M-26, M-27). **Phase 3 is unblocked pending Phase 2R remediation.**
+
+---
+
+## Phase 2R — Remediation (Opus audit, 2026-04-11)
+
+> Created by Phase 2 completion review. High items block Phase 3. Medium items should be resolved before Phase 3 ships.
+
+| ID      | Task                                                                                         | Severity | Status  | Source     |
+| ------- | -------------------------------------------------------------------------------------------- | -------- | ------- | ---------- |
+| T02R-R1 | Fix: Add audit log display UI to catalog admin screens                                       | High     | pending | Opus audit |
+| T02R-R2 | Fix: Add `restoreVariant` server action for variant restoration                              | Medium   | pending | Opus audit |
+| T02R-R3 | Fix: Clarify cloth piece schema — spec requires `sale_price`; implement or document decision | Medium   | pending | Opus audit |
+
+---
+
 ## Phase 3 — Client records
 
 | ID   | Task                                                | Status  | Dependencies |
@@ -314,6 +331,7 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | 1 — Identity              | 14      | 14     | 0           |
 | 1R — Remediation          | 4       | 4      | 0           |
 | 2 — Catalog               | 6       | 6      | 0           |
+| 2R — Remediation          | 3       | 0      | 0           |
 | 3 — Clients               | 4       | 0      | 0           |
 | 4A — Tickets and checkout | 13      | 0      | 0           |
 | 4B — Cloth batches        | 4       | 0      | 0           |
@@ -323,7 +341,7 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | 8 — Analytics             | 8       | 0      | 0           |
 | 9 — Offline               | 5       | 0      | 0           |
 | 10 — Polish               | 9       | 0      | 0           |
-| **Total**                 | **117** | **44** | **0**       |
+| **Total**                 | **120** | **44** | **0**       |
 
 ---
 
