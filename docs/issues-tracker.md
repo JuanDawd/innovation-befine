@@ -60,6 +60,14 @@
 - **Description:** The app stores PII (client names, phone, email, appointment history) and financial data (employee pay, payments). Latin American countries have data protection laws (Colombia: Ley 1581 de 2012, Brazil: LGPD, Mexico: LFPDPPP). No research document addresses compliance, data retention policies, or right-to-deletion requirements. The soft-delete pattern (preserving history) may conflict with deletion requests.
 - **Fix:** Created `docs/research/data-privacy-compliance.md` covering Colombian Ley 1581 de 2012, PII inventory, consent model, anonymization-over-deletion approach, data retention policy, cross-border transfer considerations, and SIC registration requirements.
 
+### C-05 — Deactivated employees can still log in
+
+- **Severity:** Critical
+- **Status:** Open
+- **Affected:** T022a (basic employee deactivation)
+- **Description:** `deactivateEmployee()` revokes active sessions via `auth.api.revokeUserSessions()` but does NOT ban the user in Better Auth. A deactivated employee can immediately create a new session by logging in again. Better Auth has a built-in ban mechanism (`banned`, `banReason` columns on the users table, plus `auth.api.banUser()`). The T022a acceptance criteria explicitly states "login attempt is blocked", which is currently unmet.
+- **Fix:** In `deactivateEmployee()`, call `auth.api.banUser({ userId, banReason: "Employee deactivated" })` before revoking sessions. The login form already handles 403 (banned) responses — it shows the `invalidCredentials` error message. Tracked as T01R-R1.
+
 ---
 
 ## High-priority issues
@@ -456,6 +464,14 @@
 - **Description:** No task exists between training (T088) and go-live (T089) where actual staff use the system in a realistic scenario and provide feedback before production.
 - **Fix:** Added T106 (User Acceptance Testing) to Phase 10, between T088 and T089. Each role representative uses staging for one full business day with realistic data. T089 now depends on T106.
 
+### H-17 — Missing `updated_at` column on `employees` and `business_days` tables
+
+- **Severity:** High
+- **Status:** Open
+- **Affected:** T012 (employees migration), T019 (business days migration)
+- **Description:** CLAUDE.md conventions require all tables to include `updated_at` (`timestamp with time zone`, default `now()`) with auto-refresh via Drizzle `.$onUpdate()`. Both the `employees` and `business_days` tables are missing this column. This will cause issues in Phase 7 (payroll) and Phase 4A (tickets) where `updated_at` is needed for audit trails and stale-data detection. The `business_settings` table correctly includes `updated_at`, confirming this is an oversight on the other two.
+- **Fix:** Add a new migration to add `updated_at` columns to both tables. Update Drizzle schemas with `.$onUpdate(() => new Date())`. Tracked as T01R-R2.
+
 ### H-16 — No post-deployment smoke test
 
 - **Severity:** High
@@ -504,6 +520,14 @@
 - **Description:** Middleware checked authentication only — any authenticated user could navigate to any role's page (e.g. a stylist accessing `/cashier`). Would have exposed unauthorized data once Phase 1 added real content.
 - **Fix:** Added `roleCanAccess()` gating — each role restricted to its own path prefix; unauthorized access redirects to role home. Tracked as T0AR-R3.
 
+### M-25 — Duplicate `ROLE_HOME` constant in middleware-helpers and login-form
+
+- **Severity:** Medium
+- **Status:** Open
+- **Affected:** T016 (login page), T018 (session middleware)
+- **Description:** `ROLE_HOME` is defined identically in both `apps/web/src/lib/middleware-helpers.ts` and `apps/web/src/components/login-form.tsx`. If a role's home path changes, both locations must be updated. Since `middleware-helpers.ts` is a server module and `login-form.tsx` is a client component, they can't directly share the import.
+- **Fix:** Move `ROLE_HOME` to a shared constants file in `@befine/types` (which is isomorphic) and import from both locations. Tracked as T01R-R3.
+
 ### M-24 — Sentry PII scrubbing covers only request data
 
 - **Severity:** Medium
@@ -519,6 +543,22 @@
 - **Affected:** `apps/web/src/hooks/use-sse.ts`, T009, T098
 - **Description:** T098's `useRealtimeEvent` creates its own `EventSource` directly rather than delegating to `useSSE`. The spike hook's comment claimed it would be "the underlying primitive" but T098 was implemented independently. Any Phase 4A+ code accidentally importing `useSSE` would bypass the abstraction.
 - **Fix:** Added `@deprecated` JSDoc to `use-sse.ts` directing developers to `useRealtimeEvent`. Hook kept for spike reference.
+
+### L-18 — Inconsistent role-check pattern across server actions
+
+- **Severity:** Low
+- **Status:** Open
+- **Affected:** T019 (business day actions), T013/T014/T015/T022a (employee actions)
+- **Description:** `business-day.ts` uses a `isCashierAdmin()` helper function while `update-employee.ts` and `create-employee.ts` inline the check as `session.user.role !== "cashier_admin"`. Both work but are inconsistent. CLAUDE.md documents a `hasRole(session.user, "cashier_admin")` pattern.
+- **Fix:** Create a shared `hasRole(session, role)` helper and standardize all server actions. Low priority — cosmetic consistency. Tracked as T01R-R4.
+
+### L-19 — Admin settings page not yet created (disabled nav item)
+
+- **Severity:** Low
+- **Status:** Open
+- **Affected:** T108 (business settings)
+- **Description:** T108 AC allows "a stub screen for now" and the nav item exists in `nav-config.ts` (`/admin/settings`, disabled: true), but no actual page exists at that route. Acceptable for Phase 1 since `enforce_subtype_service_restriction` only becomes meaningful in Phase 4A (T035/T028).
+- **Fix:** Create stub settings page before Phase 4A. No remediation needed now.
 
 ### L-17 — `useRealtimeEvent` ref updates use `useEffect` instead of `useLayoutEffect`
 
@@ -542,6 +582,8 @@
 | 2026-04-02 | Pre-dev | 17 stakeholder decisions were needed before development could start                                      | Decisions accumulated across 4 review rounds without a resolution session                                                          | Schedule a dedicated decision session after each review round — don't let open questions pile up                                                                            |
 | 2026-04-09 | 0A      | Dev dependencies (`pino-pretty`) referenced in code but never installed; would crash on first import     | Package was assumed to be a transitive dep or was forgotten during implementation                                                  | After adding any `import` or `require` for a new package, verify it's in the relevant `package.json` before committing                                                      |
 | 2026-04-09 | 0A      | Seed script non-transactional inserts could leave orphaned user rows                                     | Two related inserts (user + account) were written sequentially without a transaction wrapper                                       | Any multi-row insert that must succeed or fail together must use `db.transaction()` — especially when idempotency checks skip existing records                              |
+| 2026-04-11 | 1       | Deactivating an employee only revoked sessions but didn't ban the user — they could log back in          | `revokeUserSessions` clears active sessions but doesn't prevent new ones; Better Auth's `banUser` API was not called               | When implementing "block access" features, verify both existing sessions AND future login attempts are blocked — revocation alone is never sufficient                       |
+| 2026-04-11 | 1       | Two tables missing `updated_at` despite CLAUDE.md requiring it on all tables                             | Convention was followed for newer tables (business_settings) but missed on earlier ones (employees, business_days)                 | After creating a table schema, run a checklist: uuid PK, created_at, updated_at, correct naming convention, FK naming. Automate this check if possible.                     |
 
 ---
 

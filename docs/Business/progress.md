@@ -131,6 +131,24 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 
 ---
 
+> **Phase 1 completion review — Opus audit 2026-04-11**
+> All 14 tasks pass acceptance criteria with one Critical exception (C-05: deactivated employees can still log in — sessions revoked but user not banned). One High issue found (H-17: missing `updated_at` column on employees and business_days tables). Regression: 45 tests pass, lint and typecheck clean. Two Medium items (M-25) and two Low items (L-18, L-19) logged. **Phase 2 completed independently; Phase 3 blocked until T01R-R1 (Critical) and T01R-R2 (High) are resolved.**
+
+---
+
+## Phase 1R — Remediation (Opus audit, 2026-04-11)
+
+> Created by Phase 1 completion review. Critical and High items block Phase 3. Medium and Low items deferred to issues tracker.
+
+| ID      | Task                                                                            | Severity | Status  | Source     |
+| ------- | ------------------------------------------------------------------------------- | -------- | ------- | ---------- |
+| T01R-R1 | Fix: Ban deactivated employees in Better Auth to block login                    | Critical | pending | Opus audit |
+| T01R-R2 | Fix: Add `updated_at` column to `employees` and `business_days` tables          | High     | pending | Opus audit |
+| T01R-R3 | Fix: Deduplicate `ROLE_HOME` constant between middleware-helpers and login-form | Medium   | pending | Opus audit |
+| T01R-R4 | Fix: Standardize role-check pattern with shared `hasRole` helper                | Low      | pending | Opus audit |
+
+---
+
 ## Phase 2 — Catalog and pricing
 
 | ID   | Task                                                    | Status | Dependencies |
@@ -294,6 +312,7 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | 0AR — Remediation         | 4       | 4      | 0           |
 | 0B — Foundation (Std/Dsg) | 7       | 7      | 0           |
 | 1 — Identity              | 14      | 14     | 0           |
+| 1R — Remediation          | 4       | 0      | 0           |
 | 2 — Catalog               | 6       | 6      | 0           |
 | 3 — Clients               | 4       | 0      | 0           |
 | 4A — Tickets and checkout | 13      | 0      | 0           |
@@ -304,7 +323,7 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | 8 — Analytics             | 8       | 0      | 0           |
 | 9 — Offline               | 5       | 0      | 0           |
 | 10 — Polish               | 9       | 0      | 0           |
-| **Total**                 | **113** | **44** | **0**       |
+| **Total**                 | **117** | **44** | **0**       |
 
 ---
 
