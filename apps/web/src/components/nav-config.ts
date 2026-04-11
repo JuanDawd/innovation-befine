@@ -13,6 +13,7 @@ import {
   CalendarDays,
   ClipboardList,
   Scissors,
+  BookOpen,
   type LucideIcon,
 } from "lucide-react";
 import type { AppRole } from "@befine/types";
@@ -28,6 +29,7 @@ export const NAV_ITEMS: Record<AppRole, NavItem[]> = {
   cashier_admin: [
     { key: "dashboard", href: "/cashier", icon: LayoutDashboard },
     { key: "employees", href: "/admin/employees", icon: Users },
+    { key: "catalog", href: "/admin/catalog", icon: BookOpen },
     { key: "settings", href: "/admin/settings", icon: Settings, disabled: true },
   ],
   secretary: [

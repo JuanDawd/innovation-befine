@@ -133,14 +133,14 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 
 ## Phase 2 — Catalog and pricing
 
-| ID   | Task                                                    | Status  | Dependencies |
-| ---- | ------------------------------------------------------- | ------- | ------------ |
-| T023 | Services and variants table migration                   | done    | T006         |
-| T024 | Service catalog CRUD UI (admin)                         | pending | T023         |
-| T025 | Catalog audit log                                       | done    | T024         |
-| T026 | Cloth pieces table migration                            | done    | T006         |
-| T027 | Cloth piece catalog CRUD UI (admin)                     | pending | T026         |
-| T028 | Catalog read access for non-admin roles (API endpoints) | pending | T024, T027   |
+| ID   | Task                                                    | Status | Dependencies |
+| ---- | ------------------------------------------------------- | ------ | ------------ |
+| T023 | Services and variants table migration                   | done   | T006         |
+| T024 | Service catalog CRUD UI (admin)                         | done   | T023         |
+| T025 | Catalog audit log                                       | done   | T024         |
+| T026 | Cloth pieces table migration                            | done   | T006         |
+| T027 | Cloth piece catalog CRUD UI (admin)                     | done   | T026         |
+| T028 | Catalog read access for non-admin roles (API endpoints) | done   | T024, T027   |
 
 ---
 

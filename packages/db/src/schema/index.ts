@@ -21,3 +21,4 @@ export { businessDays } from "./business-days";
 export { services, serviceVariants } from "./services";
 export { clothPieces } from "./cloth-pieces";
 export { catalogEntityTypeEnum, catalogActionEnum, catalogAuditLog } from "./catalog-audit-log";
+export { servicesRelations, serviceVariantsRelations } from "./relations";
