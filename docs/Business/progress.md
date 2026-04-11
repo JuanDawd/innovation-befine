@@ -121,7 +121,7 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | T016  | Login page                                           | done    | T007, T008   |
 | T017  | Password reset flow                                  | pending | T016, T054   |
 | T018  | Session middleware and route protection              | done    | T010         |
-| T019  | Business day open/close (table + admin action)       | pending | T012         |
+| T019  | Business day open/close (table + admin action)       | done    | T012         |
 | T022a | Basic employee deactivation _(split from T022)_      | pending | T014         |
 | T054  | Resend email integration _(moved from Phase 5)_      | pending | T003         |
 | T090  | App navigation / layout shell _(new)_                | done    | T010         |

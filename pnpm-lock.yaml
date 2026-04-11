@@ -95,6 +95,9 @@ importers:
       date-fns-tz:
         specifier: ^3.2.0
         version: 3.2.0(date-fns@4.1.0)
+      drizzle-orm:
+        specifier: ^0.44.7
+        version: 0.44.7(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.1)(@types/pg@8.20.0)(kysely@0.28.15)
       import-in-the-middle:
         specifier: ^3.0.1
         version: 3.0.1

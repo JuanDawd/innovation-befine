@@ -70,7 +70,22 @@
     "close": "Close day",
     "reopen": "Reopen day",
     "dayOpen": "Day open",
-    "dayClosed": "Day closed"
+    "dayClosed": "Day closed",
+    "lastClosedAt": "Last closed: {date}",
+    "openedAt": "Opened at {time}",
+    "openSuccess": "Day opened successfully",
+    "closeSuccess": "Day closed successfully",
+    "reopenSuccess": "Day reopened successfully",
+    "openError": "Could not open day",
+    "closeError": "Could not close day",
+    "reopenError": "Could not reopen day",
+    "confirmClose": "Close the day?",
+    "confirmCloseDescription": "This will close the current day. You can reopen it if needed.",
+    "confirmReopen": "Reopen the day?",
+    "confirmReopenDescription": "Reopening a closed day requires a reason. This action is recorded in the audit log.",
+    "reopenReason": "Reason for reopening",
+    "reopenReasonPlaceholder": "E.g. Forgot to register a ticket",
+    "noPreviousDay": "No previous days to reopen"
   },
   "errors": {
     "generic": "An unexpected error occurred. Please try again.",

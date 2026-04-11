@@ -70,7 +70,22 @@
     "close": "Cerrar día",
     "reopen": "Reabrir día",
     "dayOpen": "Día abierto",
-    "dayClosed": "Día cerrado"
+    "dayClosed": "Día cerrado",
+    "lastClosedAt": "Último cierre: {date}",
+    "openedAt": "Abierto a las {time}",
+    "openSuccess": "Día abierto correctamente",
+    "closeSuccess": "Día cerrado correctamente",
+    "reopenSuccess": "Día reabierto correctamente",
+    "openError": "No se pudo abrir el día",
+    "closeError": "No se pudo cerrar el día",
+    "reopenError": "No se pudo reabrir el día",
+    "confirmClose": "¿Cerrar el día?",
+    "confirmCloseDescription": "Esta acción cerrará el día actual. Podrás reabrirlo si es necesario.",
+    "confirmReopen": "¿Reabrir el día?",
+    "confirmReopenDescription": "Reabrir un día cerrado requiere un motivo. Esta acción queda registrada en el historial.",
+    "reopenReason": "Motivo de reapertura",
+    "reopenReasonPlaceholder": "Ej: Se olvidó registrar un ticket",
+    "noPreviousDay": "No hay días anteriores para reabrir"
   },
   "errors": {
     "generic": "Ocurrió un error inesperado. Intenta de nuevo.",
