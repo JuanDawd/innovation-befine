@@ -212,7 +212,7 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | ID   | Task                                                                 | Status  | Dependencies     |
 | ---- | -------------------------------------------------------------------- | ------- | ---------------- |
 | T033 | Tickets table migration (incl. idempotency_key column)               | done    | T019, T029       |
-| T034 | Ticket items table migration (with price/commission snapshot)        | pending | T033, T023       |
+| T034 | Ticket items table migration (with price/commission snapshot)        | done    | T033, T023       |
 | T035 | Ticket creation — stylist / secretary / cashier (incl. walk-in flow) | pending | T034, T031, T028 |
 | T036 | Cashier dashboard with live updates                                  | pending | T035, T098       |
 | T037 | Ticket status transitions and permissions                            | pending | T035             |

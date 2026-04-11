@@ -23,4 +23,5 @@ export { clothPieces } from "./cloth-pieces";
 export { catalogEntityTypeEnum, catalogActionEnum, catalogAuditLog } from "./catalog-audit-log";
 export { clients } from "./clients";
 export { ticketStatusEnum, checkoutSessions, tickets } from "./tickets";
+export { ticketItems } from "./ticket-items";
 export { servicesRelations, serviceVariantsRelations } from "./relations";
