@@ -181,6 +181,7 @@ export function ClientSearchWidget({
   onChange: (selection: ClientSelection) => void;
 }) {
   const t = useTranslations("clients");
+  const tc = useTranslations("common");
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<ClientRow[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -279,7 +280,7 @@ export function ClientSearchWidget({
         <button
           onClick={clearSelection}
           className="ml-2 shrink-0 text-muted-foreground hover:text-foreground"
-          aria-label="Quitar selección"
+          aria-label={t("clearSelection")}
         >
           <XIcon className="size-4" />
         </button>
@@ -301,7 +302,7 @@ export function ClientSearchWidget({
         <button
           onClick={clearSelection}
           className="ml-2 text-muted-foreground hover:text-foreground"
-          aria-label="Quitar selección"
+          aria-label={t("clearSelection")}
         >
           <XIcon className="size-4" />
         </button>
@@ -333,7 +334,7 @@ export function ClientSearchWidget({
           aria-label={t("guestNameLabel")}
         />
         <Button size="sm" onClick={confirmGuest} disabled={!guestName.trim()}>
-          OK
+          {tc("confirm")}
         </Button>
         <Button
           size="sm"

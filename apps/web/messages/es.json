@@ -266,7 +266,8 @@
     "emptySearchDescription": "No se encontraron clientes con ese criterio.",
     "guestOption": "Invitado / Walk-in",
     "guestNameLabel": "Nombre del invitado",
-    "guestNamePlaceholder": "Ej: Juan Pérez"
+    "guestNamePlaceholder": "Ej: Juan Pérez",
+    "clearSelection": "Quitar selección"
   },
   "nav": {
     "dashboard": "Tablero",

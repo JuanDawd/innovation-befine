@@ -266,7 +266,8 @@
     "emptySearchDescription": "No clients found with that search.",
     "guestOption": "Guest / Walk-in",
     "guestNameLabel": "Guest name",
-    "guestNamePlaceholder": "e.g. Juan Pérez"
+    "guestNamePlaceholder": "e.g. Juan Pérez",
+    "clearSelection": "Remove selection"
   },
   "nav": {
     "dashboard": "Dashboard",
