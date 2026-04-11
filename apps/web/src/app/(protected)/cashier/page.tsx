@@ -7,7 +7,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { getTranslations } from "next-intl/server";
-import { PlusIcon } from "lucide-react";
+import { PlusIcon, CreditCardIcon } from "lucide-react";
 import { getCurrentBusinessDay, getLastClosedBusinessDay } from "@/lib/business-day";
 import { BusinessDayPanel } from "@/components/business-day-panel";
 import { buttonVariants } from "@/components/ui/button";
@@ -35,10 +35,16 @@ export default async function CashierHomePage() {
           <h1 className="text-2xl font-semibold">{t("roles.cashier_admin")}</h1>
           <p className="text-sm text-muted-foreground">{t("home.subtitle")}</p>
         </div>
-        <Link href="/cashier/tickets/new" className={buttonVariants()}>
-          <PlusIcon className="mr-2 size-4" />
-          {t("tickets.logService")}
-        </Link>
+        <div className="flex gap-2">
+          <Link href="/cashier/tickets/new" className={buttonVariants({ variant: "outline" })}>
+            <PlusIcon className="mr-2 size-4" />
+            {t("tickets.logService")}
+          </Link>
+          <Link href="/cashier/checkout" className={buttonVariants()}>
+            <CreditCardIcon className="mr-2 size-4" />
+            Cobrar
+          </Link>
+        </div>
       </div>
 
       <div className="max-w-sm">

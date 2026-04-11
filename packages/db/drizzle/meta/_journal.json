@@ -71,6 +71,13 @@
       "when": 1775939006432,
       "tag": "0009_green_the_order",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1775939784766,
+      "tag": "0010_petite_rictor",
+      "breakpoints": true
     }
   ]
 }

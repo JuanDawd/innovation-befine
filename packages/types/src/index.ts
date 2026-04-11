@@ -23,3 +23,9 @@ export {
   type EditClothPieceInput,
 } from "./schemas/catalog";
 export { createTicketSchema, type CreateTicketInput } from "./schemas/ticket";
+export {
+  checkoutSessionSchema,
+  paymentLineSchema,
+  type CheckoutSessionInput,
+  type PaymentLine,
+} from "./schemas/checkout";
