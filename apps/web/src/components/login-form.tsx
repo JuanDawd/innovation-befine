@@ -12,13 +12,7 @@ import type { AppRole } from "@befine/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { signIn } from "@/lib/auth-client";
-
-const ROLE_HOME: Record<AppRole, string> = {
-  cashier_admin: "/cashier",
-  secretary: "/secretary",
-  stylist: "/stylist",
-  clothier: "/clothier",
-};
+import { ROLE_HOME } from "@/lib/middleware-helpers";
 
 export function LoginForm() {
   const t = useTranslations("auth");
