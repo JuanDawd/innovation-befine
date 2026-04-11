@@ -184,7 +184,7 @@ export async function deactivateEmployee(
 
   // Ban the user in Better Auth so future login attempts are rejected (T01R-R1)
   await auth.api.banUser({
-    body: { userId: emp.userId, reason: "Employee deactivated" },
+    body: { userId: emp.userId, banReason: "Employee deactivated" },
     headers: await headers(),
   });
 
