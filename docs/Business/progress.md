@@ -181,12 +181,12 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 
 ## Phase 3 — Client records
 
-| ID   | Task                                                | Status  | Dependencies |
-| ---- | --------------------------------------------------- | ------- | ------------ |
-| T029 | Clients table migration                             | done    | T006         |
-| T030 | Saved client CRUD and search UI (cashier/secretary) | pending | T029         |
-| T031 | Guest client flow (name only, no record)            | pending | T030         |
-| T032 | No-show count display                               | pending | T029         |
+| ID   | Task                                                | Status | Dependencies |
+| ---- | --------------------------------------------------- | ------ | ------------ |
+| T029 | Clients table migration                             | done   | T006         |
+| T030 | Saved client CRUD and search UI (cashier/secretary) | done   | T029         |
+| T031 | Guest client flow (name only, no record)            | done   | T030         |
+| T032 | No-show count display                               | done   | T029         |
 
 ---
 
