@@ -218,7 +218,7 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | T037 | Ticket status transitions and permissions                            | done    | T035             |
 | T038 | Checkout flow (optimistic lock, payment method, close ticket)        | done    | T037             |
 | T039 | Split payment at checkout (ticket_payments table)                    | done    | T038             |
-| T040 | Price override at checkout (cashier only)                            | pending | T038             |
+| T040 | Price override at checkout (cashier only)                            | done    | T038             |
 | T041 | Edit approval flow (secretary/stylist → cashier)                     | pending | T035, T048       |
 | T042 | Ticket reopen and earnings recompute flag                            | pending | T038             |
 | T048 | In-app notification system (MVP)                                     | pending | T098             |

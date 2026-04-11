@@ -28,6 +28,7 @@ import {
 import {
   getAwaitingPaymentTickets,
   processCheckout,
+  setOverridePrice,
   type CheckoutTicket,
   type CheckoutSummary,
 } from "@/app/(protected)/cashier/checkout/actions";
@@ -44,6 +45,9 @@ function formatCOP(n: number) {
   return "$" + n.toLocaleString("es-CO");
 }
 
+// Override state per ticket item
+type OverrideEdit = { price: string; reason: string; saving: boolean };
+
 export function CheckoutForm() {
   const tc = useTranslations("common");
   const router = useRouter();
@@ -56,6 +60,8 @@ export function CheckoutForm() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [summary, setSummary] = useState<CheckoutSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // overrides[ticketItemId] = { price, reason, saving }
+  const [overrideEdits, setOverrideEdits] = useState<Record<string, OverrideEdit>>({});
 
   useEffect(() => {
     startLoadTransition(async () => {
@@ -73,6 +79,37 @@ export function CheckoutForm() {
   const paymentValid =
     paymentSum === grandTotal && payments.every((p) => parseInt(p.amount, 10) > 0);
   const canSubmit = selected.length > 0 && paymentValid && !isPending;
+
+  async function saveOverride(ticketItemId: string) {
+    const edit = overrideEdits[ticketItemId];
+    if (!edit) return;
+    const price = parseInt(edit.price, 10);
+    if (isNaN(price) || price < 0 || !edit.reason.trim()) return;
+
+    setOverrideEdits((prev) => ({
+      ...prev,
+      [ticketItemId]: { ...prev[ticketItemId], saving: true },
+    }));
+    const result = await setOverridePrice({
+      ticketItemId,
+      overridePrice: price,
+      overrideReason: edit.reason.trim(),
+    });
+    if (result.success) {
+      // Reload tickets to reflect override
+      const res = await getAwaitingPaymentTickets();
+      if (res.success) setAllTickets(res.data);
+      setOverrideEdits((prev) => {
+        const next = { ...prev };
+        delete next[ticketItemId];
+        return next;
+      });
+    }
+    setOverrideEdits((prev) => ({
+      ...prev,
+      [ticketItemId]: { ...prev[ticketItemId], saving: false },
+    }));
+  }
 
   function toggleTicket(id: string) {
     setSelectedIds((prev) => {
@@ -230,16 +267,103 @@ export function CheckoutForm() {
             />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium">{t.clientName}</p>
-              {t.lineItems.map((li) => (
-                <p key={li.ticketItemId} className="text-xs text-muted-foreground">
-                  {li.serviceName}
-                  {li.variantName && li.variantName !== "Estándar" && li.variantName !== "Standard"
-                    ? ` — ${li.variantName}`
-                    : ""}
-                  {li.quantity > 1 ? ` ×${li.quantity}` : ""}
-                  {li.overridePrice !== null ? ` (precio ajustado)` : ""}
-                </p>
-              ))}
+              {t.lineItems.map((li) => {
+                const edit = overrideEdits[li.ticketItemId];
+                const effectivePrice = li.overridePrice ?? li.unitPrice;
+                return (
+                  <div key={li.ticketItemId} className="mt-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-xs text-muted-foreground">
+                        {li.serviceName}
+                        {li.variantName &&
+                        li.variantName !== "Estándar" &&
+                        li.variantName !== "Standard"
+                          ? ` — ${li.variantName}`
+                          : ""}
+                        {li.quantity > 1 ? ` ×${li.quantity}` : ""}
+                      </p>
+                      <div className="flex items-center gap-1 shrink-0">
+                        {li.overridePrice !== null && (
+                          <span className="text-xs line-through text-muted-foreground">
+                            {formatCOP(li.unitPrice)}
+                          </span>
+                        )}
+                        <span className="font-mono tabular-nums text-xs">
+                          {formatCOP(effectivePrice * li.quantity)}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setOverrideEdits((prev) =>
+                              prev[li.ticketItemId]
+                                ? (() => {
+                                    const n = { ...prev };
+                                    delete n[li.ticketItemId];
+                                    return n;
+                                  })()
+                                : {
+                                    ...prev,
+                                    [li.ticketItemId]: {
+                                      price: String(li.overridePrice ?? li.unitPrice),
+                                      reason: "",
+                                      saving: false,
+                                    },
+                                  },
+                            )
+                          }
+                          className="text-xs text-muted-foreground underline hover:text-foreground"
+                        >
+                          Ajustar
+                        </button>
+                      </div>
+                    </div>
+                    {edit && (
+                      <div className="mt-1 flex gap-1">
+                        <Input
+                          type="number"
+                          min={0}
+                          value={edit.price}
+                          onChange={(e) =>
+                            setOverrideEdits((prev) => ({
+                              ...prev,
+                              [li.ticketItemId]: {
+                                ...prev[li.ticketItemId],
+                                price: e.target.value,
+                              },
+                            }))
+                          }
+                          placeholder="Precio"
+                          className="w-28 h-7 text-xs"
+                        />
+                        <Input
+                          value={edit.reason}
+                          onChange={(e) =>
+                            setOverrideEdits((prev) => ({
+                              ...prev,
+                              [li.ticketItemId]: {
+                                ...prev[li.ticketItemId],
+                                reason: e.target.value,
+                              },
+                            }))
+                          }
+                          placeholder="Motivo"
+                          className="flex-1 h-7 text-xs"
+                        />
+                        <Button
+                          type="button"
+                          size="xs"
+                          disabled={
+                            edit.saving || !edit.reason.trim() || isNaN(parseInt(edit.price, 10))
+                          }
+                          onClick={() => saveOverride(li.ticketItemId)}
+                        >
+                          OK
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
             <span className="font-mono tabular-nums text-sm shrink-0">{formatCOP(t.total)}</span>
           </label>

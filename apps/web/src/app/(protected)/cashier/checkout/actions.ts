@@ -22,6 +22,7 @@ import {
   serviceVariants,
 } from "@befine/db/schema";
 import { checkoutSessionSchema } from "@befine/types";
+import { z } from "zod";
 import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
 import { getCurrentBusinessDay } from "@/lib/business-day";
@@ -365,4 +366,122 @@ export async function processCheckout(rawInput: unknown): Promise<ActionResult<C
       error: { code: "INTERNAL_ERROR", message: "Error al procesar el pago" },
     };
   }
+}
+
+// ─── Price override — T040 ────────────────────────────────────────────────────
+
+const overridePriceSchema = z.object({
+  ticketItemId: z.string().uuid(),
+  overridePrice: z.number().int().nonnegative(),
+  overrideReason: z.string().min(1).max(500),
+});
+
+export async function setOverridePrice(
+  rawInput: unknown,
+): Promise<ActionResult<{ ticketItemId: string }>> {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session)
+    return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
+  if (!hasRole(session.user, "cashier_admin"))
+    return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
+
+  const parsed = overridePriceSchema.safeParse(rawInput);
+  if (!parsed.success)
+    return {
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "Datos inválidos" },
+    };
+
+  const { ticketItemId, overridePrice, overrideReason } = parsed.data;
+  const db = getDb();
+
+  // Verify the ticket is not yet closed
+  const [item] = await db
+    .select({ id: ticketItems.id, ticketId: ticketItems.ticketId })
+    .from(ticketItems)
+    .where(eq(ticketItems.id, ticketItemId))
+    .limit(1);
+
+  if (!item) return { success: false, error: { code: "NOT_FOUND", message: "Ítem no encontrado" } };
+
+  const [ticket] = await db
+    .select({ status: tickets.status })
+    .from(tickets)
+    .where(eq(tickets.id, item.ticketId))
+    .limit(1);
+
+  if (!ticket || ticket.status === "closed")
+    return {
+      success: false,
+      error: { code: "CONFLICT", message: "No se puede modificar un ticket cerrado" },
+    };
+
+  await db
+    .update(ticketItems)
+    .set({ overridePrice, overrideReason })
+    .where(eq(ticketItems.id, ticketItemId));
+
+  return { success: true, data: { ticketItemId } };
+}
+
+// ─── Admin override history — T040 ───────────────────────────────────────────
+
+export type OverrideHistoryRow = {
+  ticketItemId: string;
+  ticketId: string;
+  serviceName: string;
+  originalPrice: number;
+  overridePrice: number;
+  delta: number;
+  overrideReason: string;
+  cashierName: string;
+  closedAt: Date | null;
+};
+
+export async function listPriceOverrides(): Promise<ActionResult<OverrideHistoryRow[]>> {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session)
+    return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
+  if (!hasRole(session.user, "cashier_admin"))
+    return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
+
+  const db = getDb();
+  const { users, employees: emps } = await import("@befine/db/schema");
+
+  const rows = await db
+    .select({
+      ticketItemId: ticketItems.id,
+      ticketId: ticketItems.ticketId,
+      serviceName: services.name,
+      originalPrice: ticketItems.unitPrice,
+      overridePrice: ticketItems.overridePrice,
+      overrideReason: ticketItems.overrideReason,
+      closedAt: tickets.closedAt,
+      cashierName: users.name,
+    })
+    .from(ticketItems)
+    .innerJoin(tickets, eq(ticketItems.ticketId, tickets.id))
+    .innerJoin(serviceVariants, eq(ticketItems.serviceVariantId, serviceVariants.id))
+    .innerJoin(services, eq(serviceVariants.serviceId, services.id))
+    .leftJoin(emps, eq(tickets.closedBy, emps.id))
+    .leftJoin(users, eq(emps.userId, users.id))
+    .where(and(eq(tickets.status, "closed")))
+    .orderBy(tickets.closedAt);
+
+  return {
+    success: true,
+    data: rows
+      .filter((r) => r.overridePrice !== null)
+      .map((r) => ({
+        ticketItemId: r.ticketItemId,
+        ticketId: r.ticketId,
+        serviceName: r.serviceName,
+        originalPrice: r.originalPrice,
+        overridePrice: r.overridePrice!,
+        delta: r.overridePrice! - r.originalPrice,
+        overrideReason: r.overrideReason ?? "",
+        cashierName: r.cashierName ?? "—",
+        closedAt: r.closedAt,
+      })),
+  };
 }
