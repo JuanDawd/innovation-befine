@@ -115,14 +115,14 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | ID    | Task                                                 | Status  | Dependencies |
 | ----- | ---------------------------------------------------- | ------- | ------------ |
 | T012  | Employees table migration                            | done    | T006         |
-| T013  | Employee account creation UI (admin)                 | pending | T012, T010   |
-| T014  | Employee list and profile view (admin)               | pending | T013         |
-| T015  | Employee earnings visibility flag                    | pending | T014         |
+| T013  | Employee account creation UI (admin)                 | done    | T012, T010   |
+| T014  | Employee list and profile view (admin)               | done    | T013         |
+| T015  | Employee earnings visibility flag                    | done    | T014         |
 | T016  | Login page                                           | done    | T007, T008   |
 | T017  | Password reset flow                                  | pending | T016, T054   |
 | T018  | Session middleware and route protection              | done    | T010         |
 | T019  | Business day open/close (table + admin action)       | done    | T012         |
-| T022a | Basic employee deactivation _(split from T022)_      | pending | T014         |
+| T022a | Basic employee deactivation _(split from T022)_      | done    | T014         |
 | T054  | Resend email integration _(moved from Phase 5)_      | pending | T003         |
 | T090  | App navigation / layout shell _(new)_                | done    | T010         |
 | T091  | Employee self-service password change _(new)_        | pending | T016         |

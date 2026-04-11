@@ -27,7 +27,7 @@ export type NavItem = {
 export const NAV_ITEMS: Record<AppRole, NavItem[]> = {
   cashier_admin: [
     { key: "dashboard", href: "/cashier", icon: LayoutDashboard },
-    { key: "employees", href: "/admin/employees", icon: Users, disabled: true },
+    { key: "employees", href: "/admin/employees", icon: Users },
     { key: "settings", href: "/admin/settings", icon: Settings, disabled: true },
   ],
   secretary: [
