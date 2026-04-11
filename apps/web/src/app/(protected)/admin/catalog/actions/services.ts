@@ -420,6 +420,41 @@ export async function editVariant(
   return { success: true, data: { id: variantId } };
 }
 
+// ─── Restore variant ─────────────────────────────────────────────────────────
+
+export async function restoreVariant(variantId: string): Promise<ActionResult<null>> {
+  const session = await getAdminSession();
+  if (!session) {
+    const s = await auth.api.getSession({ headers: await headers() });
+    if (!s) return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
+    return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
+  }
+
+  const db = getDb();
+  const existing = await db.query.serviceVariants.findFirst({
+    where: eq(serviceVariants.id, variantId),
+  });
+  if (!existing)
+    return { success: false, error: { code: "NOT_FOUND", message: "Variante no encontrada" } };
+
+  await db
+    .update(serviceVariants)
+    .set({ isActive: true, updatedAt: new Date() })
+    .where(eq(serviceVariants.id, variantId));
+
+  await writeAuditLog(db, {
+    entityType: "service_variant",
+    entityId: variantId,
+    action: "restore",
+    changedBy: session.user.id,
+    previousData: { isActive: false },
+    newData: { isActive: true },
+  });
+
+  revalidatePath("/admin/catalog");
+  return { success: true, data: null };
+}
+
 // ─── Soft-delete variant ──────────────────────────────────────────────────────
 
 export async function deactivateVariant(variantId: string): Promise<ActionResult<null>> {
