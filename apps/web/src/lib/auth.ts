@@ -4,6 +4,8 @@ import { admin } from "better-auth/plugins";
 import { createAccessControl } from "better-auth/plugins/access";
 import { accounts, sessions, users, verifications } from "@befine/db/schema";
 import { getDb } from "./db";
+import { sendEmail } from "./email";
+import { PasswordResetEmail } from "@/emails/password-reset";
 
 /**
  * Access control — defines which admin plugin operations each role can perform.
@@ -57,6 +59,13 @@ export const auth = betterAuth({
     enabled: true,
     // Admin creates all accounts — no self-registration
     disableSignUp: true,
+    sendResetPassword: async ({ user, url }) => {
+      await sendEmail({
+        to: user.email,
+        subject: "Restablecer tu contraseña — Innovation Befine",
+        react: PasswordResetEmail({ resetUrl: url, userName: user.name }),
+      });
+    },
   },
 
   rateLimit: {
