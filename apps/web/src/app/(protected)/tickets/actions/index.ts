@@ -8,15 +8,24 @@
  */
 
 import { headers } from "next/headers";
-import { eq, and } from "drizzle-orm";
+import { eq, and, inArray } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import { tickets, ticketItems, employees, users, serviceVariants } from "@befine/db/schema";
+import {
+  tickets,
+  ticketItems,
+  employees,
+  users,
+  serviceVariants,
+  clients,
+  services,
+} from "@befine/db/schema";
 import { createTicketSchema } from "@befine/types";
 import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
 import { getCurrentBusinessDay } from "@/lib/business-day";
 import { revalidatePath } from "next/cache";
+import { publishEvent } from "@befine/realtime/server";
 
 export type TicketRow = {
   id: string;
@@ -208,6 +217,7 @@ export async function createTicket(rawInput: unknown): Promise<ActionResult<Tick
       return { ticket: newTicket, employeeName: empUser?.name ?? "" };
     });
 
+    publishEvent("cashier", "ticket_created", { ticketId: result.ticket.id });
     revalidatePath("/cashier");
     revalidatePath("/secretary");
 
@@ -231,4 +241,78 @@ export async function createTicket(rawInput: unknown): Promise<ActionResult<Tick
       error: { code: "INTERNAL_ERROR", message: "Error al crear el ticket" },
     };
   }
+}
+
+// ─── Open tickets for dashboard ───────────────────────────────────────────────
+
+export type DashboardTicket = {
+  id: string;
+  employeeId: string;
+  employeeName: string;
+  clientName: string; // saved client name or guest name
+  serviceName: string;
+  variantName: string;
+  unitPrice: number;
+  quantity: number;
+  status: "logged" | "awaiting_payment" | "closed" | "reopened" | "paid_offline";
+  createdAt: Date;
+};
+
+export async function listOpenTickets(): Promise<ActionResult<DashboardTicket[]>> {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session)
+    return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
+  if (!hasRole(session.user, "cashier_admin", "secretary"))
+    return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
+
+  const businessDay = await getCurrentBusinessDay();
+  if (!businessDay) return { success: true, data: [] };
+
+  const db = getDb();
+
+  const rows = await db
+    .select({
+      id: tickets.id,
+      employeeId: tickets.employeeId,
+      employeeName: users.name,
+      clientId: tickets.clientId,
+      clientName: clients.name,
+      guestName: tickets.guestName,
+      serviceName: services.name,
+      variantName: serviceVariants.name,
+      unitPrice: ticketItems.unitPrice,
+      quantity: ticketItems.quantity,
+      status: tickets.status,
+      createdAt: tickets.createdAt,
+    })
+    .from(tickets)
+    .innerJoin(employees, eq(tickets.employeeId, employees.id))
+    .innerJoin(users, eq(employees.userId, users.id))
+    .leftJoin(clients, eq(tickets.clientId, clients.id))
+    .innerJoin(ticketItems, eq(ticketItems.ticketId, tickets.id))
+    .innerJoin(serviceVariants, eq(ticketItems.serviceVariantId, serviceVariants.id))
+    .innerJoin(services, eq(serviceVariants.serviceId, services.id))
+    .where(
+      and(
+        eq(tickets.businessDayId, businessDay.id),
+        inArray(tickets.status, ["logged", "awaiting_payment", "reopened"]),
+      ),
+    )
+    .orderBy(tickets.createdAt);
+
+  return {
+    success: true,
+    data: rows.map((r) => ({
+      id: r.id,
+      employeeId: r.employeeId,
+      employeeName: r.employeeName,
+      clientName: r.clientName ?? r.guestName ?? "—",
+      serviceName: r.serviceName,
+      variantName: r.variantName,
+      unitPrice: r.unitPrice,
+      quantity: r.quantity,
+      status: r.status,
+      createdAt: r.createdAt,
+    })),
+  };
 }
