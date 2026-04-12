@@ -26,3 +26,4 @@ export { ticketStatusEnum, checkoutSessions, tickets } from "./tickets";
 export { ticketItems } from "./ticket-items";
 export { ticketPayments } from "./ticket-payments";
 export { servicesRelations, serviceVariantsRelations } from "./relations";
+export { notificationTypeEnum, notifications } from "./notifications";

@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 import { createSSEHandler } from "@befine/realtime/server";
 import type { RealtimeChannel } from "@befine/realtime/types";
 
-const VALID_CHANNELS: RealtimeChannel[] = ["cashier", "clothier"];
+const VALID_CHANNELS: RealtimeChannel[] = ["cashier", "clothier", "notifications"];
 
 export async function GET(_req: Request, { params }: { params: Promise<{ channel: string }> }) {
   const { channel } = await params;

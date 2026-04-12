@@ -336,6 +336,17 @@
     "reopenAction": "Reopen ticket",
     "reopenHint": "The ticket will return to the cashier board for a new checkout."
   },
+  "notifications": {
+    "bellLabel": "Notifications",
+    "bellLabelWithCount": "{count} unread notifications",
+    "panelLabel": "Notifications panel",
+    "title": "Notifications",
+    "markAllRead": "Mark all as read",
+    "empty": "No notifications",
+    "showOlder": "Show {count} older",
+    "grouped": "{count} new — {message}",
+    "view": "View"
+  },
   "nav": {
     "dashboard": "Dashboard",
     "employees": "Employees",

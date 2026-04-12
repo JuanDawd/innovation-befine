@@ -336,6 +336,17 @@
     "reopenAction": "Reabrir ticket",
     "reopenHint": "El ticket volverá al tablero del cajero para un nuevo cobro."
   },
+  "notifications": {
+    "bellLabel": "Notificaciones",
+    "bellLabelWithCount": "{count} notificaciones sin leer",
+    "panelLabel": "Panel de notificaciones",
+    "title": "Notificaciones",
+    "markAllRead": "Marcar todo como leído",
+    "empty": "No hay notificaciones",
+    "showOlder": "Ver {count} anteriores",
+    "grouped": "{count} nuevas — {message}",
+    "view": "Ver"
+  },
   "nav": {
     "dashboard": "Tablero",
     "employees": "Empleados",

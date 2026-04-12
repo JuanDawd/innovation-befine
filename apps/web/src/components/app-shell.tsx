@@ -9,11 +9,15 @@ import { cn } from "@/lib/utils";
 import { signOut } from "@/lib/auth-client";
 import { NAV_ITEMS, MOBILE_BOTTOM_NAV_ROLES, type NavItem } from "./nav-config";
 import { BrandLogo } from "./brand-logo";
+import { NotificationBell } from "./notification-bell";
+import type { NotificationRow } from "@/app/(protected)/notifications/actions";
 import type { AppRole } from "@befine/types";
 
 type AppShellProps = {
   role: AppRole;
   userName: string;
+  employeeId: string | null;
+  initialNotifications: NotificationRow[];
   children: React.ReactNode;
 };
 
@@ -82,7 +86,13 @@ function UserInitials({ name }: { name: string }) {
   );
 }
 
-export function AppShell({ role, userName, children }: AppShellProps) {
+export function AppShell({
+  role,
+  userName,
+  employeeId,
+  initialNotifications,
+  children,
+}: AppShellProps) {
   const t = useTranslations();
   const pathname = usePathname();
   const router = useRouter();
@@ -221,14 +231,22 @@ export function AppShell({ role, userName, children }: AppShellProps) {
                 <Menu className="size-5" aria-hidden="true" />
               </button>
               <BrandLogo />
-              {/* Logout on the right for mobile header */}
-              <button
-                onClick={handleLogout}
-                className="rounded-md p-1.5 text-foreground opacity-60 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                aria-label={t("auth.logout")}
-              >
-                <LogOut className="size-4" aria-hidden="true" />
-              </button>
+              {/* Bell + logout on the right */}
+              <div className="flex items-center gap-1">
+                {employeeId && (
+                  <NotificationBell
+                    employeeId={employeeId}
+                    initialNotifications={initialNotifications}
+                  />
+                )}
+                <button
+                  onClick={handleLogout}
+                  className="rounded-md p-1.5 text-foreground opacity-60 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  aria-label={t("auth.logout")}
+                >
+                  <LogOut className="size-4" aria-hidden="true" />
+                </button>
+              </div>
             </>
           )}
           {/* Stylist/clothier: show logout on the right */}
@@ -244,7 +262,10 @@ export function AppShell({ role, userName, children }: AppShellProps) {
         </header>
 
         {/* Desktop header (hidden on mobile — sidebar handles identity there) */}
-        <header className="hidden h-14 shrink-0 items-center justify-end border-b border-border bg-background px-4 md:flex">
+        <header className="hidden h-14 shrink-0 items-center justify-end gap-2 border-b border-border bg-background px-4 md:flex">
+          {employeeId && (
+            <NotificationBell employeeId={employeeId} initialNotifications={initialNotifications} />
+          )}
           <Link
             href="/profile"
             className="flex items-center gap-2 rounded-lg px-2 py-1 transition-colors hover:bg-muted"
