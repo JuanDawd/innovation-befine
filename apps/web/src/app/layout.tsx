@@ -9,12 +9,12 @@ import { getLocale, getMessages } from "next-intl/server";
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
-  title: "Befine",
+  title: "Innovation Befine",
   description: "Plataforma de operaciones internas — Innovation Befine",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Befine",
+    title: "Innovation Befine",
   },
 };
 

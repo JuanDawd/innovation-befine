@@ -32,7 +32,7 @@ export function BrandLogo({ className, variant = "full" }: BrandLogoProps) {
 
       {variant === "full" && (
         <span className="font-serif text-base font-bold tracking-tight text-sidebar-foreground">
-          Befine
+          Innovation Befine
         </span>
       )}
     </span>
