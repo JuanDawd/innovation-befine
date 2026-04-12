@@ -84,6 +84,9 @@ jobs:
       - name: Install Playwright browsers
         run: pnpm --filter @befine/web exec playwright install --with-deps chromium
 
+      - name: Clean Next.js build cache
+        run: rm -rf apps/web/.next
+
       - name: Build
         run: pnpm build
         env:
@@ -97,6 +100,18 @@ jobs:
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
 
+      - name: Start Next.js server for E2E
+        run: pnpm --filter @befine/web exec next start &
+        env:
+          PORT: 3000
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
+          BETTER_AUTH_URL: ${{ secrets.BETTER_AUTH_URL }}
+          NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
+
+      - name: Wait for server
+        run: npx wait-on http://localhost:3000 --timeout 30000
+
       - name: Run E2E smoke tests
         run: pnpm --filter @befine/web test:e2e
         env:
@@ -104,6 +119,7 @@ jobs:
           BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
           BETTER_AUTH_URL: ${{ secrets.BETTER_AUTH_URL }}
           NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
+          PLAYWRIGHT_BASE_URL: "http://localhost:3000"
 
   # Post-deployment smoke tests against Vercel preview/production URL.
   # Activated once T004 (Vercel setup) is complete.

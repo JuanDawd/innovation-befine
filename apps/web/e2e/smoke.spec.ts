@@ -10,7 +10,8 @@ test.describe("smoke tests", () => {
 
   test("home page displays all role buttons", async ({ page }) => {
     await page.goto("/");
-    const roles = ["admin", "secretary", "stylist", "clothier"];
+    // aria-label matches the role key, visible text is the translated label
+    const roles = ["cashier_admin", "secretary", "stylist", "clothier"];
     for (const role of roles) {
       await expect(page.getByRole("button", { name: role })).toBeVisible();
     }
