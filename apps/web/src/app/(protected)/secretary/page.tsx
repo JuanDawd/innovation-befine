@@ -5,7 +5,7 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { PlusIcon } from "lucide-react";
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
 
 export default async function SecretaryHomePage() {
   const t = await getTranslations();

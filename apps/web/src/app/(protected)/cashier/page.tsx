@@ -10,7 +10,7 @@ import { getTranslations } from "next-intl/server";
 import { PlusIcon, CreditCardIcon } from "lucide-react";
 import { getCurrentBusinessDay, getLastClosedBusinessDay } from "@/lib/business-day";
 import { BusinessDayPanel } from "@/components/business-day-panel";
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
 import { listOpenTickets } from "@/app/(protected)/tickets/actions";
 import { CashierDashboard, CashierDashboardSkeleton } from "@/components/cashier-dashboard";
 

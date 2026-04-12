@@ -37,12 +37,7 @@ export const auth = betterAuth({
    */
   trustedOrigins:
     process.env.NODE_ENV === "development"
-      ? [
-          "http://localhost:3000",
-          "http://localhost:3001",
-          "http://localhost:3002",
-          "http://localhost:3003",
-        ]
+      ? ["http://localhost:3000"]
       : ["https://innovation-befine.vercel.app"],
 
   database: drizzleAdapter(getDb(), {
@@ -71,7 +66,9 @@ export const auth = betterAuth({
   rateLimit: {
     enabled: true,
     window: 60,
-    max: 10,
+    // 200/min: middleware calls get-session on every page navigation;
+    // 10/min was easily exhausted causing spurious logout redirects.
+    max: 200,
     storage: "memory",
   },
 

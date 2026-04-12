@@ -136,10 +136,15 @@ export function CashierDashboard({ initialTickets }: { initialTickets: Dashboard
                   </div>
                 </div>
                 <div className="mt-1.5 flex items-center justify-between">
-                  <p className="font-mono tabular-nums text-xs text-muted-foreground">
+                  <p
+                    className="font-mono tabular-nums text-xs text-muted-foreground"
+                    suppressHydrationWarning
+                  >
                     ${(ticket.unitPrice * ticket.quantity).toLocaleString("es-CO")}
                   </p>
-                  <p className="text-xs text-muted-foreground">{elapsed(ticket.createdAt)}</p>
+                  <p className="text-xs text-muted-foreground" suppressHydrationWarning>
+                    {elapsed(ticket.createdAt)}
+                  </p>
                 </div>
               </div>
             ))}

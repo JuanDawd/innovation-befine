@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
 import { Geist } from "next/font/google";
@@ -11,12 +11,15 @@ const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 export const metadata: Metadata = {
   title: "Befine",
   description: "Plataforma de operaciones internas — Innovation Befine",
-  themeColor: "#8B3A62",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
     title: "Befine",
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#8B3A62",
 };
 
 export default async function RootLayout({ children }: { children: ReactNode }) {

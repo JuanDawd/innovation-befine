@@ -126,7 +126,7 @@ export function BusinessDayPanel({ currentDay, lastClosedDay }: BusinessDayPanel
         <div>
           <p className="font-semibold text-sm">{isOpen ? t("dayOpen") : t("dayClosed")}</p>
           {isOpen && currentDay && (
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground" suppressHydrationWarning>
               {t("openedAt", {
                 time: new Date(currentDay.openedAt).toLocaleTimeString("es-CO", {
                   hour: "2-digit",
@@ -136,7 +136,7 @@ export function BusinessDayPanel({ currentDay, lastClosedDay }: BusinessDayPanel
             </p>
           )}
           {!isOpen && lastClosedDay?.closedAt && (
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground" suppressHydrationWarning>
               {t("lastClosedAt", {
                 date: new Date(lastClosedDay.closedAt).toLocaleString("es-CO", {
                   dateStyle: "short",
