@@ -226,7 +226,7 @@ export function LogServiceForm({
       )}
 
       {/* Quantity */}
-      <div className="space-y-1.5">
+      <div className="space-y-1.5 flex items-center justify-between ">
         <label htmlFor="ls-quantity" className="text-sm font-medium">
           {t("quantity")}
         </label>
