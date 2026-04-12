@@ -23,7 +23,9 @@
   "dependencies": {
     "@better-auth/utils": "^0.4.0",
     "@neondatabase/serverless": "^1.0.2",
-    "drizzle-orm": "^0.44.0"
+    "@types/ws": "^8.18.1",
+    "drizzle-orm": "^0.44.0",
+    "ws": "^8.20.0"
   },
   "devDependencies": {
     "dotenv-cli": "^11.0.0",
