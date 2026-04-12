@@ -411,6 +411,7 @@ export async function listActiveServiceVariants(): Promise<ActionResult<ActiveSe
 export type OpenTicketItem = {
   itemId: string;
   ticketId: string;
+  ticketStatus: "logged" | "awaiting_payment" | "reopened";
   clientName: string;
   serviceVariantId: string;
   serviceName: string;
@@ -440,6 +441,7 @@ export async function listMyOpenTicketItems(): Promise<ActionResult<OpenTicketIt
     .select({
       itemId: ticketItems.id,
       ticketId: tickets.id,
+      ticketStatus: tickets.status,
       guestName: tickets.guestName,
       clientId: tickets.clientId,
       serviceVariantId: ticketItems.serviceVariantId,
@@ -493,6 +495,7 @@ export async function listMyOpenTicketItems(): Promise<ActionResult<OpenTicketIt
     data: rows.map((r) => ({
       itemId: r.itemId,
       ticketId: r.ticketId,
+      ticketStatus: r.ticketStatus as OpenTicketItem["ticketStatus"],
       clientName: r.clientId ? (clientNameMap.get(r.clientId) ?? "—") : (r.guestName ?? "—"),
       serviceVariantId: r.serviceVariantId,
       serviceName: r.serviceName,

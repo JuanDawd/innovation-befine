@@ -287,7 +287,10 @@
     "noCatalog": "No hay servicios activos en el catálogo.",
     "noStylists": "No hay estilistas activos.",
     "price": "Precio",
-    "commission": "Comisión"
+    "commission": "Comisión",
+    "markReady": "Listo para cobrar",
+    "markReadyError": "No se pudo actualizar el ticket",
+    "alreadyReady": "Ya listo para cobrar"
   },
   "dayAtAGlance": {
     "revenueToday": "Ingresos hoy",

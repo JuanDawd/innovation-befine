@@ -1,18 +1,27 @@
 "use client";
 
 /**
- * CashierDashboard — T036
+ * CashierDashboard — T036, T037
  *
  * Displays open tickets grouped by employee.
  * Updates in real-time via SSE (ticket_created / ticket_updated events).
  * Falls back to 30-second polling.
+ *
+ * Cashier/admin can mark logged or reopened tickets as "awaiting payment"
+ * directly from the card — T037.
  */
 
 import { useState, useCallback, useTransition } from "react";
 import { useTranslations } from "next-intl";
-import { Loader2Icon } from "lucide-react";
+import { Loader2Icon, CreditCardIcon } from "lucide-react";
 import { useRealtimeEvent } from "@befine/realtime/client";
-import { listOpenTickets, type DashboardTicket } from "@/app/(protected)/tickets/actions";
+import {
+  listOpenTickets,
+  transitionToAwaitingPayment,
+  transitionReopenedToAwaitingPayment,
+  type DashboardTicket,
+} from "@/app/(protected)/tickets/actions";
+import { Button } from "@/components/ui/button";
 
 type TicketsByEmployee = Map<string, { employeeName: string; tickets: DashboardTicket[] }>;
 
@@ -44,8 +53,11 @@ function statusClass(status: DashboardTicket["status"]): string {
 
 export function CashierDashboard({ initialTickets }: { initialTickets: DashboardTicket[] }) {
   const ts = useTranslations("status");
+  const tt = useTranslations("tickets");
   const [tickets, setTickets] = useState<DashboardTicket[]>(initialTickets);
   const [newIds, setNewIds] = useState<Set<string>>(new Set());
+  const [transitioning, setTransitioning] = useState<Set<string>>(new Set());
+  const [errors, setErrors] = useState<Map<string, string>>(new Map());
   const [, startTransition] = useTransition();
 
   const refresh = useCallback(() => {
@@ -58,7 +70,6 @@ export function CashierDashboard({ initialTickets }: { initialTickets: Dashboard
   useRealtimeEvent("cashier", "ticket_created", {
     onData: (data) => {
       const { ticketId } = data as { ticketId: string };
-      // Mark as new for highlight animation, then refresh
       setNewIds((prev) => new Set(prev).add(ticketId));
       setTimeout(() => {
         setNewIds((prev) => {
@@ -77,13 +88,40 @@ export function CashierDashboard({ initialTickets }: { initialTickets: Dashboard
     onPoll: refresh,
   });
 
+  async function handleMarkReady(ticket: DashboardTicket) {
+    setTransitioning((prev) => new Set(prev).add(ticket.id));
+    setErrors((prev) => {
+      const next = new Map(prev);
+      next.delete(ticket.id);
+      return next;
+    });
+
+    const action =
+      ticket.status === "reopened"
+        ? transitionReopenedToAwaitingPayment
+        : transitionToAwaitingPayment;
+
+    const result = await action({ ticketId: ticket.id });
+
+    setTransitioning((prev) => {
+      const next = new Set(prev);
+      next.delete(ticket.id);
+      return next;
+    });
+
+    if (!result.success) {
+      setErrors((prev) => new Map(prev).set(ticket.id, tt("markReadyError")));
+    }
+    // On success, SSE/poll will refresh the list automatically
+  }
+
   const byEmployee = groupByEmployee(tickets);
 
   if (tickets.length === 0) {
     return (
       <div className="rounded-lg border border-dashed p-12 text-center">
         <p className="text-sm text-muted-foreground">
-          No open tickets — services will appear here as they&apos;re logged
+          No hay tickets abiertos — los servicios aparecerán aquí cuando se registren
         </p>
       </div>
     );
@@ -97,57 +135,89 @@ export function CashierDashboard({ initialTickets }: { initialTickets: Dashboard
             {employeeName}
           </h2>
           <div className="flex flex-col gap-2">
-            {empTickets.map((ticket) => (
-              <div
-                key={ticket.id}
-                className={[
-                  "rounded-lg border bg-card p-3 shadow-xs transition-all duration-300",
-                  statusClass(ticket.status),
-                  newIds.has(ticket.id)
-                    ? "ring-2 ring-green-400 bg-green-50 dark:bg-green-950/20 animate-pulse"
-                    : "",
-                ].join(" ")}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium truncate">
-                      {ticket.serviceName}
-                      {ticket.variantName &&
-                      ticket.variantName !== "Estándar" &&
-                      ticket.variantName !== "Standard"
-                        ? ` — ${ticket.variantName}`
-                        : ""}
-                    </p>
-                    <p className="text-xs text-muted-foreground truncate">{ticket.clientName}</p>
+            {empTickets.map((ticket) => {
+              const isTransitioning = transitioning.has(ticket.id);
+              const error = errors.get(ticket.id);
+              const canMarkReady = ticket.status === "logged" || ticket.status === "reopened";
+
+              return (
+                <div
+                  key={ticket.id}
+                  className={[
+                    "rounded-lg border bg-card p-3 shadow-xs transition-all duration-300",
+                    statusClass(ticket.status),
+                    newIds.has(ticket.id)
+                      ? "ring-2 ring-green-400 bg-green-50 dark:bg-green-950/20 animate-pulse"
+                      : "",
+                  ].join(" ")}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">
+                        {ticket.serviceName}
+                        {ticket.variantName &&
+                        ticket.variantName !== "Estándar" &&
+                        ticket.variantName !== "Standard"
+                          ? ` — ${ticket.variantName}`
+                          : ""}
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate">{ticket.clientName}</p>
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <span
+                        className={[
+                          "inline-block rounded-full px-2 py-0.5 text-xs font-medium",
+                          ticket.status === "awaiting_payment"
+                            ? "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"
+                            : ticket.status === "reopened"
+                              ? "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300"
+                              : "bg-muted text-muted-foreground",
+                        ].join(" ")}
+                      >
+                        {ts(ticket.status)}
+                      </span>
+                    </div>
                   </div>
-                  <div className="shrink-0 text-right">
-                    <span
-                      className={[
-                        "inline-block rounded-full px-2 py-0.5 text-xs font-medium",
-                        ticket.status === "awaiting_payment"
-                          ? "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"
-                          : ticket.status === "reopened"
-                            ? "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300"
-                            : "bg-muted text-muted-foreground",
-                      ].join(" ")}
+
+                  <div className="mt-1.5 flex items-center justify-between">
+                    <p
+                      className="font-mono tabular-nums text-xs text-muted-foreground"
+                      suppressHydrationWarning
                     >
-                      {ts(ticket.status)}
-                    </span>
+                      ${(ticket.unitPrice * ticket.quantity).toLocaleString("es-CO")}
+                    </p>
+                    <p className="text-xs text-muted-foreground" suppressHydrationWarning>
+                      {elapsed(ticket.createdAt)}
+                    </p>
                   </div>
+
+                  {canMarkReady && (
+                    <div className="mt-2 border-t pt-2">
+                      {error && (
+                        <p className="mb-1 text-xs text-destructive" role="alert">
+                          {error}
+                        </p>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 w-full gap-1 text-xs"
+                        disabled={isTransitioning}
+                        onClick={() => handleMarkReady(ticket)}
+                        aria-label={tt("markReady")}
+                      >
+                        {isTransitioning ? (
+                          <Loader2Icon className="size-3 animate-spin" aria-hidden="true" />
+                        ) : (
+                          <CreditCardIcon className="size-3" aria-hidden="true" />
+                        )}
+                        {tt("markReady")}
+                      </Button>
+                    </div>
+                  )}
                 </div>
-                <div className="mt-1.5 flex items-center justify-between">
-                  <p
-                    className="font-mono tabular-nums text-xs text-muted-foreground"
-                    suppressHydrationWarning
-                  >
-                    ${(ticket.unitPrice * ticket.quantity).toLocaleString("es-CO")}
-                  </p>
-                  <p className="text-xs text-muted-foreground" suppressHydrationWarning>
-                    {elapsed(ticket.createdAt)}
-                  </p>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       ))}
@@ -163,7 +233,7 @@ export function CashierDashboardSkeleton() {
           <div className="h-4 w-24 rounded bg-muted animate-pulse" />
           <div className="flex flex-col gap-2">
             {[1, 2].map((j) => (
-              <div key={j} className="h-20 rounded-lg border bg-muted animate-pulse" />
+              <div key={j} className="h-24 rounded-lg border bg-muted animate-pulse" />
             ))}
           </div>
         </div>
