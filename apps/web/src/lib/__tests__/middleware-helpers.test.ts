@@ -26,6 +26,10 @@ describe("isPublic", () => {
     expect(isPublic("/403")).toBe(true);
   });
 
+  it("allows / (home) without auth", () => {
+    expect(isPublic("/")).toBe(true);
+  });
+
   it("requires auth for protected routes", () => {
     expect(isPublic("/cashier")).toBe(false);
     expect(isPublic("/secretary")).toBe(false);

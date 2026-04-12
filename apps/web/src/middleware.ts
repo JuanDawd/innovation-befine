@@ -16,7 +16,7 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (isPublic(pathname) || isShared(pathname)) {
-    // Redirect already-authenticated users away from /login
+    // Redirect already-authenticated users away from /login to their role home
     if (pathname === "/login") {
       const { data: session } = await betterFetch<SessionResponse>("/api/auth/get-session", {
         baseURL: request.nextUrl.origin,
@@ -24,7 +24,7 @@ export async function middleware(request: NextRequest) {
       });
       if (session) {
         const role = session.user.role as AppRole | undefined;
-        const home = role ? (ROLE_HOME[role] ?? "/") : "/";
+        const home = role ? (ROLE_HOME[role] ?? "/") : "/cashier";
         return NextResponse.redirect(new URL(home, request.url));
       }
     }

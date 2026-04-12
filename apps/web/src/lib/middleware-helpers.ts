@@ -11,6 +11,9 @@ import type { AppRole } from "@befine/types";
 /** Routes that bypass the session check entirely */
 export const PUBLIC_PATHS = ["/login", "/reset-password", "/api/auth", "/403"];
 
+/** Exact-match public paths (cannot use startsWith because "/" matches everything) */
+export const PUBLIC_EXACT_PATHS = ["/"];
+
 /** API paths any authenticated role may call */
 export const SHARED_PATHS = ["/api/realtime"];
 
@@ -45,7 +48,7 @@ export const SECRETARY_FINANCIAL_BLOCKED: string[] = [
 ];
 
 export function isPublic(pathname: string): boolean {
-  return PUBLIC_PATHS.some((p) => pathname.startsWith(p));
+  return PUBLIC_EXACT_PATHS.includes(pathname) || PUBLIC_PATHS.some((p) => pathname.startsWith(p));
 }
 
 export function isShared(pathname: string): boolean {
