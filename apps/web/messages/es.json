@@ -289,6 +289,35 @@
     "price": "Precio",
     "commission": "Comisión"
   },
+  "ticketHistory": {
+    "pageTitle": "Historial de tickets",
+    "pageSubtitle": "Tickets cerrados por día laboral",
+    "prevDay": "Día anterior",
+    "nextDay": "Día siguiente",
+    "noDay": "Sin día seleccionado",
+    "noDays": "No hay días laborales registrados.",
+    "searchPlaceholder": "Buscar por nombre de cliente…",
+    "emptyDay": "No hay tickets cerrados para este día",
+    "emptySearch": "No se encontraron tickets con ese criterio",
+    "colClient": "Cliente",
+    "colEmployee": "Empleado",
+    "colService": "Servicio",
+    "colPayment": "Pago",
+    "colTotal": "Total",
+    "colClosedAt": "Hora cierre",
+    "hasOverride": "Precio modificado",
+    "detailTitle": "Detalle del ticket",
+    "detailDescription": "Líneas de servicio, precios y método de pago.",
+    "detailClient": "Cliente",
+    "detailEmployee": "Empleado",
+    "detailClosedBy": "Cerrado por",
+    "detailClosedAt": "Fecha y hora",
+    "detailItems": "Servicios",
+    "detailPayments": "Pagos",
+    "detailTotal": "Total",
+    "detailError": "No se pudo cargar el detalle del ticket.",
+    "overrideNote": "Precio original: ${original}"
+  },
   "nav": {
     "dashboard": "Tablero",
     "employees": "Empleados",
@@ -298,6 +327,7 @@
     "myTickets": "Mis tickets",
     "myWork": "Mi trabajo",
     "catalog": "Catálogo",
+    "ticketHistory": "Historial",
     "openMenu": "Abrir menú",
     "closeMenu": "Cerrar menú"
   }

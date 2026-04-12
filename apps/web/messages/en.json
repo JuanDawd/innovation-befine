@@ -289,6 +289,35 @@
     "price": "Price",
     "commission": "Commission"
   },
+  "ticketHistory": {
+    "pageTitle": "Ticket history",
+    "pageSubtitle": "Closed tickets by business day",
+    "prevDay": "Previous day",
+    "nextDay": "Next day",
+    "noDay": "No day selected",
+    "noDays": "No business days recorded.",
+    "searchPlaceholder": "Search by client name…",
+    "emptyDay": "No closed tickets for this day",
+    "emptySearch": "No tickets found with that search",
+    "colClient": "Client",
+    "colEmployee": "Employee",
+    "colService": "Service",
+    "colPayment": "Payment",
+    "colTotal": "Total",
+    "colClosedAt": "Closed at",
+    "hasOverride": "Price override applied",
+    "detailTitle": "Ticket detail",
+    "detailDescription": "Service lines, prices and payment method.",
+    "detailClient": "Client",
+    "detailEmployee": "Employee",
+    "detailClosedBy": "Closed by",
+    "detailClosedAt": "Date & time",
+    "detailItems": "Services",
+    "detailPayments": "Payments",
+    "detailTotal": "Total",
+    "detailError": "Could not load ticket detail.",
+    "overrideNote": "Original price: ${original}"
+  },
   "nav": {
     "dashboard": "Dashboard",
     "employees": "Employees",
@@ -298,6 +327,7 @@
     "myTickets": "My tickets",
     "myWork": "My work",
     "catalog": "Catalog",
+    "ticketHistory": "History",
     "openMenu": "Open menu",
     "closeMenu": "Close menu"
   }
