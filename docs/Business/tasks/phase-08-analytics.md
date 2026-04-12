@@ -157,13 +157,15 @@ Add a "Download CSV" button to the analytics screen that exports the selected pe
 
 ### What to do
 
-Using the analytics seed data (T101, 6 months of realistic data), run performance benchmarks and compare results against the targets defined in T002. Measure API response times, page load times on simulated mobile (4G throttling), and Pusher event delivery latency. Document results and flag any endpoints that exceed targets.
+Using the analytics seed data (T101, 6 months of realistic data), run performance benchmarks against the targets defined in `docs/standards.md`. Measure API response times, client-side navigation times, and SSE event delivery latency. Document results and flag any endpoint that misses its target as a blocking issue.
 
 ### Acceptance criteria
 
-- [ ] All analytics queries (T071) complete in < 200 ms on seeded data (post-T075 indexes)
-- [ ] All non-analytics API endpoints respond in < 500 ms (P95) under normal load
-- [ ] LCP measured on simulated mid-range mobile (Chrome DevTools, 4G throttle) for: login page, cashier dashboard, checkout flow, analytics dashboard — all < 2.5 s
-- [ ] Pusher event delivery latency measured: < 2 s from server publish to client receipt
-- [ ] Results documented in `docs/testing/performance-results.md` with comparison to T002 targets
-- [ ] Any endpoint exceeding targets is flagged as an issue in `docs/issues-tracker.md`
+- [ ] All analytics queries (T071) complete in **< 200 ms** on seeded data (post-T075 indexes)
+- [ ] All non-analytics API endpoints respond in **< 500 ms (P95)** under normal load
+- [ ] Client-side navigation (shell already loaded) measured for: cashier dashboard → checkout, cashier dashboard → ticket history — all **< 1.5 s**
+- [ ] LCP measured on simulated mid-range mobile (Chrome DevTools, 4G throttle) for: login page **< 1.5 s**, cashier dashboard **< 2.5 s**, checkout **< 2.0 s**, analytics dashboard **< 3.0 s**
+- [ ] SSE event delivery latency measured: **< 2 s** from server publish to client receipt
+- [ ] Heavy operations (payout batch, CSV export, day-close) verified to show spinner within 100 ms and explanatory message if > 3 s
+- [ ] Results documented in `docs/testing/performance-results.md`
+- [ ] Any endpoint or page exceeding its target is flagged as blocking in `docs/issues-tracker.md` and fixed before T089 (go-live)

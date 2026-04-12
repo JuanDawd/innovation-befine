@@ -78,13 +78,41 @@ All UI must meet these minimum standards:
 
 ## Performance targets
 
-| Metric                         | Target                         | Measurement             |
-| ------------------------------ | ------------------------------ | ----------------------- |
-| LCP (Largest Contentful Paint) | < 2.5 s                        | Lighthouse / Web Vitals |
-| API response (P95)             | < 500 ms                       | Server-side logging     |
-| Real-time event delivery       | < 2 s                          | Client-side measurement |
-| Client search                  | < 300 ms                       | UI responsiveness       |
-| Analytics queries              | < 500 ms (< 200 ms after T075) | Database query timing   |
+### Hard targets — every build must meet these
+
+| Metric                                                      | Target       | How measured                                     |
+| ----------------------------------------------------------- | ------------ | ------------------------------------------------ |
+| API response (P95, all non-analytics endpoints)             | **< 500 ms** | Server-side timing log (Sentry breadcrumb)       |
+| Client-side navigation (route change, already-loaded shell) | **< 1.5 s**  | Chrome DevTools — time from click to interactive |
+| Client search (client search widget, catalog filter)        | **< 300 ms** | UI responsiveness, debounced at 200 ms           |
+| Analytics queries (post-T075 indexes)                       | **< 200 ms** | Database query timing                            |
+
+These are **blocking** in T107 (performance testing). Any endpoint that fails P95 < 500 ms must be fixed before go-live.
+
+### Heavy operations — no hard time limit, but always show progress
+
+Some operations legitimately take > 500 ms (report generation, payout batch, CSV export, analytics seed). These are **not failures** — they require a clear UI contract:
+
+| Requirement                                                  | Implementation                                        |
+| ------------------------------------------------------------ | ----------------------------------------------------- |
+| Trigger button disabled immediately on click                 | `disabled={isPending}`                                |
+| Spinner visible within 100 ms of click                       | `Loader2Icon` in button                               |
+| If the operation may take > 3 s: show an explanatory message | `"Esto puede tardar unos segundos…"` below the button |
+| On completion: toast notification (success or error)         | Sonner `toast.success()` / `toast.error()`            |
+| On error: offer a retry button                               | Inline or in the toast action                         |
+
+Operations in this category: payout recording, CSV export, day-close with open-ticket check, analytics dashboard first load, data migration (T100).
+
+### Page load (initial navigation, cold start)
+
+| Page                | LCP target | Notes                                                           |
+| ------------------- | ---------- | --------------------------------------------------------------- |
+| Login               | < 1.5 s    | Static, no auth                                                 |
+| Cashier dashboard   | < 2.5 s    | SSR + DB fetch; cookieCache eliminates extra session round-trip |
+| Checkout flow       | < 2.0 s    | Relatively small data set                                       |
+| Analytics dashboard | < 3.0 s    | Acceptable — data-heavy; show skeleton immediately              |
+
+Measured with Chrome DevTools, 4G throttle (20 Mbps / 5 ms RTT), mid-range mobile preset. Documented in `docs/testing/performance-results.md` (created in T107).
 
 ---
 
