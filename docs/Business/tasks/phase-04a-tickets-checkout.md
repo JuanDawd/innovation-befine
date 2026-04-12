@@ -208,7 +208,7 @@ Allow the cashier to override the price of any line item at checkout. A reason t
 ## T041 — Edit approval flow (secretary / stylist → cashier)
 
 **Phase:** 4A — Tickets and checkout
-**Status:** pending
+**Status:** done
 **Dependencies:** T035, T048
 
 ### What to do

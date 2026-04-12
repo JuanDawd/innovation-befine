@@ -209,21 +209,21 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 
 ## Phase 4A — Tickets and checkout
 
-| ID   | Task                                                                 | Status  | Dependencies     |
-| ---- | -------------------------------------------------------------------- | ------- | ---------------- |
-| T033 | Tickets table migration (incl. idempotency_key column)               | done    | T019, T029       |
-| T034 | Ticket items table migration (with price/commission snapshot)        | done    | T033, T023       |
-| T035 | Ticket creation — stylist / secretary / cashier (incl. walk-in flow) | done    | T034, T031, T028 |
-| T036 | Cashier dashboard with live updates                                  | done    | T035, T098       |
-| T037 | Ticket status transitions and permissions                            | done    | T035             |
-| T038 | Checkout flow (optimistic lock, payment method, close ticket)        | done    | T037             |
-| T039 | Split payment at checkout (ticket_payments table)                    | done    | T038             |
-| T040 | Price override at checkout (cashier only)                            | done    | T038             |
-| T041 | Edit approval flow (secretary/stylist → cashier)                     | pending | T035, T048       |
-| T042 | Ticket reopen and earnings recompute flag                            | done    | T038             |
-| T048 | In-app notification system (MVP)                                     | done    | T098             |
-| T092 | Closed ticket history view (admin / cashier) _(new)_                 | done    | T038             |
-| T093 | Admin home / day-at-a-glance screen _(new)_                          | done    | T036, T038       |
+| ID   | Task                                                                 | Status | Dependencies     |
+| ---- | -------------------------------------------------------------------- | ------ | ---------------- |
+| T033 | Tickets table migration (incl. idempotency_key column)               | done   | T019, T029       |
+| T034 | Ticket items table migration (with price/commission snapshot)        | done   | T033, T023       |
+| T035 | Ticket creation — stylist / secretary / cashier (incl. walk-in flow) | done   | T034, T031, T028 |
+| T036 | Cashier dashboard with live updates                                  | done   | T035, T098       |
+| T037 | Ticket status transitions and permissions                            | done   | T035             |
+| T038 | Checkout flow (optimistic lock, payment method, close ticket)        | done   | T037             |
+| T039 | Split payment at checkout (ticket_payments table)                    | done   | T038             |
+| T040 | Price override at checkout (cashier only)                            | done   | T038             |
+| T041 | Edit approval flow (secretary/stylist → cashier)                     | done   | T035, T048       |
+| T042 | Ticket reopen and earnings recompute flag                            | done   | T038             |
+| T048 | In-app notification system (MVP)                                     | done   | T098             |
+| T092 | Closed ticket history view (admin / cashier) _(new)_                 | done   | T038             |
+| T093 | Admin home / day-at-a-glance screen _(new)_                          | done   | T036, T038       |
 
 > T043 (walk-in flow) retired — merged into T035 acceptance criteria.
 

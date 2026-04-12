@@ -1,9 +1,10 @@
 /**
- * Cashier/admin home — T019, T035, T036, T093
+ * Cashier/admin home — T019, T035, T036, T041, T093
  *
  * Shows:
  * - Business day status panel
  * - Day-at-a-glance stats (revenue, open ticket count, quick actions) — T093
+ * - Pending edit requests panel — T041
  * - Live ticket board
  */
 
@@ -15,10 +16,21 @@ import { getCurrentBusinessDay, getLastClosedBusinessDay } from "@/lib/business-
 import { BusinessDayPanel } from "@/components/business-day-panel";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { listOpenTickets } from "@/app/(protected)/tickets/actions";
+import { listPendingEditRequests } from "@/app/(protected)/tickets/edit-requests/actions";
 import { getDayStats } from "@/app/(protected)/cashier/actions/day-stats";
 import { CashierDashboard, CashierDashboardSkeleton } from "@/components/cashier-dashboard";
+import {
+  PendingEditRequests,
+  PendingEditRequestsSkeleton,
+} from "@/components/pending-edit-requests";
 import { DayAtAGlance } from "@/components/day-at-a-glance";
 import { Skeleton } from "@/components/ui/loading-skeleton";
+
+async function EditRequestsPanel() {
+  const result = await listPendingEditRequests();
+  const requests = result.success ? result.data : [];
+  return <PendingEditRequests initialRequests={requests} />;
+}
 
 async function StatsAndBoard() {
   const [openResult, statsResult] = await Promise.all([listOpenTickets(), getDayStats()]);
@@ -89,6 +101,11 @@ export default async function CashierHomePage() {
       <div className="max-w-sm">
         <BusinessDayPanel currentDay={currentDay} lastClosedDay={lastClosedDay} />
       </div>
+
+      {/* Pending edit requests — T041 */}
+      <Suspense fallback={<PendingEditRequestsSkeleton />}>
+        <EditRequestsPanel />
+      </Suspense>
 
       {/* Day-at-a-glance stats + ticket board */}
       <Suspense fallback={<StatsAndBoardSkeleton />}>
