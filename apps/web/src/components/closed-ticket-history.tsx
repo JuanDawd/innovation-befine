@@ -16,6 +16,8 @@ import {
   ChevronRightIcon,
   TriangleAlertIcon,
   XIcon,
+  RotateCcwIcon,
+  Loader2Icon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,6 +32,7 @@ import {
 import {
   listClosedTickets,
   getClosedTicketDetail,
+  reopenTicket,
   type BusinessDayOption,
   type ClosedTicketRow,
   type ClosedTicketDetail,
@@ -73,6 +76,8 @@ export function ClosedTicketHistory({
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
   const [detail, setDetail] = useState<ClosedTicketDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [reopening, setReopening] = useState(false);
+  const [reopenError, setReopenError] = useState<string | null>(null);
 
   const currentDayIndex = businessDays.findIndex((d) => d.id === selectedDayId);
   const currentDay = businessDays[currentDayIndex];
@@ -123,6 +128,7 @@ export function ClosedTicketHistory({
     setSelectedTicketId(ticketId);
     setDetail(null);
     setDetailLoading(true);
+    setReopenError(null);
     const result = await getClosedTicketDetail(ticketId);
     setDetail(result.success ? result.data : null);
     setDetailLoading(false);
@@ -131,6 +137,22 @@ export function ClosedTicketHistory({
   function closeDetail() {
     setSelectedTicketId(null);
     setDetail(null);
+    setReopenError(null);
+  }
+
+  async function handleReopen() {
+    if (!selectedTicketId) return;
+    setReopening(true);
+    setReopenError(null);
+    const result = await reopenTicket(selectedTicketId);
+    if (result.success) {
+      // Remove the ticket from the current list and close dialog
+      setTickets((prev) => prev.filter((t) => t.id !== selectedTicketId));
+      closeDetail();
+    } else {
+      setReopenError(result.error.message);
+    }
+    setReopening(false);
   }
 
   // ─── Render ─────────────────────────────────────────────────────────────────
@@ -454,6 +476,29 @@ export function ClosedTicketHistory({
                 <span className="font-mono tabular-nums text-lg">
                   ${detail.total.toLocaleString("es-CO")}
                 </span>
+              </div>
+
+              {/* Reopen action */}
+              <div className="border-t pt-4">
+                {reopenError && (
+                  <p className="text-sm text-destructive mb-3" role="alert">
+                    {reopenError}
+                  </p>
+                )}
+                <Button
+                  variant="outline"
+                  onClick={handleReopen}
+                  disabled={reopening}
+                  className="w-full"
+                >
+                  {reopening ? (
+                    <Loader2Icon className="size-4 mr-2 animate-spin" aria-hidden="true" />
+                  ) : (
+                    <RotateCcwIcon className="size-4 mr-2" aria-hidden="true" />
+                  )}
+                  {t("reopenAction")}
+                </Button>
+                <p className="text-xs text-muted-foreground mt-2 text-center">{t("reopenHint")}</p>
               </div>
             </div>
           )}

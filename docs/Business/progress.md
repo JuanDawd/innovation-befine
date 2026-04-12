@@ -220,7 +220,7 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | T039 | Split payment at checkout (ticket_payments table)                    | done    | T038             |
 | T040 | Price override at checkout (cashier only)                            | done    | T038             |
 | T041 | Edit approval flow (secretary/stylist → cashier)                     | pending | T035, T048       |
-| T042 | Ticket reopen and earnings recompute flag                            | pending | T038             |
+| T042 | Ticket reopen and earnings recompute flag                            | done    | T038             |
 | T048 | In-app notification system (MVP)                                     | pending | T098             |
 | T092 | Closed ticket history view (admin / cashier) _(new)_                 | done    | T038             |
 | T093 | Admin home / day-at-a-glance screen _(new)_                          | done    | T036, T038       |

@@ -1,15 +1,16 @@
 "use server";
 
 /**
- * Closed ticket history actions — T092
+ * Closed ticket history actions — T092, T042
  *
  * listBusinessDays: returns all business days for day navigation (admin/cashier).
  * listClosedTickets: returns closed tickets for a given business day, with optional client search.
  * getClosedTicketDetail: returns full detail (line items + payment breakdown) for one ticket.
+ * reopenTicket: transitions a closed ticket back to reopened status (cashier_admin only).
  */
 
 import { headers } from "next/headers";
-import { eq, and, or, ilike, desc, inArray } from "drizzle-orm";
+import { eq, and, or, ilike, desc, inArray, ne } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import {
@@ -22,9 +23,12 @@ import {
   services,
   serviceVariants,
   businessDays,
+  checkoutSessions,
 } from "@befine/db/schema";
 import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
+import { revalidatePath } from "next/cache";
+import { publishEvent } from "@befine/realtime/server";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -333,4 +337,103 @@ export async function getClosedTicketDetail(
       total,
     },
   };
+}
+
+// ─── Reopen a closed ticket ───────────────────────────────────────────────────
+
+/**
+ * reopenTicket — T042
+ *
+ * Transitions a closed ticket back to `reopened`.
+ * - Detaches the ticket from its checkout_session (set to null).
+ * - If the session still has other closed tickets, marks it `is_partially_reopened`.
+ * - Fires a `ticket_updated` SSE event so the cashier dashboard updates live.
+ * - Payout `needs_review` flag is a stub — payouts table is created in Phase 7 (T066).
+ */
+export async function reopenTicket(ticketId: string): Promise<ActionResult<{ id: string }>> {
+  const guard = await requireAdminOrCashier();
+  if (!guard.ok)
+    return {
+      success: false,
+      error: {
+        code: guard.code!,
+        message: guard.code === "UNAUTHORIZED" ? "No autenticado" : "Sin permisos",
+      },
+    };
+
+  const db = getDb();
+
+  // Fetch current ticket state
+  const [ticket] = await db
+    .select({
+      id: tickets.id,
+      status: tickets.status,
+      version: tickets.version,
+      checkoutSessionId: tickets.checkoutSessionId,
+    })
+    .from(tickets)
+    .where(eq(tickets.id, ticketId))
+    .limit(1);
+
+  if (!ticket)
+    return { success: false, error: { code: "NOT_FOUND", message: "Ticket no encontrado" } };
+
+  if (ticket.status !== "closed")
+    return {
+      success: false,
+      error: { code: "CONFLICT", message: "Solo se pueden reabrir tickets cerrados" },
+    };
+
+  // Transition ticket: closed → reopened, detach from checkout session, bump version
+  const [updated] = await db
+    .update(tickets)
+    .set({
+      status: "reopened",
+      checkoutSessionId: null,
+      closedAt: null,
+      closedBy: null,
+      version: ticket.version + 1,
+    })
+    .where(and(eq(tickets.id, ticketId), eq(tickets.version, ticket.version)))
+    .returning({ id: tickets.id, status: tickets.status });
+
+  if (!updated)
+    return {
+      success: false,
+      error: { code: "STALE_DATA", message: "El ticket fue modificado por otra sesión" },
+    };
+
+  // If there was a checkout session, check if other closed tickets remain in it.
+  // If so, mark it partially_reopened so cashier knows.
+  if (ticket.checkoutSessionId) {
+    const [sibling] = await db
+      .select({ id: tickets.id })
+      .from(tickets)
+      .where(
+        and(
+          eq(tickets.checkoutSessionId, ticket.checkoutSessionId),
+          eq(tickets.status, "closed"),
+          ne(tickets.id, ticketId),
+        ),
+      )
+      .limit(1);
+
+    if (sibling) {
+      await db
+        .update(checkoutSessions)
+        .set({ isPartiallyReopened: true })
+        .where(eq(checkoutSessions.id, ticket.checkoutSessionId));
+    }
+  }
+
+  // NOTE (T066 stub): When the payouts table is created in Phase 7,
+  // any payout record whose period includes this ticket's closed_at date
+  // should be flagged `needs_review = true` here.
+
+  publishEvent("cashier", "ticket_updated", { ticketId: updated.id, status: updated.status });
+  revalidatePath("/cashier");
+  revalidatePath("/cashier/tickets/history");
+  revalidatePath("/admin/tickets/history");
+
+  return { success: true, data: { id: updated.id } };
 }

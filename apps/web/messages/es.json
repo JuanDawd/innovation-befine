@@ -332,7 +332,9 @@
     "detailPayments": "Pagos",
     "detailTotal": "Total",
     "detailError": "No se pudo cargar el detalle del ticket.",
-    "overrideNote": "Precio original: ${original}"
+    "overrideNote": "Precio original: ${original}",
+    "reopenAction": "Reabrir ticket",
+    "reopenHint": "El ticket volverá al tablero del cajero para un nuevo cobro."
   },
   "nav": {
     "dashboard": "Tablero",

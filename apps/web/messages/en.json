@@ -332,7 +332,9 @@
     "detailPayments": "Payments",
     "detailTotal": "Total",
     "detailError": "Could not load ticket detail.",
-    "overrideNote": "Original price: ${original}"
+    "overrideNote": "Original price: ${original}",
+    "reopenAction": "Reopen ticket",
+    "reopenHint": "The ticket will return to the cashier board for a new checkout."
   },
   "nav": {
     "dashboard": "Dashboard",
