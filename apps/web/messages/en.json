@@ -289,6 +289,22 @@
     "price": "Price",
     "commission": "Commission"
   },
+  "dayAtAGlance": {
+    "revenueToday": "Revenue today",
+    "revenueSubOpen": "From closed tickets in the current day",
+    "revenueSubClosed": "Day is closed",
+    "openTickets": "Open tickets",
+    "openTicketsSub": "Updated in real time",
+    "dayClosedSub": "Day is closed",
+    "unsettledEarnings": "Unsettled earnings",
+    "unsettledEarningsSub": "Available in Phase 7 (payroll)",
+    "quickActions": "Quick actions",
+    "actionHistory": "History",
+    "actionEmployees": "Employees",
+    "actionCatalog": "Catalog",
+    "actionPayroll": "Payroll",
+    "actionCheckout": "Checkout"
+  },
   "ticketHistory": {
     "pageTitle": "Ticket history",
     "pageSubtitle": "Closed tickets by business day",

@@ -223,7 +223,7 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | T042 | Ticket reopen and earnings recompute flag                            | pending | T038             |
 | T048 | In-app notification system (MVP)                                     | pending | T098             |
 | T092 | Closed ticket history view (admin / cashier) _(new)_                 | done    | T038             |
-| T093 | Admin home / day-at-a-glance screen _(new)_                          | pending | T036, T038       |
+| T093 | Admin home / day-at-a-glance screen _(new)_                          | done    | T036, T038       |
 
 > T043 (walk-in flow) retired — merged into T035 acceptance criteria.
 

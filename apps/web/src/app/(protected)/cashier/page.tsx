@@ -1,7 +1,10 @@
 /**
- * Cashier/admin home — T019, T035, T036
+ * Cashier/admin home — T019, T035, T036, T093
  *
- * Shows business day status, log service CTA, and live ticket board.
+ * Shows:
+ * - Business day status panel
+ * - Day-at-a-glance stats (revenue, open ticket count, quick actions) — T093
+ * - Live ticket board
  */
 
 import Link from "next/link";
@@ -12,12 +15,46 @@ import { getCurrentBusinessDay, getLastClosedBusinessDay } from "@/lib/business-
 import { BusinessDayPanel } from "@/components/business-day-panel";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { listOpenTickets } from "@/app/(protected)/tickets/actions";
+import { getDayStats } from "@/app/(protected)/cashier/actions/day-stats";
 import { CashierDashboard, CashierDashboardSkeleton } from "@/components/cashier-dashboard";
+import { DayAtAGlance } from "@/components/day-at-a-glance";
+import { Skeleton } from "@/components/ui/loading-skeleton";
 
-async function TicketBoard() {
-  const result = await listOpenTickets();
-  const tickets = result.success ? result.data : [];
-  return <CashierDashboard initialTickets={tickets} />;
+async function StatsAndBoard() {
+  const [openResult, statsResult] = await Promise.all([listOpenTickets(), getDayStats()]);
+
+  const openTickets = openResult.success ? openResult.data : [];
+  const stats = statsResult.success ? statsResult.data : { revenue: 0, businessDayId: null };
+
+  return (
+    <>
+      <DayAtAGlance
+        revenue={stats.revenue}
+        initialOpenCount={openTickets.length}
+        isDayOpen={stats.businessDayId !== null}
+      />
+      <CashierDashboard initialTickets={openTickets} />
+    </>
+  );
+}
+
+function StatsAndBoardSkeleton() {
+  return (
+    <>
+      {/* Stats skeleton */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="rounded-xl border bg-card p-5 shadow-sm flex flex-col gap-3">
+            <Skeleton className="h-3 w-24" />
+            <Skeleton className="h-8 w-32" />
+            <Skeleton className="h-3 w-40" />
+          </div>
+        ))}
+      </div>
+      {/* Board skeleton */}
+      <CashierDashboardSkeleton />
+    </>
+  );
 }
 
 export default async function CashierHomePage() {
@@ -30,6 +67,7 @@ export default async function CashierHomePage() {
 
   return (
     <div className="flex flex-col gap-6 p-6">
+      {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-semibold">{t("roles.cashier_admin")}</h1>
@@ -37,22 +75,24 @@ export default async function CashierHomePage() {
         </div>
         <div className="flex gap-2">
           <Link href="/cashier/tickets/new" className={buttonVariants({ variant: "outline" })}>
-            <PlusIcon className="mr-2 size-4" />
+            <PlusIcon className="mr-2 size-4" aria-hidden="true" />
             {t("tickets.logService")}
           </Link>
           <Link href="/cashier/checkout" className={buttonVariants()}>
-            <CreditCardIcon className="mr-2 size-4" />
-            Cobrar
+            <CreditCardIcon className="mr-2 size-4" aria-hidden="true" />
+            {t("dayAtAGlance.actionCheckout")}
           </Link>
         </div>
       </div>
 
+      {/* Business day panel */}
       <div className="max-w-sm">
         <BusinessDayPanel currentDay={currentDay} lastClosedDay={lastClosedDay} />
       </div>
 
-      <Suspense fallback={<CashierDashboardSkeleton />}>
-        <TicketBoard />
+      {/* Day-at-a-glance stats + ticket board */}
+      <Suspense fallback={<StatsAndBoardSkeleton />}>
+        <StatsAndBoard />
       </Suspense>
     </div>
   );

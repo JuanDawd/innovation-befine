@@ -289,6 +289,22 @@
     "price": "Precio",
     "commission": "Comisión"
   },
+  "dayAtAGlance": {
+    "revenueToday": "Ingresos hoy",
+    "revenueSubOpen": "Tickets cerrados en el día actual",
+    "revenueSubClosed": "El día está cerrado",
+    "openTickets": "Tickets abiertos",
+    "openTicketsSub": "En tiempo real",
+    "dayClosedSub": "El día está cerrado",
+    "unsettledEarnings": "Ganancias sin liquidar",
+    "unsettledEarningsSub": "Disponible en Fase 7 (liquidación)",
+    "quickActions": "Acciones rápidas",
+    "actionHistory": "Historial",
+    "actionEmployees": "Empleados",
+    "actionCatalog": "Catálogo",
+    "actionPayroll": "Liquidación",
+    "actionCheckout": "Cobrar"
+  },
   "ticketHistory": {
     "pageTitle": "Historial de tickets",
     "pageSubtitle": "Tickets cerrados por día laboral",
