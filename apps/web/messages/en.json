@@ -347,6 +347,20 @@
     "grouped": "{count} new — {message}",
     "view": "View"
   },
+  "clothierWork": {
+    "pageTitle": "My work",
+    "myPieces": "My pieces",
+    "available": "Available to claim",
+    "claim": "Claim",
+    "claimError": "Already claimed",
+    "markDone": "Done",
+    "markDoneError": "Could not update",
+    "staleError": "Status changed — please reload",
+    "emptyTitle": "No pieces assigned",
+    "emptyDescription": "No pieces assigned — new assignments will appear here",
+    "progress": "{done} of {total} pieces done",
+    "noOpenDay": "No business day is open."
+  },
   "batches": {
     "pageTitle": "Cloth batches",
     "createBatch": "New batch",

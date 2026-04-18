@@ -381,6 +381,20 @@
     "statusRejected": "Rechazada",
     "statusPending": "Pendiente"
   },
+  "clothierWork": {
+    "pageTitle": "Mi trabajo",
+    "myPieces": "Mis piezas",
+    "available": "Disponibles para reclamar",
+    "claim": "Reclamar",
+    "claimError": "Ya fue reclamada",
+    "markDone": "Listo",
+    "markDoneError": "No se pudo actualizar",
+    "staleError": "Estado cambiado — recarga la página",
+    "emptyTitle": "Sin piezas asignadas",
+    "emptyDescription": "No hay piezas asignadas — las nuevas asignaciones aparecerán aquí",
+    "progress": "{done} de {total} piezas listas",
+    "noOpenDay": "No hay un día laboral abierto."
+  },
   "batches": {
     "pageTitle": "Lotes de confección",
     "createBatch": "Nuevo lote",
