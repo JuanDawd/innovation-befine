@@ -1,5 +1,5 @@
 /**
- * Secretary — cloth batches list (T045)
+ * Secretary — cloth batches (T045, T047)
  */
 
 import { getTranslations } from "next-intl/server";
@@ -11,6 +11,7 @@ import { auth } from "@/lib/auth";
 import { hasRole } from "@/lib/middleware-helpers";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { cn } from "@/lib/utils";
+import { BatchApprovalBoard } from "@/components/batch-approval-board";
 
 export default async function SecretaryBatchesPage() {
   const t = await getTranslations("batches");
@@ -26,7 +27,7 @@ export default async function SecretaryBatchesPage() {
           {t("createBatch")}
         </Link>
       </div>
-      <p className="text-sm text-muted-foreground">{t("emptyDescription")}</p>
+      <BatchApprovalBoard isAdmin={false} />
     </div>
   );
 }

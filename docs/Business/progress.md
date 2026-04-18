@@ -233,12 +233,12 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 
 > Can run in parallel with Phase 5 once Phase 4A is complete.
 
-| ID   | Task                                           | Status  | Dependencies |
-| ---- | ---------------------------------------------- | ------- | ------------ |
-| T044 | Cloth batches and batch_pieces table migration | done    | T019, T026   |
-| T045 | Cloth batch creation UI (secretary / admin)    | done    | T044, T028   |
-| T046 | Clothier batch view and piece completion       | done    | T045         |
-| T047 | Piece approval flow (secretary / admin)        | pending | T046         |
+| ID   | Task                                           | Status | Dependencies |
+| ---- | ---------------------------------------------- | ------ | ------------ |
+| T044 | Cloth batches and batch_pieces table migration | done   | T019, T026   |
+| T045 | Cloth batch creation UI (secretary / admin)    | done   | T044, T028   |
+| T046 | Clothier batch view and piece completion       | done   | T045         |
+| T047 | Piece approval flow (secretary / admin)        | done   | T046         |
 
 ---
 
