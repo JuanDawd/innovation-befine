@@ -29,3 +29,4 @@ export { servicesRelations, serviceVariantsRelations } from "./relations";
 export { notificationTypeEnum, notifications } from "./notifications";
 export { editRequestStatusEnum, ticketEditRequests } from "./ticket-edit-requests";
 export { batchPieceStatusEnum, claimSourceEnum, clothBatches, batchPieces } from "./cloth-batches";
+export { appointmentStatusEnum, appointments } from "./appointments";
