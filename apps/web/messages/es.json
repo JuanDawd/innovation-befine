@@ -381,6 +381,29 @@
     "statusRejected": "Rechazada",
     "statusPending": "Pendiente"
   },
+  "batches": {
+    "pageTitle": "Lotes de confección",
+    "createBatch": "Nuevo lote",
+    "createBatchDescription": "Selecciona las piezas y asígnalas a los confeccionistas.",
+    "notes": "Notas",
+    "notesPlaceholder": "Ej: Pedido urgente, tela disponible en bodega",
+    "pieces": "Piezas",
+    "addPiece": "Agregar pieza",
+    "pieceType": "Tipo de pieza",
+    "selectPieceType": "Selecciona una pieza…",
+    "assignTo": "Asignar a",
+    "unassigned": "Sin asignar",
+    "selectClothier": "Selecciona un confeccionista…",
+    "removePiece": "Eliminar pieza",
+    "submit": "Crear lote",
+    "submitSuccess": "Lote creado correctamente",
+    "submitError": "No se pudo crear el lote",
+    "noOpenDay": "No hay un día laboral abierto.",
+    "noClothiers": "No hay confeccionistas activos.",
+    "noPieces": "No hay piezas activas en el catálogo.",
+    "emptyTitle": "Sin lotes hoy",
+    "emptyDescription": "Crea el primer lote del día."
+  },
   "nav": {
     "dashboard": "Tablero",
     "employees": "Empleados",
@@ -391,6 +414,7 @@
     "myWork": "Mi trabajo",
     "catalog": "Catálogo",
     "ticketHistory": "Historial",
+    "batches": "Lotes",
     "openMenu": "Abrir menú",
     "closeMenu": "Cerrar menú"
   }

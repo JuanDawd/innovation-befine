@@ -1,0 +1,236 @@
+"use client";
+
+/**
+ * CreateBatchForm — T045
+ *
+ * Secretary / admin can create a cloth batch by selecting piece types
+ * and optionally assigning each row to a clothier.
+ */
+
+import { useState, useTransition, useEffect } from "react";
+import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
+import { PlusIcon, Trash2Icon, Loader2Icon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  listActiveClothiers,
+  createBatch,
+  type ClothierOption,
+} from "@/app/(protected)/batches/actions";
+import { listActiveClothPieces } from "@/app/(protected)/admin/catalog/actions/cloth-pieces";
+
+type ClothPieceOption = { id: string; name: string };
+
+type PieceLine = {
+  key: number;
+  clothPieceId: string;
+  assignedToEmployeeId: string | null;
+};
+
+export function CreateBatchForm({ redirectPath }: { redirectPath: string }) {
+  const t = useTranslations("batches");
+  const tc = useTranslations("common");
+  const router = useRouter();
+
+  const [clothPieces, setClothPieces] = useState<ClothPieceOption[]>([]);
+  const [clothiers, setClothiers] = useState<ClothierOption[]>([]);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [isLoading, startLoadTransition] = useTransition();
+
+  const [notes, setNotes] = useState("");
+  const [lines, setLines] = useState<PieceLine[]>([
+    { key: 0, clothPieceId: "", assignedToEmployeeId: null },
+  ]);
+  const [nextKey, setNextKey] = useState(1);
+  const [isPending, startSubmitTransition] = useTransition();
+  const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
+
+  useEffect(() => {
+    startLoadTransition(async () => {
+      const [piecesRes, clothiersRes] = await Promise.all([
+        listActiveClothPieces(),
+        listActiveClothiers(),
+      ]);
+      if (!piecesRes.success) {
+        setLoadError(piecesRes.error.message);
+        return;
+      }
+      if (!clothiersRes.success) {
+        setLoadError(clothiersRes.error.message);
+        return;
+      }
+      setClothPieces(piecesRes.data);
+      setClothiers(clothiersRes.data);
+    });
+  }, []);
+
+  function addLine() {
+    setLines((prev) => [...prev, { key: nextKey, clothPieceId: "", assignedToEmployeeId: null }]);
+    setNextKey((k) => k + 1);
+  }
+
+  function removeLine(key: number) {
+    setLines((prev) => prev.filter((l) => l.key !== key));
+  }
+
+  function updateLine(key: number, patch: Partial<Omit<PieceLine, "key">>) {
+    setLines((prev) => prev.map((l) => (l.key === key ? { ...l, ...patch } : l)));
+  }
+
+  function handleSubmit() {
+    const invalidLine = lines.find((l) => !l.clothPieceId);
+    if (invalidLine) {
+      setToast({ type: "error", message: "Selecciona el tipo de pieza en cada fila." });
+      return;
+    }
+
+    startSubmitTransition(async () => {
+      const result = await createBatch({
+        notes: notes.trim() || undefined,
+        pieces: lines.map((l) => ({
+          clothPieceId: l.clothPieceId,
+          assignedToEmployeeId: l.assignedToEmployeeId,
+        })),
+      });
+
+      if (!result.success) {
+        setToast({ type: "error", message: result.error.message || t("submitError") });
+        return;
+      }
+
+      setToast({ type: "success", message: t("submitSuccess") });
+      setTimeout(() => router.push(redirectPath), 1000);
+    });
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center gap-2 text-sm text-muted-foreground py-8">
+        <Loader2Icon className="h-4 w-4 animate-spin" />
+        {tc("loading")}
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return <p className="text-sm text-destructive py-4">{loadError}</p>;
+  }
+
+  if (clothPieces.length === 0) {
+    return <p className="text-sm text-muted-foreground py-4">{t("noPieces")}</p>;
+  }
+
+  return (
+    <div className="flex flex-col gap-6">
+      {/* Notes */}
+      <div className="flex flex-col gap-1.5">
+        <label className="text-sm font-medium" htmlFor="batch-notes">
+          {t("notes")} <span className="text-muted-foreground font-normal">{tc("optional")}</span>
+        </label>
+        <textarea
+          id="batch-notes"
+          placeholder={t("notesPlaceholder")}
+          value={notes}
+          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value)}
+          rows={2}
+          maxLength={500}
+          className="w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 resize-none"
+        />
+      </div>
+
+      {/* Piece lines */}
+      <div className="flex flex-col gap-3">
+        <p className="text-sm font-medium">{t("pieces")}</p>
+
+        {lines.map((line, idx) => (
+          <div key={line.key} className="flex gap-2 items-start">
+            {/* Piece type */}
+            <div className="flex-1">
+              {idx === 0 && (
+                <label className="text-xs text-muted-foreground mb-1 block">{t("pieceType")}</label>
+              )}
+              <select
+                aria-label={t("pieceType")}
+                value={line.clothPieceId}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                  updateLine(line.key, { clothPieceId: e.target.value })
+                }
+                className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm focus-visible:outline-none focus-visible:border-ring"
+              >
+                <option value="">{t("selectPieceType")}</option>
+                {clothPieces.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Assigned clothier */}
+            <div className="flex-1">
+              {idx === 0 && (
+                <label className="text-xs text-muted-foreground mb-1 block">{t("assignTo")}</label>
+              )}
+              <select
+                aria-label={t("assignTo")}
+                value={line.assignedToEmployeeId ?? ""}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                  updateLine(line.key, {
+                    assignedToEmployeeId: e.target.value || null,
+                  })
+                }
+                className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm focus-visible:outline-none focus-visible:border-ring"
+              >
+                <option value="">{t("unassigned")}</option>
+                {clothiers.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Remove button */}
+            <div className={idx === 0 ? "mt-5" : ""}>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label={t("removePiece")}
+                onClick={() => removeLine(line.key)}
+                disabled={lines.length === 1}
+              >
+                <Trash2Icon className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        ))}
+
+        <Button type="button" variant="outline" size="sm" onClick={addLine} className="self-start">
+          <PlusIcon className="h-4 w-4 mr-1" />
+          {t("addPiece")}
+        </Button>
+      </div>
+
+      {/* Toast */}
+      {toast && (
+        <p
+          className={`text-sm rounded-md px-3 py-2 ${
+            toast.type === "success"
+              ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300"
+              : "bg-destructive/10 text-destructive"
+          }`}
+          role="status"
+        >
+          {toast.message}
+        </p>
+      )}
+
+      {/* Submit */}
+      <Button onClick={handleSubmit} disabled={isPending} className="self-start">
+        {isPending && <Loader2Icon className="h-4 w-4 mr-2 animate-spin" />}
+        {t("submit")}
+      </Button>
+    </div>
+  );
+}

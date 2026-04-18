@@ -347,6 +347,29 @@
     "grouped": "{count} new — {message}",
     "view": "View"
   },
+  "batches": {
+    "pageTitle": "Cloth batches",
+    "createBatch": "New batch",
+    "createBatchDescription": "Select pieces and assign them to clothiers.",
+    "notes": "Notes",
+    "notesPlaceholder": "E.g. Urgent order, fabric available in storage",
+    "pieces": "Pieces",
+    "addPiece": "Add piece",
+    "pieceType": "Piece type",
+    "selectPieceType": "Select a piece…",
+    "assignTo": "Assign to",
+    "unassigned": "Unassigned",
+    "selectClothier": "Select a clothier…",
+    "removePiece": "Remove piece",
+    "submit": "Create batch",
+    "submitSuccess": "Batch created successfully",
+    "submitError": "Could not create batch",
+    "noOpenDay": "No business day is open.",
+    "noClothiers": "No active clothiers.",
+    "noPieces": "No active pieces in the catalog.",
+    "emptyTitle": "No batches today",
+    "emptyDescription": "Create the first batch of the day."
+  },
   "nav": {
     "dashboard": "Dashboard",
     "employees": "Employees",
@@ -357,6 +380,7 @@
     "myWork": "My work",
     "catalog": "Catalog",
     "ticketHistory": "History",
+    "batches": "Batches",
     "openMenu": "Open menu",
     "closeMenu": "Close menu"
   }
