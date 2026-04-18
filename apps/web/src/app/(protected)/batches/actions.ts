@@ -17,7 +17,8 @@ import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
 import { getCurrentBusinessDay } from "@/lib/business-day";
 import { revalidatePath } from "next/cache";
-import { createNotification } from "@/app/(protected)/notifications/actions";
+import { createNotification } from "@/lib/notifications";
+import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -63,6 +64,16 @@ export async function createBatch(rawInput: unknown): Promise<ActionResult<{ id:
   if (!hasRole(session.user, "cashier_admin", "secretary"))
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
 
+  const rl = await checkRateLimit(rateLimits.general, session.user.id);
+  if (!rl.allowed)
+    return {
+      success: false,
+      error: {
+        code: "RATE_LIMITED",
+        message: "Demasiadas solicitudes. Intenta de nuevo en un momento.",
+      },
+    };
+
   const parsed = createBatchSchema.safeParse(rawInput);
   if (!parsed.success) {
     return {
@@ -98,48 +109,53 @@ export async function createBatch(rawInput: unknown): Promise<ActionResult<{ id:
   if (!creatorEmployee)
     return { success: false, error: { code: "NOT_FOUND", message: "Empleado no encontrado" } };
 
-  // Create batch + pieces in a transaction
-  const [batch] = await db
-    .insert(clothBatches)
-    .values({
-      businessDayId: businessDay.id,
-      createdBy: creatorEmployee.id,
-      notes: input.notes ?? null,
-    })
-    .returning({ id: clothBatches.id });
+  // Create batch + pieces atomically
+  const batchId = await db.transaction(async (tx) => {
+    const [batch] = await tx
+      .insert(clothBatches)
+      .values({
+        businessDayId: businessDay.id,
+        createdBy: creatorEmployee.id,
+        notes: input.notes ?? null,
+      })
+      .returning({ id: clothBatches.id });
 
-  if (!batch)
-    return { success: false, error: { code: "INTERNAL_ERROR", message: "Error al crear el lote" } };
+    if (input.pieces.length > 0) {
+      await tx.insert(batchPieces).values(
+        input.pieces.map((p) => ({
+          batchId: batch.id,
+          clothPieceId: p.clothPieceId,
+          assignedToEmployeeId: p.assignedToEmployeeId ?? null,
+          claimSource: p.assignedToEmployeeId ? ("assigned" as const) : null,
+          claimedAt: p.assignedToEmployeeId ? new Date() : null,
+        })),
+      );
+    }
 
-  if (input.pieces.length > 0) {
-    await db.insert(batchPieces).values(
-      input.pieces.map((p) => ({
-        batchId: batch.id,
-        clothPieceId: p.clothPieceId,
-        assignedToEmployeeId: p.assignedToEmployeeId ?? null,
-        claimSource: p.assignedToEmployeeId ? ("assigned" as const) : null,
-        claimedAt: p.assignedToEmployeeId ? new Date() : null,
-      })),
-    );
-  }
+    return batch.id;
+  });
 
-  // Notify each clothier who received an assignment (deduplicated)
+  // Notify each clothier who received an assignment (post-commit, deduplicated)
   const assignedClothierIds = [
     ...new Set(input.pieces.map((p) => p.assignedToEmployeeId).filter(Boolean) as string[]),
   ];
 
-  for (const clothierId of assignedClothierIds) {
-    const assignedCount = input.pieces.filter((p) => p.assignedToEmployeeId === clothierId).length;
-    void createNotification({
-      recipientEmployeeId: clothierId,
-      type: "piece_assigned",
-      message: `Tienes ${assignedCount} pieza${assignedCount !== 1 ? "s" : ""} asignada${assignedCount !== 1 ? "s" : ""} en el nuevo lote.`,
-      link: "/clothier",
-    });
-  }
+  await Promise.all(
+    assignedClothierIds.map((clothierId) => {
+      const assignedCount = input.pieces.filter(
+        (p) => p.assignedToEmployeeId === clothierId,
+      ).length;
+      return createNotification({
+        recipientEmployeeId: clothierId,
+        type: "piece_assigned",
+        message: `Tienes ${assignedCount} pieza${assignedCount !== 1 ? "s" : ""} asignada${assignedCount !== 1 ? "s" : ""} en el nuevo lote.`,
+        link: "/clothier",
+      });
+    }),
+  );
 
   revalidatePath("/secretary/batches");
   revalidatePath("/admin/batches");
 
-  return { success: true, data: { id: batch.id } };
+  return { success: true, data: { id: batchId } };
 }

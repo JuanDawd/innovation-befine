@@ -17,7 +17,9 @@ import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
 import { getCurrentBusinessDay } from "@/lib/business-day";
 import { revalidatePath } from "next/cache";
-import { createNotification } from "@/app/(protected)/notifications/actions";
+import { createNotification } from "@/lib/notifications";
+import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
+import { pieceActionSchema } from "@befine/types";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -36,6 +38,7 @@ export type BatchPieceRow = {
 async function getClothierEmployee(): Promise<{
   session: { user: { id: string } };
   employeeId: string;
+  userId: string;
 } | null> {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session || !hasRole(session.user, "clothier")) return null;
@@ -48,7 +51,7 @@ async function getClothierEmployee(): Promise<{
     .limit(1);
 
   if (!emp) return null;
-  return { session, employeeId: emp.id };
+  return { session, employeeId: emp.id, userId: session.user.id };
 }
 
 // ─── List today's batch pieces for this clothier ──────────────────────────────
@@ -93,11 +96,29 @@ export async function listTodayBatchPieces(): Promise<ActionResult<BatchPieceRow
 // ─── Self-claim an unassigned piece ──────────────────────────────────────────
 
 export async function claimPiece(
-  pieceId: string,
-  expectedVersion: number,
+  rawPieceId: unknown,
+  rawExpectedVersion: unknown,
 ): Promise<ActionResult<void>> {
+  const parsed = pieceActionSchema.safeParse({
+    pieceId: rawPieceId,
+    expectedVersion: rawExpectedVersion,
+  });
+  if (!parsed.success)
+    return { success: false, error: { code: "VALIDATION_ERROR", message: "Datos inválidos" } };
+  const { pieceId, expectedVersion } = parsed.data;
+
   const ctx = await getClothierEmployee();
   if (!ctx) return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
+
+  const rl = await checkRateLimit(rateLimits.general, ctx.userId);
+  if (!rl.allowed)
+    return {
+      success: false,
+      error: {
+        code: "RATE_LIMITED",
+        message: "Demasiadas solicitudes. Intenta de nuevo en un momento.",
+      },
+    };
 
   const db = getDb();
 
@@ -131,11 +152,29 @@ export async function claimPiece(
 // ─── Mark piece as done (→ done_pending_approval) ────────────────────────────
 
 export async function markPieceDone(
-  pieceId: string,
-  expectedVersion: number,
+  rawPieceId: unknown,
+  rawExpectedVersion: unknown,
 ): Promise<ActionResult<void>> {
+  const parsed = pieceActionSchema.safeParse({
+    pieceId: rawPieceId,
+    expectedVersion: rawExpectedVersion,
+  });
+  if (!parsed.success)
+    return { success: false, error: { code: "VALIDATION_ERROR", message: "Datos inválidos" } };
+  const { pieceId, expectedVersion } = parsed.data;
+
   const ctx = await getClothierEmployee();
   if (!ctx) return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
+
+  const rl = await checkRateLimit(rateLimits.general, ctx.userId);
+  if (!rl.allowed)
+    return {
+      success: false,
+      error: {
+        code: "RATE_LIMITED",
+        message: "Demasiadas solicitudes. Intenta de nuevo en un momento.",
+      },
+    };
 
   const db = getDb();
 
@@ -174,14 +213,16 @@ export async function markPieceDone(
       and(eq(employees.isActive, true), inArray(employees.role, ["secretary", "cashier_admin"])),
     );
 
-  for (const staff of staffRows) {
-    void createNotification({
-      recipientEmployeeId: staff.id,
-      type: "generic",
-      message: "Una pieza de confección está lista para aprobar.",
-      link: "/admin/batches",
-    });
-  }
+  await Promise.all(
+    staffRows.map((staff) =>
+      createNotification({
+        recipientEmployeeId: staff.id,
+        type: "generic",
+        message: "Una pieza de confección está lista para aprobar.",
+        link: "/admin/batches",
+      }),
+    ),
+  );
 
   revalidatePath("/clothier");
   return { success: true, data: undefined };

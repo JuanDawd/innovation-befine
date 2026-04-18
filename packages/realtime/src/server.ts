@@ -44,14 +44,6 @@ export function publishEvent<E extends RealtimeEvent>(
 /**
  * Create an SSE Response for a given channel.
  * Mount this in a Route Handler at `/api/realtime/[channel]/route.ts`.
- *
- * @example
- *   // apps/web/src/app/api/realtime/[channel]/route.ts
- *   import { createSSEHandler } from "@befine/realtime/server";
- *   export const dynamic = "force-dynamic";
- *   export async function GET(_req: Request, { params }: { params: { channel: string } }) {
- *     return createSSEHandler(params.channel as RealtimeChannel);
- *   }
  */
 export function createSSEHandler(channel: RealtimeChannel): Response {
   let cleanup: (() => void) | undefined;
@@ -105,6 +97,70 @@ export function createSSEHandler(channel: RealtimeChannel): Response {
       cleanup = () => {
         clearTimeout(timer);
         listeners.forEach(({ key, fn }) => bus.off(key, fn));
+      };
+    },
+    cancel() {
+      cleanup?.();
+    },
+  });
+
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+    },
+  });
+}
+
+/**
+ * Create an SSE Response scoped to a single employee.
+ * Used for the `notifications` channel — only forwards events whose
+ * `recipientEmployeeId` matches the connected employee (T04R-R1).
+ */
+export function createScopedSSEHandler(channel: "notifications", employeeId: string): Response {
+  let cleanup: (() => void) | undefined;
+
+  const stream = new ReadableStream({
+    start(controller) {
+      const send = (event: string, data: unknown, id?: string) => {
+        const idLine = id ? `id: ${id}\n` : "";
+        controller.enqueue(
+          new TextEncoder().encode(`${idLine}event: ${event}\ndata: ${JSON.stringify(data)}\n\n`),
+        );
+      };
+
+      send("connected", { channel, timestamp: Date.now() });
+
+      const forwardIfRecipient = (data: unknown) => {
+        if (
+          data &&
+          typeof data === "object" &&
+          "recipientEmployeeId" in data &&
+          (data as { recipientEmployeeId: string }).recipientEmployeeId === employeeId
+        ) {
+          try {
+            send("notification_created", data, String(Date.now()));
+          } catch {
+            // stream already closed
+          }
+        }
+      };
+
+      const key = `${channel}:notification_created`;
+      bus.on(key, forwardIfRecipient);
+
+      const timer = setTimeout(() => {
+        try {
+          controller.close();
+        } catch {
+          /* already closed */
+        }
+      }, STREAM_TIMEOUT_MS);
+
+      cleanup = () => {
+        clearTimeout(timer);
+        bus.off(key, forwardIfRecipient);
       };
     },
     cancel() {

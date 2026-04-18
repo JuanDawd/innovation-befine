@@ -17,6 +17,8 @@ import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
 import { getCurrentBusinessDay } from "@/lib/business-day";
 import { revalidatePath } from "next/cache";
+import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
+import { pieceActionSchema } from "@befine/types";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -34,7 +36,7 @@ export type PendingApprovalRow = {
 
 // ─── Auth helper ──────────────────────────────────────────────────────────────
 
-async function getStaffEmployee(): Promise<{ employeeId: string } | null> {
+async function getStaffEmployee(): Promise<{ employeeId: string; userId: string } | null> {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session || !hasRole(session.user, "cashier_admin", "secretary")) return null;
 
@@ -45,7 +47,7 @@ async function getStaffEmployee(): Promise<{ employeeId: string } | null> {
     .where(eq(employees.userId, session.user.id))
     .limit(1);
 
-  return emp ? { employeeId: emp.id } : null;
+  return emp ? { employeeId: emp.id, userId: session.user.id } : null;
 }
 
 // ─── List pending approvals ───────────────────────────────────────────────────
@@ -90,11 +92,29 @@ export async function listPendingApprovals(): Promise<ActionResult<PendingApprov
 // ─── Approve a piece (done_pending_approval → approved) ──────────────────────
 
 export async function approvePiece(
-  pieceId: string,
-  expectedVersion: number,
+  rawPieceId: unknown,
+  rawExpectedVersion: unknown,
 ): Promise<ActionResult<void>> {
+  const parsed = pieceActionSchema.safeParse({
+    pieceId: rawPieceId,
+    expectedVersion: rawExpectedVersion,
+  });
+  if (!parsed.success)
+    return { success: false, error: { code: "VALIDATION_ERROR", message: "Datos inválidos" } };
+  const { pieceId, expectedVersion } = parsed.data;
+
   const ctx = await getStaffEmployee();
   if (!ctx) return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
+
+  const rl = await checkRateLimit(rateLimits.general, ctx.userId);
+  if (!rl.allowed)
+    return {
+      success: false,
+      error: {
+        code: "RATE_LIMITED",
+        message: "Demasiadas solicitudes. Intenta de nuevo en un momento.",
+      },
+    };
 
   const db = getDb();
 
@@ -129,14 +149,32 @@ export async function approvePiece(
 // ─── Admin: directly approve a pending piece (skip clothier step) ─────────────
 
 export async function adminMarkApproved(
-  pieceId: string,
-  expectedVersion: number,
+  rawPieceId: unknown,
+  rawExpectedVersion: unknown,
 ): Promise<ActionResult<void>> {
+  const parsed = pieceActionSchema.safeParse({
+    pieceId: rawPieceId,
+    expectedVersion: rawExpectedVersion,
+  });
+  if (!parsed.success)
+    return { success: false, error: { code: "VALIDATION_ERROR", message: "Datos inválidos" } };
+  const { pieceId, expectedVersion } = parsed.data;
+
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session)
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
   if (!hasRole(session.user, "cashier_admin"))
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
+
+  const rl = await checkRateLimit(rateLimits.general, session.user.id);
+  if (!rl.allowed)
+    return {
+      success: false,
+      error: {
+        code: "RATE_LIMITED",
+        message: "Demasiadas solicitudes. Intenta de nuevo en un momento.",
+      },
+    };
 
   const db = getDb();
   const [emp] = await db

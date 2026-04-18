@@ -29,6 +29,8 @@ import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
 import { revalidatePath } from "next/cache";
 import { publishEvent } from "@befine/realtime/server";
+import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
+import { transitionTicketSchema } from "@befine/types";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -81,9 +83,10 @@ export type ClosedTicketDetail = {
 
 async function requireAdminOrCashier() {
   const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) return { ok: false, code: "UNAUTHORIZED" as const };
-  if (!hasRole(session.user, "cashier_admin")) return { ok: false, code: "FORBIDDEN" as const };
-  return { ok: true, code: null };
+  if (!session) return { ok: false, code: "UNAUTHORIZED" as const, userId: null };
+  if (!hasRole(session.user, "cashier_admin"))
+    return { ok: false, code: "FORBIDDEN" as const, userId: null };
+  return { ok: true, code: null, userId: session.user.id };
 }
 
 // ─── List business days ───────────────────────────────────────────────────────
@@ -350,7 +353,12 @@ export async function getClosedTicketDetail(
  * - Fires a `ticket_updated` SSE event so the cashier dashboard updates live.
  * - Payout `needs_review` flag is a stub — payouts table is created in Phase 7 (T066).
  */
-export async function reopenTicket(ticketId: string): Promise<ActionResult<{ id: string }>> {
+export async function reopenTicket(rawTicketId: unknown): Promise<ActionResult<{ id: string }>> {
+  const parsed = transitionTicketSchema.safeParse({ ticketId: rawTicketId });
+  if (!parsed.success)
+    return { success: false, error: { code: "VALIDATION_ERROR", message: "Datos inválidos" } };
+  const ticketId = parsed.data.ticketId;
+
   const guard = await requireAdminOrCashier();
   if (!guard.ok)
     return {
@@ -358,6 +366,16 @@ export async function reopenTicket(ticketId: string): Promise<ActionResult<{ id:
       error: {
         code: guard.code!,
         message: guard.code === "UNAUTHORIZED" ? "No autenticado" : "Sin permisos",
+      },
+    };
+
+  const rl = await checkRateLimit(rateLimits.general, guard.userId!);
+  if (!rl.allowed)
+    return {
+      success: false,
+      error: {
+        code: "RATE_LIMITED",
+        message: "Demasiadas solicitudes. Intenta de nuevo en un momento.",
       },
     };
 

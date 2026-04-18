@@ -28,6 +28,7 @@ import { hasRole } from "@/lib/middleware-helpers";
 import { getCurrentBusinessDay } from "@/lib/business-day";
 import { revalidatePath } from "next/cache";
 import { publishEvent } from "@befine/realtime/server";
+import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
 
 export type CheckoutLineItem = {
   ticketItemId: string;
@@ -140,6 +141,16 @@ export async function processCheckout(rawInput: unknown): Promise<ActionResult<C
   if (!hasRole(session.user, "cashier_admin"))
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
 
+  const rl = await checkRateLimit(rateLimits.general, session.user.id);
+  if (!rl.allowed)
+    return {
+      success: false,
+      error: {
+        code: "RATE_LIMITED",
+        message: "Demasiadas solicitudes. Intenta de nuevo en un momento.",
+      },
+    };
+
   const parsed = checkoutSessionSchema.safeParse(rawInput);
   if (!parsed.success)
     return {
@@ -171,16 +182,124 @@ export async function processCheckout(rawInput: unknown): Promise<ActionResult<C
 
   try {
     const result = await db.transaction(async (tx) => {
-      // Idempotency check
-      const existingSession = await tx
-        .select()
-        .from(checkoutSessions)
-        .where(eq(checkoutSessions.id, input.idempotencyKey))
-        .limit(1);
-      // Note: idempotencyKey is used as the session id for idempotency
-      // (See below — we pass it as the id on insert if not already present)
+      // ── Idempotency: try to insert the session; if it already exists, refetch ──
+      // Using ON CONFLICT DO NOTHING so concurrent duplicate requests get the
+      // same response instead of an INTERNAL_ERROR on the duplicate-key violation.
+      const inserted = await tx
+        .insert(checkoutSessions)
+        .values({
+          id: input.idempotencyKey,
+          businessDayId: businessDay.id,
+          cashierId: cashierEmp.id,
+          clientId: null, // set correctly below if this is a new session
+          totalAmount: 0, // set correctly below if this is a new session
+        })
+        .onConflictDoNothing({ target: checkoutSessions.id })
+        .returning({ id: checkoutSessions.id });
 
-      // Fetch tickets with version for optimistic locking
+      if (inserted.length === 0) {
+        // Session already exists — idempotent replay: rebuild summary from DB
+        const [existingSession] = await tx
+          .select({
+            id: checkoutSessions.id,
+            totalAmount: checkoutSessions.totalAmount,
+            createdAt: checkoutSessions.createdAt,
+          })
+          .from(checkoutSessions)
+          .where(eq(checkoutSessions.id, input.idempotencyKey))
+          .limit(1);
+
+        const existingTickets = await tx
+          .select({
+            id: tickets.id,
+            clientId: tickets.clientId,
+            guestName: tickets.guestName,
+            closedAt: tickets.closedAt,
+          })
+          .from(tickets)
+          .where(eq(tickets.checkoutSessionId, existingSession.id));
+
+        const existingItems = await tx
+          .select({
+            ticketId: ticketItems.ticketId,
+            ticketItemId: ticketItems.id,
+            unitPrice: ticketItems.unitPrice,
+            overridePrice: ticketItems.overridePrice,
+            quantity: ticketItems.quantity,
+            commissionPct: ticketItems.commissionPct,
+            serviceName: services.name,
+            variantName: serviceVariants.name,
+          })
+          .from(ticketItems)
+          .innerJoin(serviceVariants, eq(ticketItems.serviceVariantId, serviceVariants.id))
+          .innerJoin(services, eq(serviceVariants.serviceId, services.id))
+          .where(
+            inArray(
+              ticketItems.ticketId,
+              existingTickets.map((t) => t.id),
+            ),
+          );
+
+        const existingPayments = await tx
+          .select({ method: ticketPayments.method, amount: ticketPayments.amount })
+          .from(ticketPayments)
+          .where(eq(ticketPayments.checkoutSessionId, existingSession.id));
+
+        // Resolve saved client names
+        const savedClientIds = existingTickets.map((t) => t.clientId).filter(Boolean) as string[];
+        const clientNameMap = new Map<string, string>();
+        if (savedClientIds.length > 0) {
+          const clientRows = await tx
+            .select({ id: clients.id, name: clients.name })
+            .from(clients)
+            .where(inArray(clients.id, savedClientIds));
+          clientRows.forEach((c) => clientNameMap.set(c.id, c.name));
+        }
+        const clientNames = new Map(
+          existingTickets.map((t) => [
+            t.id,
+            t.clientId ? (clientNameMap.get(t.clientId) ?? "—") : (t.guestName ?? "—"),
+          ]),
+        );
+
+        const byTicket = new Map<string, CheckoutTicket>();
+        for (const item of existingItems) {
+          if (!byTicket.has(item.ticketId)) {
+            byTicket.set(item.ticketId, {
+              id: item.ticketId,
+              status: "closed",
+              clientName: clientNames.get(item.ticketId) ?? "—",
+              lineItems: [],
+              total: 0,
+            });
+          }
+          const ct = byTicket.get(item.ticketId)!;
+          const effectivePrice = item.overridePrice ?? item.unitPrice;
+          ct.lineItems.push({
+            ticketItemId: item.ticketItemId,
+            ticketId: item.ticketId,
+            serviceName: item.serviceName,
+            variantName: item.variantName,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            overridePrice: item.overridePrice,
+            commissionPct: item.commissionPct,
+          });
+          ct.total += effectivePrice * item.quantity;
+        }
+
+        return {
+          sessionId: existingSession.id,
+          tickets: Array.from(byTicket.values()),
+          grandTotal: existingSession.totalAmount,
+          payments: existingPayments,
+          closedAt: existingTickets[0]?.closedAt ?? new Date(),
+        };
+      }
+
+      // ── New session: validate tickets, compute total, close ──────────────────
+      const sessionId = inserted[0].id;
+
       const ticketRows = await tx
         .select({
           id: tickets.id,
@@ -194,11 +313,9 @@ export async function processCheckout(rawInput: unknown): Promise<ActionResult<C
 
       if (ticketRows.length !== input.ticketIds.length) throw new Error("TICKET_NOT_FOUND");
 
-      // All must be awaiting_payment
       const notReady = ticketRows.filter((t) => t.status !== "awaiting_payment");
       if (notReady.length > 0) throw new Error("TICKET_NOT_AWAITING");
 
-      // Fetch line items to compute total
       const items = await tx
         .select({
           ticketId: ticketItems.ticketId,
@@ -219,44 +336,28 @@ export async function processCheckout(rawInput: unknown): Promise<ActionResult<C
         return sum + (item.overridePrice ?? item.unitPrice) * item.quantity;
       }, 0);
 
-      // Validate payment sum equals grand total
       const paymentSum = input.payments.reduce((s, p) => s + p.amount, 0);
       if (paymentSum !== grandTotal) throw new Error("PAYMENT_MISMATCH");
 
-      // Determine client ID for session (first ticket's client, if all share one)
       const clientIds = [...new Set(ticketRows.map((t) => t.clientId).filter(Boolean))];
       const sessionClientId = clientIds.length === 1 ? (clientIds[0] ?? null) : null;
 
-      // Create checkout session (use idempotencyKey as id for dedup)
-      // First check if session with this id already exists
-      const existingById = existingSession[0];
-      let sessionId: string;
-      if (existingById) {
-        sessionId = existingById.id;
-      } else {
-        const [newSession] = await tx
-          .insert(checkoutSessions)
-          .values({
-            id: input.idempotencyKey,
-            businessDayId: businessDay.id,
-            cashierId: cashierEmp.id,
-            clientId: sessionClientId,
-            totalAmount: grandTotal,
-          })
-          .returning({ id: checkoutSessions.id });
-        sessionId = newSession.id;
+      // Back-fill totalAmount and clientId on the already-inserted session row
+      await tx
+        .update(checkoutSessions)
+        .set({ totalAmount: grandTotal, clientId: sessionClientId })
+        .where(eq(checkoutSessions.id, sessionId));
 
-        // Insert payment records
-        await tx.insert(ticketPayments).values(
-          input.payments.map((p) => ({
-            checkoutSessionId: sessionId,
-            method: p.method,
-            amount: p.amount,
-          })),
-        );
-      }
+      // Insert payment records
+      await tx.insert(ticketPayments).values(
+        input.payments.map((p) => ({
+          checkoutSessionId: sessionId,
+          method: p.method,
+          amount: p.amount,
+        })),
+      );
 
-      // Close all tickets atomically using optimistic locking
+      // Close all tickets atomically with optimistic locking
       const closedAt = new Date();
       for (const t of ticketRows) {
         const [updated] = await tx
@@ -273,11 +374,10 @@ export async function processCheckout(rawInput: unknown): Promise<ActionResult<C
         if (!updated) throw new Error("STALE_DATA");
       }
 
-      // Build summary for response
+      // Build summary
       const clientNames = new Map(
         ticketRows.map((t) => [t.id, t.clientId ? null : (t.guestName ?? "—")]),
       );
-      // Fetch saved client names
       const savedClientIds = ticketRows.filter((t) => t.clientId).map((t) => t.clientId!);
       if (savedClientIds.length > 0) {
         const clientRows = await tx
@@ -384,6 +484,16 @@ export async function setOverridePrice(
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
   if (!hasRole(session.user, "cashier_admin"))
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
+
+  const rl = await checkRateLimit(rateLimits.general, session.user.id);
+  if (!rl.allowed)
+    return {
+      success: false,
+      error: {
+        code: "RATE_LIMITED",
+        message: "Demasiadas solicitudes. Intenta de nuevo en un momento.",
+      },
+    };
 
   const parsed = overridePriceSchema.safeParse(rawInput);
   if (!parsed.success)

@@ -25,9 +25,11 @@ import {
 import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
 import { getCurrentBusinessDay } from "@/lib/business-day";
-import { createNotification } from "@/app/(protected)/notifications/actions";
+import { createNotification } from "@/lib/notifications";
 import { publishEvent } from "@befine/realtime/server";
 import { revalidatePath } from "next/cache";
+import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
+import { requestEditSchema, resolveEditRequestSchema } from "@befine/types";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -78,15 +80,33 @@ async function getSessionAndEmployee() {
 // ─── Request edit (secretary / stylist) ──────────────────────────────────────
 
 export async function requestEdit(
-  ticketItemId: string,
-  newServiceVariantId: string,
+  rawTicketItemId: unknown,
+  rawNewServiceVariantId: unknown,
 ): Promise<ActionResult<{ id: string }>> {
+  const parsed = requestEditSchema.safeParse({
+    ticketItemId: rawTicketItemId,
+    newServiceVariantId: rawNewServiceVariantId,
+  });
+  if (!parsed.success)
+    return { success: false, error: { code: "VALIDATION_ERROR", message: "Datos inválidos" } };
+  const { ticketItemId, newServiceVariantId } = parsed.data;
+
   const ctx = await getSessionAndEmployee();
   if (!ctx) return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
 
   const { session, employeeId } = ctx;
   if (!hasRole(session.user, "secretary", "stylist"))
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
+
+  const rl = await checkRateLimit(rateLimits.general, session.user.id);
+  if (!rl.allowed)
+    return {
+      success: false,
+      error: {
+        code: "RATE_LIMITED",
+        message: "Demasiadas solicitudes. Intenta de nuevo en un momento.",
+      },
+    };
 
   const db = getDb();
 
@@ -280,9 +300,17 @@ export async function listPendingEditRequests(): Promise<ActionResult<PendingEdi
 // ─── Resolve (cashier: approve or reject) ────────────────────────────────────
 
 export async function resolveEditRequest(
-  requestId: string,
-  decision: "approved" | "rejected",
+  rawRequestId: unknown,
+  rawDecision: unknown,
 ): Promise<ActionResult<void>> {
+  const parsed = resolveEditRequestSchema.safeParse({
+    requestId: rawRequestId,
+    decision: rawDecision,
+  });
+  if (!parsed.success)
+    return { success: false, error: { code: "VALIDATION_ERROR", message: "Datos inválidos" } };
+  const { requestId, decision } = parsed.data;
+
   const ctx = await getSessionAndEmployee();
   if (!ctx) return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
 
@@ -290,9 +318,19 @@ export async function resolveEditRequest(
   if (!hasRole(session.user, "cashier_admin"))
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
 
+  const rl = await checkRateLimit(rateLimits.general, session.user.id);
+  if (!rl.allowed)
+    return {
+      success: false,
+      error: {
+        code: "RATE_LIMITED",
+        message: "Demasiadas solicitudes. Intenta de nuevo en un momento.",
+      },
+    };
+
   const db = getDb();
 
-  // Fetch the request with item details
+  // Fetch the request with item details (pre-transaction read)
   const [req] = await db
     .select({
       id: ticketEditRequests.id,
@@ -313,49 +351,57 @@ export async function resolveEditRequest(
 
   const now = new Date();
 
-  if (decision === "approved") {
-    // Fetch new variant price/commission snapshot
-    const [newVariant] = await db
-      .select({
-        customerPrice: serviceVariants.customerPrice,
-        commissionPct: serviceVariants.commissionPct,
-      })
-      .from(serviceVariants)
-      .where(eq(serviceVariants.id, req.newServiceVariantId))
-      .limit(1);
-
-    if (!newVariant)
-      return { success: false, error: { code: "NOT_FOUND", message: "Variante no encontrada" } };
-
-    // Update the ticket item with new variant + repriced snapshot
-    await db
-      .update(ticketItems)
-      .set({
-        serviceVariantId: req.newServiceVariantId,
-        unitPrice: newVariant.customerPrice,
-        commissionPct: newVariant.commissionPct,
-        // Clear any existing override — it was for the old variant
-        overridePrice: null,
-        overrideReason: null,
-      })
-      .where(eq(ticketItems.id, req.ticketItemId));
-  }
-
-  // Resolve the request
-  await db
-    .update(ticketEditRequests)
-    .set({ status: decision, resolvedAt: now, resolvedBy: cashierId })
-    .where(eq(ticketEditRequests.id, requestId));
-
-  // Notify the requester
+  // Fetch ticketId for SSE/notification (needed post-commit)
   const [ticketRow] = await db
     .select({ ticketId: ticketItems.ticketId })
     .from(ticketItems)
     .where(eq(ticketItems.id, req.ticketItemId))
     .limit(1);
-
   const ticketId = ticketRow?.ticketId;
 
+  // ── Atomic: update ticket_items (if approved) + resolve the request ─────────
+  try {
+    await db.transaction(async (tx) => {
+      if (decision === "approved") {
+        const [newVariant] = await tx
+          .select({
+            customerPrice: serviceVariants.customerPrice,
+            commissionPct: serviceVariants.commissionPct,
+          })
+          .from(serviceVariants)
+          .where(eq(serviceVariants.id, req.newServiceVariantId))
+          .limit(1);
+
+        if (!newVariant) throw new Error("VARIANT_NOT_FOUND");
+
+        await tx
+          .update(ticketItems)
+          .set({
+            serviceVariantId: req.newServiceVariantId,
+            unitPrice: newVariant.customerPrice,
+            commissionPct: newVariant.commissionPct,
+            overridePrice: null,
+            overrideReason: null,
+          })
+          .where(eq(ticketItems.id, req.ticketItemId));
+      }
+
+      await tx
+        .update(ticketEditRequests)
+        .set({ status: decision, resolvedAt: now, resolvedBy: cashierId })
+        .where(eq(ticketEditRequests.id, requestId));
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "";
+    if (msg === "VARIANT_NOT_FOUND")
+      return { success: false, error: { code: "NOT_FOUND", message: "Variante no encontrada" } };
+    return {
+      success: false,
+      error: { code: "INTERNAL_ERROR", message: "Error al resolver la solicitud" },
+    };
+  }
+
+  // ── Post-commit: notify + SSE ────────────────────────────────────────────────
   await createNotification({
     recipientEmployeeId: req.requestedBy,
     type: decision === "approved" ? "edit_request_approved" : "edit_request_rejected",

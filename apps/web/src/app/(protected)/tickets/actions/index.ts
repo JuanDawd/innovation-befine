@@ -20,12 +20,13 @@ import {
   clients,
   services,
 } from "@befine/db/schema";
-import { createTicketSchema } from "@befine/types";
+import { createTicketSchema, transitionTicketSchema } from "@befine/types";
 import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
 import { getCurrentBusinessDay } from "@/lib/business-day";
 import { revalidatePath } from "next/cache";
 import { publishEvent } from "@befine/realtime/server";
+import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
 
 export type TicketRow = {
   id: string;
@@ -102,6 +103,16 @@ export async function createTicket(rawInput: unknown): Promise<ActionResult<Tick
   const isStaff = hasRole(session.user, "cashier_admin", "secretary");
   if (!isStylist && !isStaff)
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
+
+  const rl = await checkRateLimit(rateLimits.ticketCreate, session.user.id);
+  if (!rl.allowed)
+    return {
+      success: false,
+      error: {
+        code: "RATE_LIMITED",
+        message: "Demasiadas solicitudes. Intenta de nuevo en un momento.",
+      },
+    };
 
   const parsed = createTicketSchema.safeParse(rawInput);
   if (!parsed.success)
@@ -351,8 +362,13 @@ async function getTicketAndEmployee(ticketId: string, userId: string) {
 }
 
 export async function transitionToAwaitingPayment(
-  rawInput: TransitionInput,
+  rawInput: unknown,
 ): Promise<ActionResult<{ id: string; status: string }>> {
+  const parsedInput = transitionTicketSchema.safeParse(rawInput);
+  if (!parsedInput.success)
+    return { success: false, error: { code: "VALIDATION_ERROR", message: "Datos inválidos" } };
+  const validInput: TransitionInput = { ticketId: parsedInput.data.ticketId };
+
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session)
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
@@ -362,7 +378,17 @@ export async function transitionToAwaitingPayment(
   if (!isStylist && !isStaff)
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
 
-  const { ticket, employeeId } = await getTicketAndEmployee(rawInput.ticketId, session.user.id);
+  const rl = await checkRateLimit(rateLimits.general, session.user.id);
+  if (!rl.allowed)
+    return {
+      success: false,
+      error: {
+        code: "RATE_LIMITED",
+        message: "Demasiadas solicitudes. Intenta de nuevo en un momento.",
+      },
+    };
+
+  const { ticket, employeeId } = await getTicketAndEmployee(validInput.ticketId, session.user.id);
   if (!ticket)
     return { success: false, error: { code: "NOT_FOUND", message: "Ticket no encontrado" } };
 
@@ -380,7 +406,7 @@ export async function transitionToAwaitingPayment(
   const [updated] = await db
     .update(tickets)
     .set({ status: "awaiting_payment", version: ticket.version + 1 })
-    .where(and(eq(tickets.id, rawInput.ticketId), eq(tickets.version, ticket.version)))
+    .where(and(eq(tickets.id, validInput.ticketId), eq(tickets.version, ticket.version)))
     .returning({ id: tickets.id, status: tickets.status });
 
   if (!updated)
@@ -396,54 +422,31 @@ export async function transitionToAwaitingPayment(
   return { success: true, data: { id: updated.id, status: updated.status } };
 }
 
-export async function transitionToReopened(
-  rawInput: TransitionInput,
-): Promise<ActionResult<{ id: string; status: string }>> {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session)
-    return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
-  if (!hasRole(session.user, "cashier_admin"))
-    return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
-
-  const { ticket } = await getTicketAndEmployee(rawInput.ticketId, session.user.id);
-  if (!ticket)
-    return { success: false, error: { code: "NOT_FOUND", message: "Ticket no encontrado" } };
-
-  if (ticket.status !== "closed")
-    return {
-      success: false,
-      error: { code: "CONFLICT", message: "Solo se puede reabrir un ticket cerrado" },
-    };
-
-  const db = getDb();
-  const [updated] = await db
-    .update(tickets)
-    .set({ status: "reopened", closedAt: null, version: ticket.version + 1 })
-    .where(and(eq(tickets.id, rawInput.ticketId), eq(tickets.version, ticket.version)))
-    .returning({ id: tickets.id, status: tickets.status });
-
-  if (!updated)
-    return {
-      success: false,
-      error: { code: "STALE_DATA", message: "El ticket fue modificado por otra sesión" },
-    };
-
-  publishEvent("cashier", "ticket_updated", { ticketId: updated.id, status: updated.status });
-  revalidatePath("/cashier");
-
-  return { success: true, data: { id: updated.id, status: updated.status } };
-}
-
 export async function transitionReopenedToAwaitingPayment(
-  rawInput: TransitionInput,
+  rawInput: unknown,
 ): Promise<ActionResult<{ id: string; status: string }>> {
+  const parsedInput = transitionTicketSchema.safeParse(rawInput);
+  if (!parsedInput.success)
+    return { success: false, error: { code: "VALIDATION_ERROR", message: "Datos inválidos" } };
+  const validInput: TransitionInput = { ticketId: parsedInput.data.ticketId };
+
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session)
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
   if (!hasRole(session.user, "cashier_admin"))
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
 
-  const { ticket } = await getTicketAndEmployee(rawInput.ticketId, session.user.id);
+  const rl = await checkRateLimit(rateLimits.general, session.user.id);
+  if (!rl.allowed)
+    return {
+      success: false,
+      error: {
+        code: "RATE_LIMITED",
+        message: "Demasiadas solicitudes. Intenta de nuevo en un momento.",
+      },
+    };
+
+  const { ticket } = await getTicketAndEmployee(validInput.ticketId, session.user.id);
   if (!ticket)
     return { success: false, error: { code: "NOT_FOUND", message: "Ticket no encontrado" } };
 
@@ -454,7 +457,7 @@ export async function transitionReopenedToAwaitingPayment(
   const [updated] = await db
     .update(tickets)
     .set({ status: "awaiting_payment", version: ticket.version + 1 })
-    .where(and(eq(tickets.id, rawInput.ticketId), eq(tickets.version, ticket.version)))
+    .where(and(eq(tickets.id, validInput.ticketId), eq(tickets.version, ticket.version)))
     .returning({ id: tickets.id, status: tickets.status });
 
   if (!updated)

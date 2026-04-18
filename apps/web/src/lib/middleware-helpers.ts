@@ -14,8 +14,19 @@ export const PUBLIC_PATHS = ["/login", "/reset-password", "/api/auth", "/403"];
 /** Exact-match public paths (cannot use startsWith because "/" matches everything) */
 export const PUBLIC_EXACT_PATHS = ["/"];
 
-/** API paths any authenticated role may call */
-export const SHARED_PATHS = ["/api/realtime"];
+/**
+ * API paths that bypass session and role-path checks entirely (truly public).
+ * NOTE: /api/realtime was moved to AUTHENTICATED_API_PATHS — the SSE route
+ * handler enforces its own session + per-channel role gate (T04R-R1).
+ */
+export const SHARED_PATHS: string[] = [];
+
+/**
+ * API paths that require an authenticated session but bypass the role-path
+ * prefix check (since they don't live under any role's home prefix).
+ * The route handler itself enforces the per-channel role restriction.
+ */
+export const AUTHENTICATED_API_PATHS = ["/api/realtime"];
 
 /** App paths any authenticated role may access (regardless of role prefix) */
 export const SHARED_APP_PATHS = ["/profile"];
@@ -53,6 +64,10 @@ export function isPublic(pathname: string): boolean {
 
 export function isShared(pathname: string): boolean {
   return SHARED_PATHS.some((p) => pathname.startsWith(p));
+}
+
+export function isAuthenticatedApi(pathname: string): boolean {
+  return AUTHENTICATED_API_PATHS.some((p) => pathname.startsWith(p));
 }
 
 export function isSharedApp(pathname: string): boolean {

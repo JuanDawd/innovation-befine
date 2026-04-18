@@ -229,6 +229,31 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 
 ---
 
+> **Phase 4A + 4B completion review — Opus audit 2026-04-18**
+> All 17 tasks (4A × 13, 4B × 4) meet their core structural and functional acceptance criteria: schemas, role gates, optimistic locking, status enums, real-time events, and UI flows are in place. Regression: 46 tests pass (same count as after Phase 3 — no new tests added), typecheck clean, lint has 2 pre-existing warnings in Phase 1 files (not regressions). Nine findings logged spanning both phases: **two Critical** (C-06 public SSE channel, C-07 client-callable `createNotification`), **four High** (H-19 checkout idempotency pattern, H-20 non-atomic `createBatch`, H-21 missing rate limiting across all mutations, H-22 missing unit tests for financial/status/permission logic), **two Medium** (M-28 T042 payout stub, M-29 non-atomic `resolveEditRequest`), **three Low** (L-21 exposed `archiveOldNotifications`, L-22 dead `transitionToReopened`, L-23 Zod-validation gaps). **Phase 5 and Phase 7 are blocked until T04R-R1, T04R-R2, T04R-R3, T04R-R4, T04R-R5, and T04R-R6 (all Critical/High) are resolved.**
+
+---
+
+## Phase 4R — Remediation (Opus audit, 2026-04-18)
+
+> Created by Phase 4A/4B completion review. Critical and High items block Phase 5 and Phase 7. Medium and Low items should be resolved before Phase 7 ships.
+
+| ID      | Task                                                                                                                                                                                                                                        | Severity | Status | Source     |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------ | ---------- |
+| T04R-R1 | Fix: gate `/api/realtime/[channel]` with session + per-channel role check; scope `notifications` stream to the caller's employee_id; remove `/api/realtime` from middleware `SHARED_PATHS`                                                  | Critical | done   | Opus audit |
+| T04R-R2 | Fix: extract `createNotification` and `archiveOldNotifications` out of the `"use server"` module into a private `lib/notifications.ts` helper imported by server actions only                                                               | Critical | done   | Opus audit |
+| T04R-R3 | Fix: rewrite `processCheckout` idempotency to use `INSERT ... ON CONFLICT (id) DO NOTHING RETURNING` + refetch path; add concurrent-request test                                                                                            | High     | done   | Opus audit |
+| T04R-R4 | Fix: wrap `createBatch` (cloth_batches + batch_pieces inserts) in `db.transaction`; defer clothier notifications to post-commit                                                                                                             | High     | done   | Opus audit |
+| T04R-R5 | Fix: introduce `lib/rate-limit.ts` and apply CLAUDE.md caps to all Phase 4 mutations (createTicket, processCheckout, setOverridePrice, requestEdit, resolveEditRequest, reopenTicket, createBatch, claimPiece, markPieceDone, approvePiece) | High     | done   | Opus audit |
+| T04R-R6 | Fix: add Vitest unit tests covering ticket status transitions × role, checkout idempotency, payment sum mismatch, optimistic-lock conflicts, override recompute, batch-piece self-claim race, mark-done authorisation, approve state guards | High     | done   | Opus audit |
+| T04R-R7 | Fix: wrap `resolveEditRequest` (ticket_items update + edit_requests update) in `db.transaction`; fire SSE + notification post-commit                                                                                                        | Medium   | done   | Opus audit |
+| T04R-R8 | Fix: delete dead `transitionToReopened` action in `apps/web/src/app/(protected)/tickets/actions/index.ts`                                                                                                                                   | Low      | done   | Opus audit |
+| T04R-R9 | Fix: add Zod schemas in `packages/types/src/schemas/` for edit-request, reopen, claim-piece, mark-piece-done, approve-piece, mark-read inputs                                                                                               | Low      | done   | Opus audit |
+
+> M-28 (T042 payout `needs_review` stub) is deferred into T066's AC rather than added here — tracked as a doc-only update under `docs/Business/tasks/phase-07-payroll.md` when Phase 7 is drafted.
+
+---
+
 ## Phase 4B — Cloth batches
 
 > Can run in parallel with Phase 5 once Phase 4A is complete.
@@ -351,15 +376,16 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | 2R — Remediation          | 3       | 3      | 0           |
 | 3 — Clients               | 4       | 4      | 0           |
 | 3R — Remediation          | 3       | 3      | 0           |
-| 4A — Tickets and checkout | 13      | 0      | 0           |
-| 4B — Cloth batches        | 4       | 0      | 0           |
+| 4A — Tickets and checkout | 13      | 13     | 0           |
+| 4B — Cloth batches        | 4       | 4      | 0           |
+| 4R — Remediation          | 9       | 0      | 0           |
 | 5 — Appointments          | 9       | 0      | 0           |
 | 6 — Large orders          | 6       | 0      | 0           |
 | 7 — Payroll               | 11      | 0      | 0           |
 | 8 — Analytics             | 8       | 0      | 0           |
 | 9 — Offline               | 5       | 0      | 0           |
 | 10 — Polish               | 9       | 0      | 0           |
-| **Total**                 | **123** | **51** | **0**       |
+| **Total**                 | **132** | **68** | **0**       |
 
 ---
 

@@ -18,7 +18,6 @@ import {
   listNotifications,
   markRead,
   markAllRead,
-  archiveOldNotifications,
   type NotificationRow,
 } from "@/app/(protected)/notifications/actions";
 
@@ -104,8 +103,7 @@ export function NotificationBell({
 
   const refresh = useCallback(() => {
     startTransition(async () => {
-      // Archive stale on each refresh (lazy archival)
-      await archiveOldNotifications();
+      // listNotifications lazily archives stale entries server-side (T04R-R2)
       const result = await listNotifications({ includeArchived: showArchived });
       if (result.success) setRows(result.data);
     });

@@ -5,6 +5,7 @@ import type { auth } from "@/lib/auth";
 import {
   isPublic,
   isShared,
+  isAuthenticatedApi,
   roleCanAccess,
   isFinancialBlockedForSecretary,
   ROLE_HOME,
@@ -41,6 +42,12 @@ export async function middleware(request: NextRequest) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(loginUrl);
+  }
+
+  // Authenticated API paths bypass the role-path prefix check.
+  // The route handler enforces its own per-channel role restriction.
+  if (isAuthenticatedApi(pathname)) {
+    return NextResponse.next();
   }
 
   const role = session.user.role as AppRole | undefined;

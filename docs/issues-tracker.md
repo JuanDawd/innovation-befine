@@ -68,6 +68,22 @@
 - **Description:** `deactivateEmployee()` revokes active sessions via `auth.api.revokeUserSessions()` but does NOT ban the user in Better Auth. A deactivated employee can immediately create a new session by logging in again. Better Auth has a built-in ban mechanism (`banned`, `banReason` columns on the users table, plus `auth.api.banUser()`). The T022a acceptance criteria explicitly states "login attempt is blocked", which is currently unmet.
 - **Fix:** In `deactivateEmployee()`, call `auth.api.banUser({ userId, banReason: "Employee deactivated" })` before revoking sessions. The login form already handles 403 (banned) responses — it shows the `invalidCredentials` error message. Tracked as T01R-R1.
 
+### C-06 — SSE channels are publicly subscribable (no auth gate)
+
+- **Severity:** Critical
+- **Status:** Open
+- **Affected:** T098 (realtime abstraction), T036 (cashier dashboard), T048 (notifications)
+- **Description:** `middleware.ts` treats `/api/realtime` as a "shared" path and short-circuits with `NextResponse.next()` before the session lookup (`isPublic(pathname) || isShared(pathname)` branch). The route handler at `apps/web/src/app/api/realtime/[channel]/route.ts` also performs no session or role check. Any unauthenticated HTTP client can `GET /api/realtime/cashier` and stream real-time ticket events (IDs, status transitions, `edit_requested` badges). The `notifications` channel leaks notification IDs and recipient employee IDs. Combined with browser-side event shapes, this exposes operational data and employee PII.
+- **Fix:** Require a valid session in the SSE route handler (`auth.api.getSession`). Gate per-channel: `cashier` → `cashier_admin` only; `clothier` → `clothier` only; `notifications` → any authenticated user (but scope events to the caller's `employee_id` server-side). Remove `/api/realtime` from `SHARED_PATHS` so middleware enforces authentication as a defence-in-depth layer. Tracked as T04R-R1.
+
+### C-07 — `createNotification` is a client-callable server action
+
+- **Severity:** Critical
+- **Status:** Open
+- **Affected:** T048 (in-app notifications)
+- **Description:** `createNotification` is `export async function` inside `apps/web/src/app/(protected)/notifications/actions.ts`, whose first line is `"use server"`. Every export in a `"use server"` module is a Next.js server action accessible to any authenticated client. The doc-comment says "internal helper — never from the client" but Next.js cannot enforce that. A malicious authenticated user (e.g. a stylist) can invoke `createNotification` with any `recipientEmployeeId`, `type`, `message`, and `link`, spamming other employees' inboxes and potentially phishing them with crafted `link` targets.
+- **Fix:** Move `createNotification` into a non-`"use server"` module (e.g. `apps/web/src/lib/notifications.ts`) imported directly by the callers that need it (`resolveEditRequest`, `createBatch`, `markPieceDone`). Keep `"use server"` only for the three user-facing actions (`listNotifications`, `markRead`, `markAllRead`). Apply the same treatment to `archiveOldNotifications` (see L-21). Tracked as T04R-R2.
+
 ---
 
 ## High-priority issues
@@ -332,6 +348,22 @@
 - **Description:** Three hardcoded strings bypass i18n: two `aria-label="Quitar selección"` (lines 282, 304) and one `OK` button label (line 336). All user-facing strings must use `next-intl` per CLAUDE.md conventions.
 - **Fix:** Add i18n keys (`clients.clearSelection`, `common.ok`) and replace hardcoded strings. Tracked as T03R-R2.
 
+### M-28 — T042 payout `needs_review` flag is a stub, AC silently unmet
+
+- **Severity:** Medium
+- **Status:** Deferred
+- **Affected:** T042 (ticket reopen), T066 (payouts table, Phase 7)
+- **Description:** T042 AC says "Payout records that included this ticket are flagged `needs_review`." Payouts don't exist yet — the table is created in T066 (Phase 7). `reopenTicket` has a `NOTE (T066 stub)` comment acknowledging this, but T042 was still marked `done` and committed without linking the deferral anywhere reviewers would see. Risk: T066 ships without the reopen-flag wiring because the dependency isn't captured.
+- **Fix:** Add an AC to T066 that explicitly says "extend `reopenTicket` to flag overlapping payouts as `needs_review = true`" with a pointer to the stub comment. No code change needed now.
+
+### M-29 — `resolveEditRequest` is not wrapped in a transaction
+
+- **Severity:** Medium
+- **Status:** Open
+- **Affected:** T041 (edit approval flow)
+- **Description:** When a cashier approves an edit, three writes happen sequentially without a transaction: (1) update `ticket_items` with the new variant + re-snapshotted price/commission, (2) update `ticket_edit_requests` to `approved` with resolver and timestamp, (3) insert a notification row. If step 2 or 3 fails, the ticket has already been re-priced but the request stays `pending` (letting the requester submit a duplicate) and the requester gets no notification. Because the new snapshot changes the ticket total, this is a financial-data-integrity concern under CLAUDE.md's mandate.
+- **Fix:** Wrap the `ticket_items` update and the `ticket_edit_requests` update in `db.transaction`. Fire the SSE event and create the notification only after commit. Tracked as T04R-R7.
+
 ### M-27 — `clientId` parameter not validated as UUID
 
 - **Severity:** Medium
@@ -496,6 +528,38 @@
 - **Description:** No task exists between training (T088) and go-live (T089) where actual staff use the system in a realistic scenario and provide feedback before production.
 - **Fix:** Added T106 (User Acceptance Testing) to Phase 10, between T088 and T089. Each role representative uses staging for one full business day with realistic data. T089 now depends on T106.
 
+### H-19 — Checkout idempotency uses PK without `onConflictDoNothing`
+
+- **Severity:** High
+- **Status:** Open
+- **Affected:** T038 (checkout flow), T039 (split payment)
+- **Description:** `processCheckout` stores `input.idempotencyKey` as the `checkout_sessions.id` (primary key) to deduplicate, but the insert uses a plain `db.insert(...).values(...).returning()` — no `.onConflictDoNothing({ target: checkoutSessions.id })`. If two concurrent requests arrive with the same key (offline replay + manual submit, or rapid double-click before the first response returns), both transactions read no existing row in the pre-check, both try to insert, Postgres serialises, and the loser's `INSERT` raises a duplicate-key error. That error is caught by the generic `catch` and returned as `INTERNAL_ERROR` — the caller gets no idempotent reply. CLAUDE.md's financial-mutation checklist mandates the `INSERT ... ON CONFLICT DO NOTHING RETURNING *, then fetch if empty` pattern for exactly this reason. Also: the `tickets.idempotency_key` column introduced in T033 (per the offline policy) is not referenced by checkout at all — idempotency is keyed at the session level only. That's a correct choice but should be documented.
+- **Fix:** Replace the in-transaction `existingSession` pre-check and naked insert with `INSERT ... ON CONFLICT (id) DO NOTHING RETURNING id`. If no row is returned, re-fetch the existing session and rebuild the summary from the persisted `ticket_payments` rows rather than re-inserting them. Add a test that fires two concurrent `processCheckout` calls with the same `idempotencyKey` and asserts both receive `{ success: true }` with the same `sessionId`. Tracked as T04R-R3.
+
+### H-20 — `createBatch` is not atomic (orphan-batch risk)
+
+- **Severity:** High
+- **Status:** Open
+- **Affected:** T045 (cloth batch creation)
+- **Description:** `createBatch` does two separate `db.insert(...)` calls — one into `cloth_batches`, one into `batch_pieces` — outside a `db.transaction` block. The inline comment even says "Create batch + pieces in a transaction" but the wrapping is missing. If the `batch_pieces` insert fails (invalid `cloth_piece_id`, FK violation, network blip), the `cloth_batches` row is orphaned and visible in the secretary/admin batch list without any pieces. Assigned clothiers receive no notifications yet staff see a phantom batch.
+- **Fix:** Wrap both inserts in `db.transaction(async (tx) => { ... })`. Send clothier notifications only after the transaction commits (not inside it). Tracked as T04R-R4.
+
+### H-21 — No rate limiting on any Phase 4 mutation
+
+- **Severity:** High
+- **Status:** Open
+- **Affected:** T035 (ticket creation), T037 (status transitions), T038 (checkout), T040 (override), T041 (edit requests), T042 (reopen), T045/T046/T047 (batch flows)
+- **Description:** CLAUDE.md locks `@upstash/ratelimit` as the rate-limit stack and prescribes concrete caps (ticket creation 30/min/user, general mutations 60/min/user, etc.). `@upstash/ratelimit` appears only in `pnpm-lock.yaml` and documentation — no application code imports it. Every Phase 4 mutation runs without a limiter: a compromised session, a buggy client polling loop, or a malicious insider can pound these endpoints with no backpressure. Checkout and override in particular are high-impact financial mutations.
+- **Fix:** Introduce `apps/web/src/lib/rate-limit.ts` using `@upstash/ratelimit` + Upstash REST (same provider category the stack already lists) or an in-memory/DB fallback. Apply to: `createTicket`, `processCheckout`, `setOverridePrice`, `requestEdit`, `resolveEditRequest`, `reopenTicket`, `createBatch`, `claimPiece`, `markPieceDone`, `approvePiece`. Use caps from CLAUDE.md. Tracked as T04R-R5.
+
+### H-22 — Mandatory unit tests missing for Phase 4 financial and status logic
+
+- **Severity:** High
+- **Status:** Open
+- **Affected:** T035, T037, T038, T039, T040, T041, T042, T046, T047
+- **Description:** CLAUDE.md declares unit tests mandatory for: status transitions, permission checks, double-pay / duplicate prevention, financial data integrity, and commission calculations. The current test suite has 46 passing tests — all in `middleware-helpers`, `utils`, `i18n/formatting`, and `roles`. Zero tests cover `processCheckout`, `setOverridePrice`, `createTicket`, the four ticket-status transitions, `reopenTicket`, `requestEdit`/`resolveEditRequest`, `claimPiece`, `markPieceDone`, or `approvePiece`. Per-task QA gates were not enforced. CLAUDE.md also mandates 80% coverage on `packages/db/src/queries/` — that directory does not exist and the financial logic lives inside server actions instead.
+- **Fix:** Add Vitest unit tests covering (a) ticket status transition matrix × role, (b) checkout idempotency (same key → same session), (c) payment-sum-vs-total mismatch, (d) optimistic-lock conflict on concurrent checkout, (e) override price recomputes totals, (f) non-cashier cannot set override, (g) batch-piece self-claim race, (h) mark-done by the wrong clothier is rejected, (i) approve skips pending pieces without version bump. Use a transactional test harness that rolls back after each test per CLAUDE.md. Defer the `queries/` directory convention to a separate conversation. Tracked as T04R-R6.
+
 ### H-17 — Missing `updated_at` column on `employees` and `business_days` tables
 
 - **Severity:** High
@@ -599,6 +663,30 @@
 - **Affected:** `packages/realtime/src/client.ts`
 - **Description:** Callback refs (`onDataRef`, `onPollRef`) are updated in a `useEffect` (runs after paint), not `useLayoutEffect` (runs synchronously after DOM mutation). There is a one-render window where refs could be stale. In practice this is benign — callbacks only fire from async sources (SSE messages, polling timers) — but it's inconsistent with the pattern used in `use-sse.ts`.
 - **Fix:** Low priority. Switch ref update to `useLayoutEffect` if stale-callback bugs surface in Phase 4A.
+
+### L-21 — `archiveOldNotifications` exposed as a server action
+
+- **Severity:** Low
+- **Status:** Open
+- **Affected:** T048 (notifications)
+- **Description:** `archiveOldNotifications` lives in the same `"use server"` module as the user-facing notification actions, so it is a callable endpoint. Any authenticated user can invoke it directly; it only archives their own notifications, so the blast radius is limited to "archive my own items" — no data theft or spam, but it's an unnecessary endpoint surface. Also it isn't actually called from anywhere today (the "lazy archive on list" comment in the source is aspirational).
+- **Fix:** Either move it into the same non-`"use server"` module as `createNotification` (see C-07) and call it from `listNotifications`, or delete it entirely and rely on a scheduled job later. Tracked with T04R-R2.
+
+### L-22 — Dead duplicate `transitionToReopened` server action
+
+- **Severity:** Low
+- **Status:** Open
+- **Affected:** T042 (ticket reopen)
+- **Description:** `transitionToReopened` in `apps/web/src/app/(protected)/tickets/actions/index.ts` is an orphaned reopen implementation superseded by `reopenTicket` in `admin/tickets/history/actions.ts`. The admin version correctly detaches the ticket from its `checkout_session`, updates `is_partially_reopened`, and contains the payout stub comment; the dead one does none of that. A future refactor could accidentally wire it back up and silently regress T042's AC.
+- **Fix:** Delete `transitionToReopened` (it has no callers in the app code — only lingering graphify-out references). Tracked as T04R-R8.
+
+### L-23 — Phase 4 server actions skip Zod validation on scalar inputs
+
+- **Severity:** Low
+- **Status:** Open
+- **Affected:** T041 (`requestEdit`, `resolveEditRequest`), T042 (`reopenTicket`), T046 (`claimPiece`, `markPieceDone`), T047 (`approvePiece`, `adminMarkApproved`), T048 (`markRead`)
+- **Description:** CLAUDE.md requires every server action to validate input with a Zod schema before business logic. Several Phase 4 actions accept raw `string`/`number` parameters (e.g. `ticketItemId: string`, `pieceId: string`, `expectedVersion: number`) and rely on the DB to reject malformed IDs. The Drizzle query is parameterised so there's no SQL-injection risk, but the convention ensures consistent error codes (`VALIDATION_ERROR` vs generic `INTERNAL_ERROR` on a bad UUID) and keeps the validation boundary explicit.
+- **Fix:** Define shared Zod schemas in `packages/types/src/schemas/` (`editRequestSchema`, `reopenTicketSchema`, `claimPieceSchema`, etc.) and `safeParse` inputs at the top of each action. Tracked as T04R-R9.
 
 ---
 

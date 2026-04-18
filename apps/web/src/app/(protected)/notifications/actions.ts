@@ -1,12 +1,14 @@
 "use server";
 
 /**
- * Notification server actions — T048
+ * Notification server actions — T048, T04R-R2
  *
  * listNotifications: returns active (non-archived) notifications for the current employee.
  * markRead: marks one notification as read.
  * markAllRead: marks all unread notifications as read.
- * createNotification: internal helper (not exposed to client) — called by other actions.
+ *
+ * createNotification and archiveOldNotifications moved to @/lib/notifications —
+ * they are internal helpers, not client-callable actions (T04R-R2).
  */
 
 import { headers } from "next/headers";
@@ -15,7 +17,6 @@ import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { notifications, employees } from "@befine/db/schema";
 import type { ActionResult } from "@/lib/action-result";
-import { publishEvent } from "@befine/realtime/server";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -53,6 +54,9 @@ export async function listNotifications(opts?: {
   const employeeId = await getEmployeeId();
   if (!employeeId)
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
+
+  // Lazily archive notifications older than 7 days (fire-and-forget housekeeping)
+  void archiveOldNotificationsForEmployee(employeeId);
 
   const db = getDb();
 
@@ -126,12 +130,9 @@ export async function markAllRead(): Promise<ActionResult<void>> {
   return { success: true, data: undefined };
 }
 
-// ─── Archive older than 7 days (called lazily on listNotifications) ───────────
+// ─── Archive older than 7 days ───────────────────────────────────────────────
 
-export async function archiveOldNotifications(): Promise<void> {
-  const employeeId = await getEmployeeId();
-  if (!employeeId) return;
-
+async function archiveOldNotificationsForEmployee(employeeId: string): Promise<void> {
   const db = getDb();
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
@@ -145,37 +146,4 @@ export async function archiveOldNotifications(): Promise<void> {
         lt(notifications.createdAt, sevenDaysAgo),
       ),
     );
-}
-
-// ─── Internal: create a notification and fire SSE ────────────────────────────
-
-/**
- * createNotification — called from other server actions, never from the client.
- * Inserts a notification row and fires a `notification_created` SSE event
- * on the `notifications` channel so the recipient's bell updates live.
- */
-export async function createNotification(payload: {
-  recipientEmployeeId: string;
-  type: (typeof notifications.$inferInsert)["type"];
-  message: string;
-  link?: string;
-}): Promise<void> {
-  const db = getDb();
-
-  const [row] = await db
-    .insert(notifications)
-    .values({
-      recipientEmployeeId: payload.recipientEmployeeId,
-      type: payload.type,
-      message: payload.message,
-      link: payload.link ?? null,
-    })
-    .returning({ id: notifications.id });
-
-  if (row) {
-    publishEvent("notifications", "notification_created", {
-      notificationId: row.id,
-      recipientEmployeeId: payload.recipientEmployeeId,
-    });
-  }
 }

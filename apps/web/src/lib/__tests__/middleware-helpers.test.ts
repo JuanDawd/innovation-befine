@@ -3,6 +3,7 @@ import {
   isPublic,
   isShared,
   isSharedApp,
+  isAuthenticatedApi,
   roleCanAccess,
   isFinancialBlockedForSecretary,
   ROLE_HOME,
@@ -38,14 +39,27 @@ describe("isPublic", () => {
 });
 
 describe("isShared", () => {
-  it("allows /api/realtime for any authenticated role", () => {
-    expect(isShared("/api/realtime/cashier")).toBe(true);
-    expect(isShared("/api/realtime/clothier")).toBe(true);
-  });
-
   it("does not treat generic /api as shared", () => {
     expect(isShared("/api/analytics")).toBe(false);
     expect(isShared("/api/payouts")).toBe(false);
+  });
+
+  it("/api/realtime is no longer in SHARED_PATHS (moved to AUTHENTICATED_API_PATHS)", () => {
+    expect(isShared("/api/realtime/cashier")).toBe(false);
+    expect(isShared("/api/realtime/clothier")).toBe(false);
+  });
+});
+
+describe("isAuthenticatedApi", () => {
+  it("matches /api/realtime paths for authenticated session bypass", () => {
+    expect(isAuthenticatedApi("/api/realtime/cashier")).toBe(true);
+    expect(isAuthenticatedApi("/api/realtime/clothier")).toBe(true);
+    expect(isAuthenticatedApi("/api/realtime/notifications")).toBe(true);
+  });
+
+  it("does not match other API paths", () => {
+    expect(isAuthenticatedApi("/api/analytics")).toBe(false);
+    expect(isAuthenticatedApi("/api/auth/sign-in")).toBe(false);
   });
 });
 
