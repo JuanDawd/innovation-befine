@@ -30,6 +30,8 @@ export const transitionAppointmentSchema = z
     action: z.enum(["confirm", "cancel", "no_show", "complete", "reopen", "reschedule"]),
     cancellationReason: z.string().max(500).optional(),
     newScheduledAt: z.iso.datetime({ offset: true }).optional(),
+    // T05R-R7: optionally link a ticket when completing an appointment
+    ticketId: z.uuid("ID de ticket inválido").optional(),
   })
   .refine((d) => d.action !== "reschedule" || !!d.newScheduledAt, {
     message: "Se requiere la nueva fecha/hora para reagendar",

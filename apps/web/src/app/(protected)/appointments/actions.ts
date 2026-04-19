@@ -12,7 +12,7 @@ import { headers } from "next/headers";
 import { eq, and, sql } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { getDb, getTxDb } from "@/lib/db";
-import { appointments, employees, users, clients } from "@befine/db/schema";
+import { appointments, employees, users, clients, tickets } from "@befine/db/schema";
 import { createAppointmentSchema, transitionAppointmentSchema } from "@befine/types";
 import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
@@ -360,7 +360,7 @@ export async function transitionAppointment(
   if (!parsed.success)
     return { success: false, error: { code: "VALIDATION_ERROR", message: "Datos inválidos" } };
 
-  const { appointmentId, action, cancellationReason, newScheduledAt } = parsed.data;
+  const { appointmentId, action, cancellationReason, newScheduledAt, ticketId } = parsed.data;
   const db = getDb();
 
   const [appt] = await db
@@ -464,6 +464,11 @@ export async function transitionAppointment(
           .update(appointments)
           .set({ status: statusValue, updatedAt: now })
           .where(eq(appointments.id, appointmentId));
+      }
+
+      // T05R-R7: if completing with an associated ticket, link it atomically
+      if (newStatus === "completed" && ticketId) {
+        await tx.update(tickets).set({ appointmentId }).where(eq(tickets.id, ticketId));
       }
 
       // T032b — no-show count increment/decrement for saved clients only
