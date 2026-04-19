@@ -31,7 +31,7 @@ export const NAV_ITEMS: Record<AppRole, NavItem[]> = {
   cashier_admin: [
     { key: "dashboard", href: "/cashier", icon: LayoutDashboard },
     { key: "ticketHistory", href: "/cashier/tickets/history", icon: ReceiptIcon },
-    { key: "appointments", href: "/cashier/appointments/new", icon: CalendarDays },
+    { key: "appointments", href: "/cashier/appointments", icon: CalendarDays },
     { key: "batches", href: "/admin/batches", icon: Layers },
     { key: "employees", href: "/admin/employees", icon: Users },
     { key: "catalog", href: "/admin/catalog", icon: BookOpen },
@@ -40,7 +40,7 @@ export const NAV_ITEMS: Record<AppRole, NavItem[]> = {
   secretary: [
     { key: "dashboard", href: "/secretary", icon: LayoutDashboard },
     { key: "batches", href: "/secretary/batches", icon: Layers },
-    { key: "appointments", href: "/secretary/appointments/new", icon: CalendarDays },
+    { key: "appointments", href: "/secretary/appointments", icon: CalendarDays },
     { key: "clients", href: "/secretary/clients", icon: Users, disabled: true },
   ],
   stylist: [{ key: "myTickets", href: "/stylist", icon: ClipboardList }],

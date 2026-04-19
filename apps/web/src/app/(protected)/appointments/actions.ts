@@ -12,7 +12,7 @@ import { headers } from "next/headers";
 import { eq, and } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import { appointments, employees, users } from "@befine/db/schema";
+import { appointments, employees, users, clients } from "@befine/db/schema";
 import { createAppointmentSchema } from "@befine/types";
 import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
@@ -175,6 +175,97 @@ export async function createAppointment(
       status: row.status,
       createdAt: row.createdAt,
     },
+  };
+}
+
+// ─── List appointments for a calendar date ───────────────────────────────────
+
+export type AppointmentListRow = AppointmentRow & {
+  clientName: string | null;
+  stylistName: string;
+};
+
+/**
+ * Returns all appointments for a given calendar date (America/Bogota),
+ * optionally filtered by stylist. Date must be ISO date string "YYYY-MM-DD".
+ */
+export async function listAppointmentsForDate(
+  rawDate: unknown,
+  rawStylistId?: unknown,
+): Promise<ActionResult<AppointmentListRow[]>> {
+  const guard = await requireBookingRole();
+  if (!guard.ok)
+    return {
+      success: false,
+      error: {
+        code: guard.code,
+        message: guard.code === "UNAUTHORIZED" ? "No autenticado" : "Sin permisos",
+      },
+    };
+
+  // Validate date param
+  const dateStr = typeof rawDate === "string" ? rawDate : null;
+  if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr))
+    return { success: false, error: { code: "VALIDATION_ERROR", message: "Fecha inválida" } };
+
+  const stylistId = typeof rawStylistId === "string" && rawStylistId ? rawStylistId : null;
+
+  // Bogota is UTC-5; compute the UTC range for the given local date
+  const dayStart = new Date(`${dateStr}T00:00:00-05:00`);
+  const dayEnd = new Date(`${dateStr}T23:59:59.999-05:00`);
+
+  const db = getDb();
+
+  // Fetch with optional stylist filter. Day-range and status filtering happen in JS
+  // to avoid the Drizzle duplicate-instance sql-template issue (pre-existing in project).
+  const baseQuery = db
+    .select({
+      id: appointments.id,
+      clientId: appointments.clientId,
+      guestName: appointments.guestName,
+      clientName: clients.name,
+      stylistEmployeeId: appointments.stylistEmployeeId,
+      stylistName: users.name,
+      serviceVariantId: appointments.serviceVariantId,
+      serviceSummary: appointments.serviceSummary,
+      scheduledAt: appointments.scheduledAt,
+      durationMinutes: appointments.durationMinutes,
+      status: appointments.status,
+      createdAt: appointments.createdAt,
+    })
+    .from(appointments)
+    .leftJoin(clients, eq(appointments.clientId, clients.id))
+    .innerJoin(employees, eq(appointments.stylistEmployeeId, employees.id))
+    .innerJoin(users, eq(employees.userId, users.id));
+
+  const rows = stylistId
+    ? await baseQuery
+        .where(eq(appointments.stylistEmployeeId, stylistId))
+        .orderBy(appointments.scheduledAt)
+    : await baseQuery.orderBy(appointments.scheduledAt);
+
+  // Filter by Bogota calendar day in JS
+  const result = rows.filter((r) => {
+    const t = new Date(r.scheduledAt);
+    return t >= dayStart && t <= dayEnd;
+  });
+
+  return {
+    success: true,
+    data: result.map((r) => ({
+      id: r.id,
+      clientId: r.clientId,
+      guestName: r.guestName,
+      clientName: r.clientName ?? null,
+      stylistEmployeeId: r.stylistEmployeeId,
+      stylistName: r.stylistName,
+      serviceVariantId: r.serviceVariantId,
+      serviceSummary: r.serviceSummary,
+      scheduledAt: r.scheduledAt,
+      durationMinutes: r.durationMinutes,
+      status: r.status,
+      createdAt: r.createdAt,
+    })),
   };
 }
 
