@@ -276,7 +276,7 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | T032b | No-show count increment logic _(split from T032)_                      | pending | T032, T053       |
 | T049  | Appointments table migration                                           | done    | T029, T012       |
 | T050  | Appointment booking UI (secretary / cashier)                           | done    | T049, T030       |
-| T051  | Double-booking prevention (DB-level)                                   | pending | T050             |
+| T051  | Double-booking prevention (DB-level)                                   | done    | T050             |
 | T052  | Appointment list and calendar view                                     | pending | T050             |
 | T053  | Appointment status management (confirm, cancel, no-show, etc.)         | pending | T050             |
 | T055  | Appointment confirmation email template (React Email)                  | pending | T054             |
