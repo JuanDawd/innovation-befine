@@ -13,7 +13,7 @@ import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { eq, and, gt, inArray } from "drizzle-orm";
 import { auth } from "@/lib/auth";
-import { getDb } from "@/lib/db";
+import { getDb, getTxDb } from "@/lib/db";
 import {
   services,
   serviceVariants,
@@ -405,57 +405,54 @@ export async function editVariant(
     parsed.data.customerPrice !== existing.customerPrice ||
     parsed.data.commissionPct.toFixed(2) !== existing.commissionPct;
 
-  await db
-    .update(serviceVariants)
-    .set({
-      name: parsed.data.name,
-      customerPrice: parsed.data.customerPrice,
-      commissionPct: parsed.data.commissionPct.toFixed(2),
-      updatedAt: new Date(),
-    })
-    .where(eq(serviceVariants.id, variantId));
+  // T05R-R5: wrap variant update + audit log + appointment flag reset atomically.
+  // Notification fan-out runs post-commit (non-critical, SSE-only side effect).
+  const txDb = getTxDb();
+  const now = new Date();
 
-  await writeAuditLog(db, {
-    entityType: "service_variant",
-    entityId: variantId,
-    action: "update",
-    changedBy: session.user.id,
-    previousData: {
-      name: existing.name,
-      customerPrice: existing.customerPrice,
-      commissionPct: existing.commissionPct,
-    },
-    newData: parsed.data,
-  });
+  // Capture which appointments to notify before the transaction mutates them.
+  // With default(true), appointments where priceChangeAcknowledged = true are the ones
+  // transitioning from "no pending change" → "pending" → should notify.
+  let toNotify: { guestName: string | null; serviceSummary: string; scheduledAt: Date }[] = [];
+  let secretaries: { id: string }[] = [];
 
-  // T109: If price/commission changed, flag future appointments and notify secretaries
-  if (priceChanged) {
-    const now = new Date();
-
-    // Find future booked/confirmed appointments for this variant (not yet acknowledged)
-    const affected = await db
-      .select({
-        id: appointments.id,
-        clientId: appointments.clientId,
-        guestName: appointments.guestName,
-        serviceSummary: appointments.serviceSummary,
-        scheduledAt: appointments.scheduledAt,
-        priceChangeAcknowledged: appointments.priceChangeAcknowledged,
+  await txDb.transaction(async (tx) => {
+    await tx
+      .update(serviceVariants)
+      .set({
+        name: parsed.data.name,
+        customerPrice: parsed.data.customerPrice,
+        commissionPct: parsed.data.commissionPct.toFixed(2),
+        updatedAt: now,
       })
-      .from(appointments)
-      .where(
-        and(
-          eq(appointments.serviceVariantId, variantId),
-          gt(appointments.scheduledAt, now),
-          inArray(appointments.status, ["booked", "confirmed"]),
-        ),
-      );
+      .where(eq(serviceVariants.id, variantId));
 
-    if (affected.length > 0) {
-      // Reset price_change_acknowledged on all affected appointments
-      await db
-        .update(appointments)
-        .set({ priceChangeAcknowledged: false, updatedAt: now })
+    // Cast: tx (NeonTransaction) and db (NeonHttpDatabase) both expose insert() with
+    // compatible runtime behavior — the type mismatch is in Drizzle's HKT generics only.
+    await writeAuditLog(tx as unknown as ReturnType<typeof getDb>, {
+      entityType: "service_variant",
+      entityId: variantId,
+      action: "update",
+      changedBy: session.user.id,
+      previousData: {
+        name: existing.name,
+        customerPrice: existing.customerPrice,
+        commissionPct: existing.commissionPct,
+      },
+      newData: parsed.data,
+    });
+
+    // T109: If price/commission changed, flag future appointments inside the same tx
+    if (priceChanged) {
+      const affected = await tx
+        .select({
+          id: appointments.id,
+          guestName: appointments.guestName,
+          serviceSummary: appointments.serviceSummary,
+          scheduledAt: appointments.scheduledAt,
+          priceChangeAcknowledged: appointments.priceChangeAcknowledged,
+        })
+        .from(appointments)
         .where(
           and(
             eq(appointments.serviceVariantId, variantId),
@@ -464,34 +461,45 @@ export async function editVariant(
           ),
         );
 
-      // Find all active secretary employees to notify
-      const secretaries = await db
-        .select({ id: employees.id })
-        .from(employees)
-        .where(and(eq(employees.role, "secretary"), eq(employees.isActive, true)));
+      if (affected.length > 0) {
+        await tx
+          .update(appointments)
+          .set({ priceChangeAcknowledged: false, updatedAt: now })
+          .where(
+            and(
+              eq(appointments.serviceVariantId, variantId),
+              gt(appointments.scheduledAt, now),
+              inArray(appointments.status, ["booked", "confirmed"]),
+            ),
+          );
 
-      // Deduplicate: only notify for appointments that were previously acknowledged
-      // (i.e. already-unacked appointments already have a pending notification — skip them)
-      const toNotify = affected.filter((a) => a.priceChangeAcknowledged);
-
-      for (const appt of toNotify) {
-        const clientLabel = appt.guestName ?? `cliente`;
-        const apptDate = new Date(appt.scheduledAt).toLocaleString("es-CO", {
-          timeZone: "America/Bogota",
-          dateStyle: "medium",
-          timeStyle: "short",
-        });
-        const message = `Precio cambió para "${appt.serviceSummary}" — notifica a ${clientLabel} (cita: ${apptDate})`;
-
-        for (const sec of secretaries) {
-          await createNotification({
-            recipientEmployeeId: sec.id,
-            type: "price_changed",
-            message,
-            link: "/secretary/appointments",
-          });
-        }
+        // Collect data for post-commit notification fan-out
+        toNotify = affected.filter((a) => a.priceChangeAcknowledged);
+        secretaries = await tx
+          .select({ id: employees.id })
+          .from(employees)
+          .where(and(eq(employees.role, "secretary"), eq(employees.isActive, true)));
       }
+    }
+  });
+
+  // Post-commit: fan out notifications (non-critical — partial failure does not affect DB state)
+  for (const appt of toNotify) {
+    const clientLabel = appt.guestName ?? `cliente`;
+    const apptDate = new Date(appt.scheduledAt).toLocaleString("es-CO", {
+      timeZone: "America/Bogota",
+      dateStyle: "medium",
+      timeStyle: "short",
+    });
+    const message = `Precio cambió para "${appt.serviceSummary}" — notifica a ${clientLabel} (cita: ${apptDate})`;
+
+    for (const sec of secretaries) {
+      await createNotification({
+        recipientEmployeeId: sec.id,
+        type: "price_changed",
+        message,
+        link: "/secretary/appointments",
+      });
     }
   }
 
