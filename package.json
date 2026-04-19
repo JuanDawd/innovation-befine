@@ -42,6 +42,9 @@
     ]
   },
   "pnpm": {
+    "overrides": {
+      "import-in-the-middle": "3.0.1"
+    },
     "onlyBuiltDependencies": [
       "@parcel/watcher",
       "@sentry/cli",
