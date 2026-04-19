@@ -24,7 +24,8 @@ export type CreateAppointmentInput = z.infer<typeof createAppointmentSchema>;
 
 export const transitionAppointmentSchema = z.object({
   appointmentId: z.uuid("ID de cita inválido"),
-  action: z.enum(["confirm", "cancel", "no_show", "complete"]),
+  // "reopen" reverses a no_show back to booked (T032b — triggers decrement)
+  action: z.enum(["confirm", "cancel", "no_show", "complete", "reopen"]),
   cancellationReason: z.string().max(500).optional(),
 });
 

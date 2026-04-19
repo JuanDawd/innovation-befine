@@ -474,7 +474,12 @@
     "noShowSuccess": "Marcada como no asistió",
     "completeSuccess": "Cita marcada como completada",
     "statusUpdateError": "Error al actualizar la cita",
-    "statusActionsTitle": "Acciones"
+    "statusActionsTitle": "Acciones",
+    "reopenAction": "Reabrir cita",
+    "reopenSuccess": "Cita reabierta",
+    "acknowledgeAction": "Precio notificado",
+    "priceChangedBadge": "Precio cambió",
+    "priceChangedTooltip": "El precio del servicio cambió. Notifica al cliente y marca como notificado."
   },
   "nav": {
     "dashboard": "Tablero",

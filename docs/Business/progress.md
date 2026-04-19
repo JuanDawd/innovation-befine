@@ -273,7 +273,7 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 
 | ID    | Task                                                           | Status  | Dependencies     |
 | ----- | -------------------------------------------------------------- | ------- | ---------------- |
-| T032b | No-show count increment logic _(split from T032)_              | pending | T032, T053       |
+| T032b | No-show count increment logic _(split from T032)_              | done    | T032, T053       |
 | T049  | Appointments table migration                                   | done    | T029, T012       |
 | T050  | Appointment booking UI (secretary / cashier)                   | done    | T049, T030       |
 | T051  | Double-booking prevention (DB-level)                           | done    | T050             |

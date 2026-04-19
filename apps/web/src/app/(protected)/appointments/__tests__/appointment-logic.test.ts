@@ -10,7 +10,7 @@ type AppointmentStatus =
   | "rescheduled"
   | "no_show";
 
-type AppointmentAction = "confirm" | "cancel" | "no_show" | "complete";
+type AppointmentAction = "confirm" | "cancel" | "no_show" | "complete" | "reopen";
 
 // ─── Pure status-transition logic (mirrors ALLOWED_TRANSITIONS in actions.ts) ─
 
@@ -19,6 +19,8 @@ const ALLOWED_TRANSITIONS: Partial<
 > = {
   booked: { confirm: "confirmed", cancel: "cancelled", no_show: "no_show", complete: "completed" },
   confirmed: { cancel: "cancelled", no_show: "no_show", complete: "completed" },
+  // T032b: no_show can be reversed back to booked (triggers decrement of no_show_count)
+  no_show: { reopen: "booked" },
 };
 
 function transition(
@@ -30,7 +32,21 @@ function transition(
 }
 
 function isTerminal(status: AppointmentStatus): boolean {
-  return ["completed", "cancelled", "rescheduled", "no_show"].includes(status);
+  // no_show is no longer fully terminal — it can be reversed via "reopen"
+  return ["completed", "cancelled", "rescheduled"].includes(status);
+}
+
+// ─── T032b — no-show count delta logic ────────────────────────────────────────
+
+function noShowCountDelta(
+  previousStatus: AppointmentStatus,
+  newStatus: AppointmentStatus,
+  hasClientRecord: boolean,
+): number {
+  if (!hasClientRecord) return 0;
+  if (newStatus === "no_show" && previousStatus !== "no_show") return +1;
+  if (previousStatus === "no_show" && newStatus !== "no_show") return -1;
+  return 0;
 }
 
 // ─── Overlap detection (mirrors JS logic in createAppointment) ────────────────
@@ -67,11 +83,11 @@ describe("Appointment status transitions", () => {
     it("allows complete", () => expect(transition("confirmed", "complete")).toBe("completed"));
   });
 
-  describe("terminal states reject all actions", () => {
-    const terminals: AppointmentStatus[] = ["completed", "cancelled", "no_show", "rescheduled"];
-    const actions: AppointmentAction[] = ["confirm", "cancel", "no_show", "complete"];
+  describe("terminal states reject non-applicable actions", () => {
+    const hardTerminals: AppointmentStatus[] = ["completed", "cancelled", "rescheduled"];
+    const actions: AppointmentAction[] = ["confirm", "cancel", "no_show", "complete", "reopen"];
 
-    for (const status of terminals) {
+    for (const status of hardTerminals) {
       for (const action of actions) {
         it(`${status} + ${action} → INVALID`, () => {
           expect(transition(status, action)).toBe("INVALID");
@@ -80,14 +96,51 @@ describe("Appointment status transitions", () => {
     }
   });
 
+  describe("no_show → * (T032b reversal)", () => {
+    it("allows reopen (reversal)", () => expect(transition("no_show", "reopen")).toBe("booked"));
+    it("rejects confirm from no_show", () =>
+      expect(transition("no_show", "confirm")).toBe("INVALID"));
+    it("rejects cancel from no_show", () =>
+      expect(transition("no_show", "cancel")).toBe("INVALID"));
+    it("rejects complete from no_show", () =>
+      expect(transition("no_show", "complete")).toBe("INVALID"));
+  });
+
   describe("isTerminal", () => {
     it("marks completed as terminal", () => expect(isTerminal("completed")).toBe(true));
     it("marks cancelled as terminal", () => expect(isTerminal("cancelled")).toBe(true));
-    it("marks no_show as terminal", () => expect(isTerminal("no_show")).toBe(true));
+    it("marks no_show as non-terminal (T032b — reversible)", () =>
+      expect(isTerminal("no_show")).toBe(false));
     it("marks rescheduled as terminal", () => expect(isTerminal("rescheduled")).toBe(true));
     it("marks booked as non-terminal", () => expect(isTerminal("booked")).toBe(false));
     it("marks confirmed as non-terminal", () => expect(isTerminal("confirmed")).toBe(false));
   });
+});
+
+describe("T032b — no-show count delta", () => {
+  it("increments when transitioning to no_show from booked", () =>
+    expect(noShowCountDelta("booked", "no_show", true)).toBe(1));
+
+  it("increments when transitioning to no_show from confirmed", () =>
+    expect(noShowCountDelta("confirmed", "no_show", true)).toBe(1));
+
+  it("does not double-increment if already no_show (idempotency)", () =>
+    expect(noShowCountDelta("no_show", "no_show", true)).toBe(0));
+
+  it("decrements when reversing from no_show to booked", () =>
+    expect(noShowCountDelta("no_show", "booked", true)).toBe(-1));
+
+  it("decrements when reversing from no_show to completed", () =>
+    expect(noShowCountDelta("no_show", "completed", true)).toBe(-1));
+
+  it("returns 0 for guests (no client record)", () =>
+    expect(noShowCountDelta("booked", "no_show", false)).toBe(0));
+
+  it("returns 0 for non-no_show transitions", () =>
+    expect(noShowCountDelta("booked", "completed", true)).toBe(0));
+
+  it("returns 0 for confirm transition", () =>
+    expect(noShowCountDelta("booked", "confirmed", true)).toBe(0));
 });
 
 describe("Appointment overlap detection", () => {

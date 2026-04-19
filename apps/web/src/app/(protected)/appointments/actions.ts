@@ -1,15 +1,15 @@
 "use server";
 
 /**
- * Appointment server actions — T050
+ * Appointment server actions — T050, T032b
  *
  * createAppointment: secretary and cashier_admin.
- * Validates no overlapping appointment for the same stylist, then creates the
- * record and fires an in-app notification to the assigned stylist.
+ * transitionAppointment: handles status transitions including no-show count
+ *   increment/decrement (T032b) inside a DB transaction for atomicity.
  */
 
 import { headers } from "next/headers";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { appointments, employees, users, clients } from "@befine/db/schema";
@@ -310,6 +310,8 @@ export async function listBookingStylists(): Promise<ActionResult<StylistOption[
 const ALLOWED_TRANSITIONS: Record<string, Record<string, string>> = {
   booked: { confirm: "confirmed", cancel: "cancelled", no_show: "no_show", complete: "completed" },
   confirmed: { cancel: "cancelled", no_show: "no_show", complete: "completed" },
+  // T032b: no_show can be reversed back to booked (triggers decrement of no_show_count)
+  no_show: { reopen: "booked" },
 };
 
 export async function transitionAppointment(
@@ -343,7 +345,11 @@ export async function transitionAppointment(
   const db = getDb();
 
   const [appt] = await db
-    .select({ id: appointments.id, status: appointments.status })
+    .select({
+      id: appointments.id,
+      status: appointments.status,
+      clientId: appointments.clientId,
+    })
     .from(appointments)
     .where(eq(appointments.id, appointmentId))
     .limit(1);
@@ -372,23 +378,47 @@ export async function transitionAppointment(
 
   const now = new Date();
   const statusValue = newStatus as (typeof appointments.$inferInsert)["status"];
+  const previousStatus = appt.status;
 
-  if (newStatus === "cancelled") {
-    await db
-      .update(appointments)
-      .set({
-        status: statusValue,
-        updatedAt: now,
-        cancelledAt: now,
-        cancellationReason: cancellationReason ?? null,
-      })
-      .where(eq(appointments.id, appointmentId));
-  } else {
-    await db
-      .update(appointments)
-      .set({ status: statusValue, updatedAt: now })
-      .where(eq(appointments.id, appointmentId));
-  }
+  // Run inside a transaction: appointment update + optional no-show count delta (T032b)
+  await db.transaction(async (tx) => {
+    if (newStatus === "cancelled") {
+      await tx
+        .update(appointments)
+        .set({
+          status: statusValue,
+          updatedAt: now,
+          cancelledAt: now,
+          cancellationReason: cancellationReason ?? null,
+        })
+        .where(eq(appointments.id, appointmentId));
+    } else {
+      await tx
+        .update(appointments)
+        .set({ status: statusValue, updatedAt: now })
+        .where(eq(appointments.id, appointmentId));
+    }
+
+    // T032b — no-show count increment/decrement for saved clients only
+    if (appt.clientId) {
+      if (newStatus === "no_show" && previousStatus !== "no_show") {
+        // Entering no-show: increment (idempotent — only when not already no_show)
+        await tx
+          .update(clients)
+          .set({ noShowCount: sql`${clients.noShowCount} + 1`, updatedAt: now })
+          .where(eq(clients.id, appt.clientId));
+      } else if (previousStatus === "no_show" && newStatus !== "no_show") {
+        // Reversing from no_show: decrement, floor at 0 (CHECK constraint enforces this)
+        await tx
+          .update(clients)
+          .set({
+            noShowCount: sql`GREATEST(${clients.noShowCount} - 1, 0)`,
+            updatedAt: now,
+          })
+          .where(eq(clients.id, appt.clientId));
+      }
+    }
+  });
 
   return { success: true, data: { id: appointmentId, status: newStatus } };
 }

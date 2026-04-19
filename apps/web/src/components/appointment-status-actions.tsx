@@ -9,7 +9,7 @@
 
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
-import { CheckIcon, XIcon, UserXIcon, CheckCheckIcon, Loader2Icon } from "lucide-react";
+import { CheckIcon, XIcon, UserXIcon, CheckCheckIcon, Loader2Icon, UndoIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { transitionAppointment } from "@/app/(protected)/appointments/actions";
 
@@ -28,7 +28,7 @@ export function AppointmentStatusActions({ appointmentId, currentStatus, onUpdat
   const [cancelReason, setCancelReason] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  function act(action: "confirm" | "cancel" | "no_show" | "complete", reason?: string) {
+  function act(action: "confirm" | "cancel" | "no_show" | "complete" | "reopen", reason?: string) {
     setError(null);
     startTransition(async () => {
       const res = await transitionAppointment({
@@ -46,14 +46,33 @@ export function AppointmentStatusActions({ appointmentId, currentStatus, onUpdat
     });
   }
 
-  // Terminal statuses — no actions available
+  // Hard terminal statuses — no actions available
   if (
     currentStatus === "completed" ||
     currentStatus === "cancelled" ||
-    currentStatus === "no_show" ||
     currentStatus === "rescheduled"
   ) {
     return null;
+  }
+
+  // T032b: no_show can be reversed (shows only reopen)
+  if (currentStatus === "no_show") {
+    return (
+      <Button
+        size="sm"
+        variant="outline"
+        disabled={isPending}
+        onClick={() => act("reopen")}
+        aria-label={t("reopenAction")}
+      >
+        {isPending ? (
+          <Loader2Icon className="h-3.5 w-3.5 animate-spin" />
+        ) : (
+          <UndoIcon className="h-3.5 w-3.5" />
+        )}
+        <span className="ml-1 hidden sm:inline">{t("reopenAction")}</span>
+      </Button>
+    );
   }
 
   return (

@@ -440,7 +440,12 @@
     "noShowSuccess": "Marked as no-show",
     "completeSuccess": "Appointment marked as completed",
     "statusUpdateError": "Failed to update appointment",
-    "statusActionsTitle": "Actions"
+    "statusActionsTitle": "Actions",
+    "reopenAction": "Reopen appointment",
+    "reopenSuccess": "Appointment reopened",
+    "acknowledgeAction": "Price notified",
+    "priceChangedBadge": "Price changed",
+    "priceChangedTooltip": "Service price changed. Notify the client and mark as notified."
   },
   "nav": {
     "dashboard": "Dashboard",
