@@ -11,12 +11,14 @@ import {
   Users,
   Settings,
   CalendarDays,
+  CalendarOff,
   ClipboardList,
   Scissors,
   BookOpen,
   ReceiptIcon,
   Layers,
   ShoppingBag,
+  Wallet,
   type LucideIcon,
 } from "lucide-react";
 import type { AppRole } from "@befine/types";
@@ -37,6 +39,8 @@ export const NAV_ITEMS: Record<AppRole, NavItem[]> = {
     { key: "batches", href: "/admin/batches", icon: Layers },
     { key: "employees", href: "/admin/employees", icon: Users },
     { key: "catalog", href: "/admin/catalog", icon: BookOpen },
+    { key: "absences", href: "/admin/absences", icon: CalendarOff },
+    { key: "payroll", href: "/admin/payroll", icon: Wallet },
     { key: "settings", href: "/admin/settings", icon: Settings, disabled: true },
   ],
   secretary: [

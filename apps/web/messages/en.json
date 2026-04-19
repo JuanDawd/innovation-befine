@@ -453,6 +453,22 @@
     "rescheduleSuccess": "Appointment rescheduled",
     "rescheduleRequiredError": "Select a date and time to reschedule"
   },
+  "absences": {
+    "pageTitle": "Absences & Vacation",
+    "logAbsence": "Log absence",
+    "logAbsenceFor": "Log absence for {date}",
+    "deleteAbsence": "Delete absence",
+    "noAbsences": "No absences recorded for this month.",
+    "employee": "Employee",
+    "selectEmployee": "Select employee…",
+    "type": "Type",
+    "type_vacation": "Vacation",
+    "type_approved_absence": "Approved absence",
+    "type_missed": "Missed day",
+    "note": "Note",
+    "save": "Save",
+    "cancel": "Cancel"
+  },
   "largeOrders": {
     "pageTitle": "Large orders",
     "newOrder": "New order",
@@ -539,6 +555,8 @@
     "ticketHistory": "History",
     "batches": "Batches",
     "largeOrders": "Large orders",
+    "absences": "Absences",
+    "payroll": "Payroll",
     "openMenu": "Open menu",
     "closeMenu": "Close menu"
   }

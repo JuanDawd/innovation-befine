@@ -487,6 +487,22 @@
     "rescheduleSuccess": "Cita reagendada",
     "rescheduleRequiredError": "Selecciona fecha y hora para reagendar"
   },
+  "absences": {
+    "pageTitle": "Ausencias y vacaciones",
+    "logAbsence": "Registrar ausencia",
+    "logAbsenceFor": "Registrar ausencia para el {date}",
+    "deleteAbsence": "Eliminar ausencia",
+    "noAbsences": "No hay ausencias registradas para este mes.",
+    "employee": "Empleado",
+    "selectEmployee": "Seleccionar empleado…",
+    "type": "Tipo",
+    "type_vacation": "Vacaciones",
+    "type_approved_absence": "Ausencia justificada",
+    "type_missed": "Falta",
+    "note": "Nota",
+    "save": "Guardar",
+    "cancel": "Cancelar"
+  },
   "largeOrders": {
     "pageTitle": "Pedidos grandes",
     "newOrder": "Nuevo pedido",
@@ -573,6 +589,8 @@
     "ticketHistory": "Historial",
     "batches": "Lotes",
     "largeOrders": "Pedidos grandes",
+    "absences": "Ausencias",
+    "payroll": "Nómina",
     "openMenu": "Abrir menú",
     "closeMenu": "Cerrar menú"
   }
