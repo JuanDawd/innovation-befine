@@ -71,7 +71,7 @@
 ### C-06 — SSE channels are publicly subscribable (no auth gate)
 
 - **Severity:** Critical
-- **Status:** Open
+- **Status:** Resolved
 - **Affected:** T098 (realtime abstraction), T036 (cashier dashboard), T048 (notifications)
 - **Description:** `middleware.ts` treats `/api/realtime` as a "shared" path and short-circuits with `NextResponse.next()` before the session lookup (`isPublic(pathname) || isShared(pathname)` branch). The route handler at `apps/web/src/app/api/realtime/[channel]/route.ts` also performs no session or role check. Any unauthenticated HTTP client can `GET /api/realtime/cashier` and stream real-time ticket events (IDs, status transitions, `edit_requested` badges). The `notifications` channel leaks notification IDs and recipient employee IDs. Combined with browser-side event shapes, this exposes operational data and employee PII.
 - **Fix:** Require a valid session in the SSE route handler (`auth.api.getSession`). Gate per-channel: `cashier` → `cashier_admin` only; `clothier` → `clothier` only; `notifications` → any authenticated user (but scope events to the caller's `employee_id` server-side). Remove `/api/realtime` from `SHARED_PATHS` so middleware enforces authentication as a defence-in-depth layer. Tracked as T04R-R1.
@@ -79,10 +79,40 @@
 ### C-07 — `createNotification` is a client-callable server action
 
 - **Severity:** Critical
-- **Status:** Open
+- **Status:** Resolved
 - **Affected:** T048 (in-app notifications)
 - **Description:** `createNotification` is `export async function` inside `apps/web/src/app/(protected)/notifications/actions.ts`, whose first line is `"use server"`. Every export in a `"use server"` module is a Next.js server action accessible to any authenticated client. The doc-comment says "internal helper — never from the client" but Next.js cannot enforce that. A malicious authenticated user (e.g. a stylist) can invoke `createNotification` with any `recipientEmployeeId`, `type`, `message`, and `link`, spamming other employees' inboxes and potentially phishing them with crafted `link` targets.
 - **Fix:** Move `createNotification` into a non-`"use server"` module (e.g. `apps/web/src/lib/notifications.ts`) imported directly by the callers that need it (`resolveEditRequest`, `createBatch`, `markPieceDone`). Keep `"use server"` only for the three user-facing actions (`listNotifications`, `markRead`, `markAllRead`). Apply the same treatment to `archiveOldNotifications` (see L-21). Tracked as T04R-R2.
+
+---
+
+### C-08 — `neon-http` driver swap broke all `db.transaction()` call sites
+
+- **Severity:** Critical
+- **Status:** Resolved
+- **Affected:** T038 checkout, T035 ticket creation, T044/T045 batch creation, T053/T032b appointment status, T041 edit-request resolve — every call site that uses `db.transaction(...)`.
+- **Description:** Commit `fb29e55` ("fix: switch Neon driver from WebSocket Pool to HTTP neon()") replaced `drizzle-orm/neon-serverless` (Pool/WebSocket) with `drizzle-orm/neon-http` to chase a `JSON.parse` error in Better Auth session lookups. The HTTP driver does not support transactions — its session implementation throws `new Error("No transactions support in neon-http driver")` at runtime. All five financial/state-mutating transactions in the codebase will now throw on first invocation: `processCheckout`, `createTicket`, `createBatch`, `transitionAppointment` (no-show + status), `resolveEditRequest`. The commit message claimed "Transactions still work via neon-http batch mode" — that was wrong; `batch()` is a different API and Drizzle's `.transaction()` does not lower to it. Test suite did not catch this because no integration tests exercise `db.transaction` against a real Neon endpoint.
+- **Fix:** Revert `packages/db/src/index.ts` to the WebSocket Pool driver. The original JSON-parse error was a stale-pool symptom and should be addressed by either (a) disposing the pool on Next.js HMR, (b) using `Pool({ ..., maxIdleTime: ... })` with shorter idle, or (c) using `neonConfig.poolQueryViaFetch = true` which keeps the Pool API but routes single-statement queries over HTTP while preserving transaction behaviour for explicit `pool.connect() → BEGIN/COMMIT`. Tracked as T05R-R1.
+
+---
+
+### C-09 — T109 dedup logic inverts intent — first price change never notifies
+
+- **Severity:** Critical
+- **Status:** Resolved
+- **Affected:** T109 (price change notification), T049 (appointments table)
+- **Description:** `appointments.price_change_acknowledged` defaults to `false` (per the migration and Drizzle schema). The intent of the column is "secretary has acknowledged the latest price change" — so a fresh appointment with no price change should logically be `true` (no pending change to acknowledge). The implementation has it reversed: every newly-booked appointment starts with `false`. In `editVariant` the dedup filter `affected.filter((a) => a.priceChangeAcknowledged)` therefore excludes every fresh appointment, meaning **the first price change after a booking never sends a notification**. The reset-to-`false` UPDATE in the same code path is a no-op for these rows, so the only side effect is the absence of notifications. Effectively T109's primary AC ("an in-app notification is sent for each affected appointment") is silently violated for the most common case.
+- **Fix:** Flip the column default to `true`, add a backfill migration setting all existing rows to `true`, change `editVariant`'s filter to "rows where current value is `true` (need to flag and notify)", and adjust the UI badge condition (`appointment-list.tsx`) accordingly. Tracked as T05R-R2.
+
+---
+
+### C-10 — T053 `reschedule` action is missing — AC explicitly requires it
+
+- **Severity:** Critical
+- **Status:** Resolved
+- **Affected:** T053 (appointment status management)
+- **Description:** T053 acceptance criteria say "All six status transitions are reachable from the UI" and "Reschedule re-runs the overlap check". The status enum includes `rescheduled`, but `transitionAppointmentSchema.action` is `enum(["confirm", "cancel", "no_show", "complete", "reopen"])` — `reschedule` is absent. `ALLOWED_TRANSITIONS` has no entry for it. `AppointmentStatusActions` exposes confirm/cancel/no_show/complete/reopen buttons only. There is no UI path, no schema entry, and no server-side handler for rescheduling. T053 was marked done in `60781c4` despite this gap.
+- **Fix:** Extend `transitionAppointmentSchema` with `reschedule` (action enum + required `newScheduledAt: z.iso.datetime({ offset: true })` + optional `newDurationMinutes`); add `booked → rescheduled` and `confirmed → rescheduled` to `ALLOWED_TRANSITIONS`; refactor the overlap-check logic out of `createAppointment` into a shared helper and call it from the reschedule branch with the new slot; add a Reschedule button + inline date/time form to `AppointmentStatusActions`. Tracked as T05R-R3.
 
 ---
 
@@ -359,7 +389,7 @@
 ### M-29 — `resolveEditRequest` is not wrapped in a transaction
 
 - **Severity:** Medium
-- **Status:** Open
+- **Status:** Resolved
 - **Affected:** T041 (edit approval flow)
 - **Description:** When a cashier approves an edit, three writes happen sequentially without a transaction: (1) update `ticket_items` with the new variant + re-snapshotted price/commission, (2) update `ticket_edit_requests` to `approved` with resolver and timestamp, (3) insert a notification row. If step 2 or 3 fails, the ticket has already been re-priced but the request stays `pending` (letting the requester submit a duplicate) and the requester gets no notification. Because the new snapshot changes the ticket total, this is a financial-data-integrity concern under CLAUDE.md's mandate.
 - **Fix:** Wrap the `ticket_items` update and the `ticket_edit_requests` update in `db.transaction`. Fire the SSE event and create the notification only after commit. Tracked as T04R-R7.
@@ -371,6 +401,22 @@
 - **Affected:** T030 (client CRUD)
 - **Description:** The `editClient`, `archiveClient`, and `unarchiveClient` server actions accept `clientId: string` without validating it's a valid UUID. While Drizzle parameterizes the query (no SQL injection), a malformed ID causes an unnecessary DB round-trip and a generic `NOT_FOUND` error instead of a clear `VALIDATION_ERROR`.
 - **Fix:** Add `z.string().uuid()` validation on `clientId` at the top of each action. Tracked as T03R-R3.
+
+### M-30 — Default `price_change_acknowledged = false` causes false-positive UI flag on every fresh booking
+
+- **Severity:** Medium
+- **Status:** Resolved
+- **Affected:** T049 (appointments table), T109 (price-change UI), T052 (appointment list)
+- **Description:** Closely related to C-09. Because `appointments.price_change_acknowledged` defaults to `false`, every newly-booked or confirmed appointment renders an amber row + warning badge + "Precio notificado" button in the secretary calendar — even when no price change has occurred. Secretaries will quickly start ignoring the badge ("alarm fatigue"), which defeats the purpose of T109's visual cue.
+- **Fix:** Resolved as a side effect of C-09's column-default flip (T05R-R2). After that change, fresh bookings render normally and the badge appears only when a real price change has happened. Tracked under T05R-R2.
+
+### M-31 — `acknowledgeAppointmentPriceChange` lacks rate limiting
+
+- **Severity:** Medium
+- **Status:** Resolved
+- **Affected:** T109 (price-change acknowledge)
+- **Description:** Per CLAUDE.md "General mutations: 60/min per user", every server-action mutation should call `checkRateLimit(rateLimits.general, userId)` before doing work. `acknowledgeAppointmentPriceChange` (in `apps/web/src/app/(protected)/appointments/actions.ts`) is missing this guard, while sibling actions (`createAppointment`, `transitionAppointment`) include it. A logged-in user could pound the action in a loop and bypass the project-wide cap.
+- **Fix:** Add the standard rate-limit block to `acknowledgeAppointmentPriceChange`. Tracked as T05R-R6.
 
 ---
 
@@ -531,7 +577,7 @@
 ### H-19 — Checkout idempotency uses PK without `onConflictDoNothing`
 
 - **Severity:** High
-- **Status:** Open
+- **Status:** Resolved
 - **Affected:** T038 (checkout flow), T039 (split payment)
 - **Description:** `processCheckout` stores `input.idempotencyKey` as the `checkout_sessions.id` (primary key) to deduplicate, but the insert uses a plain `db.insert(...).values(...).returning()` — no `.onConflictDoNothing({ target: checkoutSessions.id })`. If two concurrent requests arrive with the same key (offline replay + manual submit, or rapid double-click before the first response returns), both transactions read no existing row in the pre-check, both try to insert, Postgres serialises, and the loser's `INSERT` raises a duplicate-key error. That error is caught by the generic `catch` and returned as `INTERNAL_ERROR` — the caller gets no idempotent reply. CLAUDE.md's financial-mutation checklist mandates the `INSERT ... ON CONFLICT DO NOTHING RETURNING *, then fetch if empty` pattern for exactly this reason. Also: the `tickets.idempotency_key` column introduced in T033 (per the offline policy) is not referenced by checkout at all — idempotency is keyed at the session level only. That's a correct choice but should be documented.
 - **Fix:** Replace the in-transaction `existingSession` pre-check and naked insert with `INSERT ... ON CONFLICT (id) DO NOTHING RETURNING id`. If no row is returned, re-fetch the existing session and rebuild the summary from the persisted `ticket_payments` rows rather than re-inserting them. Add a test that fires two concurrent `processCheckout` calls with the same `idempotencyKey` and asserts both receive `{ success: true }` with the same `sessionId`. Tracked as T04R-R3.
@@ -539,7 +585,7 @@
 ### H-20 — `createBatch` is not atomic (orphan-batch risk)
 
 - **Severity:** High
-- **Status:** Open
+- **Status:** Resolved
 - **Affected:** T045 (cloth batch creation)
 - **Description:** `createBatch` does two separate `db.insert(...)` calls — one into `cloth_batches`, one into `batch_pieces` — outside a `db.transaction` block. The inline comment even says "Create batch + pieces in a transaction" but the wrapping is missing. If the `batch_pieces` insert fails (invalid `cloth_piece_id`, FK violation, network blip), the `cloth_batches` row is orphaned and visible in the secretary/admin batch list without any pieces. Assigned clothiers receive no notifications yet staff see a phantom batch.
 - **Fix:** Wrap both inserts in `db.transaction(async (tx) => { ... })`. Send clothier notifications only after the transaction commits (not inside it). Tracked as T04R-R4.
@@ -547,7 +593,7 @@
 ### H-21 — No rate limiting on any Phase 4 mutation
 
 - **Severity:** High
-- **Status:** Open
+- **Status:** Resolved
 - **Affected:** T035 (ticket creation), T037 (status transitions), T038 (checkout), T040 (override), T041 (edit requests), T042 (reopen), T045/T046/T047 (batch flows)
 - **Description:** CLAUDE.md locks `@upstash/ratelimit` as the rate-limit stack and prescribes concrete caps (ticket creation 30/min/user, general mutations 60/min/user, etc.). `@upstash/ratelimit` appears only in `pnpm-lock.yaml` and documentation — no application code imports it. Every Phase 4 mutation runs without a limiter: a compromised session, a buggy client polling loop, or a malicious insider can pound these endpoints with no backpressure. Checkout and override in particular are high-impact financial mutations.
 - **Fix:** Introduce `apps/web/src/lib/rate-limit.ts` using `@upstash/ratelimit` + Upstash REST (same provider category the stack already lists) or an in-memory/DB fallback. Apply to: `createTicket`, `processCheckout`, `setOverridePrice`, `requestEdit`, `resolveEditRequest`, `reopenTicket`, `createBatch`, `claimPiece`, `markPieceDone`, `approvePiece`. Use caps from CLAUDE.md. Tracked as T04R-R5.
@@ -555,15 +601,31 @@
 ### H-22 — Mandatory unit tests missing for Phase 4 financial and status logic
 
 - **Severity:** High
-- **Status:** Open
+- **Status:** Resolved
 - **Affected:** T035, T037, T038, T039, T040, T041, T042, T046, T047
 - **Description:** CLAUDE.md declares unit tests mandatory for: status transitions, permission checks, double-pay / duplicate prevention, financial data integrity, and commission calculations. The current test suite has 46 passing tests — all in `middleware-helpers`, `utils`, `i18n/formatting`, and `roles`. Zero tests cover `processCheckout`, `setOverridePrice`, `createTicket`, the four ticket-status transitions, `reopenTicket`, `requestEdit`/`resolveEditRequest`, `claimPiece`, `markPieceDone`, or `approvePiece`. Per-task QA gates were not enforced. CLAUDE.md also mandates 80% coverage on `packages/db/src/queries/` — that directory does not exist and the financial logic lives inside server actions instead.
 - **Fix:** Add Vitest unit tests covering (a) ticket status transition matrix × role, (b) checkout idempotency (same key → same session), (c) payment-sum-vs-total mismatch, (d) optimistic-lock conflict on concurrent checkout, (e) override price recomputes totals, (f) non-cashier cannot set override, (g) batch-piece self-claim race, (h) mark-done by the wrong clothier is rejected, (i) approve skips pending pieces without version bump. Use a transactional test harness that rolls back after each test per CLAUDE.md. Defer the `queries/` directory convention to a separate conversation. Tracked as T04R-R6.
 
+### H-23 — T032b reopen path leaves DB exclusion errors uncaught
+
+- **Severity:** High
+- **Status:** Resolved
+- **Affected:** T032b (no-show count), T051 (double-booking constraint)
+- **Description:** The `appointments_no_overlap` exclusion constraint (T051) has the partial predicate `WHERE status NOT IN ('cancelled','rescheduled','no_show')`, which means a `no_show` row is not part of the exclusion index. When another booking is later created in the same slot, the no-show row's slot becomes occupied. T032b's new `reopen` action transitions `no_show → booked`, which re-enters the exclusion index. If the slot is now taken, Postgres raises `SQLSTATE 23P01` (exclusion_violation) and the raw error bubbles up through `db.transaction(...)` because there is no `try/catch` in `transitionAppointment`. The user sees a 500 with a Drizzle stack trace instead of a friendly conflict message.
+- **Fix:** Wrap the reopen branch in `try/catch`, detect `error.code === '23P01'` (or message-match `appointments_no_overlap`), and return `{ success: false, error: { code: "CONFLICT", message: "El horario ya está ocupado por otra cita" } }`. Tracked as T05R-R4.
+
+### H-24 — T109 multi-step writes are not transactional
+
+- **Severity:** High
+- **Status:** Resolved
+- **Affected:** T109 (price change notification), T024 (catalog edit)
+- **Description:** `editVariant` performs (1) variant update, (2) audit-log insert, (3) appointment-flag reset (UPDATE), (4) N notification inserts (one per affected appointment × number of secretaries) — none wrapped in a single transaction. If the process crashes between steps the variant is updated but appointments are not re-flagged, or the flag reset succeeds but only some secretaries get notified. Per CLAUDE.md, multi-write side effects from a single user action should be atomic; the same standard was applied in T04R-R4 (createBatch) and T04R-R7 (resolveEditRequest).
+- **Fix:** Move steps (1)–(3) into a `db.transaction`. Defer notification creation (step 4) to post-commit (collect the appointment list inside the transaction, then `await Promise.all(...)` for notifications outside). Tracked as T05R-R5.
+
 ### H-17 — Missing `updated_at` column on `employees` and `business_days` tables
 
 - **Severity:** High
-- **Status:** Open
+- **Status:** Resolved
 - **Affected:** T012 (employees migration), T019 (business days migration)
 - **Description:** CLAUDE.md conventions require all tables to include `updated_at` (`timestamp with time zone`, default `now()`) with auto-refresh via Drizzle `.$onUpdate()`. Both the `employees` and `business_days` tables are missing this column. This will cause issues in Phase 7 (payroll) and Phase 4A (tickets) where `updated_at` is needed for audit trails and stale-data detection. The `business_settings` table correctly includes `updated_at`, confirming this is an oversight on the other two.
 - **Fix:** Add a new migration to add `updated_at` columns to both tables. Update Drizzle schemas with `.$onUpdate(() => new Date())`. Tracked as T01R-R2.
@@ -619,7 +681,7 @@
 ### M-25 — Duplicate `ROLE_HOME` constant in middleware-helpers and login-form
 
 - **Severity:** Medium
-- **Status:** Open
+- **Status:** Resolved
 - **Affected:** T016 (login page), T018 (session middleware)
 - **Description:** `ROLE_HOME` is defined identically in both `apps/web/src/lib/middleware-helpers.ts` and `apps/web/src/components/login-form.tsx`. If a role's home path changes, both locations must be updated. Since `middleware-helpers.ts` is a server module and `login-form.tsx` is a client component, they can't directly share the import.
 - **Fix:** Move `ROLE_HOME` to a shared constants file in `@befine/types` (which is isomorphic) and import from both locations. Tracked as T01R-R3.
@@ -643,7 +705,7 @@
 ### L-18 — Inconsistent role-check pattern across server actions
 
 - **Severity:** Low
-- **Status:** Open
+- **Status:** Resolved
 - **Affected:** T019 (business day actions), T013/T014/T015/T022a (employee actions)
 - **Description:** `business-day.ts` uses a `isCashierAdmin()` helper function while `update-employee.ts` and `create-employee.ts` inline the check as `session.user.role !== "cashier_admin"`. Both work but are inconsistent. CLAUDE.md documents a `hasRole(session.user, "cashier_admin")` pattern.
 - **Fix:** Create a shared `hasRole(session, role)` helper and standardize all server actions. Low priority — cosmetic consistency. Tracked as T01R-R4.
@@ -667,7 +729,7 @@
 ### L-21 — `archiveOldNotifications` exposed as a server action
 
 - **Severity:** Low
-- **Status:** Open
+- **Status:** Resolved
 - **Affected:** T048 (notifications)
 - **Description:** `archiveOldNotifications` lives in the same `"use server"` module as the user-facing notification actions, so it is a callable endpoint. Any authenticated user can invoke it directly; it only archives their own notifications, so the blast radius is limited to "archive my own items" — no data theft or spam, but it's an unnecessary endpoint surface. Also it isn't actually called from anywhere today (the "lazy archive on list" comment in the source is aspirational).
 - **Fix:** Either move it into the same non-`"use server"` module as `createNotification` (see C-07) and call it from `listNotifications`, or delete it entirely and rely on a scheduled job later. Tracked with T04R-R2.
@@ -675,7 +737,7 @@
 ### L-22 — Dead duplicate `transitionToReopened` server action
 
 - **Severity:** Low
-- **Status:** Open
+- **Status:** Resolved
 - **Affected:** T042 (ticket reopen)
 - **Description:** `transitionToReopened` in `apps/web/src/app/(protected)/tickets/actions/index.ts` is an orphaned reopen implementation superseded by `reopenTicket` in `admin/tickets/history/actions.ts`. The admin version correctly detaches the ticket from its `checkout_session`, updates `is_partially_reopened`, and contains the payout stub comment; the dead one does none of that. A future refactor could accidentally wire it back up and silently regress T042's AC.
 - **Fix:** Delete `transitionToReopened` (it has no callers in the app code — only lingering graphify-out references). Tracked as T04R-R8.
@@ -683,7 +745,7 @@
 ### L-23 — Phase 4 server actions skip Zod validation on scalar inputs
 
 - **Severity:** Low
-- **Status:** Open
+- **Status:** Resolved
 - **Affected:** T041 (`requestEdit`, `resolveEditRequest`), T042 (`reopenTicket`), T046 (`claimPiece`, `markPieceDone`), T047 (`approvePiece`, `adminMarkApproved`), T048 (`markRead`)
 - **Description:** CLAUDE.md requires every server action to validate input with a Zod schema before business logic. Several Phase 4 actions accept raw `string`/`number` parameters (e.g. `ticketItemId: string`, `pieceId: string`, `expectedVersion: number`) and rely on the DB to reject malformed IDs. The Drizzle query is parameterised so there's no SQL-injection risk, but the convention ensures consistent error codes (`VALIDATION_ERROR` vs generic `INTERNAL_ERROR` on a bad UUID) and keeps the validation boundary explicit.
 - **Fix:** Define shared Zod schemas in `packages/types/src/schemas/` (`editRequestSchema`, `reopenTicketSchema`, `claimPieceSchema`, etc.) and `safeParse` inputs at the top of each action. Tracked as T04R-R9.
@@ -714,49 +776,71 @@
 
 > When an issue is resolved, update its status above and add an entry here.
 
-| Issue ID | Date resolved | Resolution                                                                                          | Commit/PR                    |
-| -------- | ------------- | --------------------------------------------------------------------------------------------------- | ---------------------------- |
-| C-01     | 2026-04-02    | Added `appointment_id (FK nullable)` to T033 schema in `phase-04a-tickets-checkout.md`              | Senior QA review             |
-| C-02     | 2026-04-02    | Added `P4B --> P7` edge to mermaid dependency graph in `project-plan.md`                            | Senior QA review             |
-| H-02     | 2026-04-02    | Updated `business.md` Sentry entry from "Phase 10" to "Phase 0"                                     | Senior QA review             |
-| H-03     | 2026-04-02    | Added manual password fallback to T013 AC when Resend is unavailable                                | Senior QA review             |
-| H-06     | 2026-04-02    | Added security review checklist to T089 acceptance criteria                                         | Senior QA review             |
-| H-08     | 2026-04-02    | Added shared `payment_method_enum` definition to T006 acceptance criteria                           | Senior QA review             |
-| H-09     | 2026-04-02    | Resolved via C-01 fix (same `appointment_id` column)                                                | Senior QA review             |
-| H-10     | 2026-04-02    | Added `cancelled` status to large order enum in T057 and T059 with cancellation reason              | Senior QA review             |
-| H-11     | 2026-04-02    | Added rate limiting policy to T097 acceptance criteria covering all mutation endpoints              | Senior QA review             |
-| M-11     | 2026-04-02    | Added T061 to T062 dependency list in task file and progress.md                                     | Senior QA review             |
-| L-10     | 2026-04-02    | Updated `postgres-providers.md` to reference only Drizzle ORM                                       | Senior QA review             |
-| L-12     | 2026-04-02    | Updated T087 health endpoint AC to include DB connectivity check (`SELECT 1`)                       | Senior QA review             |
-| C-03     | 2026-04-02    | Currency confirmed as COP (Colombian Pesos). T099 ACs updated.                                      | Stakeholder decision session |
-| C-04     | 2026-04-02    | Created `docs/research/data-privacy-compliance.md` (Colombian Ley 1581 de 2012)                     | Stakeholder decision session |
-| H-01     | 2026-04-02    | Phase 0 split into 0A (Infrastructure) and 0B (Standards & Design)                                  | Stakeholder decision session |
-| H-04     | 2026-04-02    | Added "Migration Path" section to `docs/research/auth-providers.md` with Auth.js and Clerk steps    | Stakeholder decision session |
-| H-05     | 2026-04-02    | Added 30-second polling fallback to T098 ACs                                                        | Stakeholder decision session |
-| H-07     | 2026-04-02    | Added storage capacity estimate to `docs/research/postgres-providers.md` (~28 MB for 6 months)      | Stakeholder decision session |
-| H-12     | 2026-04-02    | Added loading state to T019 "Open Day" and cold start documentation to postgres-providers.md        | Stakeholder decision session |
-| H-13     | 2026-04-02    | Created `docs/testing/concurrency-test-plan.md` with 8 race condition scenarios                     | QA review action             |
-| H-14     | 2026-04-02    | Business day boundary tests added to phase-04a test plan; timezone constant defined                 | QA review action             |
-| H-15     | 2026-04-02    | Added T106 (UAT) to Phase 10 between T088 and T089                                                  | QA review action             |
-| H-16     | 2026-04-02    | Added post-deployment smoke test AC to T095                                                         | QA review action             |
-| M-01     | 2026-04-02    | Added no-show decrement logic to T032b ACs                                                          | Stakeholder decision session |
-| M-03     | 2026-04-02    | Added `service_variant_id` FK to T049 appointments table                                            | Stakeholder decision session |
-| M-06     | 2026-04-02    | Added reopen day capability to T019 ACs (admin only, audit trail, most recent day only)             | Stakeholder decision session |
-| M-07     | 2026-04-02    | Added `expected_work_days` to T012 employees table; T065 updated for part-time                      | Stakeholder decision session |
-| M-08     | 2026-04-02    | Added `original_computed_amount` and `adjustment_reason` to T066 payouts table                      | Stakeholder decision session |
-| M-13     | 2026-04-02    | Removed `deposit_paid` column from T057; computed from payments table                               | Stakeholder decision session |
-| M-14     | 2026-04-02    | Business timezone constant `America/Bogota` added to T002 standards                                 | Stakeholder decision session |
-| M-15     | 2026-04-02    | Created `docs/research/frontend-libraries.md`                                                       | Stakeholder decision session |
-| M-17     | 2026-04-02    | `commission_pct` precision set to `numeric(5,2)` in T023; banker's rounding in T002                 | Stakeholder decision session |
-| M-19     | 2026-04-02    | Added structured business logic logging AC to T085                                                  | QA review action             |
-| M-20     | 2026-04-02    | Integration test approach documented in `docs/testing/README.md`                                    | QA review action             |
-| L-15     | 2026-04-02    | Rounding policy (banker's rounding) and precision defined in T002 standards                         | Stakeholder decision session |
-| M-16     | 2026-04-09    | Stale — Pusher replaced by SSE; no third-party message volume limits apply                          | Phase 0A Opus audit          |
-| M-21     | 2026-04-09    | `pino-pretty` installed as dev dep in `apps/web`                                                    | T0AR-R1                      |
-| M-22     | 2026-04-09    | Seed script user+account inserts wrapped in `db.transaction()`                                      | T0AR-R2                      |
-| M-23     | 2026-04-09    | Middleware `roleCanAccess()` added — each role restricted to its path prefix                        | T0AR-R3                      |
-| M-24     | 2026-04-09    | Sentry `beforeSend` extended to scrub exception messages, breadcrumbs, and extra data               | T0AR-R4                      |
-| L-16     | 2026-04-09    | `@deprecated` JSDoc added to `use-sse.ts`; developers directed to `useRealtimeEvent`                | Phase 0 Opus audit           |
-| H-18     | 2026-04-11    | Added `eq(clients.isActive, true)` guard to `editClient` WHERE clause                               | T03R-R1                      |
-| M-26     | 2026-04-11    | Added `clients.clearSelection` i18n key; replaced hardcoded aria-labels and "OK" button             | T03R-R2                      |
-| M-27     | 2026-04-11    | Added `clientIdSchema = z.string().uuid()` validation to editClient, archiveClient, unarchiveClient | T03R-R3                      |
+| Issue ID | Date resolved | Resolution                                                                                           | Commit/PR                    |
+| -------- | ------------- | ---------------------------------------------------------------------------------------------------- | ---------------------------- |
+| C-01     | 2026-04-02    | Added `appointment_id (FK nullable)` to T033 schema in `phase-04a-tickets-checkout.md`               | Senior QA review             |
+| C-02     | 2026-04-02    | Added `P4B --> P7` edge to mermaid dependency graph in `project-plan.md`                             | Senior QA review             |
+| H-02     | 2026-04-02    | Updated `business.md` Sentry entry from "Phase 10" to "Phase 0"                                      | Senior QA review             |
+| H-03     | 2026-04-02    | Added manual password fallback to T013 AC when Resend is unavailable                                 | Senior QA review             |
+| H-06     | 2026-04-02    | Added security review checklist to T089 acceptance criteria                                          | Senior QA review             |
+| H-08     | 2026-04-02    | Added shared `payment_method_enum` definition to T006 acceptance criteria                            | Senior QA review             |
+| H-09     | 2026-04-02    | Resolved via C-01 fix (same `appointment_id` column)                                                 | Senior QA review             |
+| H-10     | 2026-04-02    | Added `cancelled` status to large order enum in T057 and T059 with cancellation reason               | Senior QA review             |
+| H-11     | 2026-04-02    | Added rate limiting policy to T097 acceptance criteria covering all mutation endpoints               | Senior QA review             |
+| M-11     | 2026-04-02    | Added T061 to T062 dependency list in task file and progress.md                                      | Senior QA review             |
+| L-10     | 2026-04-02    | Updated `postgres-providers.md` to reference only Drizzle ORM                                        | Senior QA review             |
+| L-12     | 2026-04-02    | Updated T087 health endpoint AC to include DB connectivity check (`SELECT 1`)                        | Senior QA review             |
+| C-03     | 2026-04-02    | Currency confirmed as COP (Colombian Pesos). T099 ACs updated.                                       | Stakeholder decision session |
+| C-04     | 2026-04-02    | Created `docs/research/data-privacy-compliance.md` (Colombian Ley 1581 de 2012)                      | Stakeholder decision session |
+| H-01     | 2026-04-02    | Phase 0 split into 0A (Infrastructure) and 0B (Standards & Design)                                   | Stakeholder decision session |
+| H-04     | 2026-04-02    | Added "Migration Path" section to `docs/research/auth-providers.md` with Auth.js and Clerk steps     | Stakeholder decision session |
+| H-05     | 2026-04-02    | Added 30-second polling fallback to T098 ACs                                                         | Stakeholder decision session |
+| H-07     | 2026-04-02    | Added storage capacity estimate to `docs/research/postgres-providers.md` (~28 MB for 6 months)       | Stakeholder decision session |
+| H-12     | 2026-04-02    | Added loading state to T019 "Open Day" and cold start documentation to postgres-providers.md         | Stakeholder decision session |
+| H-13     | 2026-04-02    | Created `docs/testing/concurrency-test-plan.md` with 8 race condition scenarios                      | QA review action             |
+| H-14     | 2026-04-02    | Business day boundary tests added to phase-04a test plan; timezone constant defined                  | QA review action             |
+| H-15     | 2026-04-02    | Added T106 (UAT) to Phase 10 between T088 and T089                                                   | QA review action             |
+| H-16     | 2026-04-02    | Added post-deployment smoke test AC to T095                                                          | QA review action             |
+| M-01     | 2026-04-02    | Added no-show decrement logic to T032b ACs                                                           | Stakeholder decision session |
+| M-03     | 2026-04-02    | Added `service_variant_id` FK to T049 appointments table                                             | Stakeholder decision session |
+| M-06     | 2026-04-02    | Added reopen day capability to T019 ACs (admin only, audit trail, most recent day only)              | Stakeholder decision session |
+| M-07     | 2026-04-02    | Added `expected_work_days` to T012 employees table; T065 updated for part-time                       | Stakeholder decision session |
+| M-08     | 2026-04-02    | Added `original_computed_amount` and `adjustment_reason` to T066 payouts table                       | Stakeholder decision session |
+| M-13     | 2026-04-02    | Removed `deposit_paid` column from T057; computed from payments table                                | Stakeholder decision session |
+| M-14     | 2026-04-02    | Business timezone constant `America/Bogota` added to T002 standards                                  | Stakeholder decision session |
+| M-15     | 2026-04-02    | Created `docs/research/frontend-libraries.md`                                                        | Stakeholder decision session |
+| M-17     | 2026-04-02    | `commission_pct` precision set to `numeric(5,2)` in T023; banker's rounding in T002                  | Stakeholder decision session |
+| M-19     | 2026-04-02    | Added structured business logic logging AC to T085                                                   | QA review action             |
+| M-20     | 2026-04-02    | Integration test approach documented in `docs/testing/README.md`                                     | QA review action             |
+| L-15     | 2026-04-02    | Rounding policy (banker's rounding) and precision defined in T002 standards                          | Stakeholder decision session |
+| M-16     | 2026-04-09    | Stale — Pusher replaced by SSE; no third-party message volume limits apply                           | Phase 0A Opus audit          |
+| M-21     | 2026-04-09    | `pino-pretty` installed as dev dep in `apps/web`                                                     | T0AR-R1                      |
+| M-22     | 2026-04-09    | Seed script user+account inserts wrapped in `db.transaction()`                                       | T0AR-R2                      |
+| M-23     | 2026-04-09    | Middleware `roleCanAccess()` added — each role restricted to its path prefix                         | T0AR-R3                      |
+| M-24     | 2026-04-09    | Sentry `beforeSend` extended to scrub exception messages, breadcrumbs, and extra data                | T0AR-R4                      |
+| L-16     | 2026-04-09    | `@deprecated` JSDoc added to `use-sse.ts`; developers directed to `useRealtimeEvent`                 | Phase 0 Opus audit           |
+| H-18     | 2026-04-11    | Added `eq(clients.isActive, true)` guard to `editClient` WHERE clause                                | T03R-R1                      |
+| M-26     | 2026-04-11    | Added `clients.clearSelection` i18n key; replaced hardcoded aria-labels and "OK" button              | T03R-R2                      |
+| M-27     | 2026-04-11    | Added `clientIdSchema = z.string().uuid()` validation to editClient, archiveClient, unarchiveClient  | T03R-R3                      |
+| H-17     | 2026-04-11    | Added `updated_at` migration + `.$onUpdate()` to employees and business_days tables                  | T01R-R2                      |
+| M-25     | 2026-04-11    | `ROLE_HOME` moved to `@befine/types` constants; both files import from shared source                 | T01R-R3                      |
+| L-18     | 2026-04-11    | Standardized all server actions to use `hasRole(session.user, role)` helper                          | T01R-R4                      |
+| H-19     | 2026-04-18    | `processCheckout` idempotency rewritten with `INSERT ... ON CONFLICT DO NOTHING RETURNING` + refetch | T04R-R3                      |
+| H-20     | 2026-04-18    | `createBatch` wrapped in `db.transaction`; clothier notifications deferred to post-commit            | T04R-R4                      |
+| H-21     | 2026-04-18    | `lib/rate-limit.ts` introduced; CLAUDE.md caps applied to all Phase 4 mutations                      | T04R-R5                      |
+| H-22     | 2026-04-18    | Vitest unit tests added covering ticket transitions × role, checkout idempotency, optimistic locks   | T04R-R6                      |
+| M-29     | 2026-04-18    | `resolveEditRequest` wrapped in `db.transaction`; SSE + notification deferred to post-commit         | T04R-R7                      |
+| L-21     | 2026-04-18    | `createNotification`/`archiveOldNotifications` extracted to `lib/notifications.ts` private helper    | T04R-R2                      |
+| L-22     | 2026-04-18    | Dead `transitionToReopened` action deleted                                                           | T04R-R8                      |
+| L-23     | 2026-04-18    | Zod schemas added in `packages/types/src/schemas/` for edit-request, reopen, claim, mark, approve    | T04R-R9                      |
+| C-06     | 2026-04-18    | `/api/realtime/[channel]` gated with session + per-channel role check; removed from SHARED_PATHS     | T04R-R1                      |
+| C-07     | 2026-04-18    | `createNotification` extracted to private helper; no longer a callable server action endpoint        | T04R-R2                      |
+| C-08     | 2026-04-19    | Dual-driver setup: `neon-http` for reads, `neon-serverless` Pool for interactive transactions        | T05R-R1                      |
+| C-09     | 2026-04-19    | `price_change_acknowledged` default flipped to `true`; backfill migration; filter logic corrected    | T05R-R2                      |
+| C-10     | 2026-04-19    | `reschedule` action implemented with overlap re-check; Reschedule button wired in UI                 | T05R-R3                      |
+| H-23     | 2026-04-19    | Reopen branch catches `23P01` exclusion violation; returns friendly CONFLICT response                | T05R-R4                      |
+| H-24     | 2026-04-19    | `editVariant` price-change side effects wrapped in single transaction; notifications post-commit     | T05R-R5                      |
+| M-30     | 2026-04-19    | Resolved as side effect of C-09 — fresh bookings no longer show false-positive badge                 | T05R-R2                      |
+| M-31     | 2026-04-19    | `checkRateLimit(rateLimits.general)` added to `acknowledgeAppointmentPriceChange`                    | T05R-R6                      |
+| L-24     | 2026-04-19    | `complete` action wires `tickets.appointment_id` when `ticketId` is provided                         | T05R-R7                      |
+| L-25     | 2026-04-19    | `editVariant` protected by optimistic lock (`version` column) to prevent concurrent double-notify    | T05R-R8                      |
