@@ -10,7 +10,7 @@
 import { headers } from "next/headers";
 import { eq, and, inArray } from "drizzle-orm";
 import { auth } from "@/lib/auth";
-import { getDb } from "@/lib/db";
+import { getDb, getTxDb } from "@/lib/db";
 import {
   tickets,
   ticketItems,
@@ -179,8 +179,9 @@ export async function createTicket(rawInput: unknown): Promise<ActionResult<Tick
   const createdByEmployeeId = emp?.id ?? input.employeeId;
 
   // Insert ticket + item atomically
+  const txDb = getTxDb();
   try {
-    const result = await db.transaction(async (tx) => {
+    const result = await txDb.transaction(async (tx) => {
       // Idempotency: return existing ticket if key already used
       const existing = await tx
         .select()

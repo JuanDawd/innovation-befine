@@ -10,7 +10,7 @@
 import { headers } from "next/headers";
 import { eq, and } from "drizzle-orm";
 import { auth } from "@/lib/auth";
-import { getDb } from "@/lib/db";
+import { getDb, getTxDb } from "@/lib/db";
 import { employees, users, clothBatches, batchPieces } from "@befine/db/schema";
 import { createBatchSchema, type CreateBatchInput } from "@befine/types";
 import type { ActionResult } from "@/lib/action-result";
@@ -110,7 +110,8 @@ export async function createBatch(rawInput: unknown): Promise<ActionResult<{ id:
     return { success: false, error: { code: "NOT_FOUND", message: "Empleado no encontrado" } };
 
   // Create batch + pieces atomically
-  const batchId = await db.transaction(async (tx) => {
+  const txDb = getTxDb();
+  const batchId = await txDb.transaction(async (tx) => {
     const [batch] = await tx
       .insert(clothBatches)
       .values({

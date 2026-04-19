@@ -10,7 +10,7 @@
 import { headers } from "next/headers";
 import { eq, and, inArray } from "drizzle-orm";
 import { auth } from "@/lib/auth";
-import { getDb } from "@/lib/db";
+import { getDb, getTxDb } from "@/lib/db";
 import {
   tickets,
   ticketItems,
@@ -180,8 +180,9 @@ export async function processCheckout(rawInput: unknown): Promise<ActionResult<C
   if (!cashierEmp)
     return { success: false, error: { code: "NOT_FOUND", message: "Empleado no encontrado" } };
 
+  const txDb = getTxDb();
   try {
-    const result = await db.transaction(async (tx) => {
+    const result = await txDb.transaction(async (tx) => {
       // ── Idempotency: try to insert the session; if it already exists, refetch ──
       // Using ON CONFLICT DO NOTHING so concurrent duplicate requests get the
       // same response instead of an INTERNAL_ERROR on the duplicate-key violation.

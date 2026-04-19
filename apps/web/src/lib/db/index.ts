@@ -1,4 +1,4 @@
-import { createDb, type Database } from "@befine/db";
+import { createDb, createTxDb, type Database, type TxDatabase } from "@befine/db";
 
 function getDatabaseUrl(): string {
   const url = process.env.DATABASE_URL;
@@ -11,12 +11,28 @@ function getDatabaseUrl(): string {
 }
 
 let _db: Database | undefined;
+let _txDb: TxDatabase | undefined;
 
+/**
+ * HTTP driver singleton — use for reads, simple writes, Better Auth, and
+ * any query that does not need a multi-statement interactive transaction.
+ */
 export function getDb(): Database {
   if (!_db) {
     _db = createDb(getDatabaseUrl());
   }
   return _db;
+}
+
+/**
+ * WebSocket Pool singleton — use ONLY inside db.transaction(async (tx) => { … })
+ * call sites that branch on intermediate results. See packages/db/README.md.
+ */
+export function getTxDb(): TxDatabase {
+  if (!_txDb) {
+    _txDb = createTxDb(getDatabaseUrl());
+  }
+  return _txDb;
 }
 
 export async function healthCheck(): Promise<{ ok: boolean; latencyMs: number }> {

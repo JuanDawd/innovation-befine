@@ -283,6 +283,191 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 
 ---
 
+> **Phase 5 completion review — Opus audit 2026-04-19**
+> All 7 tasks meet their structural acceptance criteria (schema, role gates, status enum, double-booking constraint, day view, no-show transaction, price-change hook). Regression: 148 tests pass (52 in appointments + 96 elsewhere), typecheck clean, lint has 2 pre-existing warnings (Phase 1 forms — not regressions). However, the audit surfaces **one Critical regression introduced outside Phase 5 work** (C-08 — `neon-http` driver swap broke all `db.transaction()` calls), **two Critical Phase 5 issues** (C-09 T109 dedup logic inverts intent so first price change never notifies; C-10 T053 `reschedule` action missing from UI/schema/handler — AC explicitly required), **two High issues** (H-23 T032b `reopen` not guarded against `appointments_no_overlap` exclusion constraint; H-24 T109 multi-step writes not transactional → partial-failure state), **two Medium** (M-30 T109 default `false` causes false-positive UI badge on every fresh booking; M-31 `acknowledgeAppointmentPriceChange` lacks rate limit), **two Low** (L-24 T053 `complete` action does not populate `tickets.appointment_id`; L-25 concurrent `editVariant` calls can double-fire notifications). **Phase 6 is blocked until C-08, C-09, C-10, H-23, and H-24 are resolved.**
+
+---
+
+## Phase 5R — Remediation (Opus audit, 2026-04-19)
+
+> Created by Phase 5 completion review. Critical and High items block Phase 6. Medium and Low items should be resolved before Phase 7 ships.
+
+| ID      | Task                                                                                                                                                                                                                                                                                                                                                                                                                          | Severity | Status  | Source     |
+| ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------- | ---------- |
+| T05R-R1 | Fix: adopt a **dual-driver** Neon setup (see T05R-R1 detail block below). Keep `neon-http` as the default for reads, Better Auth, and simple writes. Add a separate `neon-serverless` (WebSocket `Pool`) driver used **only** by the 5 interactive-transaction call sites. Additionally, diagnose and root-fix the `JSON.parse` rejection at its real source (not a driver workaround).                                       | Critical | done    | Opus audit |
+| T05R-R2 | Fix: T109 dedup inversion — flip the intent. `price_change_acknowledged` should default to `true` (no pending change) on insert; `editVariant` should reset to `false` and **always** notify when transitioning `true → false`, suppress when already `false`. Update column default in schema, add a migration to backfill existing rows to `true`, fix `editVariant` filter, and adjust the UI badge condition accordingly. | Critical | pending | Opus audit |
+| T05R-R3 | Fix: implement T053 `reschedule` action — extend `transitionAppointmentSchema` (`reschedule` action with `newScheduledAt` field), add to `ALLOWED_TRANSITIONS` (booked/confirmed → rescheduled with overlap re-check via the same logic as `createAppointment`), wire a Reschedule button in `AppointmentStatusActions` with a date/time inline form. AC of T053 explicitly requires reschedule and the overlap re-check.     | Critical | pending | Opus audit |
+| T05R-R4 | Fix: T032b reopen path — wrap the `no_show → booked` UPDATE in a try/catch for Postgres error code `23P01`; on exclusion violation, return `{ code: "CONFLICT", message: "El horario ya está ocupado" }` instead of letting the raw DB error bubble up.                                                                                                                                                                       | High     | pending | Opus audit |
+| T05R-R5 | Fix: wrap `editVariant` price-change side effects (variant update + audit log + appointment-flag reset + N notifications) in a single `db.transaction`, deferring notification fan-out to post-commit. Currently a partial failure leaves variant updated but appointments un-flagged or only some secretaries notified.                                                                                                      | High     | pending | Opus audit |
+| T05R-R6 | Fix: add `checkRateLimit(rateLimits.general)` to `acknowledgeAppointmentPriceChange` per CLAUDE.md "General mutations: 60/min per user".                                                                                                                                                                                                                                                                                      | Medium   | pending | Opus audit |
+| T05R-R7 | Fix: wire `complete` action to optionally accept a `ticketId` and set `tickets.appointment_id` atomically when the secretary completes an appointment that has an associated ticket. AC of T053 says completion "optionally links to a ticket" but no plumbing exists today.                                                                                                                                                  | Low      | pending | Opus audit |
+| T05R-R8 | Fix: protect `editVariant` against concurrent double-notification by adding optimistic-lock (`version` column on `service_variants`) or a SELECT FOR UPDATE on the variant row before computing `priceChanged`.                                                                                                                                                                                                               | Low      | pending | Opus audit |
+
+### T05R-R1 detail — Neon driver architecture + JSON.parse root fix
+
+**Context — why the current state is broken**
+
+1. `packages/db/src/index.ts` was swapped from `drizzle-orm/neon-serverless` (WebSocket `Pool`) to `drizzle-orm/neon-http` in commit `fb29e55`, with the claim _"Transactions still work via neon-http batch mode."_ That claim is wrong. `drizzle-orm/neon-http/session.js` throws a hardcoded `"No transactions support in neon-http driver"` from both `NeonHttpSession.transaction()` and `NeonTransaction.transaction()`. Any call to `db.transaction(async (tx) => …)` crashes at runtime.
+2. The `neon-http` driver only exposes `sql.transaction([...])` — a **non-interactive, pre-built array of queries** sent to Neon's Data API in a single HTTP round-trip. There is no `BEGIN`/`COMMIT`/conditional branching. Our 5 call sites all branch on intermediate results (e.g. checkout's `if (inserted.length === 0) refetch else insert+close`), so this mode cannot replace them.
+3. The swap was made to fix an `"Unexpected non-whitespace character after JSON at position 134"` error originally blamed on Pool. **The same error still fires on neon-http**, proving it was never a driver-layer issue. The driver swap was a red herring.
+
+**Affected interactive transaction call sites (must keep working)**
+
+- `apps/web/src/app/(protected)/cashier/checkout/actions.ts:184` — `processCheckout` (idempotent insert, conditional replay vs new-session, optimistic lock on ticket.version, multi-row updates)
+- `apps/web/src/app/(protected)/tickets/actions/index.ts:183` — ticket creation/update
+- `apps/web/src/app/(protected)/tickets/edit-requests/actions.ts:364` — `resolveEditRequest`
+- `apps/web/src/app/(protected)/appointments/actions.ts:388` — appointment status transitions (no-show increment/decrement path)
+- `apps/web/src/app/(protected)/batches/actions.ts:113` — `createBatch` (parent + N children atomic)
+
+**Canonical driver policy (from Neon's own documentation)**
+
+| Use case                                                               | Driver                                   | Why                                                                 |
+| ---------------------------------------------------------------------- | ---------------------------------------- | ------------------------------------------------------------------- |
+| One-shot SELECT, simple INSERT/UPDATE, Better Auth, SSE/realtime reads | **`neon-http`** (`neon()` + `neon-http`) | Stateless, no socket, no stale-connection class of bug, low latency |
+| Interactive transactions with conditional logic (our 5 sites)          | **`neon-serverless`** (`Pool` + `ws`)    | Only driver that supports `BEGIN`/`COMMIT` with conditional queries |
+| Long-lived LISTEN/NOTIFY, session-scoped state                         | **`neon-serverless` Client** (future)    | Not needed for MVP                                                  |
+
+Neon's docs explicitly direct interactive transactions → `Pool`/`Client`; HTTP driver → one-shot queries only. Source: `https://neon.com/docs/serverless/serverless-driver` §"Choose a driver".
+
+**Required implementation — step by step**
+
+**Step 1 — Root-cause the `JSON.parse` error before touching drivers.**
+
+The rejection has no usable stack (only `JSON.parse (<anonymous>)`) because it originates in a bundled/minified dependency frame. The swap happened without ever identifying the real source, so it must be identified now. Fire-and-forget timing (rejection prints _after_ the `200` response, near SSE channel compile) suggests a background async task.
+
+1. Add a temporary diagnostic handler to `apps/web/src/instrumentation.ts` that runs only when `NODE_ENV !== "production"`:
+
+   ```ts
+   if (process.env.NEXT_RUNTIME === "nodejs") {
+     process.on("unhandledRejection", (reason) => {
+       console.error("[unhandledRejection]", reason);
+       if (reason instanceof Error) {
+         console.error("stack:", reason.stack);
+         let cause: unknown = (reason as { cause?: unknown }).cause;
+         while (cause) {
+           console.error("caused by:", cause);
+           cause = (cause as { cause?: unknown })?.cause;
+         }
+       }
+     });
+   }
+   ```
+
+2. Reproduce the error once (`/cashier/appointments` POST seems to trigger it reliably). Capture the full stack.
+3. Identify the real originating module. Most likely candidates, ranked by probability:
+   - **Sentry OpenTelemetry fetch instrumentation** patching `fetch` and buffering response bodies incorrectly → fixed by excluding Neon's Data API host from Sentry HTTP instrumentation (`Sentry.init({ integrations: [...], tracing: { ignoreIncomingRequestsHosts: [...], ignoreOutgoingRequestsHosts: ["api.neon.tech"] } })`) or by pinning `@sentry/nextjs` to a version without the regression.
+   - **A fire-and-forget async** in a server action (e.g. `publishEvent`/`createNotification`) that calls fetch and parses a non-JSON body without a catch.
+   - **Neon Data API** returning an error envelope with trailing whitespace/chunked framing bug. Fix: wrap `createDb`'s HTTP driver in a `fetchOptions` override that reads `.text()` first, then `JSON.parse`s inside a `try/catch` with the raw body attached to the thrown error.
+4. Fix at the root (never `swallow.catch(() => {})`). The diagnostic handler comes out once the real cause is fixed.
+
+**Step 2 — Refactor `packages/db/src/index.ts` to expose both drivers.**
+
+Replace the single `createDb` with two exports, both memoized per-URL:
+
+```ts
+// packages/db/src/index.ts
+import { neon, neonConfig, Pool } from "@neondatabase/serverless";
+import { drizzle as drizzleHttp } from "drizzle-orm/neon-http";
+import { drizzle as drizzleWs } from "drizzle-orm/neon-serverless";
+import ws from "ws";
+
+import * as schema from "./schema";
+
+// Required for neon-serverless in Node runtime
+neonConfig.webSocketConstructor = ws;
+
+// Recycle sockets aggressively so Neon compute sleep/wake can't hand us a
+// dead connection. 10s matches Neon's default idle timeout behaviour.
+neonConfig.poolQueryViaFetch = false;
+
+export function createDb(databaseUrl: string) {
+  const sql = neon(databaseUrl);
+  return drizzleHttp({ client: sql, schema });
+}
+
+export function createTxDb(databaseUrl: string) {
+  const pool = new Pool({
+    connectionString: databaseUrl,
+    // Evict idle sockets before Neon's compute can sleep them out from under us.
+    idleTimeoutMillis: 10_000,
+    // Cap per-instance connections — Neon free tier has a 100-conn ceiling
+    // shared across all Vercel function instances.
+    max: 5,
+  });
+  return drizzleWs({ client: pool, schema });
+}
+
+export type Database = ReturnType<typeof createDb>;
+export type TxDatabase = ReturnType<typeof createTxDb>;
+
+export { schema };
+```
+
+**Step 3 — Update `apps/web/src/lib/db/index.ts` to memoize both singletons.**
+
+```ts
+import { createDb, createTxDb, type Database, type TxDatabase } from "@befine/db";
+
+let _db: Database | undefined;
+let _txDb: TxDatabase | undefined;
+
+function getDatabaseUrl(): string {
+  const url = process.env.DATABASE_URL;
+  if (!url) throw new Error("DATABASE_URL is not set.");
+  return url;
+}
+
+export function getDb(): Database {
+  if (!_db) _db = createDb(getDatabaseUrl());
+  return _db;
+}
+
+export function getTxDb(): TxDatabase {
+  if (!_txDb) _txDb = createTxDb(getDatabaseUrl());
+  return _txDb;
+}
+```
+
+**Step 4 — Migrate the 5 interactive call sites from `getDb()` to `getTxDb()`.**
+
+Only the `.transaction(...)` call sites switch. All reads stay on `getDb()`. Pattern:
+
+```ts
+// before
+const db = getDb();
+const result = await db.transaction(async (tx) => { … });
+
+// after
+const txDb = getTxDb();
+const result = await txDb.transaction(async (tx) => { … });
+```
+
+Do **not** share a transaction between the two drivers (they own separate connections).
+
+**Step 5 — Prove the Pool driver does not re-introduce the original error.**
+
+1. Warm the dev server, idle long enough for Neon compute to sleep (≥5 min on free tier), then hit one of the transactional endpoints. Verify no `JSON.parse` rejection.
+2. Run `turbo test` and hit each of the 5 endpoints manually (create ticket, create batch, checkout, resolve edit request, appointment no-show + reopen). All must succeed.
+3. If the rejection reappears, **do not re-swap drivers**. Step 1's diagnostic handler will have the real stack. Fix that source.
+
+**Step 6 — Document the policy.**
+
+Update `apps/web/src/lib/db/README.md` with a short "When to use `getDb()` vs `getTxDb()`" section so future contributors do not roll back the split.
+
+**Acceptance criteria**
+
+- [ ] Diagnostic handler landed, error reproduced, real source identified and fixed at root
+- [ ] `packages/db/src/index.ts` exposes both `createDb` and `createTxDb`
+- [ ] `apps/web/src/lib/db/index.ts` exposes both `getDb()` and `getTxDb()`
+- [ ] All 5 interactive-transaction call sites use `getTxDb()`; everything else stays on `getDb()`
+- [ ] Manual repro of all 5 flows passes after a cold Neon wake-up (no JSON parse rejection, no `"No transactions support"` error)
+- [ ] `turbo test` is green
+- [ ] `apps/web/src/lib/db/README.md` documents the dual-driver policy
+- [ ] Diagnostic `unhandledRejection` handler removed once root cause is fixed
+- [ ] Commit message: `fix(T05R-R1): dual-driver Neon setup (http for reads, ws Pool for interactive tx) + root-fix JSON.parse rejection`
+
+---
+
 ## Phase 6 — Large cloth orders
 
 | ID   | Task                                                  | Status  | Dependencies |

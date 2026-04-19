@@ -12,7 +12,7 @@
 import { headers } from "next/headers";
 import { eq, and, inArray } from "drizzle-orm";
 import { auth } from "@/lib/auth";
-import { getDb } from "@/lib/db";
+import { getDb, getTxDb } from "@/lib/db";
 import {
   ticketEditRequests,
   ticketItems,
@@ -360,8 +360,9 @@ export async function resolveEditRequest(
   const ticketId = ticketRow?.ticketId;
 
   // ── Atomic: update ticket_items (if approved) + resolve the request ─────────
+  const txDb = getTxDb();
   try {
-    await db.transaction(async (tx) => {
+    await txDb.transaction(async (tx) => {
       if (decision === "approved") {
         const [newVariant] = await tx
           .select({

@@ -11,7 +11,7 @@
 import { headers } from "next/headers";
 import { eq, and, sql } from "drizzle-orm";
 import { auth } from "@/lib/auth";
-import { getDb } from "@/lib/db";
+import { getDb, getTxDb } from "@/lib/db";
 import { appointments, employees, users, clients } from "@befine/db/schema";
 import { createAppointmentSchema, transitionAppointmentSchema } from "@befine/types";
 import type { ActionResult } from "@/lib/action-result";
@@ -385,7 +385,8 @@ export async function transitionAppointment(
   const previousStatus = appt.status;
 
   // Run inside a transaction: appointment update + optional no-show count delta (T032b)
-  await db.transaction(async (tx) => {
+  const txDb = getTxDb();
+  await txDb.transaction(async (tx) => {
     if (newStatus === "cancelled") {
       await tx
         .update(appointments)
