@@ -117,14 +117,14 @@
     {
       "idx": 16,
       "version": "7",
-      "when": 1745078400000,
+      "when": 1776600100000,
       "tag": "0016_fix_price_change_acknowledged_default",
       "breakpoints": true
     },
     {
       "idx": 17,
       "version": "7",
-      "when": 1745082000000,
+      "when": 1776600200000,
       "tag": "0017_service_variants_version",
       "breakpoints": true
     }
