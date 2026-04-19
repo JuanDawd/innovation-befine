@@ -13,6 +13,7 @@ import {
   bigint,
   boolean,
   check,
+  integer,
   numeric,
   pgTable,
   text,
@@ -43,6 +44,7 @@ export const serviceVariants = pgTable(
     /** Commission percentage paid to the stylist. numeric(5,2): 0.00–100.00 */
     commissionPct: numeric("commission_pct", { precision: 5, scale: 2 }).notNull().default("0"),
     isActive: boolean("is_active").notNull().default(true),
+    version: integer("version").notNull().default(1),
     createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull().defaultNow(),
   },
