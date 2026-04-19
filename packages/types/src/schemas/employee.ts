@@ -16,7 +16,7 @@ const STYLIST_SUBTYPES = [
 export const createEmployeeSchema = z
   .object({
     name: z.string().min(2, "El nombre debe tener al menos 2 caracteres").max(100),
-    email: z.string().email("Ingresa un correo electrónico válido"),
+    email: z.email("Ingresa un correo electrónico válido"),
     role: z.enum(APP_ROLES, { message: "Selecciona un rol válido" }),
     stylistSubtype: z.enum(STYLIST_SUBTYPES).nullable().optional(),
     dailyRate: z

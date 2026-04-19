@@ -2,13 +2,13 @@ import { z } from "zod";
 
 export const createTicketSchema = z
   .object({
-    employeeId: z.string().uuid("ID de empleado inválido"),
-    serviceVariantId: z.string().uuid("ID de servicio inválido"),
+    employeeId: z.uuid("ID de empleado inválido"),
+    serviceVariantId: z.uuid("ID de servicio inválido"),
     quantity: z.number().int().min(1).default(1),
     clientType: z.enum(["saved", "guest"]),
-    clientId: z.string().uuid().optional(),
+    clientId: z.uuid().optional(),
     guestName: z.string().min(1).max(100).optional(),
-    idempotencyKey: z.string().uuid("Clave de idempotencia inválida"),
+    idempotencyKey: z.uuid("Clave de idempotencia inválida"),
   })
   .refine(
     (d) =>

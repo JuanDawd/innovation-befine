@@ -471,7 +471,7 @@ export async function processCheckout(rawInput: unknown): Promise<ActionResult<C
 // ─── Price override — T040 ────────────────────────────────────────────────────
 
 const overridePriceSchema = z.object({
-  ticketItemId: z.string().uuid(),
+  ticketItemId: z.uuid(),
   overridePrice: z.number().int().nonnegative(),
   overrideReason: z.string().min(1).max(500),
 });

@@ -18,7 +18,7 @@ import { createClientSchema, editClientSchema } from "@befine/types";
 import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
 
-const clientIdSchema = z.string().uuid();
+const clientIdSchema = z.uuid();
 
 export type ClientRow = {
   id: string;

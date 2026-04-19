@@ -18,6 +18,7 @@ import {
   type AppointmentListRow,
   type StylistOption,
 } from "@/app/(protected)/appointments/actions";
+import { AppointmentStatusActions } from "@/components/appointment-status-actions";
 
 function todayBogota(): string {
   return new Date().toLocaleDateString("sv-SE", { timeZone: "America/Bogota" });
@@ -185,6 +186,7 @@ export function AppointmentList({ newHref }: { newHref: string }) {
                 <th className="px-3 py-2 text-left font-medium">{t("colStylist")}</th>
                 <th className="px-3 py-2 text-left font-medium">{t("colService")}</th>
                 <th className="px-3 py-2 text-left font-medium">{t("colStatus")}</th>
+                <th className="px-3 py-2 text-left font-medium">{t("colActions")}</th>
               </tr>
             </thead>
             <tbody>
@@ -208,6 +210,17 @@ export function AppointmentList({ newHref }: { newHref: string }) {
                       >
                         {badge.label}
                       </span>
+                    </td>
+                    <td className="px-3 py-2">
+                      <AppointmentStatusActions
+                        appointmentId={row.id}
+                        currentStatus={row.status}
+                        onUpdated={(newStatus) =>
+                          setRows((prev) =>
+                            prev.map((r) => (r.id === row.id ? { ...r, status: newStatus } : r)),
+                          )
+                        }
+                      />
                     </td>
                   </tr>
                 );

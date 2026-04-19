@@ -462,7 +462,19 @@
     "prevDay": "Día anterior",
     "nextDay": "Día siguiente",
     "today": "Hoy",
-    "selectDate": "Seleccionar fecha"
+    "selectDate": "Seleccionar fecha",
+    "confirmAction": "Confirmar cita",
+    "cancelAction": "Cancelar cita",
+    "noShowAction": "Marcar no asistió",
+    "completeAction": "Marcar completada",
+    "cancellationReason": "Motivo de cancelación",
+    "cancellationReasonPlaceholder": "Ej: Cliente llamó para cancelar",
+    "confirmSuccess": "Cita confirmada",
+    "cancelSuccess": "Cita cancelada",
+    "noShowSuccess": "Marcada como no asistió",
+    "completeSuccess": "Cita marcada como completada",
+    "statusUpdateError": "Error al actualizar la cita",
+    "statusActionsTitle": "Acciones"
   },
   "nav": {
     "dashboard": "Tablero",

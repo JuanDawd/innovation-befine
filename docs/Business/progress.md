@@ -278,7 +278,7 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | T050  | Appointment booking UI (secretary / cashier)                           | done    | T049, T030       |
 | T051  | Double-booking prevention (DB-level)                                   | done    | T050             |
 | T052  | Appointment list and calendar view                                     | done    | T050             |
-| T053  | Appointment status management (confirm, cancel, no-show, etc.)         | pending | T050             |
+| T053  | Appointment status management (confirm, cancel, no-show, etc.)         | done    | T050             |
 | T055  | Appointment confirmation email template (React Email)                  | pending | T054             |
 | T056  | "Send confirmation email" action on appointment _(low priority — MVP)_ | pending | T055, T053       |
 | T109  | Price change notification to secretary _(new — grilling)_              | pending | T025, T049, T048 |

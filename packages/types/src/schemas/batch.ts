@@ -1,8 +1,8 @@
 import { z } from "zod";
 
 export const batchPieceLineSchema = z.object({
-  clothPieceId: z.string().uuid("ID de pieza inválido"),
-  assignedToEmployeeId: z.string().uuid("ID de empleado inválido").nullable(),
+  clothPieceId: z.uuid("ID de pieza inválido"),
+  assignedToEmployeeId: z.uuid("ID de empleado inválido").nullable(),
 });
 
 export const createBatchSchema = z.object({

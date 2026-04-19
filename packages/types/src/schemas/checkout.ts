@@ -6,9 +6,9 @@ export const paymentLineSchema = z.object({
 });
 
 export const checkoutSessionSchema = z.object({
-  ticketIds: z.array(z.string().uuid()).min(1),
+  ticketIds: z.array(z.uuid()).min(1),
   payments: z.array(paymentLineSchema).min(1),
-  idempotencyKey: z.string().uuid(),
+  idempotencyKey: z.uuid(),
 });
 
 export type PaymentLine = z.infer<typeof paymentLineSchema>;

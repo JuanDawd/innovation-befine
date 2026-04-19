@@ -6,18 +6,18 @@ export const env = createEnv({
     NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
 
     // Database (Neon) — T005
-    DATABASE_URL: z.string().url(),
+    DATABASE_URL: z.url(),
 
     // Auth (Better Auth) — T007
     BETTER_AUTH_SECRET: z.string().min(32),
-    BETTER_AUTH_URL: z.string().url(),
+    BETTER_AUTH_URL: z.url(),
 
     // Email (Resend) — T054
     RESEND_API_KEY: z.string().min(1),
     RESEND_FROM_EMAIL: z.string().min(1),
 
     // Error tracking (Sentry) — T085
-    SENTRY_DSN: z.string().url().optional(),
+    SENTRY_DSN: z.url().optional(),
     SENTRY_AUTH_TOKEN: z.string().min(1).optional(),
     SENTRY_ORG: z.string().min(1).optional(),
     SENTRY_PROJECT: z.string().min(1).optional(),
@@ -25,9 +25,9 @@ export const env = createEnv({
 
   client: {
     // App URL for client-side references
-    NEXT_PUBLIC_APP_URL: z.string().url(),
+    NEXT_PUBLIC_APP_URL: z.url(),
     // Sentry DSN (public — safe to expose) — T085
-    NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional(),
+    NEXT_PUBLIC_SENTRY_DSN: z.url().optional(),
   },
 
   runtimeEnv: {

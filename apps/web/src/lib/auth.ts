@@ -65,15 +65,18 @@ export const auth = betterAuth({
 
   session: {
     /**
-     * cookieCache stores the session payload in a signed, encrypted cookie.
-     * get-session reads the cookie instead of hitting the DB for up to maxAge seconds.
-     * This eliminates the DB query on every page navigation (middleware + server components).
-     * The cookie is refreshed automatically when it expires or the session changes.
-     * 5 minutes (300s) matches the Better Auth default and Prompt Cache TTL.
+     * 15-day session lifetime — employees stay logged in across work weeks.
+     * Sessions are stored in the DB; the token cookie references the session row.
+     */
+    expiresIn: 60 * 60 * 24 * 15, // 15 days in seconds
+
+    /**
+     * cookieCache stores the session payload in an encrypted cookie so
+     * auth.api.getSession() reads the cookie instead of hitting the DB.
+     * maxAge: 300 — cookie is refreshed every 5 minutes.
      *
-     * Trade-off: a banned/deactivated user can continue acting for up to 300s
-     * before the next DB check forces them out. Acceptable for this use case —
-     * forced logout on deactivation is handled by session revocation (T01R-R1).
+     * Trade-off: a deactivated user can act for up to 300s before the DB check
+     * forces them out. Handled by session revocation on deactivation (T01R-R1).
      */
     cookieCache: {
       enabled: true,
@@ -84,8 +87,13 @@ export const auth = betterAuth({
   rateLimit: {
     enabled: true,
     window: 60,
-    // Reduced now that cookieCache handles most middleware checks without hitting the DB.
-    max: 50,
+    /**
+     * Middleware now uses auth.api.getSession() (cookie-based, no HTTP call)
+     * instead of betterFetch which hit /api/auth/get-session on every navigation.
+     * Only explicit sign-in, sign-out, and password-reset flows hit the HTTP
+     * rate limiter. 100/min is safe for a small team.
+     */
+    max: 100,
     storage: "memory",
   },
 

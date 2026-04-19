@@ -428,7 +428,19 @@
     "prevDay": "Previous day",
     "nextDay": "Next day",
     "today": "Today",
-    "selectDate": "Select date"
+    "selectDate": "Select date",
+    "confirmAction": "Confirm appointment",
+    "cancelAction": "Cancel appointment",
+    "noShowAction": "Mark no-show",
+    "completeAction": "Mark completed",
+    "cancellationReason": "Cancellation reason",
+    "cancellationReasonPlaceholder": "e.g. Client called to cancel",
+    "confirmSuccess": "Appointment confirmed",
+    "cancelSuccess": "Appointment cancelled",
+    "noShowSuccess": "Marked as no-show",
+    "completeSuccess": "Appointment marked as completed",
+    "statusUpdateError": "Failed to update appointment",
+    "statusActionsTitle": "Actions"
   },
   "nav": {
     "dashboard": "Dashboard",

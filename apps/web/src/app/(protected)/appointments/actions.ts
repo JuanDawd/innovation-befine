@@ -13,7 +13,7 @@ import { eq, and } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { appointments, employees, users, clients } from "@befine/db/schema";
-import { createAppointmentSchema } from "@befine/types";
+import { createAppointmentSchema, transitionAppointmentSchema } from "@befine/types";
 import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
 import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
@@ -297,4 +297,98 @@ export async function listBookingStylists(): Promise<ActionResult<StylistOption[
     .orderBy(users.name);
 
   return { success: true, data: rows };
+}
+
+// ─── Transition appointment status (T053) ────────────────────────────────────
+
+/**
+ * Valid transitions:
+ *   booked    → confirmed | cancelled | no_show | completed
+ *   confirmed → cancelled | no_show | completed
+ *   (cancelled, no_show, completed, rescheduled are terminal — no further transitions)
+ */
+const ALLOWED_TRANSITIONS: Record<string, Record<string, string>> = {
+  booked: { confirm: "confirmed", cancel: "cancelled", no_show: "no_show", complete: "completed" },
+  confirmed: { cancel: "cancelled", no_show: "no_show", complete: "completed" },
+};
+
+export async function transitionAppointment(
+  rawInput: unknown,
+): Promise<ActionResult<{ id: string; status: string }>> {
+  const guard = await requireBookingRole();
+  if (!guard.ok)
+    return {
+      success: false,
+      error: {
+        code: guard.code,
+        message: guard.code === "UNAUTHORIZED" ? "No autenticado" : "Sin permisos",
+      },
+    };
+
+  const rl = await checkRateLimit(rateLimits.general, guard.userId!);
+  if (!rl.allowed)
+    return {
+      success: false,
+      error: {
+        code: "RATE_LIMITED",
+        message: "Demasiadas solicitudes. Intenta de nuevo en un momento.",
+      },
+    };
+
+  const parsed = transitionAppointmentSchema.safeParse(rawInput);
+  if (!parsed.success)
+    return { success: false, error: { code: "VALIDATION_ERROR", message: "Datos inválidos" } };
+
+  const { appointmentId, action, cancellationReason } = parsed.data;
+  const db = getDb();
+
+  const [appt] = await db
+    .select({ id: appointments.id, status: appointments.status })
+    .from(appointments)
+    .where(eq(appointments.id, appointmentId))
+    .limit(1);
+
+  if (!appt) return { success: false, error: { code: "NOT_FOUND", message: "Cita no encontrada" } };
+
+  const transitions = ALLOWED_TRANSITIONS[appt.status];
+  if (!transitions)
+    return {
+      success: false,
+      error: {
+        code: "CONFLICT",
+        message: `La cita en estado "${appt.status}" no permite transiciones`,
+      },
+    };
+
+  const newStatus = transitions[action];
+  if (!newStatus)
+    return {
+      success: false,
+      error: {
+        code: "CONFLICT",
+        message: `Acción "${action}" no permitida desde el estado "${appt.status}"`,
+      },
+    };
+
+  const now = new Date();
+  const statusValue = newStatus as (typeof appointments.$inferInsert)["status"];
+
+  if (newStatus === "cancelled") {
+    await db
+      .update(appointments)
+      .set({
+        status: statusValue,
+        updatedAt: now,
+        cancelledAt: now,
+        cancellationReason: cancellationReason ?? null,
+      })
+      .where(eq(appointments.id, appointmentId));
+  } else {
+    await db
+      .update(appointments)
+      .set({ status: statusValue, updatedAt: now })
+      .where(eq(appointments.id, appointmentId));
+  }
+
+  return { success: true, data: { id: appointmentId, status: newStatus } };
 }

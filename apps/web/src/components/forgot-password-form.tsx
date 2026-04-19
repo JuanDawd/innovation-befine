@@ -22,7 +22,7 @@ import { Input } from "@/components/ui/input";
 import { signIn } from "@/lib/auth-client";
 
 const schema = z.object({
-  email: z.string().email("Ingresa un correo electrónico válido"),
+  email: z.email("Ingresa un correo electrónico válido"),
 });
 
 type FormInput = z.infer<typeof schema>;
