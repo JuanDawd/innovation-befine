@@ -19,26 +19,36 @@ import type { Redis } from "@upstash/redis";
 const store = new Map<string, number[]>();
 
 function makeInMemoryRedis(): Redis {
+  const evalImpl = async <TResult>(
+    _script: string,
+    keys: string[],
+    args: (string | number)[],
+  ): Promise<TResult> => {
+    const key = keys[0] ?? String(args[0]);
+    const now = Date.now();
+    const windowMs = Number(args[1]) * 1000;
+    const limit = Number(args[2]);
+
+    const timestamps = (store.get(key) ?? []).filter((t) => now - t < windowMs);
+    const count = timestamps.length + 1;
+    timestamps.push(now);
+    store.set(key, timestamps);
+
+    const reset = Math.ceil((timestamps[0]! + windowMs) / 1000);
+    const remaining = Math.max(0, limit - count);
+    const allowed = count <= limit ? 1 : 0;
+
+    return [allowed, String(reset), count, remaining] as TResult;
+  };
   return {
-    eval: async <TResult>(
-      _script: string,
+    eval: evalImpl,
+    // REQUIRED: upstash uses this
+    evalsha: async <TResult>(
+      _sha: string,
       keys: string[],
       args: (string | number)[],
     ): Promise<TResult> => {
-      const key = keys[0] ?? String(args[0]);
-      const now = Date.now();
-      const windowMs = Number(args[1]) * 1000;
-      const limit = Number(args[2]);
-
-      const timestamps = (store.get(key) ?? []).filter((t) => now - t < windowMs);
-      const count = timestamps.length + 1;
-      timestamps.push(now);
-      store.set(key, timestamps);
-
-      const reset = Math.ceil((timestamps[0]! + windowMs) / 1000);
-      const remaining = Math.max(0, limit - count);
-      const allowed = count <= limit ? 1 : 0;
-      return [allowed, String(reset), count, remaining] as TResult;
+      return evalImpl<TResult>("", keys, args);
     },
   } as unknown as Redis;
 }
