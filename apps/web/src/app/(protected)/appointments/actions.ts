@@ -521,6 +521,16 @@ export async function acknowledgeAppointmentPriceChange(
       },
     };
 
+  const rl = await checkRateLimit(rateLimits.general, guard.userId!);
+  if (!rl.allowed)
+    return {
+      success: false,
+      error: {
+        code: "RATE_LIMITED",
+        message: "Demasiadas solicitudes. Intenta de nuevo en un momento.",
+      },
+    };
+
   if (typeof appointmentId !== "string" || !appointmentId)
     return { success: false, error: { code: "VALIDATION_ERROR", message: "ID inválido" } };
 
