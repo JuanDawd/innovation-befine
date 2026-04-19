@@ -37,3 +37,5 @@ export { editRequestStatusEnum, ticketEditRequests } from "./ticket-edit-request
 export { batchPieceStatusEnum, claimSourceEnum, clothBatches, batchPieces } from "./cloth-batches";
 export { appointmentStatusEnum, appointments } from "./appointments";
 export { largeOrderStatusEnum, largeOrders, largeOrderPayments } from "./large-orders";
+export { absenceTypeEnum, employeeAbsences } from "./absences";
+export { payouts, payoutTicketItems, payoutBatchPieces } from "./payouts";

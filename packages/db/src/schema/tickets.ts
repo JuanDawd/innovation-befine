@@ -70,6 +70,8 @@ export const tickets = pgTable(
       .notNull()
       .references(() => employees.id, { onDelete: "restrict" }),
     version: integer("version").notNull().default(1),
+    /** Set true when a ticket is reopened after payout — excluded from future earnings until reviewed */
+    needsReview: boolean("needs_review").notNull().default(false),
   },
   (t) => [
     // Either client_id or guest_name must be present
