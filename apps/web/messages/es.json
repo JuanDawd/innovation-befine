@@ -551,7 +551,15 @@
     "submit": "Guardar pedido",
     "cash": "Efectivo",
     "card": "Tarjeta",
-    "transfer": "Transferencia"
+    "transfer": "Transferencia",
+    "recordedBy": "Registrado por",
+    "cancelTitle": "Cancelar pedido",
+    "cancelDescription": "Esta acción es permanente y no se puede deshacer.",
+    "cancelDepositWarning": "Este pedido tiene pagos registrados",
+    "cancelDepositAmount": "Total pagado: {amount}. Revisa la política de reembolso antes de continuar.",
+    "cancelDepositAck": "He revisado la política de reembolso y confirmo la cancelación",
+    "cancelDialogClose": "Volver",
+    "cancellationReasonRequired": "El motivo de cancelación es obligatorio"
   },
   "nav": {
     "dashboard": "Tablero",

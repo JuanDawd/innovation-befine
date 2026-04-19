@@ -752,6 +752,129 @@
 
 ---
 
+### C-11 — `/large-orders/*` unreachable for every authenticated role
+
+- **Severity:** Critical
+- **Status:** Resolved
+- **Affected:** T058, T059, T061, T062 (entire Phase 6 UI), `nav-config.ts`
+- **Description:** The middleware's `roleCanAccess()` allows a request only when the pathname starts with the role's home prefix (`/cashier`, `/secretary`, `/stylist`, `/clothier`), `/admin` (for `cashier_admin`), or one of `SHARED_APP_PATHS` (`/profile`). `/large-orders` matches none of these, so every authenticated request to `/large-orders*` is rewritten to `/403`. The large-orders nav link (added to both `cashier_admin` and `secretary` in `nav-config.ts`) is therefore dead. Server actions defined under that path are also unreachable from the UI, so the entire Phase 6 feature is non-functional despite passing its structural ACs.
+- **Fix:** Either (a) register `/large-orders` in `SHARED_APP_PATHS` and keep role enforcement in the page/server-action layer, or (b) move the route to `/admin/large-orders` + `/secretary/large-orders` (matching the existing prefix convention) and update every internal link, `revalidatePath`, and nav entry. Add middleware-helpers unit tests that explicitly assert each role's access to `/large-orders*`. Tracked as T06R-R1.
+
+---
+
+### H-25 — T062 "cashier read-only" AC unimplementable against current 4-role model
+
+- **Severity:** High
+- **Status:** Resolved
+- **Affected:** T062
+- **Description:** T062 AC reads "Admin and secretary can access; cashier read-only." The app has four roles: `cashier_admin`, `secretary`, `stylist`, `clothier` — there is no standalone "cashier" role. Current implementation only grants access to `cashier_admin` and `secretary` (both can write). The AC is either a vestige of an earlier role model or requires introducing a read-only check path, which no other Phase 6 server action supports.
+- **Fix:** Disambiguate the AC. Either (a) strike the "cashier read-only" clause and treat `cashier_admin` + `secretary` as the full access set (preferred, matches the rest of the app), or (b) split the auth helper into `requireOrderWrite` vs `requireOrderRead` and clarify which role is the read-only one. Update `phase-06-large-orders.md` accordingly. Tracked as T06R-R3.
+
+---
+
+### H-26 — `recordLargeOrderPayment` allows overpayment, silent clamp, and unsafe auto-transition
+
+- **Severity:** High
+- **Status:** Resolved
+- **Affected:** T061
+- **Description:** Three related defects:
+  1. No upper bound — `amount` only has to be `>= 1`. A secretary can accidentally record $999.999.999 against a $100.000 order; the ledger records the excess, balance displayed clamps to 0 via `Math.max`, and the overpayment is hidden.
+  2. The auto-transition to `paid_in_full` checks `order.status !== "paid_in_full"` from the pre-transaction read, not inside the transaction. A concurrent `cancel` can interleave, leaving the order simultaneously "paid" and "cancelled" in effect (payments recorded after cancel are allowed by the server because the pre-read saw `pending`).
+  3. The order row is not re-read under a lock (`FOR UPDATE`) and the existing `version` column is not incremented on auto-transition, so two concurrent payments that each individually zero the balance can both fire the `paid_in_full` update.
+- **Fix:** (a) Reject when `amount > max(0, totalPrice - totalPaid)` with a `VALIDATION_ERROR` unless the caller passes an explicit `allowOverpayment: true` flag (requires admin); (b) re-read the order row inside the transaction with `SELECT ... FOR UPDATE` (or with `WHERE version = $expected`) and abort the auto-transition if the status has changed or is `cancelled`; (c) bump `version` on every write. Add a success toast on record (UI currently just refreshes silently). Tracked as T06R-R2.
+
+---
+
+### H-27 — T059 cancellation-with-deposits confirmation AC not implemented
+
+- **Severity:** High
+- **Status:** Resolved
+- **Affected:** T059
+- **Description:** T059 AC says "Cancellation of an order with deposits recorded prompts a confirmation noting whether deposits are refundable (business decision: document refund policy)." Current UI shows only an inline text input asking for the reason — no listing of recorded payments, no refund-policy copy, no explicit confirmation step distinct from typing the reason. The server accepts the cancel transition regardless of whether `sum(payments) > 0`. A single accidental click → typed reason → Enter is enough to cancel a $2M order with deposits recorded.
+- **Fix:** UI: open a `ConfirmationDialog` that lists existing payments + total paid, displays the refund-policy copy (pull from `business_settings`), and requires an explicit "Confirm cancel" button plus a non-empty reason. Server: when action is `cancel` and `sumPayments > 0`, require a boolean `acknowledgedDeposits` flag in the schema; reject if missing. Tracked as T06R-R4.
+
+---
+
+### M-32 — `editLargeOrder` missing optimistic lock, terminal-state guard, and total-below-paid guard
+
+- **Severity:** Medium
+- **Status:** Resolved
+- **Affected:** T058
+- **Description:** `editLargeOrder` does not accept a `version` and does not increment it, so concurrent edits overwrite each other silently. It also does not check the order's current `status`, so a race between the client hiding the edit button (on terminal status) and the server accepting the request can modify `paid_in_full` or `cancelled` orders. Finally, there is no guard preventing `totalPrice` from being lowered below the already-paid total, which then silently clamps `balanceDue` to 0 via `Math.max`.
+- **Fix:** Extend `editLargeOrderSchema` with `version: z.number().int()`. In the handler, `WHERE id = $id AND version = $version AND status NOT IN ('paid_in_full', 'cancelled')`, bump version, return `STALE_DATA` on zero rows. Add `parsed.data.totalPrice >= totalPaid` check before the update. Tracked as T06R-R5.
+
+---
+
+### M-33 — Zero unit tests added for Phase 6 (CLAUDE.md mandate)
+
+- **Severity:** Medium
+- **Status:** Resolved
+- **Affected:** T057–T062
+- **Description:** CLAUDE.md lists "Status transitions", "Permission / role checks", "Double-pay / duplicate prevention", and "Financial data integrity" as categories with mandatory unit tests. Phase 6 covers all four (order status flow, secretary vs cashier_admin write gate, auto-transition to `paid_in_full`, balance computation in integer pesos) yet added zero tests — regression count stayed at 148 after Phase 5.
+- **Fix:** Add Vitest unit tests covering: allowed transition matrix (including rejecting reverse transitions), cancellation-reason-required, auto-`paid_in_full` threshold (exact, under, over), balance computation with 0/1/N payments, role gates on all six actions, archived-client rejection on create, idempotency on duplicate deposit submission. Tracked as T06R-R6.
+
+---
+
+### M-34 — Create vs edit schema inconsistency on `estimatedDeliveryAt` + `notes`
+
+- **Severity:** Medium
+- **Status:** Resolved
+- **Affected:** T058
+- **Description:** `createLargeOrderSchema` uses `.optional()` (undefined allowed, null rejected) while `editLargeOrderSchema` uses `.optional().nullable()` (both allowed) for the same fields. The client passes `null` from `editLargeOrderForm` for the edit path but `undefined` on create. Also, `initialDepositAmount` and `initialDepositMethod` are independently optional — nothing prevents a caller from passing amount without method (amount would be silently ignored by the `if (…amount && …method)` branch).
+- **Fix:** Align both schemas on `.nullish()` for `estimatedDeliveryAt` and `notes`. Add a Zod `.refine()` on the create schema: `(amount > 0) === !!method`. Tracked as T06R-R7.
+
+---
+
+### M-35 — Archived-client TOCTOU in `createLargeOrder`
+
+- **Severity:** Medium
+- **Status:** Resolved
+- **Affected:** T058
+- **Description:** `listClientsForOrder` filters to `isActive = true`, but `createLargeOrder` re-fetches the client only by `id` — if the client is archived between dropdown load and submit, a new large order is attached to an archived client. AC of T058 explicitly requires "Only saved clients (not guests) can be linked", and by extension the soft-delete convention implies archived clients cannot receive new orders.
+- **Fix:** In `createLargeOrder`, add `eq(clients.isActive, true)` to the client lookup and return `VALIDATION_ERROR` with message "El cliente está archivado" when not found. Tracked as T06R-R8.
+
+---
+
+### L-26 — Unsafe `sql.raw` array interpolation in `getLargeOrderBatchSummary`
+
+- **Severity:** Low
+- **Status:** Resolved
+- **Affected:** T060
+- **Description:** The query builds `sql.raw(\`ARRAY['\${batchIds.join("','")}']::uuid[]\`)`by string concatenation. Because`batchIds`comes from the database (UUID PKs), there is no real injection vector today, but the pattern bypasses parameter binding and will break the first time someone refactors the source of`batchIds`.
+- **Fix:** Replace with `inArray(batchPieces.batchId, batchIds)` from `drizzle-orm`. Tracked as T06R-R9.
+
+---
+
+### L-27 — Hardcoded Spanish "Registrado por" in `large-order-detail.tsx`
+
+- **Severity:** Low
+- **Status:** Resolved
+- **Affected:** T061
+- **Description:** The payment-history table header at `large-order-detail.tsx:366` reads `Registrado por` as a literal string, bypassing `next-intl`. Violates the "no hardcoded user-facing strings" policy in CLAUDE.md.
+- **Fix:** Add `largeOrders.recordedBy` key to `es.json` + `en.json`; replace literal with `{t("recordedBy")}`. Tracked as T06R-R10.
+
+---
+
+### L-28 — Missing `revalidatePath('/large-orders/[id]')` on detail-page mutations
+
+- **Severity:** Low
+- **Status:** Resolved
+- **Affected:** T058, T059, T061
+- **Description:** `editLargeOrder`, `transitionLargeOrder`, and `recordLargeOrderPayment` call `revalidatePath("/large-orders")` (the list) but not `/large-orders/[orderId]` (the detail page). Another tab viewing the same order does not re-render server data on navigation until the cache TTL expires. `router.refresh()` handles the current tab but not cross-tab.
+- **Fix:** Add `revalidatePath(\`/large-orders/\${orderId}\`)` alongside the list revalidation in all three mutations. Tracked as T06R-R11.
+
+---
+
+### L-29 — Destructive cancel action lacks a `ConfirmationDialog`
+
+- **Severity:** Low
+- **Status:** Resolved
+- **Affected:** T059
+- **Description:** CLAUDE.md: "Destructive actions require a `ConfirmationDialog` before executing." The current cancel flow shows a secondary button that reveals an inline reason input next to a red Cancel button. There is no modal, no summary of consequences, no typed-to-confirm pattern. Click-through velocity is high. Related to H-27 but tracked separately because even orders with no deposits should get a confirmation.
+- **Fix:** Wrap the cancel action in the shared `ConfirmationDialog` primitive. The dialog owns the reason input and the destructive confirm button. Tracked as T06R-R12.
+
+---
+
 ## Lessons learned
 
 > This section is populated during development. Each entry documents what went wrong, the root cause, and how to prevent it in the future.
@@ -776,71 +899,83 @@
 
 > When an issue is resolved, update its status above and add an entry here.
 
-| Issue ID | Date resolved | Resolution                                                                                           | Commit/PR                    |
-| -------- | ------------- | ---------------------------------------------------------------------------------------------------- | ---------------------------- |
-| C-01     | 2026-04-02    | Added `appointment_id (FK nullable)` to T033 schema in `phase-04a-tickets-checkout.md`               | Senior QA review             |
-| C-02     | 2026-04-02    | Added `P4B --> P7` edge to mermaid dependency graph in `project-plan.md`                             | Senior QA review             |
-| H-02     | 2026-04-02    | Updated `business.md` Sentry entry from "Phase 10" to "Phase 0"                                      | Senior QA review             |
-| H-03     | 2026-04-02    | Added manual password fallback to T013 AC when Resend is unavailable                                 | Senior QA review             |
-| H-06     | 2026-04-02    | Added security review checklist to T089 acceptance criteria                                          | Senior QA review             |
-| H-08     | 2026-04-02    | Added shared `payment_method_enum` definition to T006 acceptance criteria                            | Senior QA review             |
-| H-09     | 2026-04-02    | Resolved via C-01 fix (same `appointment_id` column)                                                 | Senior QA review             |
-| H-10     | 2026-04-02    | Added `cancelled` status to large order enum in T057 and T059 with cancellation reason               | Senior QA review             |
-| H-11     | 2026-04-02    | Added rate limiting policy to T097 acceptance criteria covering all mutation endpoints               | Senior QA review             |
-| M-11     | 2026-04-02    | Added T061 to T062 dependency list in task file and progress.md                                      | Senior QA review             |
-| L-10     | 2026-04-02    | Updated `postgres-providers.md` to reference only Drizzle ORM                                        | Senior QA review             |
-| L-12     | 2026-04-02    | Updated T087 health endpoint AC to include DB connectivity check (`SELECT 1`)                        | Senior QA review             |
-| C-03     | 2026-04-02    | Currency confirmed as COP (Colombian Pesos). T099 ACs updated.                                       | Stakeholder decision session |
-| C-04     | 2026-04-02    | Created `docs/research/data-privacy-compliance.md` (Colombian Ley 1581 de 2012)                      | Stakeholder decision session |
-| H-01     | 2026-04-02    | Phase 0 split into 0A (Infrastructure) and 0B (Standards & Design)                                   | Stakeholder decision session |
-| H-04     | 2026-04-02    | Added "Migration Path" section to `docs/research/auth-providers.md` with Auth.js and Clerk steps     | Stakeholder decision session |
-| H-05     | 2026-04-02    | Added 30-second polling fallback to T098 ACs                                                         | Stakeholder decision session |
-| H-07     | 2026-04-02    | Added storage capacity estimate to `docs/research/postgres-providers.md` (~28 MB for 6 months)       | Stakeholder decision session |
-| H-12     | 2026-04-02    | Added loading state to T019 "Open Day" and cold start documentation to postgres-providers.md         | Stakeholder decision session |
-| H-13     | 2026-04-02    | Created `docs/testing/concurrency-test-plan.md` with 8 race condition scenarios                      | QA review action             |
-| H-14     | 2026-04-02    | Business day boundary tests added to phase-04a test plan; timezone constant defined                  | QA review action             |
-| H-15     | 2026-04-02    | Added T106 (UAT) to Phase 10 between T088 and T089                                                   | QA review action             |
-| H-16     | 2026-04-02    | Added post-deployment smoke test AC to T095                                                          | QA review action             |
-| M-01     | 2026-04-02    | Added no-show decrement logic to T032b ACs                                                           | Stakeholder decision session |
-| M-03     | 2026-04-02    | Added `service_variant_id` FK to T049 appointments table                                             | Stakeholder decision session |
-| M-06     | 2026-04-02    | Added reopen day capability to T019 ACs (admin only, audit trail, most recent day only)              | Stakeholder decision session |
-| M-07     | 2026-04-02    | Added `expected_work_days` to T012 employees table; T065 updated for part-time                       | Stakeholder decision session |
-| M-08     | 2026-04-02    | Added `original_computed_amount` and `adjustment_reason` to T066 payouts table                       | Stakeholder decision session |
-| M-13     | 2026-04-02    | Removed `deposit_paid` column from T057; computed from payments table                                | Stakeholder decision session |
-| M-14     | 2026-04-02    | Business timezone constant `America/Bogota` added to T002 standards                                  | Stakeholder decision session |
-| M-15     | 2026-04-02    | Created `docs/research/frontend-libraries.md`                                                        | Stakeholder decision session |
-| M-17     | 2026-04-02    | `commission_pct` precision set to `numeric(5,2)` in T023; banker's rounding in T002                  | Stakeholder decision session |
-| M-19     | 2026-04-02    | Added structured business logic logging AC to T085                                                   | QA review action             |
-| M-20     | 2026-04-02    | Integration test approach documented in `docs/testing/README.md`                                     | QA review action             |
-| L-15     | 2026-04-02    | Rounding policy (banker's rounding) and precision defined in T002 standards                          | Stakeholder decision session |
-| M-16     | 2026-04-09    | Stale — Pusher replaced by SSE; no third-party message volume limits apply                           | Phase 0A Opus audit          |
-| M-21     | 2026-04-09    | `pino-pretty` installed as dev dep in `apps/web`                                                     | T0AR-R1                      |
-| M-22     | 2026-04-09    | Seed script user+account inserts wrapped in `db.transaction()`                                       | T0AR-R2                      |
-| M-23     | 2026-04-09    | Middleware `roleCanAccess()` added — each role restricted to its path prefix                         | T0AR-R3                      |
-| M-24     | 2026-04-09    | Sentry `beforeSend` extended to scrub exception messages, breadcrumbs, and extra data                | T0AR-R4                      |
-| L-16     | 2026-04-09    | `@deprecated` JSDoc added to `use-sse.ts`; developers directed to `useRealtimeEvent`                 | Phase 0 Opus audit           |
-| H-18     | 2026-04-11    | Added `eq(clients.isActive, true)` guard to `editClient` WHERE clause                                | T03R-R1                      |
-| M-26     | 2026-04-11    | Added `clients.clearSelection` i18n key; replaced hardcoded aria-labels and "OK" button              | T03R-R2                      |
-| M-27     | 2026-04-11    | Added `clientIdSchema = z.string().uuid()` validation to editClient, archiveClient, unarchiveClient  | T03R-R3                      |
-| H-17     | 2026-04-11    | Added `updated_at` migration + `.$onUpdate()` to employees and business_days tables                  | T01R-R2                      |
-| M-25     | 2026-04-11    | `ROLE_HOME` moved to `@befine/types` constants; both files import from shared source                 | T01R-R3                      |
-| L-18     | 2026-04-11    | Standardized all server actions to use `hasRole(session.user, role)` helper                          | T01R-R4                      |
-| H-19     | 2026-04-18    | `processCheckout` idempotency rewritten with `INSERT ... ON CONFLICT DO NOTHING RETURNING` + refetch | T04R-R3                      |
-| H-20     | 2026-04-18    | `createBatch` wrapped in `db.transaction`; clothier notifications deferred to post-commit            | T04R-R4                      |
-| H-21     | 2026-04-18    | `lib/rate-limit.ts` introduced; CLAUDE.md caps applied to all Phase 4 mutations                      | T04R-R5                      |
-| H-22     | 2026-04-18    | Vitest unit tests added covering ticket transitions × role, checkout idempotency, optimistic locks   | T04R-R6                      |
-| M-29     | 2026-04-18    | `resolveEditRequest` wrapped in `db.transaction`; SSE + notification deferred to post-commit         | T04R-R7                      |
-| L-21     | 2026-04-18    | `createNotification`/`archiveOldNotifications` extracted to `lib/notifications.ts` private helper    | T04R-R2                      |
-| L-22     | 2026-04-18    | Dead `transitionToReopened` action deleted                                                           | T04R-R8                      |
-| L-23     | 2026-04-18    | Zod schemas added in `packages/types/src/schemas/` for edit-request, reopen, claim, mark, approve    | T04R-R9                      |
-| C-06     | 2026-04-18    | `/api/realtime/[channel]` gated with session + per-channel role check; removed from SHARED_PATHS     | T04R-R1                      |
-| C-07     | 2026-04-18    | `createNotification` extracted to private helper; no longer a callable server action endpoint        | T04R-R2                      |
-| C-08     | 2026-04-19    | Dual-driver setup: `neon-http` for reads, `neon-serverless` Pool for interactive transactions        | T05R-R1                      |
-| C-09     | 2026-04-19    | `price_change_acknowledged` default flipped to `true`; backfill migration; filter logic corrected    | T05R-R2                      |
-| C-10     | 2026-04-19    | `reschedule` action implemented with overlap re-check; Reschedule button wired in UI                 | T05R-R3                      |
-| H-23     | 2026-04-19    | Reopen branch catches `23P01` exclusion violation; returns friendly CONFLICT response                | T05R-R4                      |
-| H-24     | 2026-04-19    | `editVariant` price-change side effects wrapped in single transaction; notifications post-commit     | T05R-R5                      |
-| M-30     | 2026-04-19    | Resolved as side effect of C-09 — fresh bookings no longer show false-positive badge                 | T05R-R2                      |
-| M-31     | 2026-04-19    | `checkRateLimit(rateLimits.general)` added to `acknowledgeAppointmentPriceChange`                    | T05R-R6                      |
-| L-24     | 2026-04-19    | `complete` action wires `tickets.appointment_id` when `ticketId` is provided                         | T05R-R7                      |
-| L-25     | 2026-04-19    | `editVariant` protected by optimistic lock (`version` column) to prevent concurrent double-notify    | T05R-R8                      |
+| Issue ID | Date resolved | Resolution                                                                                               | Commit/PR                    |
+| -------- | ------------- | -------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| C-01     | 2026-04-02    | Added `appointment_id (FK nullable)` to T033 schema in `phase-04a-tickets-checkout.md`                   | Senior QA review             |
+| C-02     | 2026-04-02    | Added `P4B --> P7` edge to mermaid dependency graph in `project-plan.md`                                 | Senior QA review             |
+| H-02     | 2026-04-02    | Updated `business.md` Sentry entry from "Phase 10" to "Phase 0"                                          | Senior QA review             |
+| H-03     | 2026-04-02    | Added manual password fallback to T013 AC when Resend is unavailable                                     | Senior QA review             |
+| H-06     | 2026-04-02    | Added security review checklist to T089 acceptance criteria                                              | Senior QA review             |
+| H-08     | 2026-04-02    | Added shared `payment_method_enum` definition to T006 acceptance criteria                                | Senior QA review             |
+| H-09     | 2026-04-02    | Resolved via C-01 fix (same `appointment_id` column)                                                     | Senior QA review             |
+| H-10     | 2026-04-02    | Added `cancelled` status to large order enum in T057 and T059 with cancellation reason                   | Senior QA review             |
+| H-11     | 2026-04-02    | Added rate limiting policy to T097 acceptance criteria covering all mutation endpoints                   | Senior QA review             |
+| M-11     | 2026-04-02    | Added T061 to T062 dependency list in task file and progress.md                                          | Senior QA review             |
+| L-10     | 2026-04-02    | Updated `postgres-providers.md` to reference only Drizzle ORM                                            | Senior QA review             |
+| L-12     | 2026-04-02    | Updated T087 health endpoint AC to include DB connectivity check (`SELECT 1`)                            | Senior QA review             |
+| C-03     | 2026-04-02    | Currency confirmed as COP (Colombian Pesos). T099 ACs updated.                                           | Stakeholder decision session |
+| C-04     | 2026-04-02    | Created `docs/research/data-privacy-compliance.md` (Colombian Ley 1581 de 2012)                          | Stakeholder decision session |
+| H-01     | 2026-04-02    | Phase 0 split into 0A (Infrastructure) and 0B (Standards & Design)                                       | Stakeholder decision session |
+| H-04     | 2026-04-02    | Added "Migration Path" section to `docs/research/auth-providers.md` with Auth.js and Clerk steps         | Stakeholder decision session |
+| H-05     | 2026-04-02    | Added 30-second polling fallback to T098 ACs                                                             | Stakeholder decision session |
+| H-07     | 2026-04-02    | Added storage capacity estimate to `docs/research/postgres-providers.md` (~28 MB for 6 months)           | Stakeholder decision session |
+| H-12     | 2026-04-02    | Added loading state to T019 "Open Day" and cold start documentation to postgres-providers.md             | Stakeholder decision session |
+| H-13     | 2026-04-02    | Created `docs/testing/concurrency-test-plan.md` with 8 race condition scenarios                          | QA review action             |
+| H-14     | 2026-04-02    | Business day boundary tests added to phase-04a test plan; timezone constant defined                      | QA review action             |
+| H-15     | 2026-04-02    | Added T106 (UAT) to Phase 10 between T088 and T089                                                       | QA review action             |
+| H-16     | 2026-04-02    | Added post-deployment smoke test AC to T095                                                              | QA review action             |
+| M-01     | 2026-04-02    | Added no-show decrement logic to T032b ACs                                                               | Stakeholder decision session |
+| M-03     | 2026-04-02    | Added `service_variant_id` FK to T049 appointments table                                                 | Stakeholder decision session |
+| M-06     | 2026-04-02    | Added reopen day capability to T019 ACs (admin only, audit trail, most recent day only)                  | Stakeholder decision session |
+| M-07     | 2026-04-02    | Added `expected_work_days` to T012 employees table; T065 updated for part-time                           | Stakeholder decision session |
+| M-08     | 2026-04-02    | Added `original_computed_amount` and `adjustment_reason` to T066 payouts table                           | Stakeholder decision session |
+| M-13     | 2026-04-02    | Removed `deposit_paid` column from T057; computed from payments table                                    | Stakeholder decision session |
+| M-14     | 2026-04-02    | Business timezone constant `America/Bogota` added to T002 standards                                      | Stakeholder decision session |
+| M-15     | 2026-04-02    | Created `docs/research/frontend-libraries.md`                                                            | Stakeholder decision session |
+| M-17     | 2026-04-02    | `commission_pct` precision set to `numeric(5,2)` in T023; banker's rounding in T002                      | Stakeholder decision session |
+| M-19     | 2026-04-02    | Added structured business logic logging AC to T085                                                       | QA review action             |
+| M-20     | 2026-04-02    | Integration test approach documented in `docs/testing/README.md`                                         | QA review action             |
+| L-15     | 2026-04-02    | Rounding policy (banker's rounding) and precision defined in T002 standards                              | Stakeholder decision session |
+| M-16     | 2026-04-09    | Stale — Pusher replaced by SSE; no third-party message volume limits apply                               | Phase 0A Opus audit          |
+| M-21     | 2026-04-09    | `pino-pretty` installed as dev dep in `apps/web`                                                         | T0AR-R1                      |
+| M-22     | 2026-04-09    | Seed script user+account inserts wrapped in `db.transaction()`                                           | T0AR-R2                      |
+| M-23     | 2026-04-09    | Middleware `roleCanAccess()` added — each role restricted to its path prefix                             | T0AR-R3                      |
+| M-24     | 2026-04-09    | Sentry `beforeSend` extended to scrub exception messages, breadcrumbs, and extra data                    | T0AR-R4                      |
+| L-16     | 2026-04-09    | `@deprecated` JSDoc added to `use-sse.ts`; developers directed to `useRealtimeEvent`                     | Phase 0 Opus audit           |
+| H-18     | 2026-04-11    | Added `eq(clients.isActive, true)` guard to `editClient` WHERE clause                                    | T03R-R1                      |
+| M-26     | 2026-04-11    | Added `clients.clearSelection` i18n key; replaced hardcoded aria-labels and "OK" button                  | T03R-R2                      |
+| M-27     | 2026-04-11    | Added `clientIdSchema = z.string().uuid()` validation to editClient, archiveClient, unarchiveClient      | T03R-R3                      |
+| H-17     | 2026-04-11    | Added `updated_at` migration + `.$onUpdate()` to employees and business_days tables                      | T01R-R2                      |
+| M-25     | 2026-04-11    | `ROLE_HOME` moved to `@befine/types` constants; both files import from shared source                     | T01R-R3                      |
+| L-18     | 2026-04-11    | Standardized all server actions to use `hasRole(session.user, role)` helper                              | T01R-R4                      |
+| H-19     | 2026-04-18    | `processCheckout` idempotency rewritten with `INSERT ... ON CONFLICT DO NOTHING RETURNING` + refetch     | T04R-R3                      |
+| H-20     | 2026-04-18    | `createBatch` wrapped in `db.transaction`; clothier notifications deferred to post-commit                | T04R-R4                      |
+| H-21     | 2026-04-18    | `lib/rate-limit.ts` introduced; CLAUDE.md caps applied to all Phase 4 mutations                          | T04R-R5                      |
+| H-22     | 2026-04-18    | Vitest unit tests added covering ticket transitions × role, checkout idempotency, optimistic locks       | T04R-R6                      |
+| M-29     | 2026-04-18    | `resolveEditRequest` wrapped in `db.transaction`; SSE + notification deferred to post-commit             | T04R-R7                      |
+| L-21     | 2026-04-18    | `createNotification`/`archiveOldNotifications` extracted to `lib/notifications.ts` private helper        | T04R-R2                      |
+| L-22     | 2026-04-18    | Dead `transitionToReopened` action deleted                                                               | T04R-R8                      |
+| L-23     | 2026-04-18    | Zod schemas added in `packages/types/src/schemas/` for edit-request, reopen, claim, mark, approve        | T04R-R9                      |
+| C-06     | 2026-04-18    | `/api/realtime/[channel]` gated with session + per-channel role check; removed from SHARED_PATHS         | T04R-R1                      |
+| C-07     | 2026-04-18    | `createNotification` extracted to private helper; no longer a callable server action endpoint            | T04R-R2                      |
+| C-08     | 2026-04-19    | Dual-driver setup: `neon-http` for reads, `neon-serverless` Pool for interactive transactions            | T05R-R1                      |
+| C-09     | 2026-04-19    | `price_change_acknowledged` default flipped to `true`; backfill migration; filter logic corrected        | T05R-R2                      |
+| C-10     | 2026-04-19    | `reschedule` action implemented with overlap re-check; Reschedule button wired in UI                     | T05R-R3                      |
+| H-23     | 2026-04-19    | Reopen branch catches `23P01` exclusion violation; returns friendly CONFLICT response                    | T05R-R4                      |
+| H-24     | 2026-04-19    | `editVariant` price-change side effects wrapped in single transaction; notifications post-commit         | T05R-R5                      |
+| M-30     | 2026-04-19    | Resolved as side effect of C-09 — fresh bookings no longer show false-positive badge                     | T05R-R2                      |
+| M-31     | 2026-04-19    | `checkRateLimit(rateLimits.general)` added to `acknowledgeAppointmentPriceChange`                        | T05R-R6                      |
+| L-24     | 2026-04-19    | `complete` action wires `tickets.appointment_id` when `ticketId` is provided                             | T05R-R7                      |
+| L-25     | 2026-04-19    | `editVariant` protected by optimistic lock (`version` column) to prevent concurrent double-notify        | T05R-R8                      |
+| C-11     | 2026-04-19    | `/large-orders` added to `SHARED_APP_PATHS`; 2 new middleware-helpers tests confirm all roles reach path | T06R-R1                      |
+| H-25     | 2026-04-19    | T062 AC updated: "cashier read-only" clause removed; `cashier_admin` + `secretary` have full access      | T06R-R3                      |
+| H-26     | 2026-04-19    | Overpayment guard added; order re-read inside tx; concurrent-cancel guard via status re-check            | T06R-R2                      |
+| H-27     | 2026-04-19    | Cancel dialog with deposit warning + `acknowledgedDeposits` flag on server; Dialog UI with reason        | T06R-R4                      |
+| M-32     | 2026-04-19    | `editLargeOrder` adds `version` to schema + WHERE clause, terminal-state guard, totalPrice≥paid check    | T06R-R5                      |
+| M-33     | 2026-04-19    | 31 Vitest unit tests added: transitions, balance, overpayment, auto-paid, cancel reason, role gates      | T06R-R6                      |
+| M-34     | 2026-04-19    | Both schemas use `.nullish()` for optional fields; deposit refine ensures amount↔method both-or-none     | T06R-R7                      |
+| M-35     | 2026-04-19    | `createLargeOrder` re-checks `isActive` on client fetch; returns VALIDATION_ERROR if archived            | T06R-R8                      |
+| L-26     | 2026-04-19    | `sql.raw` array replaced with `inArray(batchPieces.batchId, batchIds)` in batch summary query            | T06R-R9                      |
+| L-27     | 2026-04-19    | "Registrado por" replaced with `t("recordedBy")`; key added to `es.json` and `en.json`                   | T06R-R10                     |
+| L-28     | 2026-04-19    | `revalidatePath(\`/large-orders/\${orderId}\`)` added to edit, transition, and payment actions           | T06R-R11                     |
+| L-29     | 2026-04-19    | Cancel wrapped in Dialog with deposit warning, reason input, and disabled confirm until acked            | T06R-R12                     |

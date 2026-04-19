@@ -29,7 +29,7 @@ export const SHARED_PATHS: string[] = [];
 export const AUTHENTICATED_API_PATHS = ["/api/realtime"];
 
 /** App paths any authenticated role may access (regardless of role prefix) */
-export const SHARED_APP_PATHS = ["/profile"];
+export const SHARED_APP_PATHS = ["/profile", "/large-orders"];
 
 /** Where each role is redirected after login; also the route prefix they own */
 export const ROLE_HOME: Record<AppRole, string> = {

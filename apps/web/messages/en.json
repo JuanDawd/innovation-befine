@@ -517,7 +517,15 @@
     "submit": "Save order",
     "cash": "Cash",
     "card": "Card",
-    "transfer": "Transfer"
+    "transfer": "Transfer",
+    "recordedBy": "Recorded by",
+    "cancelTitle": "Cancel order",
+    "cancelDescription": "This action is permanent and cannot be undone.",
+    "cancelDepositWarning": "This order has recorded payments",
+    "cancelDepositAmount": "Total paid: {amount}. Review the refund policy before continuing.",
+    "cancelDepositAck": "I have reviewed the refund policy and confirm the cancellation",
+    "cancelDialogClose": "Go back",
+    "cancellationReasonRequired": "Cancellation reason is required"
   },
   "nav": {
     "dashboard": "Dashboard",

@@ -3,9 +3,18 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Loader2Icon, PencilIcon, CheckIcon, XIcon } from "lucide-react";
+import { Loader2Icon, PencilIcon, CheckIcon, XIcon, AlertTriangleIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
 import {
   transitionLargeOrder,
   editLargeOrder,
@@ -32,10 +41,13 @@ export function LargeOrderDetail({ order: initialOrder, batches }: Props) {
   const [isPending, startTransition] = useTransition();
   const order = initialOrder;
   const [editing, setEditing] = useState(false);
-  const [showCancelForm, setShowCancelForm] = useState(false);
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
+  const [acknowledgedDeposits, setAcknowledgedDeposits] = useState(false);
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const hasDeposits = order.totalPaid > 0;
 
   // Edit form state
   const [editDescription, setEditDescription] = useState(order.description);
@@ -45,7 +57,7 @@ export function LargeOrderDetail({ order: initialOrder, batches }: Props) {
   );
   const [editNotes, setEditNotes] = useState(order.notes ?? "");
 
-  function transition(action: string, cancellationReason?: string) {
+  function transition(action: string, cancellationReason?: string, ackDeposits?: boolean) {
     setError(null);
     startTransition(async () => {
       const res = await transitionLargeOrder({
@@ -54,16 +66,26 @@ export function LargeOrderDetail({ order: initialOrder, batches }: Props) {
           ? A
           : string,
         cancellationReason,
+        acknowledgedDeposits: ackDeposits,
         version: order.version,
       });
       if (!res.success) {
         setError(res.error.message);
         return;
       }
-      setShowCancelForm(false);
+      setCancelDialogOpen(false);
       setCancelReason("");
+      setAcknowledgedDeposits(false);
       router.refresh();
     });
+  }
+
+  function confirmCancel() {
+    if (!cancelReason.trim()) {
+      setError(t("cancellationReasonRequired"));
+      return;
+    }
+    transition("cancel", cancelReason.trim(), hasDeposits ? acknowledgedDeposits : undefined);
   }
 
   function saveEdit() {
@@ -74,6 +96,7 @@ export function LargeOrderDetail({ order: initialOrder, batches }: Props) {
         totalPrice: parseInt(editTotalPrice, 10),
         estimatedDeliveryAt: editEta ? `${editEta}:00-05:00` : null,
         notes: editNotes || null,
+        version: order.version,
       });
       if (!res.success) {
         setError(res.error.message);
@@ -253,39 +276,111 @@ export function LargeOrderDetail({ order: initialOrder, batches }: Props) {
               variant="outline"
               disabled={isPending}
               className="text-destructive hover:text-destructive"
-              onClick={() => setShowCancelForm((v) => !v)}
+              onClick={() => {
+                setError(null);
+                setCancelDialogOpen(true);
+              }}
             >
               <XIcon className="h-3.5 w-3.5 mr-1" />
               {t("action_cancel")}
             </Button>
           </div>
+        </div>
+      )}
 
-          {showCancelForm && (
-            <div className="flex gap-2 items-start mt-1">
+      {/* Cancel confirmation dialog */}
+      <Dialog
+        open={cancelDialogOpen}
+        onOpenChange={(open) => {
+          if (!isPending) {
+            setCancelDialogOpen(open);
+            if (!open) {
+              setCancelReason("");
+              setAcknowledgedDeposits(false);
+              setError(null);
+            }
+          }
+        }}
+      >
+        <DialogContent showCloseButton={false}>
+          <DialogHeader>
+            <div className="flex items-start gap-3">
+              <div className="rounded-full bg-destructive/10 p-2">
+                <AlertTriangleIcon className="size-5 text-destructive" aria-hidden="true" />
+              </div>
+              <div className="space-y-1">
+                <DialogTitle className="text-destructive">{t("cancelTitle")}</DialogTitle>
+                <DialogDescription>{t("cancelDescription")}</DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="space-y-3 py-1">
+            {hasDeposits && (
+              <div className="rounded-md border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/20 p-3 text-sm space-y-1">
+                <p className="font-semibold text-amber-800 dark:text-amber-300">
+                  {t("cancelDepositWarning")}
+                </p>
+                <p className="text-amber-700 dark:text-amber-400">
+                  {t("cancelDepositAmount", {
+                    amount: `$${order.totalPaid.toLocaleString("es-CO")}`,
+                  })}
+                </p>
+                <label className="flex items-center gap-2 cursor-pointer mt-2">
+                  <input
+                    type="checkbox"
+                    checked={acknowledgedDeposits}
+                    onChange={(e) => setAcknowledgedDeposits(e.target.checked)}
+                    className="h-4 w-4 rounded border-input"
+                  />
+                  <span className="text-amber-800 dark:text-amber-300 font-medium">
+                    {t("cancelDepositAck")}
+                  </span>
+                </label>
+              </div>
+            )}
+
+            <div className="space-y-1">
+              <label className="text-sm font-medium" htmlFor="cancelReason">
+                {t("cancellationReason")} <span className="text-destructive">*</span>
+              </label>
               <input
-                className="flex-1 h-8 rounded-md border border-input bg-transparent px-2 text-sm focus-visible:outline-none focus-visible:border-ring"
+                id="cancelReason"
+                className="w-full h-9 rounded-md border border-input bg-transparent px-3 text-sm focus-visible:outline-none focus-visible:border-ring"
                 placeholder={t("cancellationReasonPlaceholder")}
                 value={cancelReason}
                 onChange={(e) => setCancelReason(e.target.value)}
                 maxLength={500}
-                aria-label={t("cancellationReason")}
+                aria-describedby={error ? "cancel-error" : undefined}
               />
-              <Button
-                size="sm"
-                variant="destructive"
-                disabled={isPending}
-                onClick={() => transition("cancel", cancelReason.trim() || undefined)}
-              >
-                {isPending ? (
-                  <Loader2Icon className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  t("action_cancel")
-                )}
-              </Button>
             </div>
-          )}
-        </div>
-      )}
+
+            {error && (
+              <p id="cancel-error" className="text-sm text-destructive" role="alert">
+                {error}
+              </p>
+            )}
+          </div>
+
+          <DialogFooter>
+            <DialogClose
+              render={
+                <Button variant="outline" disabled={isPending}>
+                  {t("cancelDialogClose")}
+                </Button>
+              }
+            />
+            <Button
+              variant="destructive"
+              disabled={isPending || (hasDeposits && !acknowledgedDeposits)}
+              onClick={confirmCancel}
+            >
+              {isPending ? <Loader2Icon className="h-3.5 w-3.5 animate-spin mr-1" /> : null}
+              {t("action_cancel")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Record payment */}
       {!isTerminal && order.status !== "cancelled" && (
@@ -363,7 +458,7 @@ export function LargeOrderDetail({ order: initialOrder, batches }: Props) {
                   </th>
                   <th className="px-3 py-2 text-left font-medium">{t("paymentMethod")}</th>
                   <th className="px-3 py-2 text-left font-medium text-muted-foreground">
-                    Registrado por
+                    {t("recordedBy")}
                   </th>
                 </tr>
               </thead>

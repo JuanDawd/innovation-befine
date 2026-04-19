@@ -481,6 +481,32 @@ Update `apps/web/src/lib/db/README.md` with a short "When to use `getDb()` vs `g
 
 ---
 
+> **Phase 6 completion review — Opus audit 2026-04-19**
+> All 6 tasks (T057–T062) meet their core structural acceptance criteria: schema + migration land cleanly, role gates and Zod schemas are in place, `balance_due` is computed (not stored), cancellation requires a reason, batch → order linkage works end-to-end from `createBatch`. Regression: 148 tests pass (same as post-Phase 5 — zero Phase 6 tests added), typecheck clean, lint has 2 pre-existing Phase 1 warnings (not regressions). However the audit found **one Critical routing defect that makes the entire Phase 6 UI unreachable** (C-11 — `/large-orders` is not covered by any role prefix in `roleCanAccess`, so middleware 403s every authenticated request including the nav links), **three High issues** (H-25 T062 cashier read-only AC unimplemented and inconsistent with 4-role model; H-26 T061 no overpayment guard + unsafe auto-transition + silent clamp; H-27 T059 cancellation-with-deposits confirmation AC missing), **four Medium** (M-32 `editLargeOrder` missing optimistic lock + terminal-state guard + can drop totalPrice below totalPaid; M-33 zero Phase 6 unit tests — CLAUDE.md violation; M-34 create vs edit schema null/undefined inconsistency; M-35 active-client TOCTOU between dropdown and submit), **four Low** (L-26 unsafe `sql.raw` array interpolation in `getLargeOrderBatchSummary`; L-27 hardcoded Spanish "Registrado por" bypasses i18n; L-28 missing `revalidatePath('/large-orders/[id]')` on cross-tab updates; L-29 cancel button doesn't confirm destructive action). **Phase 7 is blocked until T06R-R1, T06R-R2, T06R-R3, and T06R-R4 (all Critical/High) are resolved.**
+
+---
+
+## Phase 6R — Remediation (Opus audit, 2026-04-19)
+
+> Created by Phase 6 completion review. Critical and High items block Phase 7. Medium and Low items should be resolved before Phase 7 ships.
+
+| ID       | Task                                                                                                                                                                                                                                                                                                                                                                                                                                                           | Severity | Status | Source     |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------ | ---------- |
+| T06R-R1  | Fix: make `/large-orders/*` reachable. Either add `/large-orders` to `SHARED_APP_PATHS` in `middleware-helpers.ts` (with a per-role allow-list enforced in the pages/actions) **or** move the route under `/admin/large-orders` + `/secretary/large-orders` so the existing prefix check covers it. Update nav, all internal links, and `revalidatePath` calls accordingly. Add middleware-helpers unit tests asserting each role's access.                    | Critical | done   | Opus audit |
+| T06R-R2  | Fix: `recordLargeOrderPayment` — reject payments where `amount > max(0, totalPrice - totalPaid)` returning `VALIDATION_ERROR` (allow user to confirm or split). Recompute `totalPaid` inside the transaction against `FOR UPDATE` on the order row (or rely on the already-present `version` column), and re-check `order.status` before the auto-transition to `paid_in_full` so a concurrent cancel doesn't flip to paid. Surface a success toast on record. | High     | done   | Opus audit |
+| T06R-R3  | Fix: T062 AC disambiguation + cashier read-only. Clarify in the task file that the app has only `cashier_admin`/`secretary`/`stylist`/`clothier` roles — strike the "cashier read-only" line OR add a `cashier_admin`-only read path (pick one). If keeping the read-only concept, split `requireOrderRole` into `requireOrderWrite` vs `requireOrderRead`.                                                                                                    | High     | done   | Opus audit |
+| T06R-R4  | Fix: T059 cancellation-with-deposits confirmation. Before calling `transitionLargeOrder({ action: "cancel" })`, the UI must show a modal that (a) lists recorded payments with total, (b) displays the refund-policy copy from business settings, and (c) requires explicit confirmation plus a non-empty reason. Server-side, add `sumPayments > 0` check to the cancel branch and require the caller to pass a boolean `acknowledgedDeposits` flag.          | High     | done   | Opus audit |
+| T06R-R5  | Fix: `editLargeOrder` — add optimistic lock (pass `version` from client, `WHERE version = $version`, bump on update), block edits when `status IN ('paid_in_full','cancelled')`, and reject `totalPrice < totalPaid` with a descriptive error.                                                                                                                                                                                                                 | Medium   | done   | Opus audit |
+| T06R-R6  | Fix: add Vitest unit tests for Phase 6. Minimum coverage: balance computation (including the "over-paid clamp" case), auto-transition to `paid_in_full` gating, cancellation reason required, `ALLOWED_TRANSITIONS` × role matrix, `createLargeOrder` archived-client rejection, idempotency on create via deposit.                                                                                                                                            | Medium   | done   | Opus audit |
+| T06R-R7  | Fix: align `createLargeOrderSchema` and `editLargeOrderSchema` — both should treat `estimatedDeliveryAt` and `notes` the same way (`.nullish()`). Also tighten `initialDepositAmount` to require `initialDepositMethod` when > 0 (or both or neither) using `z.object(...).refine(...)`.                                                                                                                                                                       | Medium   | done   | Opus audit |
+| T06R-R8  | Fix: active-client TOCTOU. In `createLargeOrder`, re-check `clients.isActive = true` when fetching the client row; return `VALIDATION_ERROR` ("El cliente está archivado") if archived.                                                                                                                                                                                                                                                                        | Medium   | done   | Opus audit |
+| T06R-R9  | Fix: replace `sql.raw(\`ARRAY['${batchIds.join("','")}']::uuid[]\`)`with`inArray(batchPieces.batchId, batchIds)`in`getLargeOrderBatchSummary`.                                                                                                                                                                                                                                                                                                                 | Low      | done   | Opus audit |
+| T06R-R10 | Fix: replace hardcoded "Registrado por" in `large-order-detail.tsx` with an i18n key (`largeOrders.recordedBy`) in both `es.json` and `en.json`.                                                                                                                                                                                                                                                                                                               | Low      | done   | Opus audit |
+| T06R-R11 | Fix: add `revalidatePath(\`/large-orders/\${orderId}\`)`to`editLargeOrder`, `transitionLargeOrder`, and `recordLargeOrderPayment` so cross-tab viewers see updates on navigation.                                                                                                                                                                                                                                                                              | Low      | done   | Opus audit |
+| T06R-R12 | Fix: wrap the cancel action in a `ConfirmationDialog` (destructive) — current inline input is not a real confirmation and violates the CLAUDE.md "destructive actions require a ConfirmationDialog" convention.                                                                                                                                                                                                                                                | Low      | done   | Opus audit |
+
+---
+
 ## Phase 7 — Payroll settlement and audit
 
 > Includes absence tracking (T020, T021) and deactivation guard (T022b) — moved here because they are only consumed by payroll logic.
@@ -559,29 +585,30 @@ Update `apps/web/src/lib/db/README.md` with a short "When to use `getDb()` vs `g
 
 ## Totals
 
-| Phase                     | Tasks   | Done   | In progress |
-| ------------------------- | ------- | ------ | ----------- |
-| 0A — Foundation (Infra)   | 13      | 13     | 0           |
-| 0AR — Remediation         | 4       | 4      | 0           |
-| 0B — Foundation (Std/Dsg) | 7       | 7      | 0           |
-| 1 — Identity              | 14      | 14     | 0           |
-| 1R — Remediation          | 4       | 4      | 0           |
-| 2 — Catalog               | 6       | 6      | 0           |
-| 2R — Remediation          | 3       | 3      | 0           |
-| 3 — Clients               | 4       | 4      | 0           |
-| 3R — Remediation          | 3       | 3      | 0           |
-| 4A — Tickets and checkout | 13      | 13     | 0           |
-| 4B — Cloth batches        | 4       | 4      | 0           |
-| 4R — Remediation          | 9       | 9      | 0           |
-| 5 — Appointments          | 7       | 7      | 0           |
-| 5R — Remediation          | 8       | 8      | 0           |
-| 6 — Large orders          | 6       | 6      | 0           |
-| 7 — Payroll               | 11      | 0      | 0           |
-| 8 — Analytics             | 8       | 0      | 0           |
-| 9 — Offline               | 5       | 0      | 0           |
-| 10 — Polish               | 9       | 0      | 0           |
-| POST-MVP                  | 2       | 0      | 0           |
-| **Total**                 | **138** | **94** | **0**       |
+| Phase                     | Tasks   | Done    | In progress |
+| ------------------------- | ------- | ------- | ----------- |
+| 0A — Foundation (Infra)   | 13      | 13      | 0           |
+| 0AR — Remediation         | 4       | 4       | 0           |
+| 0B — Foundation (Std/Dsg) | 7       | 7       | 0           |
+| 1 — Identity              | 14      | 14      | 0           |
+| 1R — Remediation          | 4       | 4       | 0           |
+| 2 — Catalog               | 6       | 6       | 0           |
+| 2R — Remediation          | 3       | 3       | 0           |
+| 3 — Clients               | 4       | 4       | 0           |
+| 3R — Remediation          | 3       | 3       | 0           |
+| 4A — Tickets and checkout | 13      | 13      | 0           |
+| 4B — Cloth batches        | 4       | 4       | 0           |
+| 4R — Remediation          | 9       | 9       | 0           |
+| 5 — Appointments          | 7       | 7       | 0           |
+| 5R — Remediation          | 8       | 8       | 0           |
+| 6 — Large orders          | 6       | 6       | 0           |
+| 6R — Remediation          | 12      | 12      | 0           |
+| 7 — Payroll               | 11      | 0       | 0           |
+| 8 — Analytics             | 8       | 0       | 0           |
+| 9 — Offline               | 5       | 0       | 0           |
+| 10 — Polish               | 9       | 0       | 0           |
+| POST-MVP                  | 2       | 0       | 0           |
+| **Total**                 | **150** | **106** | **0**       |
 
 ---
 

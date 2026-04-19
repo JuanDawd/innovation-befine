@@ -120,3 +120,5 @@ Build the large orders list screen: all orders with client name, status, total p
 - [ ] Balance due highlighted in a warning color if order is `delivered` but not `paid_in_full`
 - [ ] Responsive — works on mobile
 - [ ] Empty state shown when no large orders exist (message + "Create order" CTA)
+
+> **Role clarification (T06R-R3):** The app has four roles — `cashier_admin`, `secretary`, `stylist`, `clothier`. There is no standalone cashier role. Both `cashier_admin` and `secretary` have full read/write access to large orders. Stylist and clothier have no access (enforced by server actions). The original "cashier read-only" clause is removed as there is no matching role.

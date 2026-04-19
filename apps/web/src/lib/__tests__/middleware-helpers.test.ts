@@ -133,6 +133,20 @@ describe("roleCanAccess", () => {
     expect(roleCanAccess("stylist", "/profile")).toBe(true);
     expect(roleCanAccess("clothier", "/profile")).toBe(true);
   });
+
+  it("cashier_admin and secretary can access /large-orders (shared app path)", () => {
+    expect(roleCanAccess("cashier_admin", "/large-orders")).toBe(true);
+    expect(roleCanAccess("cashier_admin", "/large-orders/new")).toBe(true);
+    expect(roleCanAccess("cashier_admin", "/large-orders/abc-123")).toBe(true);
+    expect(roleCanAccess("secretary", "/large-orders")).toBe(true);
+    expect(roleCanAccess("secretary", "/large-orders/new")).toBe(true);
+  });
+
+  it("stylist and clothier can technically reach /large-orders path (middleware allows; server actions enforce role)", () => {
+    // SHARED_APP_PATHS bypasses prefix check — server actions do the role gate
+    expect(roleCanAccess("stylist", "/large-orders")).toBe(true);
+    expect(roleCanAccess("clothier", "/large-orders")).toBe(true);
+  });
 });
 
 describe("isFinancialBlockedForSecretary", () => {
