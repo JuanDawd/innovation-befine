@@ -1,15 +1,19 @@
 -- T051: Double-booking prevention — DB-level exclusion constraint
 --
--- Uses PostgreSQL's EXCLUDE USING GIST to prevent overlapping active
--- appointments for the same stylist. The tstzrange covers
--- [scheduled_at, scheduled_at + interval duration_minutes).
---
--- Cancelled, rescheduled, and no_show appointments are excluded from the
--- constraint via a partial index condition so they never block new bookings.
---
--- Requires btree_gist extension for the (uuid, tstzrange) combined exclusion.
+-- make_interval() is not IMMUTABLE, so we can't use it directly in a GIST
+-- index expression. Workaround: compute the end timestamp via integer
+-- multiplication (minutes * interval '1 minute') which IS immutable, then
+-- wrap in an IMMUTABLE helper function so PostgreSQL accepts it in an index.
 
 CREATE EXTENSION IF NOT EXISTS btree_gist;--> statement-breakpoint
+
+CREATE OR REPLACE FUNCTION appointment_end_at(scheduled_at timestamptz, duration_minutes integer)
+RETURNS timestamptz
+LANGUAGE sql
+IMMUTABLE PARALLEL SAFE
+AS $$
+  SELECT scheduled_at + (duration_minutes * interval '1 minute')
+$$;--> statement-breakpoint
 
 ALTER TABLE "appointments"
   ADD CONSTRAINT "appointments_no_overlap"
@@ -17,7 +21,7 @@ ALTER TABLE "appointments"
     stylist_employee_id WITH =,
     tstzrange(
       scheduled_at,
-      scheduled_at + make_interval(mins => duration_minutes),
+      appointment_end_at(scheduled_at, duration_minutes),
       '[)'
     ) WITH &&
   )
