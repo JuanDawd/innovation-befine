@@ -271,15 +271,15 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 
 > Can run in parallel with Phase 4B once Phase 4A is complete.
 
-| ID    | Task                                                           | Status  | Dependencies     |
-| ----- | -------------------------------------------------------------- | ------- | ---------------- |
-| T032b | No-show count increment logic _(split from T032)_              | done    | T032, T053       |
-| T049  | Appointments table migration                                   | done    | T029, T012       |
-| T050  | Appointment booking UI (secretary / cashier)                   | done    | T049, T030       |
-| T051  | Double-booking prevention (DB-level)                           | done    | T050             |
-| T052  | Appointment list and calendar view                             | done    | T050             |
-| T053  | Appointment status management (confirm, cancel, no-show, etc.) | done    | T050             |
-| T109  | Price change notification to secretary _(new — grilling)_      | pending | T025, T049, T048 |
+| ID    | Task                                                           | Status | Dependencies     |
+| ----- | -------------------------------------------------------------- | ------ | ---------------- |
+| T032b | No-show count increment logic _(split from T032)_              | done   | T032, T053       |
+| T049  | Appointments table migration                                   | done   | T029, T012       |
+| T050  | Appointment booking UI (secretary / cashier)                   | done   | T049, T030       |
+| T051  | Double-booking prevention (DB-level)                           | done   | T050             |
+| T052  | Appointment list and calendar view                             | done   | T050             |
+| T053  | Appointment status management (confirm, cancel, no-show, etc.) | done   | T050             |
+| T109  | Price change notification to secretary _(new — grilling)_      | done   | T025, T049, T048 |
 
 ---
 
@@ -388,14 +388,14 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | 4A — Tickets and checkout | 13      | 13     | 0           |
 | 4B — Cloth batches        | 4       | 4      | 0           |
 | 4R — Remediation          | 9       | 0      | 0           |
-| 5 — Appointments          | 7       | 6      | 0           |
+| 5 — Appointments          | 7       | 7      | 0           |
 | 6 — Large orders          | 6       | 0      | 0           |
 | 7 — Payroll               | 11      | 0      | 0           |
 | 8 — Analytics             | 8       | 0      | 0           |
 | 9 — Offline               | 5       | 0      | 0           |
 | 10 — Polish               | 9       | 0      | 0           |
 | POST-MVP                  | 2       | 0      | 0           |
-| **Total**                 | **130** | **69** | **0**       |
+| **Total**                 | **130** | **71** | **0**       |
 
 ---
 

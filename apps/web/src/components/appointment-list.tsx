@@ -9,16 +9,61 @@
 
 import { useState, useTransition, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
-import { ChevronLeftIcon, ChevronRightIcon, Loader2Icon, PlusIcon } from "lucide-react";
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  Loader2Icon,
+  PlusIcon,
+  TriangleAlertIcon,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   listAppointmentsForDate,
   listBookingStylists,
+  acknowledgeAppointmentPriceChange,
   type AppointmentListRow,
   type StylistOption,
 } from "@/app/(protected)/appointments/actions";
 import { AppointmentStatusActions } from "@/components/appointment-status-actions";
+
+// ─── Price change acknowledge inline widget (T109) ────────────────────────────
+
+function PriceChangedAcknowledge({
+  appointmentId,
+  t,
+  onAcknowledged,
+}: {
+  appointmentId: string;
+  t: ReturnType<typeof useTranslations<"appointments">>;
+  onAcknowledged: () => void;
+}) {
+  const [isPending, startTransition] = useTransition();
+
+  function acknowledge() {
+    startTransition(async () => {
+      await acknowledgeAppointmentPriceChange(appointmentId);
+      onAcknowledged();
+    });
+  }
+
+  return (
+    <div className="flex items-center gap-1 mt-0.5">
+      <TriangleAlertIcon className="h-3 w-3 text-amber-600 shrink-0" aria-hidden />
+      <span className="text-xs text-amber-700 dark:text-amber-400">{t("priceChangedBadge")}</span>
+      <Button
+        size="sm"
+        variant="ghost"
+        className="h-5 px-1.5 text-xs text-amber-700 hover:text-amber-900 hover:bg-amber-100"
+        onClick={acknowledge}
+        disabled={isPending}
+        aria-label={t("acknowledgeAction")}
+      >
+        {isPending ? <Loader2Icon className="h-3 w-3 animate-spin" /> : t("acknowledgeAction")}
+      </Button>
+    </div>
+  );
+}
 
 function todayBogota(): string {
   return new Date().toLocaleDateString("sv-SE", { timeZone: "America/Bogota" });
@@ -193,8 +238,14 @@ export function AppointmentList({ newHref }: { newHref: string }) {
               {rows.map((row) => {
                 const badge = STATUS_BADGE[row.status];
                 const clientDisplay = row.clientName ?? row.guestName ?? "—";
+                const showPriceAlert =
+                  !row.priceChangeAcknowledged &&
+                  (row.status === "booked" || row.status === "confirmed");
                 return (
-                  <tr key={row.id} className="border-t hover:bg-muted/30 transition-colors">
+                  <tr
+                    key={row.id}
+                    className={`border-t hover:bg-muted/30 transition-colors${showPriceAlert ? " bg-amber-50 dark:bg-amber-950/20" : ""}`}
+                  >
                     <td className="px-3 py-2 font-mono tabular-nums whitespace-nowrap">
                       {formatTime(row.scheduledAt)}
                       <span className="text-muted-foreground ml-1 text-xs">
@@ -203,7 +254,22 @@ export function AppointmentList({ newHref }: { newHref: string }) {
                     </td>
                     <td className="px-3 py-2">{clientDisplay}</td>
                     <td className="px-3 py-2">{row.stylistName}</td>
-                    <td className="px-3 py-2 max-w-[200px] truncate">{row.serviceSummary}</td>
+                    <td className="px-3 py-2 max-w-[200px]">
+                      <span className="truncate block">{row.serviceSummary}</span>
+                      {showPriceAlert && (
+                        <PriceChangedAcknowledge
+                          appointmentId={row.id}
+                          t={t}
+                          onAcknowledged={() =>
+                            setRows((prev) =>
+                              prev.map((r) =>
+                                r.id === row.id ? { ...r, priceChangeAcknowledged: true } : r,
+                              ),
+                            )
+                          }
+                        />
+                      )}
+                    </td>
                     <td className="px-3 py-2">
                       <span
                         className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${badge.className}`}

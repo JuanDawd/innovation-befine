@@ -1,19 +1,27 @@
 "use server";
 
 /**
- * Service catalog server actions — T024
+ * Service catalog server actions — T024, T109
  *
  * CRUD for services and service_variants.
  * Only cashier_admin can mutate; all authenticated roles can read (T028).
  * Every mutation writes to catalog_audit_log.
+ * editVariant triggers price-change notifications to secretaries (T109).
  */
 
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
-import { eq } from "drizzle-orm";
+import { eq, and, gt, inArray } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import { services, serviceVariants, catalogAuditLog } from "@befine/db/schema";
+import {
+  services,
+  serviceVariants,
+  catalogAuditLog,
+  appointments,
+  employees,
+} from "@befine/db/schema";
+import { createNotification } from "@/lib/notifications";
 import {
   createServiceSchema,
   editServiceSchema,
@@ -393,6 +401,10 @@ export async function editVariant(
   if (!existing)
     return { success: false, error: { code: "NOT_FOUND", message: "Variante no encontrada" } };
 
+  const priceChanged =
+    parsed.data.customerPrice !== existing.customerPrice ||
+    parsed.data.commissionPct.toFixed(2) !== existing.commissionPct;
+
   await db
     .update(serviceVariants)
     .set({
@@ -415,6 +427,73 @@ export async function editVariant(
     },
     newData: parsed.data,
   });
+
+  // T109: If price/commission changed, flag future appointments and notify secretaries
+  if (priceChanged) {
+    const now = new Date();
+
+    // Find future booked/confirmed appointments for this variant (not yet acknowledged)
+    const affected = await db
+      .select({
+        id: appointments.id,
+        clientId: appointments.clientId,
+        guestName: appointments.guestName,
+        serviceSummary: appointments.serviceSummary,
+        scheduledAt: appointments.scheduledAt,
+        priceChangeAcknowledged: appointments.priceChangeAcknowledged,
+      })
+      .from(appointments)
+      .where(
+        and(
+          eq(appointments.serviceVariantId, variantId),
+          gt(appointments.scheduledAt, now),
+          inArray(appointments.status, ["booked", "confirmed"]),
+        ),
+      );
+
+    if (affected.length > 0) {
+      // Reset price_change_acknowledged on all affected appointments
+      await db
+        .update(appointments)
+        .set({ priceChangeAcknowledged: false, updatedAt: now })
+        .where(
+          and(
+            eq(appointments.serviceVariantId, variantId),
+            gt(appointments.scheduledAt, now),
+            inArray(appointments.status, ["booked", "confirmed"]),
+          ),
+        );
+
+      // Find all active secretary employees to notify
+      const secretaries = await db
+        .select({ id: employees.id })
+        .from(employees)
+        .where(and(eq(employees.role, "secretary"), eq(employees.isActive, true)));
+
+      // Deduplicate: only notify for appointments that were previously acknowledged
+      // (i.e. already-unacked appointments already have a pending notification — skip them)
+      const toNotify = affected.filter((a) => a.priceChangeAcknowledged);
+
+      for (const appt of toNotify) {
+        const clientLabel = appt.guestName ?? `cliente`;
+        const apptDate = new Date(appt.scheduledAt).toLocaleString("es-CO", {
+          timeZone: "America/Bogota",
+          dateStyle: "medium",
+          timeStyle: "short",
+        });
+        const message = `Precio cambió para "${appt.serviceSummary}" — notifica a ${clientLabel} (cita: ${apptDate})`;
+
+        for (const sec of secretaries) {
+          await createNotification({
+            recipientEmployeeId: sec.id,
+            type: "price_changed",
+            message,
+            link: "/secretary/appointments",
+          });
+        }
+      }
+    }
+  }
 
   revalidatePath("/admin/catalog");
   return { success: true, data: { id: variantId } };

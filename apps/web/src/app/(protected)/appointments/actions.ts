@@ -29,6 +29,7 @@ export type AppointmentRow = {
   scheduledAt: Date;
   durationMinutes: number;
   status: "booked" | "confirmed" | "completed" | "cancelled" | "rescheduled" | "no_show";
+  priceChangeAcknowledged: boolean;
   createdAt: Date;
 };
 
@@ -173,6 +174,7 @@ export async function createAppointment(
       scheduledAt: row.scheduledAt,
       durationMinutes: row.durationMinutes,
       status: row.status,
+      priceChangeAcknowledged: row.priceChangeAcknowledged,
       createdAt: row.createdAt,
     },
   };
@@ -231,6 +233,7 @@ export async function listAppointmentsForDate(
       scheduledAt: appointments.scheduledAt,
       durationMinutes: appointments.durationMinutes,
       status: appointments.status,
+      priceChangeAcknowledged: appointments.priceChangeAcknowledged,
       createdAt: appointments.createdAt,
     })
     .from(appointments)
@@ -264,6 +267,7 @@ export async function listAppointmentsForDate(
       scheduledAt: r.scheduledAt,
       durationMinutes: r.durationMinutes,
       status: r.status,
+      priceChangeAcknowledged: r.priceChangeAcknowledged,
       createdAt: r.createdAt,
     })),
   };
@@ -421,4 +425,39 @@ export async function transitionAppointment(
   });
 
   return { success: true, data: { id: appointmentId, status: newStatus } };
+}
+
+// ─── Acknowledge price change (T109) ──────────────────────────────────────────
+
+/**
+ * Secretary marks that they have notified the client about a price change.
+ * Sets price_change_acknowledged = true on the appointment.
+ */
+export async function acknowledgeAppointmentPriceChange(
+  appointmentId: string,
+): Promise<ActionResult<null>> {
+  const guard = await requireBookingRole();
+  if (!guard.ok)
+    return {
+      success: false,
+      error: {
+        code: guard.code,
+        message: guard.code === "UNAUTHORIZED" ? "No autenticado" : "Sin permisos",
+      },
+    };
+
+  if (typeof appointmentId !== "string" || !appointmentId)
+    return { success: false, error: { code: "VALIDATION_ERROR", message: "ID inválido" } };
+
+  const db = getDb();
+  const result = await db
+    .update(appointments)
+    .set({ priceChangeAcknowledged: true, updatedAt: new Date() })
+    .where(eq(appointments.id, appointmentId))
+    .returning({ id: appointments.id });
+
+  if (!result.length)
+    return { success: false, error: { code: "NOT_FOUND", message: "Cita no encontrada" } };
+
+  return { success: true, data: null };
 }
