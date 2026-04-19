@@ -22,11 +22,18 @@ export const createAppointmentSchema = z
 
 export type CreateAppointmentInput = z.infer<typeof createAppointmentSchema>;
 
-export const transitionAppointmentSchema = z.object({
-  appointmentId: z.uuid("ID de cita inválido"),
-  // "reopen" reverses a no_show back to booked (T032b — triggers decrement)
-  action: z.enum(["confirm", "cancel", "no_show", "complete", "reopen"]),
-  cancellationReason: z.string().max(500).optional(),
-});
+export const transitionAppointmentSchema = z
+  .object({
+    appointmentId: z.uuid("ID de cita inválido"),
+    // "reopen" reverses a no_show back to booked (T032b — triggers decrement)
+    // "reschedule" moves booked/confirmed to a new date/time with overlap re-check (T053)
+    action: z.enum(["confirm", "cancel", "no_show", "complete", "reopen", "reschedule"]),
+    cancellationReason: z.string().max(500).optional(),
+    newScheduledAt: z.iso.datetime({ offset: true }).optional(),
+  })
+  .refine((d) => d.action !== "reschedule" || !!d.newScheduledAt, {
+    message: "Se requiere la nueva fecha/hora para reagendar",
+    path: ["newScheduledAt"],
+  });
 
 export type TransitionAppointmentInput = z.infer<typeof transitionAppointmentSchema>;

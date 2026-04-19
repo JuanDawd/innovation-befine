@@ -3,13 +3,21 @@
 /**
  * AppointmentStatusActions — T053
  *
- * Inline action buttons (confirm, cancel, no-show, complete) for a single
- * appointment row in the list. Cancel prompts for a reason via a small inline form.
+ * Inline action buttons (confirm, cancel, no-show, complete, reschedule) for a
+ * single appointment row. Cancel and reschedule each open an inline form.
  */
 
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
-import { CheckIcon, XIcon, UserXIcon, CheckCheckIcon, Loader2Icon, UndoIcon } from "lucide-react";
+import {
+  CheckIcon,
+  XIcon,
+  UserXIcon,
+  CheckCheckIcon,
+  Loader2Icon,
+  UndoIcon,
+  CalendarClockIcon,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { transitionAppointment } from "@/app/(protected)/appointments/actions";
 
@@ -25,16 +33,24 @@ export function AppointmentStatusActions({ appointmentId, currentStatus, onUpdat
   const t = useTranslations("appointments");
   const [isPending, startTransition] = useTransition();
   const [showCancelForm, setShowCancelForm] = useState(false);
+  const [showRescheduleForm, setShowRescheduleForm] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
+  const [newDate, setNewDate] = useState("");
+  const [newTime, setNewTime] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  function act(action: "confirm" | "cancel" | "no_show" | "complete" | "reopen", reason?: string) {
+  function act(
+    action: "confirm" | "cancel" | "no_show" | "complete" | "reopen" | "reschedule",
+    reason?: string,
+    newScheduledAt?: string,
+  ) {
     setError(null);
     startTransition(async () => {
       const res = await transitionAppointment({
         appointmentId,
         action,
         cancellationReason: reason,
+        newScheduledAt,
       });
       if (!res.success) {
         setError(res.error.message);
@@ -42,8 +58,21 @@ export function AppointmentStatusActions({ appointmentId, currentStatus, onUpdat
       }
       onUpdated(res.data.status as Status);
       setShowCancelForm(false);
+      setShowRescheduleForm(false);
       setCancelReason("");
+      setNewDate("");
+      setNewTime("");
     });
+  }
+
+  function submitReschedule() {
+    if (!newDate || !newTime) {
+      setError(t("rescheduleRequiredError"));
+      return;
+    }
+    // Combine date + time into ISO 8601 with Bogota offset (-05:00)
+    const newScheduledAt = `${newDate}T${newTime}:00-05:00`;
+    act("reschedule", undefined, newScheduledAt);
   }
 
   // Hard terminal statuses — no actions available
@@ -126,7 +155,23 @@ export function AppointmentStatusActions({ appointmentId, currentStatus, onUpdat
           size="sm"
           variant="outline"
           disabled={isPending}
-          onClick={() => setShowCancelForm((v) => !v)}
+          onClick={() => {
+            setShowRescheduleForm((v) => !v);
+            setShowCancelForm(false);
+          }}
+          aria-label={t("rescheduleAction")}
+        >
+          <CalendarClockIcon className="h-3.5 w-3.5" />
+          <span className="ml-1 hidden sm:inline">{t("rescheduleAction")}</span>
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={isPending}
+          onClick={() => {
+            setShowCancelForm((v) => !v);
+            setShowRescheduleForm(false);
+          }}
           aria-label={t("cancelAction")}
           className="text-destructive hover:text-destructive"
         >
@@ -153,6 +198,34 @@ export function AppointmentStatusActions({ appointmentId, currentStatus, onUpdat
           >
             {isPending ? <Loader2Icon className="h-3.5 w-3.5 animate-spin" /> : t("cancelAction")}
           </Button>
+        </div>
+      )}
+
+      {showRescheduleForm && (
+        <div className="flex flex-col gap-1.5 mt-1">
+          <div className="flex gap-2 items-center">
+            <input
+              type="date"
+              className="h-8 rounded-md border border-input bg-transparent px-2 text-sm focus-visible:outline-none focus-visible:border-ring"
+              value={newDate}
+              onChange={(e) => setNewDate(e.target.value)}
+              aria-label={t("rescheduleDate")}
+            />
+            <input
+              type="time"
+              className="h-8 rounded-md border border-input bg-transparent px-2 text-sm focus-visible:outline-none focus-visible:border-ring"
+              value={newTime}
+              onChange={(e) => setNewTime(e.target.value)}
+              aria-label={t("rescheduleTime")}
+            />
+            <Button size="sm" variant="outline" disabled={isPending} onClick={submitReschedule}>
+              {isPending ? (
+                <Loader2Icon className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                t("rescheduleConfirm")
+              )}
+            </Button>
+          </div>
         </div>
       )}
 

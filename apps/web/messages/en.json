@@ -445,7 +445,13 @@
     "reopenSuccess": "Appointment reopened",
     "acknowledgeAction": "Price notified",
     "priceChangedBadge": "Price changed",
-    "priceChangedTooltip": "Service price changed. Notify the client and mark as notified."
+    "priceChangedTooltip": "Service price changed. Notify the client and mark as notified.",
+    "rescheduleAction": "Reschedule",
+    "rescheduleDate": "New date",
+    "rescheduleTime": "New time",
+    "rescheduleConfirm": "Confirm reschedule",
+    "rescheduleSuccess": "Appointment rescheduled",
+    "rescheduleRequiredError": "Select a date and time to reschedule"
   },
   "nav": {
     "dashboard": "Dashboard",

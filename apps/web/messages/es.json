@@ -479,7 +479,13 @@
     "reopenSuccess": "Cita reabierta",
     "acknowledgeAction": "Precio notificado",
     "priceChangedBadge": "Precio cambió",
-    "priceChangedTooltip": "El precio del servicio cambió. Notifica al cliente y marca como notificado."
+    "priceChangedTooltip": "El precio del servicio cambió. Notifica al cliente y marca como notificado.",
+    "rescheduleAction": "Reagendar",
+    "rescheduleDate": "Nueva fecha",
+    "rescheduleTime": "Nueva hora",
+    "rescheduleConfirm": "Confirmar reagendado",
+    "rescheduleSuccess": "Cita reagendada",
+    "rescheduleRequiredError": "Selecciona fecha y hora para reagendar"
   },
   "nav": {
     "dashboard": "Tablero",

@@ -307,20 +307,35 @@ export async function listBookingStylists(): Promise<ActionResult<StylistOption[
 
 /**
  * Valid transitions:
- *   booked    → confirmed | cancelled | no_show | completed
- *   confirmed → cancelled | no_show | completed
- *   (cancelled, no_show, completed, rescheduled are terminal — no further transitions)
+ *   booked    → confirmed | cancelled | no_show | completed | rescheduled
+ *   confirmed → cancelled | no_show | completed | rescheduled
+ *   no_show   → booked (T032b: reopen reverses no-show, triggers decrement)
+ *   (cancelled, completed, rescheduled are terminal — no further transitions)
  */
 const ALLOWED_TRANSITIONS: Record<string, Record<string, string>> = {
-  booked: { confirm: "confirmed", cancel: "cancelled", no_show: "no_show", complete: "completed" },
-  confirmed: { cancel: "cancelled", no_show: "no_show", complete: "completed" },
+  booked: {
+    confirm: "confirmed",
+    cancel: "cancelled",
+    no_show: "no_show",
+    complete: "completed",
+    reschedule: "rescheduled",
+  },
+  confirmed: {
+    cancel: "cancelled",
+    no_show: "no_show",
+    complete: "completed",
+    reschedule: "rescheduled",
+  },
   // T032b: no_show can be reversed back to booked (triggers decrement of no_show_count)
   no_show: { reopen: "booked" },
 };
 
 export async function transitionAppointment(
   rawInput: unknown,
-): Promise<ActionResult<{ id: string; status: string }>> {
+): Promise<
+  | ActionResult<{ id: string; status: string }>
+  | { success: false; error: { code: "CONFLICT"; message: string; conflict: ConflictDetail } }
+> {
   const guard = await requireBookingRole();
   if (!guard.ok)
     return {
@@ -345,7 +360,7 @@ export async function transitionAppointment(
   if (!parsed.success)
     return { success: false, error: { code: "VALIDATION_ERROR", message: "Datos inválidos" } };
 
-  const { appointmentId, action, cancellationReason } = parsed.data;
+  const { appointmentId, action, cancellationReason, newScheduledAt } = parsed.data;
   const db = getDb();
 
   const [appt] = await db
@@ -353,6 +368,8 @@ export async function transitionAppointment(
       id: appointments.id,
       status: appointments.status,
       clientId: appointments.clientId,
+      stylistEmployeeId: appointments.stylistEmployeeId,
+      durationMinutes: appointments.durationMinutes,
     })
     .from(appointments)
     .where(eq(appointments.id, appointmentId))
@@ -384,6 +401,45 @@ export async function transitionAppointment(
   const statusValue = newStatus as (typeof appointments.$inferInsert)["status"];
   const previousStatus = appt.status;
 
+  // ── Reschedule: overlap re-check before updating (T053) ───────────────────
+  let rescheduledAt: Date | undefined;
+  if (action === "reschedule" && newScheduledAt) {
+    rescheduledAt = new Date(newScheduledAt);
+    const newEnd = new Date(rescheduledAt.getTime() + appt.durationMinutes * 60_000);
+
+    const stylistAppts = await db
+      .select({
+        scheduledAt: appointments.scheduledAt,
+        durationMinutes: appointments.durationMinutes,
+        status: appointments.status,
+        id: appointments.id,
+      })
+      .from(appointments)
+      .where(eq(appointments.stylistEmployeeId, appt.stylistEmployeeId));
+
+    const conflicts = stylistAppts.filter((a) => {
+      // Skip self and terminal statuses
+      if (a.id === appointmentId) return false;
+      if (a.status === "cancelled" || a.status === "no_show" || a.status === "rescheduled")
+        return false;
+      const aStart = new Date(a.scheduledAt);
+      const aEnd = new Date(aStart.getTime() + a.durationMinutes * 60_000);
+      return aStart < newEnd && aEnd > rescheduledAt!;
+    });
+
+    if (conflicts.length > 0) {
+      const c = conflicts[0]!;
+      return {
+        success: false,
+        error: {
+          code: "CONFLICT",
+          message: "El estilista ya tiene una cita en ese horario",
+          conflict: { scheduledAt: c.scheduledAt, durationMinutes: c.durationMinutes },
+        },
+      };
+    }
+  }
+
   // Run inside a transaction: appointment update + optional no-show count delta (T032b)
   const txDb = getTxDb();
   await txDb.transaction(async (tx) => {
@@ -396,6 +452,11 @@ export async function transitionAppointment(
           cancelledAt: now,
           cancellationReason: cancellationReason ?? null,
         })
+        .where(eq(appointments.id, appointmentId));
+    } else if (newStatus === "rescheduled" && rescheduledAt) {
+      await tx
+        .update(appointments)
+        .set({ status: statusValue, scheduledAt: rescheduledAt, updatedAt: now })
         .where(eq(appointments.id, appointmentId));
     } else {
       await tx
