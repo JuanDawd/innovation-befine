@@ -572,15 +572,16 @@ Update `apps/web/src/lib/db/README.md` with a short "When to use `getDb()` vs `g
 | 3R — Remediation          | 3       | 3      | 0           |
 | 4A — Tickets and checkout | 13      | 13     | 0           |
 | 4B — Cloth batches        | 4       | 4      | 0           |
-| 4R — Remediation          | 9       | 0      | 0           |
+| 4R — Remediation          | 9       | 9      | 0           |
 | 5 — Appointments          | 7       | 7      | 0           |
-| 6 — Large orders          | 6       | 0      | 0           |
+| 5R — Remediation          | 8       | 8      | 0           |
+| 6 — Large orders          | 6       | 6      | 0           |
 | 7 — Payroll               | 11      | 0      | 0           |
 | 8 — Analytics             | 8       | 0      | 0           |
 | 9 — Offline               | 5       | 0      | 0           |
 | 10 — Polish               | 9       | 0      | 0           |
 | POST-MVP                  | 2       | 0      | 0           |
-| **Total**                 | **130** | **71** | **0**       |
+| **Total**                 | **138** | **94** | **0**       |
 
 ---
 
