@@ -113,6 +113,13 @@
       "when": 1776600000000,
       "tag": "0015_appointment_no_overlap",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1745078400000,
+      "tag": "0016_fix_price_change_acknowledged_default",
+      "breakpoints": true
     }
   ]
 }

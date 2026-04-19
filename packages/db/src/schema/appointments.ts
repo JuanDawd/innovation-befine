@@ -48,7 +48,7 @@ export const appointments = pgTable(
     cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
     cancellationReason: text("cancellation_reason"),
     confirmationSentAt: timestamp("confirmation_sent_at", { withTimezone: true }),
-    priceChangeAcknowledged: boolean("price_change_acknowledged").notNull().default(false),
+    priceChangeAcknowledged: boolean("price_change_acknowledged").notNull().default(true),
     createdBy: uuid("created_by")
       .notNull()
       .references(() => employees.id, { onDelete: "restrict" }),
