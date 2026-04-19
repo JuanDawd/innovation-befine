@@ -35,6 +35,7 @@ export {
   type CreateBatchInput,
   type BatchPieceLine,
 } from "./schemas/batch";
+export { createAppointmentSchema, type CreateAppointmentInput } from "./schemas/appointment";
 export {
   requestEditSchema,
   resolveEditRequestSchema,
