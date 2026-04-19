@@ -20,6 +20,7 @@ import {
 import { listActiveClothPieces } from "@/app/(protected)/admin/catalog/actions/cloth-pieces";
 
 type ClothPieceOption = { id: string; name: string };
+type LargeOrderOption = { id: string; clientName: string; description: string };
 
 type PieceLine = {
   key: number;
@@ -27,7 +28,13 @@ type PieceLine = {
   assignedToEmployeeId: string | null;
 };
 
-export function CreateBatchForm({ redirectPath }: { redirectPath: string }) {
+export function CreateBatchForm({
+  redirectPath,
+  largeOrders = [],
+}: {
+  redirectPath: string;
+  largeOrders?: LargeOrderOption[];
+}) {
   const t = useTranslations("batches");
   const tc = useTranslations("common");
   const router = useRouter();
@@ -38,6 +45,7 @@ export function CreateBatchForm({ redirectPath }: { redirectPath: string }) {
   const [isLoading, startLoadTransition] = useTransition();
 
   const [notes, setNotes] = useState("");
+  const [largeOrderId, setLargeOrderId] = useState<string>("");
   const [lines, setLines] = useState<PieceLine[]>([
     { key: 0, clothPieceId: "", assignedToEmployeeId: null },
   ]);
@@ -87,6 +95,7 @@ export function CreateBatchForm({ redirectPath }: { redirectPath: string }) {
     startSubmitTransition(async () => {
       const result = await createBatch({
         notes: notes.trim() || undefined,
+        largeOrderId: largeOrderId || undefined,
         pieces: lines.map((l) => ({
           clothPieceId: l.clothPieceId,
           assignedToEmployeeId: l.assignedToEmployeeId,
@@ -122,6 +131,29 @@ export function CreateBatchForm({ redirectPath }: { redirectPath: string }) {
 
   return (
     <div className="flex flex-col gap-6">
+      {/* Linked large order (T060) */}
+      {largeOrders.length > 0 && (
+        <div className="flex flex-col gap-1.5">
+          <label className="text-sm font-medium" htmlFor="batch-order">
+            Pedido grande vinculado{" "}
+            <span className="text-muted-foreground font-normal">{tc("optional")}</span>
+          </label>
+          <select
+            id="batch-order"
+            value={largeOrderId}
+            onChange={(e) => setLargeOrderId(e.target.value)}
+            className="h-9 rounded-md border border-input bg-transparent px-3 text-sm focus-visible:outline-none focus-visible:border-ring"
+          >
+            <option value="">Sin vinculación</option>
+            {largeOrders.map((o) => (
+              <option key={o.id} value={o.id}>
+                {o.clientName} — {o.description.slice(0, 50)}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
       {/* Notes */}
       <div className="flex flex-col gap-1.5">
         <label className="text-sm font-medium" htmlFor="batch-notes">

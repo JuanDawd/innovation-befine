@@ -39,6 +39,7 @@ const entityStatusMap: Record<string, StatusCategory> = {
   reopened: "attention",
   done_pending_approval: "attention",
   rescheduled: "attention",
+  ready: "attention",
   closed: "success",
   approved: "success",
   delivered: "success",

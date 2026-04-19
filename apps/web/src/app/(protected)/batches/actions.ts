@@ -118,6 +118,7 @@ export async function createBatch(rawInput: unknown): Promise<ActionResult<{ id:
         businessDayId: businessDay.id,
         createdBy: creatorEmployee.id,
         notes: input.notes ?? null,
+        largeOrderId: input.largeOrderId ?? null,
       })
       .returning({ id: clothBatches.id });
 

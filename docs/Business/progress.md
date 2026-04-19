@@ -470,14 +470,14 @@ Update `apps/web/src/lib/db/README.md` with a short "When to use `getDb()` vs `g
 
 ## Phase 6 — Large cloth orders
 
-| ID   | Task                                                  | Status  | Dependencies |
-| ---- | ----------------------------------------------------- | ------- | ------------ |
-| T057 | Large orders and large_order_payments table migration | done    | T029         |
-| T058 | Large order creation and edit UI (admin / secretary)  | pending | T057, T030   |
-| T059 | Order status flow (admin / secretary)                 | pending | T058         |
-| T060 | Link cloth batches to large orders                    | pending | T059, T044   |
-| T061 | Additional payment recording on large orders          | pending | T058         |
-| T062 | Large orders list view                                | pending | T059, T061   |
+| ID   | Task                                                  | Status | Dependencies |
+| ---- | ----------------------------------------------------- | ------ | ------------ |
+| T057 | Large orders and large_order_payments table migration | done   | T029         |
+| T058 | Large order creation and edit UI (admin / secretary)  | done   | T057, T030   |
+| T059 | Order status flow (admin / secretary)                 | done   | T058         |
+| T060 | Link cloth batches to large orders                    | done   | T059, T044   |
+| T061 | Additional payment recording on large orders          | done   | T058         |
+| T062 | Large orders list view                                | done   | T059, T061   |
 
 ---
 

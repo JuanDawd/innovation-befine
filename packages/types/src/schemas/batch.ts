@@ -7,6 +7,7 @@ export const batchPieceLineSchema = z.object({
 
 export const createBatchSchema = z.object({
   notes: z.string().max(500).optional(),
+  largeOrderId: z.uuid("ID de pedido inválido").optional(),
   pieces: z.array(batchPieceLineSchema).min(1, "El lote debe tener al menos una pieza"),
 });
 
