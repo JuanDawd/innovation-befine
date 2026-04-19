@@ -442,49 +442,62 @@ export async function transitionAppointment(
 
   // Run inside a transaction: appointment update + optional no-show count delta (T032b)
   const txDb = getTxDb();
-  await txDb.transaction(async (tx) => {
-    if (newStatus === "cancelled") {
-      await tx
-        .update(appointments)
-        .set({
-          status: statusValue,
-          updatedAt: now,
-          cancelledAt: now,
-          cancellationReason: cancellationReason ?? null,
-        })
-        .where(eq(appointments.id, appointmentId));
-    } else if (newStatus === "rescheduled" && rescheduledAt) {
-      await tx
-        .update(appointments)
-        .set({ status: statusValue, scheduledAt: rescheduledAt, updatedAt: now })
-        .where(eq(appointments.id, appointmentId));
-    } else {
-      await tx
-        .update(appointments)
-        .set({ status: statusValue, updatedAt: now })
-        .where(eq(appointments.id, appointmentId));
-    }
-
-    // T032b — no-show count increment/decrement for saved clients only
-    if (appt.clientId) {
-      if (newStatus === "no_show" && previousStatus !== "no_show") {
-        // Entering no-show: increment (idempotent — only when not already no_show)
+  try {
+    await txDb.transaction(async (tx) => {
+      if (newStatus === "cancelled") {
         await tx
-          .update(clients)
-          .set({ noShowCount: sql`${clients.noShowCount} + 1`, updatedAt: now })
-          .where(eq(clients.id, appt.clientId));
-      } else if (previousStatus === "no_show" && newStatus !== "no_show") {
-        // Reversing from no_show: decrement, floor at 0 (CHECK constraint enforces this)
-        await tx
-          .update(clients)
+          .update(appointments)
           .set({
-            noShowCount: sql`GREATEST(${clients.noShowCount} - 1, 0)`,
+            status: statusValue,
             updatedAt: now,
+            cancelledAt: now,
+            cancellationReason: cancellationReason ?? null,
           })
-          .where(eq(clients.id, appt.clientId));
+          .where(eq(appointments.id, appointmentId));
+      } else if (newStatus === "rescheduled" && rescheduledAt) {
+        await tx
+          .update(appointments)
+          .set({ status: statusValue, scheduledAt: rescheduledAt, updatedAt: now })
+          .where(eq(appointments.id, appointmentId));
+      } else {
+        await tx
+          .update(appointments)
+          .set({ status: statusValue, updatedAt: now })
+          .where(eq(appointments.id, appointmentId));
       }
+
+      // T032b — no-show count increment/decrement for saved clients only
+      if (appt.clientId) {
+        if (newStatus === "no_show" && previousStatus !== "no_show") {
+          // Entering no-show: increment (idempotent — only when not already no_show)
+          await tx
+            .update(clients)
+            .set({ noShowCount: sql`${clients.noShowCount} + 1`, updatedAt: now })
+            .where(eq(clients.id, appt.clientId));
+        } else if (previousStatus === "no_show" && newStatus !== "no_show") {
+          // Reversing from no_show: decrement, floor at 0 (CHECK constraint enforces this)
+          await tx
+            .update(clients)
+            .set({
+              noShowCount: sql`GREATEST(${clients.noShowCount} - 1, 0)`,
+              updatedAt: now,
+            })
+            .where(eq(clients.id, appt.clientId));
+        }
+      }
+    });
+  } catch (err) {
+    // T05R-R4: reopen (no_show → booked) can fail with exclusion constraint 23P01 if
+    // the stylist now has a conflicting appointment in that slot.
+    const pgCode = (err as { code?: string })?.code;
+    if (pgCode === "23P01") {
+      return {
+        success: false,
+        error: { code: "CONFLICT", message: "El horario ya está ocupado" },
+      };
     }
-  });
+    throw err;
+  }
 
   return { success: true, data: { id: appointmentId, status: newStatus } };
 }
