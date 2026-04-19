@@ -25,8 +25,15 @@ export { clients } from "./clients";
 export { ticketStatusEnum, checkoutSessions, tickets } from "./tickets";
 export { ticketItems } from "./ticket-items";
 export { ticketPayments } from "./ticket-payments";
-export { servicesRelations, serviceVariantsRelations } from "./relations";
+export {
+  servicesRelations,
+  serviceVariantsRelations,
+  largeOrdersRelations,
+  largeOrderPaymentsRelations,
+  clothBatchesRelations,
+} from "./relations";
 export { notificationTypeEnum, notifications } from "./notifications";
 export { editRequestStatusEnum, ticketEditRequests } from "./ticket-edit-requests";
 export { batchPieceStatusEnum, claimSourceEnum, clothBatches, batchPieces } from "./cloth-batches";
 export { appointmentStatusEnum, appointments } from "./appointments";
+export { largeOrderStatusEnum, largeOrders, largeOrderPayments } from "./large-orders";

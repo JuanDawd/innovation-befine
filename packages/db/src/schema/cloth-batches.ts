@@ -2,6 +2,7 @@ import { pgEnum, pgTable, uuid, text, timestamp, integer } from "drizzle-orm/pg-
 import { businessDays } from "./business-days";
 import { employees } from "./employees";
 import { clothPieces } from "./cloth-pieces";
+import { largeOrders } from "./large-orders";
 
 export const batchPieceStatusEnum = pgEnum("batch_piece_status_enum", [
   "pending",
@@ -25,8 +26,7 @@ export const clothBatches = pgTable("cloth_batches", {
     .notNull()
     .references(() => employees.id, { onDelete: "restrict" }),
   notes: text("notes"),
-  // large_order_id FK column reserved — linked in Phase 6 (T060)
-  largeOrderId: uuid("large_order_id"),
+  largeOrderId: uuid("large_order_id").references(() => largeOrders.id, { onDelete: "restrict" }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

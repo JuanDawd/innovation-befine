@@ -472,7 +472,7 @@ Update `apps/web/src/lib/db/README.md` with a short "When to use `getDb()` vs `g
 
 | ID   | Task                                                  | Status  | Dependencies |
 | ---- | ----------------------------------------------------- | ------- | ------------ |
-| T057 | Large orders and large_order_payments table migration | pending | T029         |
+| T057 | Large orders and large_order_payments table migration | done    | T029         |
 | T058 | Large order creation and edit UI (admin / secretary)  | pending | T057, T030   |
 | T059 | Order status flow (admin / secretary)                 | pending | T058         |
 | T060 | Link cloth batches to large orders                    | pending | T059, T044   |
