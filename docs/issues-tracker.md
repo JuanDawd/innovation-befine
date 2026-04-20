@@ -176,6 +176,36 @@
 
 ---
 
+### C-18 — `paidOffline` offline-checkout flow is a stub
+
+- **Severity:** Critical
+- **Status:** Open
+- **Affected:** T079 (`apps/web/src/lib/mutation-queue.ts:14`, `apps/web/src/lib/use-queue-flush.ts:22–49`, checkout actions)
+- **Description:** `MutationType` declares `"paidOffline"` and the T079 AC + resolved decisions explicitly support cashier-offline checkout: "cashier marks tickets `paid_offline`… syncs on reconnect… server creates `checkout_session` and closes all tickets atomically; cashier's version always wins on conflict." The implementation has none of it: `dispatchMutation` handles only `markPieceDone` and `createTicket`, and no `processPaidOfflineCheckout` server action exists. The `paid_offline` value is present in the ticket status enum (from T033) and in i18n copy, but there is no code path that transitions a ticket to it. A cashier who enqueues a `paidOffline` mutation would see it stuck in the queue forever.
+- **Fix:** Implement `processPaidOfflineCheckout({ ticketIds, paymentMethod, amount, idempotencyKey })` that (a) validates the cashier's session, (b) transitions all targeted tickets to `paid_offline` within a transaction, (c) on the subsequent online flush creates the `checkout_session`, transitions tickets to `closed`, and records `ticket_payments` — all atomically with cashier-wins conflict resolution. Wire the `"paidOffline"` branch in `dispatchMutation`. Add an integration test that the round-trip (offline enqueue → reconnect → close) leaves exactly one checkout session with the correct total.
+
+---
+
+### C-19 — `createTicket` is not wired to the shared idempotency helper
+
+- **Severity:** Critical
+- **Status:** Open
+- **Affected:** T078 (`apps/web/src/app/(protected)/tickets/actions/index.ts:189–246`, `apps/web/src/lib/idempotency.ts`)
+- **Description:** T078 AC: "Covered routes: ticket creation, piece mark-done." `markPieceDone` calls `checkIdempotency`/`storeIdempotency`; `createTicket` does not. Instead, `createTicket` uses the older column-level dedup via `tickets.idempotency_key` introduced in T033. The two mechanisms are not reconciled: (a) the shared `idempotency_keys` table was designed to cover all mutating routes including ticket creation, so the AC is half-met; (b) future mutating routes that aren't tickets (e.g. `claimPiece`, `approvePiece`, `recordPayout`) have no idempotency guard at all. An offline retry of `createTicket` uses column dedup which is fine, but the design intent of T078 was a single abstraction.
+- **Fix:** Either (a) wire `createTicket` to `checkIdempotency`/`storeIdempotency` as well, keeping `tickets.idempotency_key` only as a backstop unique constraint; or (b) formally document that `tickets.idempotency_key` is authoritative for ticket creation, remove the "ticket creation" line from T078 AC, and document per-route idempotency strategy. Either way both mechanisms should not remain silently duplicated. Add an integration test that duplicate `createTicket` with the same key is a no-op.
+
+---
+
+### C-20 — T078 accepts idempotency as a parameter, not as `Idempotency-Key` header
+
+- **Severity:** Critical
+- **Status:** Open
+- **Affected:** T078 (`apps/web/src/lib/idempotency.ts`, callers)
+- **Description:** T078 AC: "Accept an `Idempotency-Key` header." The implementation takes the key as a positional `rawIdempotencyKey` parameter on the server action. External clients (curl, third-party integrations, future mobile apps) cannot use it — they can only set HTTP headers, not call server actions with arbitrary arguments. For offline flushes from this app's own IndexedDB queue this is fine; for the "any mutating API route" coverage implied by the AC, it is not.
+- **Fix:** Read `idempotency-key` via `headers().get("idempotency-key")` inside the idempotency helper; fall back to the parameter for server actions that pre-fetch it. Document the HTTP contract in `docs/api-conventions.md`. If no public HTTP surface is planned post-MVP, rewrite the T078 AC to reflect server-action-only usage instead.
+
+---
+
 ## High-priority issues
 
 ### H-01 — Phase 0 scope inflation
@@ -373,6 +403,56 @@
 - **Affected:** T071–T076, T101 (no test files under `packages/db/src/queries/` or `apps/web/src/app/(protected)/admin/analytics/__tests__/`)
 - **Description:** CLAUDE.md mandates unit tests for "earnings computation (commission, piece_rate, daily_rate)", "permission / role checks", "financial data integrity". Analytics queries compute revenue, per-employee earnings, and prior-period comparisons — all financial logic — and have zero tests. Today's 213 passing tests include the Phase 7 payroll logic, but analytics is untested. Bugs like C-16 (open-day exclusion), C-17 (secretary under-report), and L-35 (UTC date slice) were only catchable by code review; a regression in any of these would ship silently.
 - **Fix:** Add `packages/db/src/queries/__tests__/analytics.test.ts` (or `apps/web/src/app/(protected)/admin/analytics/__tests__/`) covering: `revenueByPeriod` on closed + open day, zero-ticket days, needs_review exclusion, override-price use; `earningsByEmployee` per role including secretary parity with `computeSecretaryEarnings`; `getBusinessDayIdsByPeriod` boundaries (week Mon, month 1st, year turnover); role gate FORBIDDEN for non-admin roles; CSV totals match the aggregate queries. Target 80%+ branch coverage of `packages/db/src/queries/analytics.ts` per CLAUDE.md threshold.
+
+---
+
+### H-38 — Service worker has no explicit `NetworkOnly` rule for mutating requests
+
+- **Severity:** High
+- **Status:** Open
+- **Affected:** T081 (`apps/web/next.config.ts:29–49`)
+- **Description:** `workboxOptions.runtimeCaching` has two rules: Cache First for static assets, SWR for `/api/(?!realtime).*`. No explicit matcher excludes POST/PUT/DELETE methods. Workbox by default caches GET only, but the SWR URL pattern is wide enough to match authenticated admin mutations. The T081 AC explicitly calls for "Mutating requests (POST/PUT): NetworkOnly (handled by IndexedDB queue instead)" — the rule is relied on by convention, not by code. If Workbox defaults change or a future rule broadens matching, mutating requests could be served stale.
+- **Fix:** Prepend an explicit `{ urlPattern: /.*/, method: "POST", handler: "NetworkOnly" }` + same for `PUT`, `DELETE`, `PATCH`. Verify with `sw.js` inspection that mutating requests bypass the cache.
+
+---
+
+### H-39 — Zero tests for T078/T079/T080 offline infrastructure
+
+- **Severity:** High
+- **Status:** Open
+- **Affected:** T078, T079, T080 (no test files under `apps/web/src/lib/__tests__/mutation-queue.test.ts`, `idempotency.test.ts`, or `use-queue-flush.test.ts`)
+- **Description:** CLAUDE.md mandates unit tests for "financial data integrity" and "double-pay / duplicate prevention" — idempotency is the heart of both. The T078 helper, the IndexedDB queue, the flush hook, and the SyncStatus UI have zero tests. The only offline-relevant tests that exist are Phase 4 checkout idempotency (column-level). A regression in `checkIdempotency` (e.g. H-41 race), `dispatchMutation` (e.g. missing mutation type as in C-18), or `useQueueFlush` (e.g. infinite-loop on persistent failure) would ship silently.
+- **Fix:** Add Vitest tests: (a) `idempotency.test.ts` — miss/hit/expired lazy delete; (b) `mutation-queue.test.ts` — enqueue/list/dequeue/markAttempted on `fake-indexeddb`; (c) `dispatch.test.ts` — success/failure per supported mutation type; (d) `use-queue-flush.test.tsx` — state transitions on online/offline events. Target 80%+ branch coverage.
+
+---
+
+### H-40 — PWA icons are SVG only; Lighthouse PWA ≥ 80 unverified
+
+- **Severity:** High
+- **Status:** Open
+- **Affected:** T082 (`apps/web/src/app/manifest.ts:13–26`, `apps/web/public/brand/icon-192.svg`, `icon-512.svg`)
+- **Description:** Chrome's PWA installability and Lighthouse PWA audit score favour raster icons (PNG 192×192 + 512×512) with a `"any maskable"` purpose pair. The current manifest uses SVGs only, with the 512 entry carrying `purpose: "maskable"` alone (not `"any maskable"`). T082 AC: "Lighthouse PWA score ≥ 80 on production" and "PWA icons use brand assets from T105 (192×192 and 512×512)" — the dimension claim is met on paper but not in format. No performance-results.md update captures the actual Lighthouse score.
+- **Fix:** Add PNG versions at the two required sizes (export from the SVGs), include both in `icons[]`, and set at least one 512 entry to `purpose: "any maskable"`. Run Lighthouse PWA audit against a production build and record the score in `docs/testing/performance-results.md`. If < 80, log as blocking.
+
+---
+
+### H-41 — `checkIdempotency` lazy-expiry race lets duplicates slip through
+
+- **Severity:** High
+- **Status:** Open
+- **Affected:** T078 (`apps/web/src/lib/idempotency.ts:20–38`)
+- **Description:** When a key has expired, `checkIdempotency` does: SELECT → DELETE → return null. Two concurrent requests arriving with the same expired key both SELECT, both DELETE (the second is a no-op), both fall through to re-execute the mutation. At expiry boundaries this collapses idempotency guarantees — users retrying at the TTL edge can see double-execution. The same race exists for any `storeIdempotency` call following a cleared key because `onConflictDoNothing` silently skips the insert while the mutation already committed (see M-48).
+- **Fix:** Use a single `DELETE … WHERE expires_at < now() RETURNING *` race-safe statement to own the expiry. Or keep the row and gate reads on `expires_at > now()`; sweep expired rows in a scheduled job. Wrap the check in the same transaction as the mutation (see M-48 fix) so the whole thing is atomic.
+
+---
+
+### H-42 — SyncStatus hides failed-item count while offline
+
+- **Severity:** High
+- **Status:** Open
+- **Affected:** T080 (`apps/web/src/components/sync-status.tsx:36–63`)
+- **Description:** T080 AC: "Failed items show a count (not just an icon)". Today, the failed-count badge only renders in the `online + syncing/failed` toast branch. The offline banner shows `pendingCount` but not `failedCount`. A cashier who dropped offline with 3 already-failed mutations sees only a pending total that excludes them, and has no way to see that 3 were rejected server-side before going offline. The Retry button also only appears when online.
+- **Fix:** Render `failedCount` in the offline banner alongside `pendingCount`. Optionally show a disabled "Reintentar al volver la conexión" affordance so users understand state.
 
 ---
 
@@ -667,6 +747,46 @@
 - **Affected:** T101 (`packages/db/src/seed-analytics.ts:81–102`)
 - **Description:** `clearAnalyticsData` deletes every row from `clients`, `large_orders`, `large_order_payments`, `employee_absences`, `tickets`, `ticket_items`, `ticket_payments`, `checkout_sessions`, `cloth_batches`, `batch_pieces`, `payouts`, `payout_period_days`, `payout_ticket_items`, `payout_batch_pieces`, `business_days` — regardless of whether they were seeded or real. The `--analytics` flag gate prevents accidental execution only against accidental `pnpm db:seed` confusion; any dev who runs `pnpm db:seed:analytics` against a shared staging database wipes real operator data. T101 AC: "Does not affect or overwrite real data if run against a non-empty database (operates in a seeded namespace or requires explicit flag)" — only the flag side of this AC is satisfied.
 - **Fix:** Either (a) tag seeded rows with a `seeded_namespace` marker column (or use a distinct `client.name` prefix already present — `Cliente Seed ${i+1}` — and filter delete by name/id list), or (b) add a second `--confirm-destructive` flag + loud banner naming the tables to be wiped, and require a DB URL that does not match production patterns. Option (a) is stronger; either is acceptable.
+
+---
+
+### M-45 — Payroll UI has no "pay today" / per-day shortcut (user add-on)
+
+- **Severity:** Medium
+- **Status:** Open
+- **Affected:** T067 (`apps/web/src/app/(protected)/admin/payroll/payroll-screen.tsx`)
+- **Description:** Stakeholder feedback during Phase 9 review: "the payments to the employees are daily but I don't see the option in nómina. I see pay by day worked — that's not the same." Current flow: admin selects an employee, then manually ticks individual closed business day chips, then previews, then confirms. For the common case of "settle today's work right now" the admin still has to find and click today's date chip among a list of unsettled days. There is no single-click "pay today" shortcut. Additionally, the preview's language is "daysWorked / expectedWorkDays" which reads as secretary-specific framing even when the selected employee is a stylist or clothier — reinforcing the perception that daily payment isn't supported for them.
+- **Fix:** (a) Add a "Pagar día de hoy" button beside the employee selector that auto-ticks today's closed business day (if one exists and isn't settled) and jumps directly to preview. (b) Add role-aware copy above the day picker ("Selecciona los días a liquidar — cada día se paga de forma independiente") so stylists/clothiers see the same daily-payment affordance. (c) Keep multi-day selection for back-settlement cases. Tracked as T09R-R9.
+
+---
+
+### M-46 — No endpoint-level response contract test suite (user add-on)
+
+- **Severity:** Medium
+- **Status:** Open
+- **Affected:** All server actions + API routes
+- **Description:** Stakeholder feedback: "test all the endpoints, make sure everyone returns what is expected." Today's unit tests cover business logic modules (earnings computation, status transitions, etc.) and a small number of server actions. There is no systematic test that every mutating or reading server action/API route (a) returns the correct `ActionResult<T>` success shape for authorised callers, (b) returns `FORBIDDEN` for disallowed roles with the correct error code, (c) returns `UNAUTHORIZED` for unauthenticated, (d) returns `VALIDATION_ERROR` for malformed inputs. Regressions in the standard response shape or in role gating surface in production, not in CI.
+- **Fix:** Build an endpoint inventory table under `docs/testing/endpoint-inventory.md`. Add a contract test suite under `apps/web/src/app/__tests__/endpoints/` that iterates through every listed endpoint × every role × each of the four shape assertions, executed against an in-memory pglite fixture. Target: every inventoried endpoint covered before go-live. Tracked as T09R-R10.
+
+---
+
+### M-47 — No integration tests for cross-module flows (user add-on)
+
+- **Severity:** Medium
+- **Status:** Open
+- **Affected:** All phases
+- **Description:** Stakeholder feedback: "add integration testing." Unit tests exercise individual modules in isolation. Cross-module flows — appointment → ticket creation → checkout → payout, batch → approve → payout, large_order → batch link → payment recording → auto-paid-in-full, offline-queue flush after reconnect — have no end-to-end coverage. Bugs that only manifest at module seams (e.g. C-19 idempotency cross-wiring, H-32 Phase 7 financial tests that stubbed real modules before T07R-R9) keep appearing because no test forces the modules to interoperate on live data.
+- **Fix:** Add `apps/web/src/__tests__/integration/` with Vitest + pglite fixtures for: (a) book appointment → create ticket from appointment → checkout → verify payout preview includes the ticket commission; (b) create batch → mark pieces done → approve → verify payout preview includes the piece_rate; (c) large-order → link batches → record partial payments → verify auto-transition to `paid_in_full`; (d) enqueue mutation offline → reconnect → verify server state matches and no duplicate. Document patterns in `docs/testing/README.md`. Tracked as T09R-R11.
+
+---
+
+### M-48 — `storeIdempotency` runs outside the mutation transaction
+
+- **Severity:** Medium
+- **Status:** Open
+- **Affected:** T078 (`apps/web/src/lib/idempotency.ts:40–52`, callers)
+- **Description:** The helper inserts the key + response after the mutation completes (`onConflictDoNothing`). A second concurrent request arriving before the first has stored its key finds no cached row, re-executes the mutation, and both responses race to insert — the second insert is silently skipped. The real-world effect: two `markPieceDone` calls both succeed and the response cache is the first-committer's view, while the second committer has already applied a second state transition (which the optimistic lock on the piece usually catches, but not always if other fields mutate). The T078 contract promises "Check if the key already exists → return cached response. Otherwise execute the operation and store the key + response in the same transaction" — "same transaction" is not implemented.
+- **Fix:** Wrap `checkIdempotency` + mutation + `storeIdempotency` in a single `db.transaction(async (tx) => …)`. Under Postgres READ COMMITTED the first transaction's INSERT acquires a row lock on `idempotency_keys.key`; the second transaction's INSERT blocks until the first commits, then fails the unique constraint and re-reads the cached response. Use `ON CONFLICT (key) DO UPDATE SET response_body = response_body RETURNING response_body` to atomically fetch-or-insert.
 
 ---
 
@@ -1192,6 +1312,46 @@
 - **Affected:** T107 (`docs/testing/performance-results.md:55–95`)
 - **Description:** T107 AC: "Results documented in `docs/testing/performance-results.md`" and "Any endpoint or page exceeding its target is flagged as blocking in `docs/issues-tracker.md` and fixed before T089 (go-live)". The doc marks client-side navigation, LCP-on-mobile-4G, and SSE delivery latency as ⏳ "Manual measurement pending". While the DB-level numbers are complete, the user-perceivable metrics that T107 was written to enforce are not actually captured yet.
 - **Fix:** Run the three manual measurements (Chrome DevTools Performance/Lighthouse on a running deployment; two-tab SSE test) and record the numbers. If any target is missed, log a new blocking issue here. This can follow T08R-R3 (real-time refresh) because SSE latency is affected by that change.
+
+---
+
+### L-37 — `useQueueFlush` flushes on mount regardless of prior offline state
+
+- **Severity:** Low
+- **Status:** Open
+- **Affected:** T079 (`apps/web/src/lib/use-queue-flush.ts:85–91`)
+- **Description:** The effect calls `flush()` unconditionally if `navigator.onLine` on mount. For users who have never been offline (the overwhelming majority of sessions), this triggers an IndexedDB read and a no-op flush on every page load. Harmless but wasteful.
+- **Fix:** Track a ref that flips to `true` on the `offline` event and only call `flush()` on the next `online` event if the ref was set. First-page-load flush can be replaced with a one-time "check-if-queue-has-items" via `listQueued` + early return if empty.
+
+---
+
+### L-38 — `SyncStatus` `role` prop is typed as `string`
+
+- **Severity:** Low
+- **Status:** Open
+- **Affected:** T080 (`apps/web/src/components/sync-status.tsx:16`)
+- **Description:** The prop is declared `role: string` so the `role === "cashier_admin"` branch is stringly-typed. Other roles could be passed in without TypeScript complaining.
+- **Fix:** Import `AppRole` from `@befine/types` and type the prop as `AppRole`. Layout already casts the role before passing, so the fix is localised.
+
+---
+
+### L-39 — PWA manifest missing `scope` and `lang`
+
+- **Severity:** Low
+- **Status:** Open
+- **Affected:** T082 (`apps/web/src/app/manifest.ts`)
+- **Description:** `scope` defaults to `start_url`'s directory which is fine, but being explicit (`scope: "/"`) helps iOS Safari PWA behavior. `lang: "es"` is missing — the app is Spanish-primary per CLAUDE.md and i18n setup.
+- **Fix:** Add `scope: "/"` and `lang: "es"` to the manifest return.
+
+---
+
+### L-40 — No service-worker update prompt UI
+
+- **Severity:** Low
+- **Status:** Open
+- **Affected:** T081 (`apps/web/next.config.ts:50–53`)
+- **Description:** Workbox is configured with `skipWaiting: true` and `clientsClaim: true`, which means a new SW version takes over on next navigation without asking the user. Users mid-session on a long-lived tab don't get a prompt when a new release ships — they just see behaviour change mid-action or on reload. For a POS app where cashiers keep the same tab open all day, this is subtly disruptive.
+- **Fix:** Subscribe to the `controllerchange` event on `navigator.serviceWorker` and show a toast "Hay una nueva versión — recarga para actualizar" with a Reload button. Alternative: keep `skipWaiting: false` and explicitly `registration.waiting.postMessage({ type: "SKIP_WAITING" })` after user confirms.
 
 ---
 
