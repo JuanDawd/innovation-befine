@@ -8,7 +8,7 @@
  *   SQL aggregation for efficiency.
  */
 
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray, or, sql } from "drizzle-orm";
 import type { Database } from "../index";
 import {
   tickets,
@@ -41,6 +41,7 @@ export type EarningsByEmployee = {
   employeeName: string;
   role: string;
   totalEarnings: number;
+  jobCount: number;
 };
 
 export type DailyRevenueRow = {
@@ -94,6 +95,7 @@ export async function revenueByPeriod(
 export async function jobsCountByEmployee(
   db: Database,
   businessDayIds: string[],
+  { activeOnly = true }: { activeOnly?: boolean } = {},
 ): Promise<JobsCountByEmployee[]> {
   if (businessDayIds.length === 0) return [];
 
@@ -112,6 +114,7 @@ export async function jobsCountByEmployee(
         inArray(tickets.businessDayId, businessDayIds),
         eq(tickets.status, "closed"),
         eq(tickets.needsReview, false),
+        activeOnly ? eq(employees.isActive, true) : undefined,
       ),
     )
     .groupBy(tickets.employeeId, users.name, employees.role)
@@ -128,24 +131,24 @@ export async function jobsCountByEmployee(
 // ─── Earnings by employee ─────────────────────────────────────────────────────
 
 /**
- * Total earnings per employee for the given business days.
- * Stylist: sum of banker-rounded commission on closed ticket items.
- * Clothier: sum of piece_rate for approved batch_pieces in those days.
- * Secretary: (daysWorked × daily_rate) — computed in application code because
- *   it needs per-ISO-week capping; this function returns 0 for secretary roles
- *   and callers should supplement with computeSecretaryEarnings.
+ * Total earnings + job count per active employee for the given business days.
+ * Stylist: commission on closed ticket items (SQL ROUND, display only).
+ * Clothier: sum of piece_rate for approved batch_pieces.
+ * Secretary: daysWorked × daily_rate with ISO-week expected_work_days cap,
+ *   excluding vacation/approved_absence days.
  *
- * Note: banker's rounding applied per-item in application code; SQL aggregation
- * uses standard rounding for the totals displayed in analytics (display only,
- * not used for settlement amounts).
+ * activeOnly=true (default) excludes deactivated employees.
  */
 export async function earningsByEmployee(
   db: Database,
   businessDayIds: string[],
+  { activeOnly = true }: { activeOnly?: boolean } = {},
 ): Promise<EarningsByEmployee[]> {
   if (businessDayIds.length === 0) return [];
 
-  // Stylist earnings
+  const activeFilter = activeOnly ? eq(employees.isActive, true) : undefined;
+
+  // Stylist earnings + job count
   const stylistRows = await db
     .select({
       employeeId: tickets.employeeId,
@@ -159,6 +162,7 @@ export async function earningsByEmployee(
             * ${ticketItems.quantity}
           )
         ), 0)::bigint`,
+      jobCount: sql<number>`COUNT(DISTINCT ${tickets.id})::int`,
     })
     .from(tickets)
     .innerJoin(ticketItems, eq(ticketItems.ticketId, tickets.id))
@@ -170,17 +174,19 @@ export async function earningsByEmployee(
         eq(tickets.status, "closed"),
         eq(tickets.needsReview, false),
         eq(employees.role, "stylist"),
+        activeFilter,
       ),
     )
     .groupBy(tickets.employeeId, users.name, employees.role);
 
-  // Clothier earnings
+  // Clothier earnings + job count (pieces)
   const clothierRows = await db
     .select({
       employeeId: batchPieces.assignedToEmployeeId,
       employeeName: users.name,
       role: employees.role,
       totalEarnings: sql<number>`COALESCE(SUM(${clothPieces.pieceRate}), 0)::bigint`,
+      jobCount: sql<number>`COUNT(${batchPieces.id})::int`,
     })
     .from(batchPieces)
     .innerJoin(clothBatches, eq(batchPieces.batchId, clothBatches.id))
@@ -188,7 +194,11 @@ export async function earningsByEmployee(
     .innerJoin(employees, eq(batchPieces.assignedToEmployeeId, employees.id))
     .innerJoin(users, eq(employees.userId, users.id))
     .where(
-      and(inArray(clothBatches.businessDayId, businessDayIds), eq(batchPieces.status, "approved")),
+      and(
+        inArray(clothBatches.businessDayId, businessDayIds),
+        eq(batchPieces.status, "approved"),
+        activeFilter,
+      ),
     )
     .groupBy(batchPieces.assignedToEmployeeId, users.name, employees.role);
 
@@ -200,6 +210,7 @@ export async function earningsByEmployee(
       employeeName: r.employeeName,
       role: r.role,
       totalEarnings: Number(r.totalEarnings),
+      jobCount: Number(r.jobCount),
     });
   }
 
@@ -208,12 +219,84 @@ export async function earningsByEmployee(
     const existing = result.get(r.employeeId);
     if (existing) {
       existing.totalEarnings += Number(r.totalEarnings);
+      existing.jobCount += Number(r.jobCount);
     } else {
       result.set(r.employeeId, {
         employeeId: r.employeeId,
         employeeName: r.employeeName,
         role: r.role,
         totalEarnings: Number(r.totalEarnings),
+        jobCount: Number(r.jobCount),
+      });
+    }
+  }
+
+  // Secretary earnings: daysWorked × daily_rate with ISO-week cap (T08R-R2, T08R-R8)
+  const secretaryEmps = await db
+    .select({
+      id: employees.id,
+      name: users.name,
+      dailyRate: employees.dailyRate,
+      expectedWorkDays: employees.expectedWorkDays,
+    })
+    .from(employees)
+    .innerJoin(users, eq(employees.userId, users.id))
+    .where(and(eq(employees.role, "secretary"), activeFilter));
+
+  if (secretaryEmps.length > 0 && businessDayIds.length > 0) {
+    const dayRows = await db
+      .select({ id: businessDays.id, openedAt: businessDays.openedAt })
+      .from(businessDays)
+      .where(inArray(businessDays.id, businessDayIds));
+
+    const dayDateMap = new Map(dayRows.map((d) => [d.id, toBogotaDate(new Date(d.openedAt))]));
+    const allDateStrings = Array.from(dayDateMap.values());
+
+    for (const sec of secretaryEmps) {
+      if (!sec.dailyRate) continue;
+
+      const absenceRows = allDateStrings.length
+        ? await db
+            .select({ date: employeeAbsences.date })
+            .from(employeeAbsences)
+            .where(
+              and(
+                eq(employeeAbsences.employeeId, sec.id),
+                inArray(employeeAbsences.date, allDateStrings),
+                or(
+                  eq(employeeAbsences.type, "vacation"),
+                  eq(employeeAbsences.type, "approved_absence"),
+                ),
+              ),
+            )
+        : [];
+
+      const excludedDates = new Set(absenceRows.map((a) => a.date));
+
+      // ISO-week cap: count present days per week, cap at expectedWorkDays
+      const weekCounts = new Map<string, number>();
+      for (const [, dateStr] of dayDateMap) {
+        if (excludedDates.has(dateStr)) continue;
+        const d = new Date(dateStr + "T12:00:00Z");
+        const dow = d.getUTCDay() || 7;
+        d.setUTCDate(d.getUTCDate() + 4 - dow);
+        const yr = d.getUTCFullYear();
+        const wk = Math.ceil(((d.getTime() - Date.UTC(yr, 0, 1)) / 86400000 + 1) / 7);
+        const key = `${yr}-W${String(wk).padStart(2, "0")}`;
+        weekCounts.set(key, (weekCounts.get(key) ?? 0) + 1);
+      }
+
+      let daysWorked = 0;
+      for (const count of weekCounts.values()) {
+        daysWorked += Math.min(count, sec.expectedWorkDays);
+      }
+
+      result.set(sec.id, {
+        employeeId: sec.id,
+        employeeName: sec.name,
+        role: "secretary",
+        totalEarnings: daysWorked * sec.dailyRate,
+        jobCount: daysWorked,
       });
     }
   }
@@ -257,7 +340,7 @@ export async function dailyRevenueBreakdown(
 
   return rows.map((r) => ({
     businessDayId: r.businessDayId,
-    date: new Date(r.openedAt).toISOString().slice(0, 10),
+    date: toBogotaDate(new Date(r.openedAt)),
     revenue: Number(r.revenue),
     jobs: Number(r.jobs),
   }));
@@ -270,8 +353,14 @@ export type PeriodDays = {
   prior: string[];
 };
 
+function toBogotaDate(d: Date): string {
+  return d.toLocaleDateString("en-CA", { timeZone: "America/Bogota" });
+}
+
 /**
- * Returns closed business day IDs for the current and prior period.
+ * Returns business day IDs for the current and prior period.
+ * Current window includes the open business day (if any) so today's in-progress
+ * revenue is visible. Prior window is closed days only.
  * period = "day" | "week" | "month" — boundaries anchored to America/Bogota.
  */
 export async function getBusinessDayIdsByPeriod(
@@ -295,18 +384,21 @@ export async function getBusinessDayIdsByPeriod(
     priorStart = new Date(yStr + "T00:00:00-05:00");
     priorEnd = new Date(yStr + "T23:59:59-05:00");
   } else if (period === "week") {
-    const dow = today.getDay() || 7;
+    // Resolved decision: weekly = previous calendar week Mon–Sun.
+    // Current window: Mon → upcoming Sun (like-for-like vs prior full week).
+    const dow = today.getDay() || 7; // Mon=1…Sun=7
     const monday = new Date(today);
     monday.setDate(monday.getDate() - (dow - 1));
-    const mondayStr = monday.toISOString().slice(0, 10);
-    currentStart = new Date(mondayStr + "T00:00:00-05:00");
-    currentEnd = new Date(bogotaToday + "T23:59:59-05:00");
+    const sunday = new Date(monday);
+    sunday.setDate(sunday.getDate() + 6);
+    currentStart = new Date(toBogotaDate(monday) + "T00:00:00-05:00");
+    currentEnd = new Date(toBogotaDate(sunday) + "T23:59:59-05:00");
     const priorMonday = new Date(monday);
     priorMonday.setDate(priorMonday.getDate() - 7);
     const priorSunday = new Date(monday);
     priorSunday.setDate(priorSunday.getDate() - 1);
-    priorStart = new Date(priorMonday.toISOString().slice(0, 10) + "T00:00:00-05:00");
-    priorEnd = new Date(priorSunday.toISOString().slice(0, 10) + "T23:59:59-05:00");
+    priorStart = new Date(toBogotaDate(priorMonday) + "T00:00:00-05:00");
+    priorEnd = new Date(toBogotaDate(priorSunday) + "T23:59:59-05:00");
   } else {
     const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
     const fomStr = firstOfMonth.toISOString().slice(0, 10);
@@ -318,13 +410,18 @@ export async function getBusinessDayIdsByPeriod(
     priorEnd = new Date(priorLast.toISOString().slice(0, 10) + "T23:59:59-05:00");
   }
 
-  // Single query: fetch all days covering both current and prior windows, then split in JS
+  // Single query: fetch all days in the combined window.
+  // Current: include open day (no closedAt filter) — shows live revenue.
+  // Prior: closed only — in-progress days can't be compared meaningfully.
   const rows = await db
-    .select({ id: businessDays.id, openedAt: businessDays.openedAt })
+    .select({
+      id: businessDays.id,
+      openedAt: businessDays.openedAt,
+      closedAt: businessDays.closedAt,
+    })
     .from(businessDays)
     .where(
-      sql`${businessDays.closedAt} IS NOT NULL
-        AND ${businessDays.openedAt} >= ${priorStart.toISOString()}
+      sql`${businessDays.openedAt} >= ${priorStart.toISOString()}
         AND ${businessDays.openedAt} <= ${currentEnd.toISOString()}`,
     );
 
@@ -332,7 +429,7 @@ export async function getBusinessDayIdsByPeriod(
     .filter((d) => d.openedAt >= currentStart && d.openedAt <= currentEnd)
     .map((d) => d.id);
   const prior = rows
-    .filter((d) => d.openedAt >= priorStart && d.openedAt <= priorEnd)
+    .filter((d) => d.closedAt !== null && d.openedAt >= priorStart && d.openedAt <= priorEnd)
     .map((d) => d.id);
 
   return { current, prior };
@@ -397,7 +494,7 @@ export async function employeeDayBreakdown(
 
     return rows.map((r) => ({
       businessDayId: r.businessDayId,
-      date: new Date(r.openedAt).toISOString().slice(0, 10),
+      date: toBogotaDate(new Date(r.openedAt)),
       jobs: Number(r.jobs),
       earnings: Number(r.earnings),
     }));
@@ -427,7 +524,7 @@ export async function employeeDayBreakdown(
 
     return rows.map((r) => ({
       businessDayId: r.businessDayId,
-      date: new Date(r.openedAt).toISOString().slice(0, 10),
+      date: toBogotaDate(new Date(r.openedAt)),
       jobs: Number(r.jobs),
       earnings: Number(r.earnings),
     }));
@@ -437,10 +534,10 @@ export async function employeeDayBreakdown(
   const dayRows = await db
     .select({ id: businessDays.id, openedAt: businessDays.openedAt })
     .from(businessDays)
-    .where(and(inArray(businessDays.id, businessDayIds), sql`${businessDays.closedAt} IS NOT NULL`))
+    .where(inArray(businessDays.id, businessDayIds))
     .orderBy(businessDays.openedAt);
 
-  const dateStrings = dayRows.map((d) => new Date(d.openedAt).toISOString().slice(0, 10));
+  const dateStrings = dayRows.map((d) => toBogotaDate(new Date(d.openedAt)));
   const absenceRows = await db
     .select({ date: employeeAbsences.date })
     .from(employeeAbsences)
@@ -462,7 +559,7 @@ export async function employeeDayBreakdown(
   const dailyRate = empData?.dailyRate ?? 0;
 
   return dayRows.map((d) => {
-    const dateStr = new Date(d.openedAt).toISOString().slice(0, 10);
+    const dateStr = toBogotaDate(new Date(d.openedAt));
     const present = !excludedDates.has(dateStr);
     return {
       businessDayId: d.id,

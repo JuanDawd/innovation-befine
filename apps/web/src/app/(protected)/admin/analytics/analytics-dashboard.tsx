@@ -1,15 +1,10 @@
 "use client";
 
 /**
- * T072 + T073 + T074 — Analytics dashboard
- *
- * Day / week / month tabs with:
- * - Large revenue display + colour-coded delta (T072)
- * - Recharts bar chart current vs prior (T073)
- * - Per-employee table with drill-down sparkline (T074)
+ * T072 + T073 + T074 + T08R-R3 + T08R-R4 + T08R-R13 — Analytics dashboard
  */
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useRef, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import {
   BarChart,
@@ -31,6 +26,7 @@ import {
   DownloadIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useRealtimeEvent } from "@befine/realtime/client";
 import {
   getAnalyticsSummary,
   getAnalyticsCsvData,
@@ -77,8 +73,6 @@ function DeltaIndicator({ current, prior }: { current: number; prior: number }) 
   );
 }
 
-// ─── Metric card ──────────────────────────────────────────────────────────────
-
 function MetricCard({
   label,
   value,
@@ -101,8 +95,6 @@ function MetricCard({
   );
 }
 
-// ─── Bar chart: current vs prior ─────────────────────────────────────────────
-
 function ComparisonChart({
   current,
   prior,
@@ -113,21 +105,9 @@ function ComparisonChart({
   labels: { revenue: string; jobs: string; earnings: string };
 }) {
   const data = [
-    {
-      metric: labels.revenue,
-      current: current.revenue,
-      prior: prior.revenue,
-    },
-    {
-      metric: labels.jobs,
-      current: current.jobs,
-      prior: prior.jobs,
-    },
-    {
-      metric: labels.earnings,
-      current: current.earnings,
-      prior: prior.earnings,
-    },
+    { metric: labels.revenue, current: current.revenue, prior: prior.revenue },
+    { metric: labels.jobs, current: current.jobs, prior: prior.jobs },
+    { metric: labels.earnings, current: current.earnings, prior: prior.earnings },
   ];
 
   return (
@@ -172,7 +152,7 @@ function EmployeeRow({
     setOpen(true);
     if (!drillDown) {
       startTransition(async () => {
-        const res = await getEmployeeDrillDown(emp.employeeId, period);
+        const res = await getEmployeeDrillDown({ employeeId: emp.employeeId, period });
         if (res.success) setDrillDown(res.data);
       });
     }
@@ -185,8 +165,9 @@ function EmployeeRow({
       <tr className="hover:bg-muted/40 cursor-pointer transition-colors" onClick={toggleDrillDown}>
         <td className="px-3 py-2 text-sm font-medium">{emp.employeeName}</td>
         <td className="px-3 py-2 text-xs text-muted-foreground capitalize">{emp.role}</td>
-        <td className="px-3 py-2 text-sm text-right tabular-nums">
-          {emp.totalEarnings > 0 ? emp.totalEarnings.toLocaleString("es-CO") : "—"}
+        <td className="px-3 py-2 text-sm text-right tabular-nums">{emp.jobCount}</td>
+        <td className="px-3 py-2 text-sm text-right tabular-nums font-mono">
+          {emp.totalEarnings > 0 ? formatCOP(emp.totalEarnings) : "—"}
         </td>
         <td className="px-3 py-2 text-center">
           {open ? (
@@ -198,7 +179,7 @@ function EmployeeRow({
       </tr>
       {open && (
         <tr>
-          <td colSpan={4} className="px-3 pb-3 pt-0 bg-muted/10">
+          <td colSpan={5} className="px-3 pb-3 pt-0 bg-muted/10">
             {isPending ? (
               <div className="flex items-center gap-2 py-3 text-xs text-muted-foreground">
                 <Loader2Icon className="size-3 animate-spin" /> Cargando...
@@ -246,16 +227,20 @@ function EmployeeRow({
   );
 }
 
-// ─── Employee table (T074) ────────────────────────────────────────────────────
+// ─── Employee table (T074 + T08R-R4 + T08R-R13) ──────────────────────────────
 
-type SortKey = "name" | "earnings";
+type SortKey = "name" | "jobs" | "earnings";
 
 function EmployeeTable({
   rows,
   period,
+  includeInactive,
+  onToggleInactive,
 }: {
   rows: EarningsByEmployee[];
   period: "day" | "week" | "month";
+  includeInactive: boolean;
+  onToggleInactive: () => void;
 }) {
   const t = useTranslations("analytics");
   const [sortKey, setSortKey] = useState<SortKey>("earnings");
@@ -264,6 +249,7 @@ function EmployeeTable({
   const sorted = [...rows].sort((a, b) => {
     let cmp = 0;
     if (sortKey === "name") cmp = a.employeeName.localeCompare(b.employeeName);
+    else if (sortKey === "jobs") cmp = a.jobCount - b.jobCount;
     else cmp = a.totalEarnings - b.totalEarnings;
     return sortAsc ? cmp : -cmp;
   });
@@ -279,61 +265,81 @@ function EmployeeTable({
   const maxEarnings = Math.max(...rows.map((r) => r.totalEarnings), 1);
 
   return (
-    <div className="rounded-xl border overflow-hidden">
-      <table className="w-full text-sm">
-        <thead className="bg-muted/50 text-xs">
-          <tr>
-            <th
-              className="px-3 py-2 text-left font-medium cursor-pointer select-none"
-              onClick={() => toggleSort("name")}
-            >
-              {t("colEmployee")} {sortKey === "name" ? (sortAsc ? "↑" : "↓") : ""}
-            </th>
-            <th className="px-3 py-2 text-left font-medium">{t("colRole")}</th>
-            <th
-              className="px-3 py-2 text-right font-medium cursor-pointer select-none"
-              onClick={() => toggleSort("earnings")}
-            >
-              {t("colEarnings")} {sortKey === "earnings" ? (sortAsc ? "↑" : "↓") : ""}
-            </th>
-            <th className="px-3 py-2 w-6" />
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-border">
-          {sorted.map((emp) => (
-            <EmployeeRow key={emp.employeeId} emp={emp} period={period} />
-          ))}
-          {sorted.length === 0 && (
-            <tr>
-              <td colSpan={4} className="px-3 py-8 text-center text-sm text-muted-foreground">
-                {t("noEmployeeData")}
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold">{t("byEmployee")}</h2>
+        <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
+          <input
+            type="checkbox"
+            checked={includeInactive}
+            onChange={onToggleInactive}
+            className="size-3.5 rounded"
+          />
+          {t("includeInactive")}
+        </label>
+      </div>
 
-      {/* Inline performance bars */}
-      {sorted.length > 0 && (
-        <div className="px-3 py-2 border-t bg-muted/10 space-y-1">
-          {sorted.map((emp) => (
-            <div key={emp.employeeId} className="flex items-center gap-2 text-xs">
-              <span className="w-28 truncate text-muted-foreground">
-                {emp.employeeName.split(" ")[0]}
-              </span>
-              <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
-                <div
-                  className="h-full bg-primary rounded-full transition-all"
-                  style={{ width: `${(emp.totalEarnings / maxEarnings) * 100}%` }}
-                />
+      <div className="rounded-xl border overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="bg-muted/50 text-xs">
+            <tr>
+              <th
+                className="px-3 py-2 text-left font-medium cursor-pointer select-none"
+                onClick={() => toggleSort("name")}
+              >
+                {t("colEmployee")} {sortKey === "name" ? (sortAsc ? "↑" : "↓") : ""}
+              </th>
+              <th className="px-3 py-2 text-left font-medium">{t("colRole")}</th>
+              <th
+                className="px-3 py-2 text-right font-medium cursor-pointer select-none"
+                onClick={() => toggleSort("jobs")}
+              >
+                {t("colJobs")} {sortKey === "jobs" ? (sortAsc ? "↑" : "↓") : ""}
+              </th>
+              <th
+                className="px-3 py-2 text-right font-medium cursor-pointer select-none"
+                onClick={() => toggleSort("earnings")}
+              >
+                {t("colEarnings")} {sortKey === "earnings" ? (sortAsc ? "↑" : "↓") : ""}
+              </th>
+              <th className="px-3 py-2 w-6" />
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {sorted.map((emp) => (
+              <EmployeeRow key={emp.employeeId} emp={emp} period={period} />
+            ))}
+            {sorted.length === 0 && (
+              <tr>
+                <td colSpan={5} className="px-3 py-8 text-center text-sm text-muted-foreground">
+                  {t("noEmployeeData")}
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+
+        {sorted.length > 0 && (
+          <div className="px-3 py-2 border-t bg-muted/10 space-y-1">
+            {sorted.map((emp) => (
+              <div key={emp.employeeId} className="flex items-center gap-2 text-xs">
+                <span className="w-28 truncate text-muted-foreground">
+                  {emp.employeeName.split(" ")[0]}
+                </span>
+                <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
+                  <div
+                    className="h-full bg-primary rounded-full transition-all"
+                    style={{ width: `${(emp.totalEarnings / maxEarnings) * 100}%` }}
+                  />
+                </div>
+                <span className="font-mono text-muted-foreground w-24 text-right">
+                  {formatCOP(emp.totalEarnings)}
+                </span>
               </div>
-              <span className="font-mono text-muted-foreground w-24 text-right">
-                {formatCOP(emp.totalEarnings)}
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -345,9 +351,47 @@ type Period = "day" | "week" | "month";
 export function AnalyticsDashboard({ initialData }: { initialData: AnalyticsSummary }) {
   const t = useTranslations("analytics");
   const [period, setPeriod] = useState<Period>(initialData.period);
+  const [includeInactive, setIncludeInactive] = useState(false);
   const [data, setData] = useState<AnalyticsSummary>(initialData);
   const [isPending, startTransition] = useTransition();
   const [csvPending, setCsvPending] = useState(false);
+
+  // Throttled refetch: at most 1 refresh per 5s (T08R-R3)
+  const lastRefetchRef = useRef(0);
+
+  const refetch = useCallback((p: Period, inactive: boolean) => {
+    const now = Date.now();
+    if (now - lastRefetchRef.current < 5000) return;
+    lastRefetchRef.current = now;
+    startTransition(async () => {
+      const res = await getAnalyticsSummary({ period: p, includeInactive: inactive });
+      if (res.success) setData(res.data);
+    });
+  }, []);
+
+  // T08R-R3: refresh on ticket_updated events (throttled to 1/5s)
+  useRealtimeEvent("cashier", "ticket_updated", {
+    onData: () => refetch(period, includeInactive),
+    onPoll: () => refetch(period, includeInactive),
+  });
+
+  function switchPeriod(p: Period) {
+    if (p === period) return;
+    setPeriod(p);
+    startTransition(async () => {
+      const res = await getAnalyticsSummary({ period: p, includeInactive });
+      if (res.success) setData(res.data);
+    });
+  }
+
+  function toggleInactive() {
+    const next = !includeInactive;
+    setIncludeInactive(next);
+    startTransition(async () => {
+      const res = await getAnalyticsSummary({ period, includeInactive: next });
+      if (res.success) setData(res.data);
+    });
+  }
 
   async function downloadCsv() {
     setCsvPending(true);
@@ -366,15 +410,6 @@ export function AnalyticsDashboard({ initialData }: { initialData: AnalyticsSumm
     } finally {
       setCsvPending(false);
     }
-  }
-
-  function switchPeriod(p: Period) {
-    if (p === period) return;
-    setPeriod(p);
-    startTransition(async () => {
-      const res = await getAnalyticsSummary(p);
-      if (res.success) setData(res.data);
-    });
   }
 
   const isEmpty =
@@ -416,7 +451,6 @@ export function AnalyticsDashboard({ initialData }: { initialData: AnalyticsSumm
         </Button>
       </div>
 
-      {/* Empty state */}
       {isEmpty && (
         <div className="rounded-xl border border-dashed p-12 text-center space-y-2">
           <p className="text-sm font-medium text-muted-foreground">{t("emptyTitle")}</p>
@@ -426,7 +460,6 @@ export function AnalyticsDashboard({ initialData }: { initialData: AnalyticsSumm
 
       {!isEmpty && (
         <>
-          {/* Metric cards */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 print:grid-cols-3">
             <MetricCard
               label={t("revenue")}
@@ -443,23 +476,17 @@ export function AnalyticsDashboard({ initialData }: { initialData: AnalyticsSumm
             />
           </div>
 
-          {/* Comparison bar chart */}
           {period !== "day" && (
             <div className="rounded-xl border p-4 space-y-2">
               <h2 className="text-sm font-semibold">{t("comparisonChart")}</h2>
               <ComparisonChart
                 current={data.current}
                 prior={data.prior}
-                labels={{
-                  revenue: t("revenue"),
-                  jobs: t("jobs"),
-                  earnings: t("earnings"),
-                }}
+                labels={{ revenue: t("revenue"), jobs: t("jobs"), earnings: t("earnings") }}
               />
             </div>
           )}
 
-          {/* Daily breakdown (bar chart for week/month) */}
           {data.dailyBreakdown.length > 1 && (
             <div className="rounded-xl border p-4 space-y-2">
               <h2 className="text-sm font-semibold">{t("dailyBreakdown")}</h2>
@@ -489,10 +516,13 @@ export function AnalyticsDashboard({ initialData }: { initialData: AnalyticsSumm
             </div>
           )}
 
-          {/* Employee performance table (T074) */}
-          <div className="space-y-2 print:hidden">
-            <h2 className="text-lg font-semibold">{t("byEmployee")}</h2>
-            <EmployeeTable rows={data.earningsTable} period={period} />
+          <div className="print:hidden">
+            <EmployeeTable
+              rows={data.earningsTable}
+              period={period}
+              includeInactive={includeInactive}
+              onToggleInactive={toggleInactive}
+            />
           </div>
         </>
       )}

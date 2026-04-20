@@ -4,7 +4,7 @@ import { AnalyticsDashboard } from "./analytics-dashboard";
 
 export default async function AnalyticsPage() {
   const t = await getTranslations("analytics");
-  const result = await getAnalyticsSummary("day");
+  const result = await getAnalyticsSummary({ period: "day", includeInactive: false });
   const initialData = result.success
     ? result.data
     : {

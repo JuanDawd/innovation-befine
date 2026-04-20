@@ -1,11 +1,7 @@
 "use server";
 
 /**
- * Analytics server actions — T072, T073, T074
- *
- * getAnalyticsSummary: admin — revenue, jobs, earnings for current + prior period
- * getEmployeePerformance: admin — per-employee jobs + earnings table for a period
- * getEmployeeDrillDown: admin — day-by-day breakdown for one employee
+ * Analytics server actions — T072, T073, T074, T08R-R4, T08R-R5, T08R-R10
  */
 
 import { headers } from "next/headers";
@@ -13,6 +9,7 @@ import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { hasRole } from "@/lib/middleware-helpers";
 import { todayInBogota } from "@/lib/dates";
+import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
 import {
   revenueByPeriod,
   earningsByEmployee,
@@ -23,16 +20,21 @@ import {
   type EarningsByEmployee,
   type EmployeeDayBreakdown,
 } from "@befine/db";
+import {
+  analyticsQuerySchema,
+  employeeDrillDownSchema,
+  analyticsPeriodSchema,
+} from "@befine/types";
 import type { ActionResult } from "@/lib/action-result";
 
 // ─── Auth helper ──────────────────────────────────────────────────────────────
 
 async function requireAdmin() {
   const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) return { ok: false as const, code: "UNAUTHORIZED" as const };
+  if (!session) return { ok: false as const, code: "UNAUTHORIZED" as const, userId: null };
   if (!hasRole(session.user, "cashier_admin"))
-    return { ok: false as const, code: "FORBIDDEN" as const };
-  return { ok: true as const, code: null };
+    return { ok: false as const, code: "FORBIDDEN" as const, userId: null };
+  return { ok: true as const, code: null, userId: session.user.id };
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -61,7 +63,7 @@ export type EmployeeDrillDownResult = {
 // ─── Analytics summary ────────────────────────────────────────────────────────
 
 export async function getAnalyticsSummary(
-  period: "day" | "week" | "month",
+  rawInput: unknown,
 ): Promise<ActionResult<AnalyticsSummary>> {
   const guard = await requireAdmin();
   if (!guard.ok)
@@ -73,25 +75,34 @@ export async function getAnalyticsSummary(
       },
     };
 
+  const rl = await checkRateLimit(rateLimits.general, guard.userId!);
+  if (!rl.allowed)
+    return { success: false, error: { code: "RATE_LIMITED", message: "Demasiadas solicitudes." } };
+
+  const parsed = analyticsQuerySchema.safeParse(rawInput);
+  if (!parsed.success)
+    return {
+      success: false,
+      error: {
+        code: "VALIDATION_ERROR",
+        message: "Período inválido",
+        details: parsed.error.issues.map((i) => ({ field: i.path.join("."), message: i.message })),
+      },
+    };
+
+  const { period, includeInactive } = parsed.data;
   const db = getDb();
   const today = todayInBogota();
   const { current, prior } = await getBusinessDayIdsByPeriod(db, period, today);
 
-  const [
-    currentRevenue,
-    priorRevenue,
-    currentEarnings,
-    priorEarnings,
-    dailyBreakdown,
-    earningsTable,
-  ] = await Promise.all([
-    revenueByPeriod(db, current),
-    revenueByPeriod(db, prior),
-    earningsByEmployee(db, current),
-    earningsByEmployee(db, prior),
-    dailyRevenueBreakdown(db, current),
-    earningsByEmployee(db, current),
-  ]);
+  const [currentRevenue, priorRevenue, currentEarnings, priorEarnings, dailyBreakdown] =
+    await Promise.all([
+      revenueByPeriod(db, current),
+      revenueByPeriod(db, prior),
+      earningsByEmployee(db, current, { activeOnly: !includeInactive }),
+      earningsByEmployee(db, prior, { activeOnly: !includeInactive }),
+      dailyRevenueBreakdown(db, current),
+    ]);
 
   const sumEarnings = (rows: EarningsByEmployee[]) => rows.reduce((s, r) => s + r.totalEarnings, 0);
 
@@ -110,7 +121,7 @@ export async function getAnalyticsSummary(
         earnings: sumEarnings(priorEarnings),
       },
       dailyBreakdown,
-      earningsTable,
+      earningsTable: currentEarnings,
     },
   };
 }
@@ -118,7 +129,7 @@ export async function getAnalyticsSummary(
 // ─── Employee performance table ───────────────────────────────────────────────
 
 export async function getEmployeePerformance(
-  period: "day" | "week" | "month",
+  rawInput: unknown,
 ): Promise<ActionResult<EarningsByEmployee[]>> {
   const guard = await requireAdmin();
   if (!guard.ok)
@@ -130,17 +141,33 @@ export async function getEmployeePerformance(
       },
     };
 
+  const rl = await checkRateLimit(rateLimits.general, guard.userId!);
+  if (!rl.allowed)
+    return { success: false, error: { code: "RATE_LIMITED", message: "Demasiadas solicitudes." } };
+
+  const parsed = analyticsQuerySchema.safeParse(rawInput);
+  if (!parsed.success)
+    return {
+      success: false,
+      error: {
+        code: "VALIDATION_ERROR",
+        message: "Período inválido",
+        details: parsed.error.issues.map((i) => ({ field: i.path.join("."), message: i.message })),
+      },
+    };
+
+  const { period, includeInactive } = parsed.data;
   const db = getDb();
   const today = todayInBogota();
   const { current } = await getBusinessDayIdsByPeriod(db, period, today);
-  const rows = await earningsByEmployee(db, current);
+  const rows = await earningsByEmployee(db, current, { activeOnly: !includeInactive });
   return { success: true, data: rows };
 }
 
-// ─── CSV export (T076) ───────────────────────────────────────────────────────
+// ─── CSV export (T076 + T08R-R12) ────────────────────────────────────────────
 
 export async function getAnalyticsCsvData(
-  period: "day" | "week" | "month",
+  rawPeriod: unknown,
 ): Promise<ActionResult<{ csv: string; filename: string }>> {
   const guard = await requireAdmin();
   if (!guard.ok)
@@ -152,39 +179,65 @@ export async function getAnalyticsCsvData(
       },
     };
 
+  const rl = await checkRateLimit(rateLimits.analyticsCsv, guard.userId!);
+  if (!rl.allowed)
+    return { success: false, error: { code: "RATE_LIMITED", message: "Demasiadas solicitudes." } };
+
+  const parsed = analyticsPeriodSchema.safeParse(rawPeriod);
+  if (!parsed.success)
+    return { success: false, error: { code: "VALIDATION_ERROR", message: "Período inválido" } };
+
+  const period = parsed.data;
   const db = getDb();
   const today = todayInBogota();
   const { current } = await getBusinessDayIdsByPeriod(db, period, today);
 
-  const [revenue, earnings, daily] = await Promise.all([
-    revenueByPeriod(db, current),
-    earningsByEmployee(db, current),
+  const [daily, earnings] = await Promise.all([
     dailyRevenueBreakdown(db, current),
+    earningsByEmployee(db, current, { activeOnly: true }),
   ]);
 
-  const rows: string[] = [
-    "Fecha,Ingresos,Trabajos",
-    ...daily.map((d) => `${d.date},${d.revenue},${d.jobs}`),
-    "",
-    "Empleado,Rol,Ganancias",
-    ...earnings.map((e) => `${e.employeeName},${e.role},${e.totalEarnings}`),
-    "",
-    `Total ingresos,${revenue.totalRevenue}`,
-    `Total trabajos,${revenue.totalJobs}`,
-    `Total ganancias,${earnings.reduce((s, e) => s + e.totalEarnings, 0)}`,
-  ];
+  // T08R-R12: one row per business-day × employee
+  const header = "Fecha,Empleado,Rol,Trabajos,Ganancias,IngresosDia,TrabajosDia";
+  const dataRows: string[] = [];
 
+  for (const day of daily) {
+    for (const emp of earnings) {
+      dataRows.push(
+        [
+          day.date,
+          emp.employeeName,
+          emp.role,
+          emp.jobCount,
+          emp.totalEarnings,
+          day.revenue,
+          day.jobs,
+        ].join(","),
+      );
+    }
+    // Days with no employee rows still get a revenue summary line
+    if (earnings.length === 0) {
+      dataRows.push([day.date, "", "", 0, 0, day.revenue, day.jobs].join(","));
+    }
+  }
+
+  // Totals footer
+  const totalRevenue = daily.reduce((s, d) => s + d.revenue, 0);
+  const totalEarnings = earnings.reduce((s, e) => s + e.totalEarnings, 0);
+  dataRows.push("");
+  dataRows.push(`Total,,,, ${totalEarnings},${totalRevenue},`);
+
+  const csv = [header, ...dataRows].join("\n");
   const periodLabel = today.slice(0, 7);
   const filename = `innovation-befine-${periodLabel}-${period}.csv`;
 
-  return { success: true, data: { csv: rows.join("\n"), filename } };
+  return { success: true, data: { csv, filename } };
 }
 
 // ─── Employee drill-down ──────────────────────────────────────────────────────
 
 export async function getEmployeeDrillDown(
-  employeeId: string,
-  period: "day" | "week" | "month",
+  rawInput: unknown,
 ): Promise<ActionResult<EmployeeDrillDownResult>> {
   const guard = await requireAdmin();
   if (!guard.ok)
@@ -196,12 +249,27 @@ export async function getEmployeeDrillDown(
       },
     };
 
+  const rl = await checkRateLimit(rateLimits.general, guard.userId!);
+  if (!rl.allowed)
+    return { success: false, error: { code: "RATE_LIMITED", message: "Demasiadas solicitudes." } };
+
+  const parsed = employeeDrillDownSchema.safeParse(rawInput);
+  if (!parsed.success)
+    return {
+      success: false,
+      error: {
+        code: "VALIDATION_ERROR",
+        message: "Datos inválidos",
+        details: parsed.error.issues.map((i) => ({ field: i.path.join("."), message: i.message })),
+      },
+    };
+
+  const { employeeId, period } = parsed.data;
   const db = getDb();
   const today = todayInBogota();
   const { current } = await getBusinessDayIdsByPeriod(db, period, today);
   const days = await employeeDayBreakdown(db, employeeId, current);
 
-  // Fetch employee name
   const { employees, users } = await import("@befine/db/schema");
   const { eq } = await import("drizzle-orm");
   const [emp] = await db
@@ -214,8 +282,5 @@ export async function getEmployeeDrillDown(
   if (!emp)
     return { success: false, error: { code: "NOT_FOUND", message: "Empleado no encontrado" } };
 
-  return {
-    success: true,
-    data: { employeeId, employeeName: emp.name, role: emp.role, days },
-  };
+  return { success: true, data: { employeeId, employeeName: emp.name, role: emp.role, days } };
 }

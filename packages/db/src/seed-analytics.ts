@@ -1,15 +1,20 @@
 /**
  * T101 — Analytics seed script
  *
- * Generates ~180 business days (6 months) of realistic data.
- * Requires existing employee + user records from db:seed.
+ * ⚠️  DESTRUCTIVE — clears ALL rows from: business_days, tickets, ticket_items,
+ * ticket_payments, checkout_sessions, cloth_batches, batch_pieces, payouts,
+ * payout_period_days, payout_ticket_items, payout_batch_pieces,
+ * employee_absences, large_orders, large_order_payments, clients.
+ *
+ * This script is intended for development / staging databases only.
+ * Do NOT run against a production database. Real data will be lost.
+ *
+ * Two safeguards must both be present:
+ *   --analytics          (flag 1 — confirms intent)
+ *   --confirm-destructive (flag 2 — confirms you read this warning)
  *
  * Run: pnpm --filter @befine/db db:seed:analytics
- *
- * Idempotent: clears analytics data (business_days, tickets, ticket_items,
- *   cloth_batches, batch_pieces, payouts, payout_period_days) before re-seeding.
- * Requires --analytics flag to protect against accidental runs on production:
- *   node --import tsx/esm src/seed-analytics.ts --analytics
+ * (package.json script passes both flags automatically — still read this)
  */
 
 import { eq } from "drizzle-orm";
@@ -38,8 +43,11 @@ import {
 
 // ─── Guard ────────────────────────────────────────────────────────────────────
 
-if (!process.argv.includes("--analytics")) {
-  console.error("❌ Safety guard: pass --analytics flag to run the analytics seed script");
+if (!process.argv.includes("--analytics") || !process.argv.includes("--confirm-destructive")) {
+  console.error("❌  SAFETY GUARD: This script deletes ALL analytics data.");
+  console.error("    Pass BOTH flags to proceed:");
+  console.error("      --analytics --confirm-destructive");
+  console.error("    Do NOT run against a production database.");
   process.exit(1);
 }
 
