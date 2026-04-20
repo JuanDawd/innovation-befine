@@ -17,6 +17,7 @@ export const transitionTicketSchema = z.object({
 export const pieceActionSchema = z.object({
   pieceId: z.uuid("ID de pieza inválido"),
   expectedVersion: z.number().int().nonnegative(),
+  idempotencyKey: z.uuid("Clave de idempotencia inválida").optional(),
 });
 
 export const markNotificationReadSchema = z.object({

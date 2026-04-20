@@ -650,5 +650,14 @@
     "myEarnings": "My earnings",
     "openMenu": "Open menu",
     "closeMenu": "Close menu"
+  },
+  "sync": {
+    "offlineTitle": "You're offline",
+    "offlineDescription": "Actions will sync when your connection is restored.",
+    "offlineCashierNote": "You can mark payments as 'paid offline' — they'll sync automatically.",
+    "pendingCount": "{count} action(s) pending",
+    "syncing": "Syncing…",
+    "failedCount": "{count} sync error(s)",
+    "retry": "Retry"
   }
 }

@@ -19,6 +19,7 @@ import { getCurrentBusinessDay } from "@/lib/business-day";
 import { revalidatePath } from "next/cache";
 import { createNotification } from "@/lib/notifications";
 import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
+import { checkIdempotency, storeIdempotency } from "@/lib/idempotency";
 import { pieceActionSchema } from "@befine/types";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -154,17 +155,25 @@ export async function claimPiece(
 export async function markPieceDone(
   rawPieceId: unknown,
   rawExpectedVersion: unknown,
+  rawIdempotencyKey?: unknown,
 ): Promise<ActionResult<void>> {
   const parsed = pieceActionSchema.safeParse({
     pieceId: rawPieceId,
     expectedVersion: rawExpectedVersion,
+    idempotencyKey: rawIdempotencyKey,
   });
   if (!parsed.success)
     return { success: false, error: { code: "VALIDATION_ERROR", message: "Datos inválidos" } };
-  const { pieceId, expectedVersion } = parsed.data;
+  const { pieceId, expectedVersion, idempotencyKey } = parsed.data;
 
   const ctx = await getClothierEmployee();
   if (!ctx) return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
+
+  // T078: idempotency — return cached response on retry
+  if (idempotencyKey) {
+    const cached = await checkIdempotency(idempotencyKey);
+    if (cached) return cached as ActionResult<void>;
+  }
 
   const rl = await checkRateLimit(rateLimits.general, ctx.userId);
   if (!rl.allowed)
@@ -225,5 +234,7 @@ export async function markPieceDone(
   );
 
   revalidatePath("/clothier");
-  return { success: true, data: undefined };
+  const successResult: ActionResult<void> = { success: true, data: undefined };
+  if (idempotencyKey) await storeIdempotency(idempotencyKey, "markPieceDone", successResult);
+  return successResult;
 }

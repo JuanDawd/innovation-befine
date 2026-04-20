@@ -176,6 +176,13 @@
       "when": 1776740000000,
       "tag": "0024_cloth_piece_variants",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1776750000000,
+      "tag": "0025_idempotency_keys",
+      "breakpoints": true
     }
   ]
 }

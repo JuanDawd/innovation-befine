@@ -15,6 +15,7 @@ import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { employees } from "@befine/db/schema";
 import { AppShell } from "@/components/app-shell";
+import { SyncStatus } from "@/components/sync-status";
 import { listNotifications } from "@/app/(protected)/notifications/actions";
 import type { AppRole } from "@befine/types";
 
@@ -50,6 +51,7 @@ export default async function ProtectedLayout({ children }: { children: ReactNod
       initialNotifications={initialNotifications}
     >
       {children}
+      <SyncStatus role={role} />
     </AppShell>
   );
 }

@@ -606,13 +606,13 @@ Update `apps/web/src/lib/db/README.md` with a short "When to use `getDb()` vs `g
 
 > T077 (offline policy) moved to Phase 0. The `idempotency_key` column is added to tickets in T033 (Phase 4A).
 
-| ID   | Task                                              | Status  | Dependencies |
-| ---- | ------------------------------------------------- | ------- | ------------ |
-| T078 | Idempotency keys on remaining mutating API routes | pending | T033, T044   |
-| T079 | IndexedDB local mutation queue                    | pending | T078         |
-| T080 | Sync status UI (online/offline/syncing indicator) | pending | T079         |
-| T081 | Service worker with Workbox (caching strategies)  | pending | T001         |
-| T082 | Web App Manifest and PWA install prompt           | pending | T081         |
+| ID   | Task                                              | Status | Dependencies |
+| ---- | ------------------------------------------------- | ------ | ------------ |
+| T078 | Idempotency keys on remaining mutating API routes | done   | T033, T044   |
+| T079 | IndexedDB local mutation queue                    | done   | T078         |
+| T080 | Sync status UI (online/offline/syncing indicator) | done   | T079         |
+| T081 | Service worker with Workbox (caching strategies)  | done   | T001         |
+| T082 | Web App Manifest and PWA install prompt           | done   | T081         |
 
 ---
 

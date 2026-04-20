@@ -684,5 +684,14 @@
     "myEarnings": "Mis ganancias",
     "openMenu": "Abrir menú",
     "closeMenu": "Cerrar menú"
+  },
+  "sync": {
+    "offlineTitle": "Sin conexión",
+    "offlineDescription": "Las acciones se sincronizarán cuando vuelva la conexión.",
+    "offlineCashierNote": "Puedes marcar pagos como 'pagado sin conexión' — se sincronizarán automáticamente.",
+    "pendingCount": "{count} acción(es) pendientes",
+    "syncing": "Sincronizando…",
+    "failedCount": "{count} error(es) de sincronización",
+    "retry": "Reintentar"
   }
 }

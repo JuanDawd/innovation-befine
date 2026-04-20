@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 import { withSentryConfig } from "@sentry/nextjs";
+import withPWA from "@ducanh2912/next-pwa";
 
 const nextConfig: NextConfig = {
   transpilePackages: ["@befine/types", "@befine/db", "@befine/realtime"],
@@ -17,7 +18,42 @@ const nextConfig: NextConfig = {
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
-export default withSentryConfig(withNextIntl(nextConfig), {
+// T081 — Service worker with Workbox
+// Disabled in dev to avoid cache interference; enabled only on production builds.
+const withPWAConfig = withPWA({
+  dest: "public",
+  disable: process.env.NODE_ENV !== "production",
+  // App shell: Cache First — JS/CSS/fonts always available offline
+  // API GETs (catalog, clients): Stale While Revalidate
+  // POST/PUT mutations: NetworkOnly — handled by IndexedDB queue instead
+  workboxOptions: {
+    runtimeCaching: [
+      {
+        // App shell — Cache First
+        urlPattern: /^https:\/\/.*\.(js|css|woff2|woff|ttf)$/i,
+        handler: "CacheFirst",
+        options: {
+          cacheName: "static-assets",
+          expiration: { maxEntries: 100, maxAgeSeconds: 7 * 24 * 60 * 60 },
+        },
+      },
+      {
+        // Catalog & reference data — Stale While Revalidate
+        urlPattern: /\/api\/(?!realtime).*/i,
+        handler: "StaleWhileRevalidate",
+        options: {
+          cacheName: "api-cache",
+          expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 },
+        },
+      },
+    ],
+    // Skip waiting and claim clients immediately on SW update
+    skipWaiting: true,
+    clientsClaim: true,
+  },
+});
+
+export default withSentryConfig(withPWAConfig(withNextIntl(nextConfig)), {
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
   authToken: process.env.SENTRY_AUTH_TOKEN,
