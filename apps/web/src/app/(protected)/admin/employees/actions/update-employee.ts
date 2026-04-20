@@ -8,11 +8,22 @@
 
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
-import { and, eq, not, sql } from "drizzle-orm";
+import { and, eq, inArray, not, sql } from "drizzle-orm";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { getDb, getTxDb } from "@/lib/db";
-import { employees, users, payouts, businessDays } from "@befine/db/schema";
+import {
+  employees,
+  users,
+  payouts,
+  payoutPeriodDays,
+  businessDays,
+  tickets,
+  batchPieces,
+  clothBatches,
+  employeeAbsences,
+} from "@befine/db/schema";
+import { terminateEmployeeSchema } from "@befine/types";
 import type { ActionResult } from "@/lib/action-result";
 import type { EmployeeListItem } from "./list-employees";
 import { hasRole } from "@/lib/middleware-helpers";
@@ -32,6 +43,10 @@ const editEmployeeSchema = z.object({
   expectedWorkDays: z.coerce.number().int().min(1).max(7).default(6),
 });
 
+const editEmployeeSchemaWithVersion = editEmployeeSchema.extend({
+  version: z.number().int().min(0),
+});
+
 export async function editEmployee(
   employeeId: string,
   rawInput: unknown,
@@ -44,7 +59,7 @@ export async function editEmployee(
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
   }
 
-  const parsed = editEmployeeSchema.safeParse(rawInput);
+  const parsed = editEmployeeSchemaWithVersion.safeParse(rawInput);
   if (!parsed.success) {
     return {
       success: false,
@@ -59,10 +74,10 @@ export async function editEmployee(
     };
   }
 
-  const { name, role, stylistSubtype, dailyRate, expectedWorkDays } = parsed.data;
+  const { name, role, stylistSubtype, dailyRate, expectedWorkDays, version } = parsed.data;
   const db = getDb();
 
-  // Update employee record
+  // Optimistic locking: only update if version matches; increment version
   const empRows = await db
     .update(employees)
     .set({
@@ -70,23 +85,57 @@ export async function editEmployee(
       stylistSubtype: stylistSubtype ?? null,
       dailyRate: role === "secretary" ? (dailyRate ?? null) : null,
       expectedWorkDays,
+      version: sql<number>`${employees.version} + 1`,
     })
-    .where(eq(employees.id, employeeId))
+    .where(and(eq(employees.id, employeeId), eq(employees.version, version)))
     .returning();
 
   const emp = empRows[0];
   if (!emp) {
-    return { success: false, error: { code: "NOT_FOUND", message: "Empleado no encontrado" } };
+    // Either not found or stale version
+    const [existing] = await db
+      .select({ id: employees.id })
+      .from(employees)
+      .where(eq(employees.id, employeeId))
+      .limit(1);
+    return existing
+      ? {
+          success: false,
+          error: {
+            code: "STALE_DATA",
+            message: "Otro usuario modificó este empleado. Recarga y reintenta.",
+          },
+        }
+      : { success: false, error: { code: "NOT_FOUND", message: "Empleado no encontrado" } };
   }
 
   // Update name in auth users table
   await db.update(users).set({ name, updatedAt: new Date() }).where(eq(users.id, emp.userId));
 
-  // Update role in auth users table
-  await auth.api.setRole({
-    body: { userId: emp.userId, role },
-    headers: await headers(),
-  });
+  // Update role in auth system — capture prior role for rollback if needed
+  const [priorUser] = await db
+    .select({ role: users.role })
+    .from(users)
+    .where(eq(users.id, emp.userId))
+    .limit(1);
+
+  try {
+    await auth.api.setRole({
+      body: { userId: emp.userId, role },
+      headers: await headers(),
+    });
+  } catch (authErr) {
+    // Roll back employee role/name changes to prior state
+    await db
+      .update(employees)
+      .set({ role: priorUser?.role ?? emp.role, version: sql<number>`${employees.version} - 1` })
+      .where(eq(employees.id, employeeId));
+    await db
+      .update(users)
+      .set({ role: priorUser?.role ?? emp.role })
+      .where(eq(users.id, emp.userId));
+    throw authErr;
+  }
 
   // Re-fetch with user data to return full item
   const rows = await db
@@ -101,6 +150,7 @@ export async function editEmployee(
       expectedWorkDays: employees.expectedWorkDays,
       showEarnings: employees.showEarnings,
       isActive: employees.isActive,
+      version: employees.version,
       hiredAt: employees.hiredAt,
       deactivatedAt: employees.deactivatedAt,
     })
@@ -216,26 +266,87 @@ export async function deactivateEmployee(
 
 export type UnsettledPeriod = { businessDayIds: string[]; oldestDate: string };
 
-/** Returns unsettled periods for the given employee — used to block deactivation. */
+/** Returns unsettled periods for the given employee — used to block deactivation.
+ *  Role-aware: only counts days the employee actually worked (T07R-R3). */
 export async function getUnsettledPeriodsForEmployee(
   employeeId: string,
 ): Promise<UnsettledPeriod | null> {
   const db = getDb();
-  const existingPayouts = await db
-    .select({ periodBusinessDayIds: payouts.periodBusinessDayIds })
-    .from(payouts)
-    .where(eq(payouts.employeeId, employeeId));
 
-  const settledIds = new Set(existingPayouts.flatMap((p) => p.periodBusinessDayIds));
+  const [emp] = await db
+    .select({ role: employees.role })
+    .from(employees)
+    .where(eq(employees.id, employeeId))
+    .limit(1);
+  if (!emp) return null;
+
+  // Settled days for this employee from junction table
+  const settledRows = await db
+    .select({ businessDayId: payoutPeriodDays.businessDayId })
+    .from(payoutPeriodDays)
+    .where(eq(payoutPeriodDays.employeeId, employeeId));
+  const settledIds = new Set(settledRows.map((r) => r.businessDayId));
 
   const closedDays = await db
     .select({ id: businessDays.id, openedAt: businessDays.openedAt })
     .from(businessDays)
     .where(not(sql`${businessDays.closedAt} IS NULL`));
 
-  const unsettledDays = closedDays.filter((d) => !settledIds.has(d.id));
-  if (!unsettledDays.length) return null;
+  if (!closedDays.length) return null;
+  const closedDayIds = closedDays.map((d) => d.id);
 
+  let unsettledDays: typeof closedDays = [];
+
+  if (emp.role === "stylist") {
+    const workDays = await db
+      .selectDistinct({ businessDayId: tickets.businessDayId })
+      .from(tickets)
+      .where(
+        and(
+          eq(tickets.employeeId, employeeId),
+          eq(tickets.status, "closed"),
+          inArray(tickets.businessDayId, closedDayIds),
+        ),
+      );
+    unsettledDays = closedDays.filter(
+      (d) => workDays.some((w) => w.businessDayId === d.id) && !settledIds.has(d.id),
+    );
+  } else if (emp.role === "clothier") {
+    const workDays = await db
+      .selectDistinct({ businessDayId: clothBatches.businessDayId })
+      .from(batchPieces)
+      .innerJoin(clothBatches, eq(batchPieces.batchId, clothBatches.id))
+      .where(
+        and(
+          eq(batchPieces.assignedToEmployeeId, employeeId),
+          eq(batchPieces.status, "approved"),
+          inArray(clothBatches.businessDayId, closedDayIds),
+        ),
+      );
+    unsettledDays = closedDays.filter(
+      (d) => workDays.some((w) => w.businessDayId === d.id) && !settledIds.has(d.id),
+    );
+  } else {
+    // Secretary: closed days not settled, excluding vacation + approved_absence
+    const dateStrings = closedDays.map((d) => new Date(d.openedAt).toISOString().slice(0, 10));
+    const absences = await db
+      .select({ date: employeeAbsences.date })
+      .from(employeeAbsences)
+      .where(
+        and(
+          eq(employeeAbsences.employeeId, employeeId),
+          inArray(employeeAbsences.date, dateStrings),
+          sql`${employeeAbsences.type} IN ('vacation', 'approved_absence')`,
+        ),
+      );
+    const excludedDates = new Set(absences.map((a) => a.date));
+    unsettledDays = closedDays.filter((d) => {
+      const dateStr = new Date(d.openedAt).toISOString().slice(0, 10);
+      return !settledIds.has(d.id) && !excludedDates.has(dateStr);
+    });
+  }
+
+  if (!unsettledDays.length) return null;
   const dates = unsettledDays.map((d) => new Date(d.openedAt).toISOString().slice(0, 10)).sort();
   return { businessDayIds: unsettledDays.map((d) => d.id), oldestDate: dates[0] };
 }
@@ -245,10 +356,7 @@ export async function getUnsettledPeriodsForEmployee(
  * Block deactivation if unsettled earnings exist but no termination amount is given.
  */
 export async function terminateEmployee(
-  employeeId: string,
-  terminationAmount: number,
-  method: "cash" | "card" | "transfer",
-  reason: string,
+  rawInput: unknown,
 ): Promise<ActionResult<{ deactivatedAt: Date }>> {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session)
@@ -256,16 +364,18 @@ export async function terminateEmployee(
   if (!hasRole(session.user, "cashier_admin"))
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
 
-  if (terminationAmount < 0)
+  const parsed = terminateEmployeeSchema.safeParse(rawInput);
+  if (!parsed.success)
     return {
       success: false,
-      error: { code: "VALIDATION_ERROR", message: "El monto de liquidación no puede ser negativo" },
+      error: {
+        code: "VALIDATION_ERROR",
+        message: "Datos inválidos",
+        details: parsed.error.issues.map((i) => ({ field: i.path.join("."), message: i.message })),
+      },
     };
-  if (!reason.trim())
-    return {
-      success: false,
-      error: { code: "VALIDATION_ERROR", message: "Se requiere motivo de liquidación" },
-    };
+
+  const { employeeId, terminationAmount, method, reason } = parsed.data;
 
   const db = getDb();
   const [adminEmp] = await db
@@ -281,18 +391,30 @@ export async function terminateEmployee(
   const now = new Date();
 
   const deactivatedAt = await txDb.transaction(async (tx) => {
-    // Record termination payout covering all unsettled days
-    if (unsettled) {
-      await tx.insert(payouts).values({
-        employeeId,
-        amount: terminationAmount,
-        originalComputedAmount: terminationAmount,
-        adjustmentReason: reason,
-        method,
-        periodBusinessDayIds: unsettled.businessDayIds,
-        recordedBy: adminEmp.id,
-        notes: "Liquidación final",
-      });
+    // Record termination payout covering all unsettled days (T07R-R1: junction table)
+    if (unsettled && unsettled.businessDayIds.length > 0) {
+      const idemKey = crypto.randomUUID();
+      const [payout] = await tx
+        .insert(payouts)
+        .values({
+          idempotencyKey: idemKey,
+          employeeId,
+          amount: terminationAmount,
+          originalComputedAmount: terminationAmount,
+          adjustmentReason: reason,
+          method,
+          recordedBy: adminEmp.id,
+          notes: "Liquidación final",
+        })
+        .returning({ id: payouts.id });
+
+      await tx.insert(payoutPeriodDays).values(
+        unsettled.businessDayIds.map((dayId) => ({
+          payoutId: payout.id,
+          employeeId,
+          businessDayId: dayId,
+        })),
+      );
     }
 
     const [emp] = await tx

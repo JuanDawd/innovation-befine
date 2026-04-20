@@ -34,7 +34,9 @@ import {
   editEmployee,
   setShowEarnings,
   deactivateEmployee,
+  terminateEmployee,
 } from "@/app/(protected)/admin/employees/actions/update-employee";
+import { previewEarnings } from "@/app/(protected)/admin/payroll/actions";
 
 const STYLIST_SUBTYPES = [
   { value: "hairdresser" },
@@ -55,6 +57,7 @@ const editSchema = z.object({
     .optional(),
   dailyRate: z.number().int().min(0).nullable().optional(),
   expectedWorkDays: z.number().int().min(1).max(7),
+  version: z.number().int().min(0),
 });
 
 type EditInput = z.infer<typeof editSchema>;
@@ -77,6 +80,13 @@ export function EmployeeList({ initialEmployees }: EmployeeListProps) {
   const [editOpen, setEditOpen] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
   const [confirmDeactivate, setConfirmDeactivate] = useState(false);
+  const [terminateOpen, setTerminateOpen] = useState(false);
+  const [terminateTarget, setTerminateTarget] = useState<EmployeeListItem | null>(null);
+  const [terminateAmount, setTerminateAmount] = useState("");
+  const [terminateMethod, setTerminateMethod] = useState<"cash" | "card" | "transfer">("cash");
+  const [terminateReason, setTerminateReason] = useState("");
+  const [terminateError, setTerminateError] = useState<string | null>(null);
+  const [computedTermination, setComputedTermination] = useState<number | null>(null);
   const [isPending, startTransition] = useTransition();
   const [toastMsg, setToastMsg] = useState<string | null>(null);
 
@@ -100,6 +110,7 @@ export function EmployeeList({ initialEmployees }: EmployeeListProps) {
       stylistSubtype: emp.stylistSubtype as EditInput["stylistSubtype"],
       dailyRate: emp.dailyRate,
       expectedWorkDays: emp.expectedWorkDays,
+      version: emp.version,
     });
     setEditOpen(true);
   }
@@ -145,6 +156,58 @@ export function EmployeeList({ initialEmployees }: EmployeeListProps) {
           ),
         );
         showToast(t("deactivateSuccess"));
+        return;
+      }
+      // T022b: unsettled earnings → open termination dialog
+      if (result.error.code === "CONFLICT") {
+        setTerminateTarget(emp);
+        setTerminateError(null);
+        setComputedTermination(null);
+        setTerminateAmount("");
+        setTerminateReason("");
+        setTerminateOpen(true);
+        // Pre-fill with computed amount
+        const preview = await previewEarnings(emp.id, []);
+        if (preview.success) {
+          // We pass empty array — just surface 0 for now; admin fills in
+          setComputedTermination(preview.data.computedAmount);
+          setTerminateAmount(String(preview.data.computedAmount));
+        }
+      }
+    });
+  }
+
+  function handleTerminate() {
+    if (!terminateTarget) return;
+    setTerminateError(null);
+    startTransition(async () => {
+      const amount = parseInt(terminateAmount, 10);
+      if (isNaN(amount) || amount < 0) {
+        setTerminateError(t("invalidAmount"));
+        return;
+      }
+      if (!terminateReason.trim()) {
+        setTerminateError(t("terminationReasonRequired"));
+        return;
+      }
+      const result = await terminateEmployee({
+        employeeId: terminateTarget.id,
+        terminationAmount: amount,
+        method: terminateMethod,
+        reason: terminateReason.trim(),
+      });
+      if (result.success) {
+        setEmployees((prev) =>
+          prev.map((e) =>
+            e.id === terminateTarget.id
+              ? { ...e, isActive: false, deactivatedAt: result.data.deactivatedAt }
+              : e,
+          ),
+        );
+        setTerminateOpen(false);
+        showToast(t("terminateSuccess"));
+      } else {
+        setTerminateError(result.error.message);
       }
     });
   }
@@ -447,6 +510,92 @@ export function EmployeeList({ initialEmployees }: EmployeeListProps) {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* T022b — Termination dialog */}
+      <Dialog
+        open={terminateOpen}
+        onOpenChange={(o) => {
+          if (!isPending) setTerminateOpen(o);
+        }}
+      >
+        <DialogContent showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle className="text-destructive">{t("terminateTitle")}</DialogTitle>
+            <DialogDescription>
+              {t("terminateDescription", { name: terminateTarget?.name ?? "" })}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-1">
+            {computedTermination !== null && (
+              <p className="text-sm text-muted-foreground">
+                {t("terminateComputed")}:{" "}
+                <span className="font-mono font-semibold">
+                  ${computedTermination.toLocaleString("es-CO")}
+                </span>
+              </p>
+            )}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="text-sm font-medium" htmlFor="terminateAmount">
+                  {t("terminateAmount")} <span className="text-destructive">*</span>
+                </label>
+                <input
+                  id="terminateAmount"
+                  type="number"
+                  min={0}
+                  value={terminateAmount}
+                  onChange={(e) => setTerminateAmount(e.target.value)}
+                  className="w-full h-9 rounded-md border border-input bg-transparent px-3 text-sm font-mono focus-visible:outline-none focus-visible:border-ring"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-sm font-medium" htmlFor="terminateMethod">
+                  {t("terminateMethod")}
+                </label>
+                <select
+                  id="terminateMethod"
+                  value={terminateMethod}
+                  onChange={(e) =>
+                    setTerminateMethod(e.target.value as "cash" | "card" | "transfer")
+                  }
+                  className="w-full h-9 rounded-md border border-input bg-transparent px-3 text-sm focus-visible:outline-none focus-visible:border-ring"
+                >
+                  <option value="cash">{t("cash")}</option>
+                  <option value="card">{t("card")}</option>
+                  <option value="transfer">{t("transfer")}</option>
+                </select>
+              </div>
+            </div>
+            <div className="space-y-1">
+              <label className="text-sm font-medium" htmlFor="terminateReason">
+                {t("terminateReason")} <span className="text-destructive">*</span>
+              </label>
+              <input
+                id="terminateReason"
+                type="text"
+                maxLength={500}
+                value={terminateReason}
+                onChange={(e) => setTerminateReason(e.target.value)}
+                className="w-full h-9 rounded-md border border-input bg-transparent px-3 text-sm focus-visible:outline-none focus-visible:border-ring"
+              />
+            </div>
+            {terminateError && (
+              <p className="text-sm text-destructive" role="alert">
+                {terminateError}
+              </p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" disabled={isPending} onClick={() => setTerminateOpen(false)}>
+              {tCommon("cancel")}
+            </Button>
+            <Button variant="destructive" disabled={isPending} onClick={handleTerminate}>
+              {isPending ? <Loader2Icon className="h-3.5 w-3.5 animate-spin mr-1" /> : null}
+              {t("terminateConfirm")}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

@@ -141,6 +141,20 @@
       "when": 1776620694076,
       "tag": "0019_legal_layla_miller",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1776700000000,
+      "tag": "0020_payroll_remediation",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1776710000000,
+      "tag": "0021_employees_version",
+      "breakpoints": true
     }
   ]
 }

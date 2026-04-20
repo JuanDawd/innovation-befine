@@ -17,6 +17,7 @@ import {
   timestamp,
   unique,
   uuid,
+  smallint,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { users } from "./auth";
@@ -48,6 +49,8 @@ export const employees = pgTable(
     /** Whether the employee can view their own earnings in the app */
     showEarnings: boolean("show_earnings").notNull().default(false),
     isActive: boolean("is_active").notNull().default(true),
+    /** Optimistic locking — increment on every update; concurrent edits detect stale data */
+    version: smallint("version").notNull().default(0),
     hiredAt: timestamp("hired_at", { mode: "date", withTimezone: true }).notNull().defaultNow(),
     deactivatedAt: timestamp("deactivated_at", { mode: "date", withTimezone: true }),
     createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).notNull().defaultNow(),
