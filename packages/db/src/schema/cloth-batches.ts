@@ -1,7 +1,7 @@
 import { pgEnum, pgTable, uuid, text, timestamp, integer, index } from "drizzle-orm/pg-core";
 import { businessDays } from "./business-days";
 import { employees } from "./employees";
-import { clothPieces } from "./cloth-pieces";
+import { clothPieces, clothPieceVariants } from "./cloth-pieces";
 import { largeOrders } from "./large-orders";
 
 export const batchPieceStatusEnum = pgEnum("batch_piece_status_enum", [
@@ -45,6 +45,9 @@ export const batchPieces = pgTable(
     clothPieceId: uuid("cloth_piece_id")
       .notNull()
       .references(() => clothPieces.id, { onDelete: "restrict" }),
+    clothPieceVariantId: uuid("cloth_piece_variant_id")
+      .notNull()
+      .references(() => clothPieceVariants.id, { onDelete: "restrict" }),
     assignedToEmployeeId: uuid("assigned_to_employee_id").references(() => employees.id, {
       onDelete: "restrict",
     }),

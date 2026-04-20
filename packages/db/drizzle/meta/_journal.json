@@ -169,6 +169,13 @@
       "when": 1776730000000,
       "tag": "0023_business_days_opened_at_index",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1776740000000,
+      "tag": "0024_cloth_piece_variants",
+      "breakpoints": true
     }
   ]
 }

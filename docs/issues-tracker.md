@@ -156,6 +156,26 @@
 
 ---
 
+### C-16 — Analytics silently excludes the currently-open business day
+
+- **Severity:** Critical
+- **Status:** Open
+- **Affected:** T071, T072, T073, T074, T076 (`packages/db/src/queries/analytics.ts:326` — `${businessDays.closedAt} IS NOT NULL` in `getBusinessDayIdsByPeriod`)
+- **Description:** `getBusinessDayIdsByPeriod` filters `closedAt IS NOT NULL` for **both** current and prior windows. Admins who open the analytics tab during an active business day see revenue=0, jobs=0, earnings=0 for "day" (and the open-day contribution is missing from "week"/"month" too). The empty-state banner then fires: "No hay ingresos para este período — cierra tickets para ver los totales", which is misleading since tickets _are_ closing. The T072 AC explicitly calls out "current business day (or most recent closed day)" — neither behaviour is implemented; the open day is just silently dropped. All downstream surfaces (CSV export, comparison chart, per-employee table) inherit the gap.
+- **Fix:** Drop `closedAt IS NOT NULL` from the current-window filter; keep it (or a softer "ended in the past" check) only on the prior window if needed for clean comparisons. Verify `revenueByPeriod`/`earningsByEmployee`/`employeeDayBreakdown` handle open days (tickets with status=closed already exist on open days). Add a unit test that an open day with 2 closed tickets contributes its revenue.
+
+---
+
+### C-17 — `earningsByEmployee` returns 0 for all secretaries, under-reporting the total
+
+- **Severity:** Critical
+- **Status:** Open
+- **Affected:** T071, T072, T073, T074, T076 (`packages/db/src/queries/analytics.ts:128–222`, `341–474`)
+- **Description:** `earningsByEmployee` only aggregates stylist commission and clothier piece_rate. The in-file comment says "returns 0 for secretary roles and callers should supplement with computeSecretaryEarnings", but `getAnalyticsSummary` never does the supplemental call — it sums the aggregated rows directly. Result: (1) the top-line `earnings` card understates the real payroll cost by the full secretary `daily_rate × daysWorked` each period; (2) secretaries never appear in the per-employee performance table or CSV; (3) prior-period comparisons are consistently biased the same direction so the delta % looks fine, hiding the error. Same omission in `employeeDayBreakdown` (the secretary branch is present but only uses `daily_rate` without the ISO-week `expected_work_days` cap from T065).
+- **Fix:** Either (a) add a secretary branch to the SQL aggregation that joins `business_days` and subtracts vacation/approved_absence days, multiplied by `employees.daily_rate`, with the same ISO-week cap as `computeSecretaryEarnings`; or (b) call `computeSecretaryEarnings` per secretary in application code and merge results. Either way the analytics earnings total must match the sum of payouts that would be computed by T065 on the same window. Add a test that asserts parity.
+
+---
+
 ## High-priority issues
 
 ### H-01 — Phase 0 scope inflation
@@ -313,6 +333,46 @@
 - **Affected:** T069 (`apps/web/src/components/nav-config.ts`)
 - **Description:** `/stylist/earnings`, `/clothier/earnings`, `/secretary/earnings` exist as routes and the page components mount `MyEarningsView`, but `NAV_ITEMS` for these three roles has no entry pointing to them. Stylist nav has only "myTickets"; clothier has only "myWork"; secretary has dashboard/largeOrders/batches/appointments. Employees with `show_earnings = true` cannot discover their own earnings page. T069 AC: "Build the 'My earnings' screen for stylists, clothiers, and secretaries" — implicitly requires it to be reachable.
 - **Fix:** Add a conditional nav entry per role pointing to `/{role}/earnings`. Visibility should respect `employees.show_earnings` — fetch the flag in the layout that builds the nav (or hide the link until the flag is true on the server). On mobile (stylist + clothier) add as second tab in the bottom bar.
+
+---
+
+### H-34 — Analytics dashboard has no real-time refresh
+
+- **Severity:** High
+- **Status:** Open
+- **Affected:** T072 (`apps/web/src/app/(protected)/admin/analytics/analytics-dashboard.tsx`)
+- **Description:** T072 AC: "Updates in near-real-time (real-time event on ticket close can trigger a refresh)". The dashboard is a pure client component with no subscription to `packages/realtime` — admins must manually switch periods or reload the page to see updated numbers after checkouts. Combined with C-16 (open day excluded entirely), the dashboard becomes a stale snapshot until day close. The `packages/realtime` `useRealtimeEvent` hook already exists (used by cashier dashboard) — this is a wiring gap, not a new infrastructure requirement.
+- **Fix:** Subscribe the dashboard to the `cashier` SSE channel's `ticket.closed` event. On receipt, refetch the current period (throttled to 1 refresh/5s to avoid thrashing during batch checkouts). Alternative: use `router.refresh()` on receipt to re-run the server component.
+
+---
+
+### H-35 — T074 active-employee filter + include-inactive toggle unimplemented
+
+- **Severity:** High
+- **Status:** Open
+- **Affected:** T074 (`packages/db/src/queries/analytics.ts:94–222`, `apps/web/src/app/(protected)/admin/analytics/analytics-dashboard.tsx:253–339`)
+- **Description:** T074 AC: "Table shows all active employees (inactive employees excluded by default; toggle to include)". The implementation has neither the default filter nor the toggle. `earningsByEmployee`, `jobsCountByEmployee`, and `employeeDayBreakdown` make no reference to `employees.isActive`. Any employee who was deactivated mid-period is silently included in the table and the drill-down; any inactive employee with zero earnings is excluded only because the aggregation returns no rows, not because of a filter. There is no user-facing control to toggle the filter.
+- **Fix:** (1) thread `includeInactive?: boolean` through `getAnalyticsSummary`, `getEmployeePerformance`, `getEmployeeDrillDown`; (2) default `false`; (3) add `AND employees.isActive = true` unless `includeInactive` is set; (4) surface a checkbox above the employee table that toggles the flag and re-fetches. Drill-down respects the same flag.
+
+---
+
+### H-36 — Analytics server actions skip Zod validation
+
+- **Severity:** High
+- **Status:** Open
+- **Affected:** T071–T076 (`apps/web/src/app/(protected)/admin/analytics/actions.ts`)
+- **Description:** `getAnalyticsSummary(period)`, `getEmployeePerformance(period)`, `getAnalyticsCsvData(period)`, and `getEmployeeDrillDown(employeeId, period)` type their params but never validate them. `period` is used in SQL-branching JS code and interpolated into `toLocaleDateString` downstream; a client could pass an arbitrary string. `employeeId` is passed directly to `employeeDayBreakdown` and to a `.where(eq(employees.id, employeeId))` clause — Drizzle coerces and Postgres would reject the bad UUID, but the error surfaces as an untyped `INTERNAL_ERROR` instead of a clean `VALIDATION_ERROR`. CLAUDE.md: "Every server action validates input with a Zod schema before business logic."
+- **Fix:** Create `packages/types/src/schemas/analytics.ts` with `periodSchema` (enum `["day","week","month"]`), `employeeIdSchema` (uuid), `includeInactiveSchema` (boolean optional). Convert the four actions to take `unknown` + `safeParse` and return `VALIDATION_ERROR` with field-level details on failure.
+
+---
+
+### H-37 — Zero unit tests for Phase 8 analytics logic
+
+- **Severity:** High
+- **Status:** Open
+- **Affected:** T071–T076, T101 (no test files under `packages/db/src/queries/` or `apps/web/src/app/(protected)/admin/analytics/__tests__/`)
+- **Description:** CLAUDE.md mandates unit tests for "earnings computation (commission, piece_rate, daily_rate)", "permission / role checks", "financial data integrity". Analytics queries compute revenue, per-employee earnings, and prior-period comparisons — all financial logic — and have zero tests. Today's 213 passing tests include the Phase 7 payroll logic, but analytics is untested. Bugs like C-16 (open-day exclusion), C-17 (secretary under-report), and L-35 (UTC date slice) were only catchable by code review; a regression in any of these would ship silently.
+- **Fix:** Add `packages/db/src/queries/__tests__/analytics.test.ts` (or `apps/web/src/app/(protected)/admin/analytics/__tests__/`) covering: `revenueByPeriod` on closed + open day, zero-ticket days, needs_review exclusion, override-price use; `earningsByEmployee` per role including secretary parity with `computeSecretaryEarnings`; `getBusinessDayIdsByPeriod` boundaries (week Mon, month 1st, year turnover); role gate FORBIDDEN for non-admin roles; CSV totals match the aggregate queries. Target 80%+ branch coverage of `packages/db/src/queries/analytics.ts` per CLAUDE.md threshold.
 
 ---
 
@@ -557,6 +617,56 @@
 - **Affected:** T014, T065 (`apps/web/src/app/(protected)/admin/employees/actions/update-employee.ts:35–119`)
 - **Description:** Two admins editing the same employee concurrently can clobber each other's changes — `editEmployee` simply does `UPDATE employees SET … WHERE id = $1` with no `version` column or last-write-wins safeguard. For a row whose `dailyRate` and `expectedWorkDays` directly drive payroll, a stale write produces silently wrong settlements. The same call also updates `users.name` and `auth.api.setRole` outside any transaction — if the auth role update fails the employee row is already changed.
 - **Fix:** Add `version` to the `employees` table (if not present), include `WHERE id = $1 AND version = $expected` in the `UPDATE`, return `STALE_DATA` on zero-row update. Wrap the three writes (employees update, users name update, auth role update) into a single sequence with a try/rollback semantic — auth.api.setRole isn't transactional, so capture the prior role and restore on failure.
+
+---
+
+### M-40 — Analytics queries never filter on `employees.isActive`
+
+- **Severity:** Medium
+- **Status:** Open
+- **Affected:** T071, T074 (`packages/db/src/queries/analytics.ts:94–222`, `341–474`)
+- **Description:** `earningsByEmployee`, `jobsCountByEmployee`, and `employeeDayBreakdown` join `employees` but never filter on `isActive`. A deactivated employee who had tickets/batches during the period still appears in the results with their historical earnings. T074 AC (H-35) explicitly excludes inactive by default with a toggle — M-40 is the query-layer counterpart to that UI-level gap.
+- **Fix:** Thread `includeInactive` through the query signatures, defaulting to `false`, and add `AND employees.isActive = true` when absent. Piggybacks on T08R-R4 / H-35 plumbing.
+
+---
+
+### M-41 — `employeeDayBreakdown` secretary branch ignores `expected_work_days` cap
+
+- **Severity:** Medium
+- **Status:** Open
+- **Affected:** T071, T074 (`packages/db/src/queries/analytics.ts:436–473`, `apps/web/src/lib/payroll/compute-secretary-earnings.ts`)
+- **Description:** The secretary branch of `employeeDayBreakdown` just emits `{ jobs: present ? 1 : 0, earnings: present ? dailyRate : 0 }` per closed business day. T065 (`computeSecretaryEarnings`) applies a per-ISO-week cap at `expected_work_days` so a 5-day-per-week secretary who worked 6 days gets paid for 5, not 6. The analytics drill-down therefore shows a higher total than what `previewEarnings` will propose to pay — admins see the bigger number and enter that amount, over-paying part-time secretaries.
+- **Fix:** Extract the ISO-week capping logic from `computeSecretaryEarnings` into a shared helper (e.g. `capByExpectedWorkDays`) and call it from both `computeSecretaryEarnings` and `employeeDayBreakdown`. Add a test: a 3-day-per-week secretary with 4 present days in an ISO week computes to 3 × dailyRate, not 4.
+
+---
+
+### M-42 — Week comparison is apples-to-oranges when today is not Sunday
+
+- **Severity:** Medium
+- **Status:** Open
+- **Affected:** T073 (`packages/db/src/queries/analytics.ts:297–309`)
+- **Description:** Resolved-decisions: "weekly = previous calendar week (Mon–Sun)". Implementation: current window is Monday → `bogotaToday`, prior window is Monday → Sunday of the previous week. On Wednesday the user compares a 3-day window to a 7-day window — unsurprisingly the delta is always negative until Sunday. The comparison misleads rather than informs.
+- **Fix:** Either (a) keep current window as Mon → upcoming Sunday (future-dated days have no data so they contribute 0 and the comparison stays like-for-like until the week ends), or (b) truncate the prior window to the same weekday offset (Mon → prior Wednesday when today is Wednesday). Either choice must be documented under "Analytics comparison periods" in progress.md so the behaviour is discoverable.
+
+---
+
+### M-43 — Analytics server actions have no rate limiting
+
+- **Severity:** Medium
+- **Status:** Open
+- **Affected:** T071–T076 (`apps/web/src/app/(protected)/admin/analytics/actions.ts`)
+- **Description:** None of `getAnalyticsSummary`, `getEmployeePerformance`, `getAnalyticsCsvData`, or `getEmployeeDrillDown` call `checkRateLimit`. CLAUDE.md requires "General mutations: 60/min per user" and has explicit caps for heavier actions. These endpoints run six aggregation queries each (`getAnalyticsSummary`) and are trivially enumerable — a CSV-export loop could download months of payroll data in seconds. Reads, yes, but auth-gated financial reads are still rate-limit worthy.
+- **Fix:** Add `checkRateLimit(rateLimits.general)` (60/min) to the three read-style actions and a tighter cap (e.g. 20/min) to `getAnalyticsCsvData` given its weight.
+
+---
+
+### M-44 — `seed-analytics.ts` destroys real production data on every run
+
+- **Severity:** Medium
+- **Status:** Open
+- **Affected:** T101 (`packages/db/src/seed-analytics.ts:81–102`)
+- **Description:** `clearAnalyticsData` deletes every row from `clients`, `large_orders`, `large_order_payments`, `employee_absences`, `tickets`, `ticket_items`, `ticket_payments`, `checkout_sessions`, `cloth_batches`, `batch_pieces`, `payouts`, `payout_period_days`, `payout_ticket_items`, `payout_batch_pieces`, `business_days` — regardless of whether they were seeded or real. The `--analytics` flag gate prevents accidental execution only against accidental `pnpm db:seed` confusion; any dev who runs `pnpm db:seed:analytics` against a shared staging database wipes real operator data. T101 AC: "Does not affect or overwrite real data if run against a non-empty database (operates in a seeded namespace or requires explicit flag)" — only the flag side of this AC is satisfied.
+- **Fix:** Either (a) tag seeded rows with a `seeded_namespace` marker column (or use a distinct `client.name` prefix already present — `Cliente Seed ${i+1}` — and filter delete by name/id list), or (b) add a second `--confirm-destructive` flag + loud banner naming the tables to be wiped, and require a DB URL that does not match production patterns. Option (a) is stronger; either is acceptable.
 
 ---
 
@@ -1042,6 +1152,46 @@
 - **Affected:** T066 (`packages/db/src/schema/payouts.ts:31`)
 - **Description:** Storing covered days as `uuid[]` requires every "is this day settled?" check to either (a) load every payout into memory and `flatMap` (current code in `listClosedBusinessDays`, `getUnsettledEmployees`, `getUnsettledPeriodsForEmployee`) or (b) write a `ANY(period_business_day_ids)` query that can't use a normal B-tree index. As payout volume grows, all three call sites become O(payouts × closedDays). Resolved together with C-12 if the suggested junction table approach is taken.
 - **Fix:** When fixing C-12, prefer a `payout_period_days(payout_id, business_day_id, employee_id)` table with `UNIQUE(employee_id, business_day_id)` plus indexes on each FK. Drop `period_business_day_ids` from `payouts`.
+
+---
+
+### L-33 — CSV export shape loses business-day granularity per employee
+
+- **Severity:** Low
+- **Status:** Open
+- **Affected:** T076 (`apps/web/src/app/(protected)/admin/analytics/actions.ts:140–181`)
+- **Description:** T076 AC: "CSV includes: business day date, revenue, jobs count, per-employee earnings". The current CSV is two disjoint sections — (1) date,revenue,jobs and (2) employeeName,role,earnings totalled across the period. Accountants cannot pivot per-day-per-employee without going back to the app. Also the joined section has no shared key between the two blocks, so spreadsheet pivots are not possible.
+- **Fix:** Reshape into one table: one row per `(businessDayId, employeeId)` with columns `date, employeeName, role, jobs, earnings, dailyRevenue, dailyJobs`. Rename the file if filename collision with the current shape matters.
+
+---
+
+### L-34 — Employee table not sortable by jobs count
+
+- **Severity:** Low
+- **Status:** Open
+- **Affected:** T074 (`apps/web/src/app/(protected)/admin/analytics/analytics-dashboard.tsx:251–339`)
+- **Description:** T074 AC: "Sortable by name, jobs count, earnings". The current implementation only fetches `totalEarnings` per employee (via `earningsByEmployee`) — not a job count — and the `SortKey` type is `"name" | "earnings"`. Clicking any "Jobs" header would be a no-op because the data is not there.
+- **Fix:** Either (a) join `jobsCountByEmployee` into `getAnalyticsSummary`'s earningsTable and add a `"jobs"` sort key with a visible column; or (b) formally drop "jobs count" from T074's AC since the admin can already see total jobs on the metric card. Option (a) is closer to the spec.
+
+---
+
+### L-35 — `dailyRevenueBreakdown.date` uses UTC slice, not Bogota
+
+- **Severity:** Low
+- **Status:** Open
+- **Affected:** T071 (`packages/db/src/queries/analytics.ts:258–263`, `399–403`, `428–432`, `464–473`)
+- **Description:** Five call sites format `date` as `new Date(openedAt).toISOString().slice(0, 10)`. `toISOString` is UTC; `openedAt` is stored UTC. For seed days opened at 08:00 Bogota (13:00 UTC) the sliced date is correct, but any day opened after 19:00 Bogota (00:00+ UTC next day) reports the UTC date — one day ahead of the Bogota date. Not a concern for the current seed data (fixed 08:00 opens) but brittle for real operations.
+- **Fix:** Use `toLocaleDateString("en-CA", { timeZone: "America/Bogota" })` — the same helper (`bogotaDateStr`) already exists in `seed-analytics.ts:68–70`. Extract to a shared `@befine/db` utility and replace the 5 call sites.
+
+---
+
+### L-36 — `performance-results.md` has three pending manual measurements
+
+- **Severity:** Low
+- **Status:** Open
+- **Affected:** T107 (`docs/testing/performance-results.md:55–95`)
+- **Description:** T107 AC: "Results documented in `docs/testing/performance-results.md`" and "Any endpoint or page exceeding its target is flagged as blocking in `docs/issues-tracker.md` and fixed before T089 (go-live)". The doc marks client-side navigation, LCP-on-mobile-4G, and SSE delivery latency as ⏳ "Manual measurement pending". While the DB-level numbers are complete, the user-perceivable metrics that T107 was written to enforce are not actually captured yet.
+- **Fix:** Run the three manual measurements (Chrome DevTools Performance/Lighthouse on a running deployment; two-tab SSE test) and record the numbers. If any target is missed, log a new blocking issue here. This can follow T08R-R3 (real-time refresh) because SSE latency is affected by that change.
 
 ---
 
