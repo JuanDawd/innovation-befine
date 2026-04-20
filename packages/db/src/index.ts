@@ -43,3 +43,4 @@ export type Database = ReturnType<typeof createDb>;
 export type TxDatabase = ReturnType<typeof createTxDb>;
 
 export { schema };
+export * from "./queries/analytics";
