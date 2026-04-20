@@ -23,11 +23,17 @@ import {
   clients,
   tickets,
   ticketItems,
+  ticketPayments,
+  checkoutSessions,
   clothBatches,
   batchPieces,
   payouts,
   payoutPeriodDays,
+  payoutTicketItems,
+  payoutBatchPieces,
   employeeAbsences,
+  largeOrders,
+  largeOrderPayments,
 } from "./schema";
 
 // ─── Guard ────────────────────────────────────────────────────────────────────
@@ -75,14 +81,20 @@ function dailyRevenueTarget(dow: number): number {
 async function clearAnalyticsData() {
   console.log("🗑️  Clearing analytics seed data...");
 
-  // Delete in reverse FK order
+  // Delete in reverse FK order — all tables that reference business_days or tickets
+  await db.delete(payoutBatchPieces);
+  await db.delete(payoutTicketItems);
   await db.delete(payoutPeriodDays);
   await db.delete(payouts);
   await db.delete(batchPieces);
   await db.delete(clothBatches);
+  await db.delete(ticketPayments);
   await db.delete(ticketItems);
   await db.delete(tickets);
+  await db.delete(checkoutSessions);
   await db.delete(employeeAbsences);
+  await db.delete(largeOrderPayments);
+  await db.delete(largeOrders);
   await db.delete(businessDays);
   await db.delete(clients);
 
@@ -281,6 +293,7 @@ async function run() {
             employeeId: sec.id,
             date: dateStr,
             type: "vacation",
+            createdBy: adminEmp.id,
           })
           .onConflictDoNothing();
       }

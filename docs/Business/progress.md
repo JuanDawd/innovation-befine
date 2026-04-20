@@ -560,16 +560,16 @@ Update `apps/web/src/lib/db/README.md` with a short "When to use `getDb()` vs `g
 
 ## Phase 8 — Analytics
 
-| ID   | Task                                                  | Status  | Dependencies |
-| ---- | ----------------------------------------------------- | ------- | ------------ |
-| T071 | Analytics data queries (revenue, jobs, earnings)      | done    | T038, T066   |
-| T072 | Daily revenue dashboard                               | done    | T071         |
-| T073 | Weekly and monthly revenue dashboards with comparison | done    | T071         |
-| T074 | Per-employee performance views and drill-down         | done    | T071         |
-| T075 | Analytics database indexes and query optimization     | done    | T071         |
-| T101 | Analytics seed script (6 months of data) _(new)_      | done    | T071         |
-| T107 | Performance testing _(new — QA review Q11)_           | pending | T101         |
-| T076 | CSV export for accountant (stretch)                   | done    | T071         |
+| ID   | Task                                                  | Status | Dependencies |
+| ---- | ----------------------------------------------------- | ------ | ------------ |
+| T071 | Analytics data queries (revenue, jobs, earnings)      | done   | T038, T066   |
+| T072 | Daily revenue dashboard                               | done   | T071         |
+| T073 | Weekly and monthly revenue dashboards with comparison | done   | T071         |
+| T074 | Per-employee performance views and drill-down         | done   | T071         |
+| T075 | Analytics database indexes and query optimization     | done   | T071         |
+| T101 | Analytics seed script (6 months of data) _(new)_      | done   | T071         |
+| T107 | Performance testing _(new — QA review Q11)_           | done   | T101         |
+| T076 | CSV export for accountant (stretch)                   | done   | T071         |
 
 ---
 

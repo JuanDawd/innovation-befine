@@ -318,24 +318,24 @@ export async function getBusinessDayIdsByPeriod(
     priorEnd = new Date(priorLast.toISOString().slice(0, 10) + "T23:59:59-05:00");
   }
 
-  const allClosed = await db
+  // Single query: fetch all days covering both current and prior windows, then split in JS
+  const rows = await db
     .select({ id: businessDays.id, openedAt: businessDays.openedAt })
     .from(businessDays)
-    .where(sql`${businessDays.closedAt} IS NOT NULL`);
+    .where(
+      sql`${businessDays.closedAt} IS NOT NULL
+        AND ${businessDays.openedAt} >= ${priorStart.toISOString()}
+        AND ${businessDays.openedAt} <= ${currentEnd.toISOString()}`,
+    );
 
-  function filterIds(start: Date, end: Date) {
-    return allClosed
-      .filter((d) => {
-        const t = new Date(d.openedAt).getTime();
-        return t >= start.getTime() && t <= end.getTime();
-      })
-      .map((d) => d.id);
-  }
+  const current = rows
+    .filter((d) => d.openedAt >= currentStart && d.openedAt <= currentEnd)
+    .map((d) => d.id);
+  const prior = rows
+    .filter((d) => d.openedAt >= priorStart && d.openedAt <= priorEnd)
+    .map((d) => d.id);
 
-  return {
-    current: filterIds(currentStart, currentEnd),
-    prior: filterIds(priorStart, priorEnd),
-  };
+  return { current, prior };
 }
 
 // ─── Per-employee day-by-day breakdown ───────────────────────────────────────

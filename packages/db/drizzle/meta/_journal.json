@@ -162,6 +162,13 @@
       "when": 1776720000000,
       "tag": "0022_analytics_indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1776730000000,
+      "tag": "0023_business_days_opened_at_index",
+      "breakpoints": true
     }
   ]
 }
