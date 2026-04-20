@@ -127,6 +127,22 @@
     "title": "Innovation Befine",
     "subtitle": "Internal operations platform"
   },
+  "landing": {
+    "eyebrow": "Internal platform",
+    "heroLine1": "Operations management",
+    "heroLine2": "for your salon & workshop.",
+    "heroParagraph": "Tickets, batches, payroll and more — all in one place built for the pace of Innovation Befine.",
+    "cta": "Sign in",
+    "ctaNav": "Access",
+    "featuresLabel": "Features",
+    "feat1Title": "Ticket control",
+    "feat1Desc": "Log services, handle payments, and close the day with precision.",
+    "feat2Title": "Batches & clothing",
+    "feat2Desc": "Assign pieces, approve work, and track every production batch.",
+    "feat3Title": "Payroll & earnings",
+    "feat3Desc": "Calculate commissions, piece rates, and settlements for every role.",
+    "footer": "© 2026 Innovation Befine. All rights reserved."
+  },
   "employees": {
     "pageTitle": "Employees",
     "createEmployee": "Create employee",

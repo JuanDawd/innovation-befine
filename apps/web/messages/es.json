@@ -127,6 +127,22 @@
     "title": "Innovation Befine",
     "subtitle": "Plataforma de operaciones internas"
   },
+  "landing": {
+    "eyebrow": "Plataforma interna",
+    "heroLine1": "Gestión operativa",
+    "heroLine2": "para tu salón y taller.",
+    "heroParagraph": "Tickets, confección, nómina y más — todo en un solo lugar diseñado para el ritmo de Innovation Befine.",
+    "cta": "Iniciar sesión",
+    "ctaNav": "Acceder",
+    "featuresLabel": "Funcionalidades",
+    "feat1Title": "Control de tickets",
+    "feat1Desc": "Registra servicios, gestiona pagos y cierra el día con precisión.",
+    "feat2Title": "Confección y lotes",
+    "feat2Desc": "Asigna piezas, aprueba trabajo y lleva el seguimiento de cada lote.",
+    "feat3Title": "Nómina y ganancias",
+    "feat3Desc": "Calcula comisiones, tarifas y liquidaciones para cada rol.",
+    "footer": "© 2026 Innovation Befine. Todos los derechos reservados."
+  },
   "employees": {
     "pageTitle": "Empleados",
     "createEmployee": "Crear empleado",
