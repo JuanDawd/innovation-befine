@@ -16,6 +16,7 @@
     "db:studio": "dotenv -e ../../.env.local -- drizzle-kit studio",
     "db:check": "dotenv -e ../../.env.local -- drizzle-kit check",
     "db:seed": "dotenv -e ../../.env.local -- node --import tsx/esm src/seed.ts",
+    "db:seed:analytics": "dotenv -e ../../.env.local -- node --import tsx/esm src/seed-analytics.ts --analytics",
     "lint": "eslint .",
     "format": "prettier --check .",
     "typecheck": "tsc --noEmit"

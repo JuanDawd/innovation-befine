@@ -530,7 +530,8 @@
     "colEarnings": "Earnings",
     "noEmployeeData": "No employee data for this period",
     "emptyTitle": "No revenue data yet",
-    "emptyDescription": "No revenue data for this period — close tickets to see daily totals"
+    "emptyDescription": "No revenue data for this period — close tickets to see daily totals",
+    "downloadCsv": "Download CSV"
   },
   "absences": {
     "pageTitle": "Absences & Vacation",

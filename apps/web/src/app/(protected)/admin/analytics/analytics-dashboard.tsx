@@ -28,10 +28,12 @@ import {
   ChevronDownIcon,
   ChevronUpIcon,
   Loader2Icon,
+  DownloadIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   getAnalyticsSummary,
+  getAnalyticsCsvData,
   getEmployeeDrillDown,
   type AnalyticsSummary,
   type EmployeeDrillDownResult,
@@ -345,6 +347,26 @@ export function AnalyticsDashboard({ initialData }: { initialData: AnalyticsSumm
   const [period, setPeriod] = useState<Period>(initialData.period);
   const [data, setData] = useState<AnalyticsSummary>(initialData);
   const [isPending, startTransition] = useTransition();
+  const [csvPending, setCsvPending] = useState(false);
+
+  async function downloadCsv() {
+    setCsvPending(true);
+    try {
+      const res = await getAnalyticsCsvData(period);
+      if (!res.success) return;
+      const blob = new Blob([res.data.csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = res.data.filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } finally {
+      setCsvPending(false);
+    }
+  }
 
   function switchPeriod(p: Period) {
     if (p === period) return;
@@ -360,22 +382,38 @@ export function AnalyticsDashboard({ initialData }: { initialData: AnalyticsSumm
 
   return (
     <div className="space-y-6 print:space-y-4">
-      {/* Period tabs */}
-      <div className="flex gap-1 rounded-lg border p-1 w-fit print:hidden">
-        {(["day", "week", "month"] as const).map((p) => (
-          <Button
-            key={p}
-            variant={period === p ? "default" : "ghost"}
-            size="sm"
-            onClick={() => switchPeriod(p)}
-            disabled={isPending}
-          >
-            {t(`period_${p}`)}
-          </Button>
-        ))}
-        {isPending && (
-          <Loader2Icon className="size-4 animate-spin self-center ml-1 text-muted-foreground" />
-        )}
+      {/* Period tabs + CSV download */}
+      <div className="flex flex-wrap items-center gap-2 print:hidden">
+        <div className="flex gap-1 rounded-lg border p-1 w-fit">
+          {(["day", "week", "month"] as const).map((p) => (
+            <Button
+              key={p}
+              variant={period === p ? "default" : "ghost"}
+              size="sm"
+              onClick={() => switchPeriod(p)}
+              disabled={isPending}
+            >
+              {t(`period_${p}`)}
+            </Button>
+          ))}
+          {isPending && (
+            <Loader2Icon className="size-4 animate-spin self-center ml-1 text-muted-foreground" />
+          )}
+        </div>
+
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={downloadCsv}
+          disabled={csvPending || isPending}
+        >
+          {csvPending ? (
+            <Loader2Icon className="size-4 animate-spin mr-1.5" aria-hidden="true" />
+          ) : (
+            <DownloadIcon className="size-4 mr-1.5" aria-hidden="true" />
+          )}
+          {t("downloadCsv")}
+        </Button>
       </div>
 
       {/* Empty state */}

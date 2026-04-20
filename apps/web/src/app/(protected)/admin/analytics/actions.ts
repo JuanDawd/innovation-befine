@@ -137,6 +137,49 @@ export async function getEmployeePerformance(
   return { success: true, data: rows };
 }
 
+// ─── CSV export (T076) ───────────────────────────────────────────────────────
+
+export async function getAnalyticsCsvData(
+  period: "day" | "week" | "month",
+): Promise<ActionResult<{ csv: string; filename: string }>> {
+  const guard = await requireAdmin();
+  if (!guard.ok)
+    return {
+      success: false,
+      error: {
+        code: guard.code,
+        message: guard.code === "UNAUTHORIZED" ? "No autenticado" : "Sin permisos",
+      },
+    };
+
+  const db = getDb();
+  const today = todayInBogota();
+  const { current } = await getBusinessDayIdsByPeriod(db, period, today);
+
+  const [revenue, earnings, daily] = await Promise.all([
+    revenueByPeriod(db, current),
+    earningsByEmployee(db, current),
+    dailyRevenueBreakdown(db, current),
+  ]);
+
+  const rows: string[] = [
+    "Fecha,Ingresos,Trabajos",
+    ...daily.map((d) => `${d.date},${d.revenue},${d.jobs}`),
+    "",
+    "Empleado,Rol,Ganancias",
+    ...earnings.map((e) => `${e.employeeName},${e.role},${e.totalEarnings}`),
+    "",
+    `Total ingresos,${revenue.totalRevenue}`,
+    `Total trabajos,${revenue.totalJobs}`,
+    `Total ganancias,${earnings.reduce((s, e) => s + e.totalEarnings, 0)}`,
+  ];
+
+  const periodLabel = today.slice(0, 7);
+  const filename = `innovation-befine-${periodLabel}-${period}.csv`;
+
+  return { success: true, data: { csv: rows.join("\n"), filename } };
+}
+
 // ─── Employee drill-down ──────────────────────────────────────────────────────
 
 export async function getEmployeeDrillDown(

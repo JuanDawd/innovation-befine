@@ -564,7 +564,8 @@
     "colEarnings": "Ganancias",
     "noEmployeeData": "Sin datos de empleados para este período",
     "emptyTitle": "Sin datos de ingresos",
-    "emptyDescription": "No hay ingresos para este período — cierra tickets para ver los totales"
+    "emptyDescription": "No hay ingresos para este período — cierra tickets para ver los totales",
+    "downloadCsv": "Descargar CSV"
   },
   "absences": {
     "pageTitle": "Ausencias y vacaciones",
