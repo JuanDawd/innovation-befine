@@ -13,6 +13,7 @@
 import { and, eq, inArray, or } from "drizzle-orm";
 import type { Database } from "@befine/db";
 import { businessDays, employees, employeeAbsences } from "@befine/db/schema";
+import { isoWeekKey } from "@/lib/dates";
 
 export type SecretaryEarningsResult = {
   employeeId: string;
@@ -22,16 +23,6 @@ export type SecretaryEarningsResult = {
   expectedWorkDays: number;
   totalEarnings: number;
 };
-
-/** Get ISO week number (Mon=1 baseline) */
-function isoWeekKey(dateStr: string): string {
-  const d = new Date(dateStr + "T12:00:00Z");
-  const day = d.getUTCDay() || 7; // Sun→7
-  d.setUTCDate(d.getUTCDate() + 4 - day);
-  const year = d.getUTCFullYear();
-  const week = Math.ceil(((d.getTime() - Date.UTC(year, 0, 1)) / 86400000 + 1) / 7);
-  return `${year}-W${String(week).padStart(2, "0")}`;
-}
 
 export async function computeSecretaryEarnings(
   db: Database,

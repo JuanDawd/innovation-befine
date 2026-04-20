@@ -48,10 +48,17 @@ export const NAV_ITEMS: Record<AppRole, NavItem[]> = {
     { key: "largeOrders", href: "/large-orders", icon: ShoppingBag },
     { key: "batches", href: "/secretary/batches", icon: Layers },
     { key: "appointments", href: "/secretary/appointments", icon: CalendarDays },
+    { key: "myEarnings", href: "/secretary/earnings", icon: Wallet },
     { key: "clients", href: "/secretary/clients", icon: Users, disabled: true },
   ],
-  stylist: [{ key: "myTickets", href: "/stylist", icon: ClipboardList }],
-  clothier: [{ key: "myWork", href: "/clothier", icon: Scissors }],
+  stylist: [
+    { key: "myTickets", href: "/stylist", icon: ClipboardList },
+    { key: "myEarnings", href: "/stylist/earnings", icon: Wallet },
+  ],
+  clothier: [
+    { key: "myWork", href: "/clothier", icon: Scissors },
+    { key: "myEarnings", href: "/clothier/earnings", icon: Wallet },
+  ],
 };
 
 /** Roles whose primary device is mobile — use bottom tab bar instead of sidebar */

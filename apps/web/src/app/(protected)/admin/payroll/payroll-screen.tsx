@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useTransition, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Loader2Icon, CheckIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,15 +18,17 @@ type Props = {
   days: BusinessDayOption[];
   employees: EmployeeOption[];
   history: PayoutRow[];
+  initialEmployeeId?: string;
 };
 
-export function PayrollScreen({ days, employees, history }: Props) {
+export function PayrollScreen({ days, employees, history, initialEmployeeId }: Props) {
   const t = useTranslations("payroll");
   const router = useRouter();
-  const sp = useSearchParams();
   const [isPending, startTransition] = useTransition();
+  // Stable idempotency key per preview session — refreshed after each successful record
+  const idempotencyKeyRef = useRef(crypto.randomUUID());
 
-  const [selectedEmployee, setSelectedEmployee] = useState(sp.get("employeeId") ?? "");
+  const [selectedEmployee, setSelectedEmployee] = useState(initialEmployeeId ?? "");
   const [selectedDays, setSelectedDays] = useState<Set<string>>(new Set());
   const [preview, setPreview] = useState<EarningsPreview | null>(null);
   const [adjustedAmount, setAdjustedAmount] = useState("");
@@ -74,6 +76,7 @@ export function PayrollScreen({ days, employees, history }: Props) {
         return;
       }
       const res = await recordPayout({
+        idempotencyKey: idempotencyKeyRef.current,
         employeeId: preview.employeeId,
         businessDayIds: preview.businessDayIds,
         amount: finalAmount,
@@ -92,6 +95,8 @@ export function PayrollScreen({ days, employees, history }: Props) {
       setAdjustedAmount("");
       setAdjustmentReason("");
       setNotes("");
+      // Rotate idempotency key so next payout gets a fresh one
+      idempotencyKeyRef.current = crypto.randomUUID();
       router.refresh();
     });
   }
@@ -108,10 +113,12 @@ export function PayrollScreen({ days, employees, history }: Props) {
         <select
           value={selectedEmployee}
           onChange={(e) => {
-            setSelectedEmployee(e.target.value);
+            const id = e.target.value;
+            setSelectedEmployee(id);
             setSelectedDays(new Set());
             setPreview(null);
             setSuccess(false);
+            router.push(id ? `/admin/payroll?employeeId=${id}` : "/admin/payroll");
           }}
           className="h-9 w-full max-w-xs rounded-md border border-input bg-transparent px-3 text-sm focus-visible:outline-none focus-visible:border-ring"
           aria-label={t("selectEmployee")}
@@ -354,7 +361,7 @@ export function PayrollScreen({ days, employees, history }: Props) {
                       })}
                     </td>
                     <td className="px-3 py-2 text-center text-xs text-muted-foreground">
-                      {p.periodBusinessDayIds.length}
+                      {p.periodDayCount}
                     </td>
                   </tr>
                 ))}

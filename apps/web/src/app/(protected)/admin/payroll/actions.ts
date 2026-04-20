@@ -19,7 +19,9 @@ import {
   employees,
   users,
   businessDays,
+  employeeAbsences,
   payouts,
+  payoutPeriodDays,
   payoutTicketItems,
   payoutBatchPieces,
   ticketItems,
@@ -31,6 +33,7 @@ import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
 import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
 import { revalidatePath } from "next/cache";
+import { recordPayoutSchema } from "@befine/types";
 import { computeStylistEarnings } from "@/lib/payroll/compute-stylist-earnings";
 import { computeClothierEarnings } from "@/lib/payroll/compute-clothier-earnings";
 import { computeSecretaryEarnings } from "@/lib/payroll/compute-secretary-earnings";
@@ -70,7 +73,7 @@ export type PayoutRow = {
   adjustmentReason: string | null;
   method: string;
   paidAt: Date;
-  periodBusinessDayIds: string[];
+  periodDayCount: number;
   notes: string | null;
   createdAt: Date;
 };
@@ -96,7 +99,9 @@ async function requireAdmin() {
 
 // ─── List closed business days ────────────────────────────────────────────────
 
-export async function listClosedBusinessDays(): Promise<ActionResult<BusinessDayOption[]>> {
+export async function listClosedBusinessDays(
+  employeeId?: string,
+): Promise<ActionResult<BusinessDayOption[]>> {
   const guard = await requireAdmin();
   if (!guard.ok)
     return {
@@ -114,9 +119,14 @@ export async function listClosedBusinessDays(): Promise<ActionResult<BusinessDay
     .where(not(sql`${businessDays.closedAt} IS NULL`))
     .orderBy(businessDays.openedAt);
 
-  // Get all settled business day IDs (already covered by a payout)
-  const settledRows = await db.select({ ids: payouts.periodBusinessDayIds }).from(payouts);
-  const settledIds = new Set(settledRows.flatMap((r) => r.ids));
+  // Get settled day IDs from the junction table — scoped to employee if provided
+  const settledQuery = db
+    .select({ businessDayId: payoutPeriodDays.businessDayId })
+    .from(payoutPeriodDays);
+  const settledRows = employeeId
+    ? await settledQuery.where(eq(payoutPeriodDays.employeeId, employeeId))
+    : await settledQuery;
+  const settledIds = new Set(settledRows.map((r) => r.businessDayId));
 
   return {
     success: true,
@@ -196,17 +206,9 @@ export async function previewEarnings(
   };
 }
 
-// ─── Record payout (T067 + T068 double-pay check) ────────────────────────────
+// ─── Record payout (T067 + T068 double-pay via junction unique constraint) ────
 
-export async function recordPayout(rawInput: {
-  employeeId: string;
-  businessDayIds: string[];
-  amount: number;
-  originalComputedAmount: number;
-  adjustmentReason?: string;
-  method: "cash" | "card" | "transfer";
-  notes?: string;
-}): Promise<ActionResult<{ id: string }>> {
+export async function recordPayout(rawInput: unknown): Promise<ActionResult<{ id: string }>> {
   const guard = await requireAdmin();
   if (!guard.ok)
     return {
@@ -224,13 +226,20 @@ export async function recordPayout(rawInput: {
       error: { code: "RATE_LIMITED", message: "Demasiadas solicitudes. Intenta de nuevo." },
     };
 
-  if (!rawInput.businessDayIds.length)
+  const parsed = recordPayoutSchema.safeParse(rawInput);
+  if (!parsed.success)
     return {
       success: false,
-      error: { code: "VALIDATION_ERROR", message: "Selecciona al menos un día laboral" },
+      error: {
+        code: "VALIDATION_ERROR",
+        message: "Datos inválidos",
+        details: parsed.error.issues.map((i) => ({ field: i.path.join("."), message: i.message })),
+      },
     };
 
-  if (rawInput.amount !== rawInput.originalComputedAmount && !rawInput.adjustmentReason?.trim())
+  const input = parsed.data;
+
+  if (input.amount !== input.originalComputedAmount && !input.adjustmentReason?.trim())
     return {
       success: false,
       error: {
@@ -248,100 +257,104 @@ export async function recordPayout(rawInput: {
   if (!adminEmp)
     return { success: false, error: { code: "NOT_FOUND", message: "Empleado no encontrado" } };
 
-  // T068: double-pay check — find any existing payout for this employee that covers any of the selected days
-  const existingPayouts = await db
-    .select({ id: payouts.id, periodBusinessDayIds: payouts.periodBusinessDayIds })
-    .from(payouts)
-    .where(eq(payouts.employeeId, rawInput.employeeId));
-
-  const conflictPayoutIds: string[] = [];
-  const conflictDayIds: string[] = [];
-
-  for (const existing of existingPayouts) {
-    const overlap = rawInput.businessDayIds.filter((id) =>
-      existing.periodBusinessDayIds.includes(id),
-    );
-    if (overlap.length > 0) {
-      conflictPayoutIds.push(existing.id);
-      conflictDayIds.push(...overlap);
-    }
-  }
-
-  if (conflictDayIds.length > 0)
-    return {
-      success: false,
-      error: {
-        code: "CONFLICT",
-        message: `Días ya liquidados: ${conflictDayIds.join(", ")}. Pagos previos: ${[...new Set(conflictPayoutIds)].join(", ")}`,
-      },
-    };
-
   const [emp] = await db
     .select({ id: employees.id, role: employees.role })
     .from(employees)
-    .where(eq(employees.id, rawInput.employeeId))
+    .where(eq(employees.id, input.employeeId))
     .limit(1);
   if (!emp)
     return { success: false, error: { code: "NOT_FOUND", message: "Empleado no encontrado" } };
 
   const txDb = getTxDb();
-  const payoutId = await txDb.transaction(async (tx) => {
-    const [payout] = await tx
-      .insert(payouts)
-      .values({
-        employeeId: rawInput.employeeId,
-        amount: rawInput.amount,
-        originalComputedAmount: rawInput.originalComputedAmount,
-        adjustmentReason: rawInput.adjustmentReason ?? null,
-        method: rawInput.method,
-        periodBusinessDayIds: rawInput.businessDayIds,
-        recordedBy: adminEmp.id,
-        notes: rawInput.notes ?? null,
-      })
-      .returning({ id: payouts.id });
+  let payoutId: string;
+  try {
+    payoutId = await txDb.transaction(async (tx) => {
+      // Idempotency: if this key already exists, return the existing payout
+      const [existing] = await tx
+        .select({ id: payouts.id })
+        .from(payouts)
+        .where(eq(payouts.idempotencyKey, input.idempotencyKey))
+        .limit(1);
+      if (existing) return existing.id;
 
-    // Link covered ticket items (stylists)
-    if (emp.role === "stylist") {
-      const items = await tx
-        .select({ id: ticketItems.id })
-        .from(ticketItems)
-        .innerJoin(tickets, eq(ticketItems.ticketId, tickets.id))
-        .where(
-          and(
-            eq(tickets.employeeId, rawInput.employeeId),
-            inArray(tickets.businessDayId, rawInput.businessDayIds),
-            eq(tickets.status, "closed"),
-          ),
-        );
-      if (items.length > 0) {
-        await tx
-          .insert(payoutTicketItems)
-          .values(items.map((item) => ({ payoutId: payout.id, ticketItemId: item.id })));
+      const [payout] = await tx
+        .insert(payouts)
+        .values({
+          idempotencyKey: input.idempotencyKey,
+          employeeId: input.employeeId,
+          amount: input.amount,
+          originalComputedAmount: input.originalComputedAmount,
+          adjustmentReason: input.adjustmentReason ?? null,
+          method: input.method,
+          recordedBy: adminEmp.id,
+          notes: input.notes ?? null,
+        })
+        .returning({ id: payouts.id });
+
+      // T068 + T07R-R1: insert period days — UNIQUE(employee_id, business_day_id) prevents
+      // double-pay at DB level; conflict throws and rolls back the entire transaction.
+      await tx.insert(payoutPeriodDays).values(
+        input.businessDayIds.map((dayId) => ({
+          payoutId: payout.id,
+          employeeId: input.employeeId,
+          businessDayId: dayId,
+        })),
+      );
+
+      // Link covered ticket items (stylists)
+      if (emp.role === "stylist") {
+        const items = await tx
+          .select({ id: ticketItems.id })
+          .from(ticketItems)
+          .innerJoin(tickets, eq(ticketItems.ticketId, tickets.id))
+          .where(
+            and(
+              eq(tickets.employeeId, input.employeeId),
+              inArray(tickets.businessDayId, input.businessDayIds),
+              eq(tickets.status, "closed"),
+            ),
+          );
+        if (items.length > 0)
+          await tx
+            .insert(payoutTicketItems)
+            .values(items.map((item) => ({ payoutId: payout.id, ticketItemId: item.id })));
       }
-    }
 
-    // Link covered batch pieces (clothiers)
-    if (emp.role === "clothier") {
-      const pieces = await tx
-        .select({ id: batchPieces.id })
-        .from(batchPieces)
-        .innerJoin(clothBatches, eq(batchPieces.batchId, clothBatches.id))
-        .where(
-          and(
-            eq(batchPieces.assignedToEmployeeId, rawInput.employeeId),
-            eq(batchPieces.status, "approved"),
-            inArray(clothBatches.businessDayId, rawInput.businessDayIds),
-          ),
-        );
-      if (pieces.length > 0) {
-        await tx
-          .insert(payoutBatchPieces)
-          .values(pieces.map((p) => ({ payoutId: payout.id, batchPieceId: p.id })));
+      // Link covered batch pieces (clothiers)
+      if (emp.role === "clothier") {
+        const pieces = await tx
+          .select({ id: batchPieces.id })
+          .from(batchPieces)
+          .innerJoin(clothBatches, eq(batchPieces.batchId, clothBatches.id))
+          .where(
+            and(
+              eq(batchPieces.assignedToEmployeeId, input.employeeId),
+              eq(batchPieces.status, "approved"),
+              inArray(clothBatches.businessDayId, input.businessDayIds),
+            ),
+          );
+        if (pieces.length > 0)
+          await tx
+            .insert(payoutBatchPieces)
+            .values(pieces.map((p) => ({ payoutId: payout.id, batchPieceId: p.id })));
       }
-    }
 
-    return payout.id;
-  });
+      return payout.id;
+    });
+  } catch (err) {
+    // Postgres unique violation on payout_period_days = double-pay attempt
+    const code = (err as { code?: string }).code;
+    if (code === "23505") {
+      return {
+        success: false,
+        error: {
+          code: "CONFLICT",
+          message: "Uno o más días seleccionados ya están liquidados para este empleado.",
+        },
+      };
+    }
+    throw err;
+  }
 
   revalidatePath("/admin/payroll");
   return { success: true, data: { id: payoutId } };
@@ -371,7 +384,6 @@ export async function listPayouts(employeeId?: string): Promise<ActionResult<Pay
       adjustmentReason: payouts.adjustmentReason,
       method: payouts.method,
       paidAt: payouts.paidAt,
-      periodBusinessDayIds: payouts.periodBusinessDayIds,
       notes: payouts.notes,
       createdAt: payouts.createdAt,
     })
@@ -381,7 +393,29 @@ export async function listPayouts(employeeId?: string): Promise<ActionResult<Pay
     .where(employeeId ? eq(payouts.employeeId, employeeId) : undefined)
     .orderBy(payouts.paidAt);
 
-  return { success: true, data: rows };
+  // Count covered days per payout from junction table
+  const dayCountRows = await db
+    .select({
+      payoutId: payoutPeriodDays.payoutId,
+      cnt: sql<number>`count(*)::int`,
+    })
+    .from(payoutPeriodDays)
+    .where(
+      rows.length > 0
+        ? inArray(
+            payoutPeriodDays.payoutId,
+            rows.map((r) => r.id),
+          )
+        : sql`false`,
+    )
+    .groupBy(payoutPeriodDays.payoutId);
+
+  const countMap = new Map(dayCountRows.map((r) => [r.payoutId, r.cnt]));
+
+  return {
+    success: true,
+    data: rows.map((r) => ({ ...r, periodDayCount: countMap.get(r.id) ?? 0 })),
+  };
 }
 
 // ─── Unsettled employees alert (T070) ────────────────────────────────────────
@@ -407,20 +441,23 @@ export async function getUnsettledEmployees(): Promise<ActionResult<UnsettledEmp
 
   if (!closedDays.length) return { success: true, data: [] };
 
-  // Settled day IDs per employee
-  const payoutRows = await db
-    .select({ employeeId: payouts.employeeId, periodBusinessDayIds: payouts.periodBusinessDayIds })
-    .from(payouts);
+  // Settled day IDs per employee from junction table (T07R-R3)
+  const periodRows = await db
+    .select({
+      employeeId: payoutPeriodDays.employeeId,
+      businessDayId: payoutPeriodDays.businessDayId,
+    })
+    .from(payoutPeriodDays);
 
   const settledMap = new Map<string, Set<string>>();
-  for (const p of payoutRows) {
+  for (const p of periodRows) {
     if (!settledMap.has(p.employeeId)) settledMap.set(p.employeeId, new Set());
-    for (const id of p.periodBusinessDayIds) settledMap.get(p.employeeId)!.add(id);
+    settledMap.get(p.employeeId)!.add(p.businessDayId);
   }
 
   const closedDayIds = closedDays.map((d) => d.id);
 
-  // Active employees
+  // Active employees (not admin)
   const empRows = await db
     .select({ id: employees.id, role: employees.role, name: users.name })
     .from(employees)
@@ -434,7 +471,6 @@ export async function getUnsettledEmployees(): Promise<ActionResult<UnsettledEmp
     let unsettledDays: typeof closedDays = [];
 
     if (emp.role === "stylist") {
-      // Has closed tickets in unsettled days?
       const workDays = await db
         .selectDistinct({ businessDayId: tickets.businessDayId })
         .from(tickets)
@@ -449,7 +485,6 @@ export async function getUnsettledEmployees(): Promise<ActionResult<UnsettledEmp
         (d) => workDays.some((w) => w.businessDayId === d.id) && !settled.has(d.id),
       );
     } else if (emp.role === "clothier") {
-      // Has approved pieces in unsettled days?
       const workDays = await db
         .selectDistinct({ businessDayId: clothBatches.businessDayId })
         .from(batchPieces)
@@ -465,8 +500,23 @@ export async function getUnsettledEmployees(): Promise<ActionResult<UnsettledEmp
         (d) => workDays.some((w) => w.businessDayId === d.id) && !settled.has(d.id),
       );
     } else {
-      // Secretary: any closed day they weren't absent is work
-      unsettledDays = closedDays.filter((d) => !settled.has(d.id));
+      // Secretary: closed days not yet settled, excluding vacation + approved_absence (T07R-R4)
+      const dateStrings = closedDays.map((d) => new Date(d.openedAt).toISOString().slice(0, 10));
+      const absenceRows = await db
+        .select({ date: employeeAbsences.date })
+        .from(employeeAbsences)
+        .where(
+          and(
+            eq(employeeAbsences.employeeId, emp.id),
+            inArray(employeeAbsences.date, dateStrings),
+            sql`${employeeAbsences.type} IN ('vacation', 'approved_absence')`,
+          ),
+        );
+      const excludedDates = new Set(absenceRows.map((a) => a.date));
+      unsettledDays = closedDays.filter((d) => {
+        const dateStr = new Date(d.openedAt).toISOString().slice(0, 10);
+        return !settled.has(d.id) && !excludedDates.has(dateStr);
+      });
     }
 
     if (unsettledDays.length > 0) {
@@ -515,20 +565,29 @@ export async function getMyEarnings(): Promise<ActionResult<MyEarningsSummary>> 
   if (!emp || !emp.showEarnings)
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
 
-  // Fetch recent closed business days — today, this week, this month
-  const now = new Date();
-  const todayStr = now.toISOString().slice(0, 10);
-  const weekStart = new Date(now);
-  weekStart.setDate(now.getDate() - now.getDay());
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  // Fetch recent closed business days — today, this week (ISO Mon), this month
+  // All boundaries anchored to America/Bogota to match the business day (T07R-R7)
+  const { todayInBogota, isoWeekStartInBogota, monthStartInBogota } = await import("@/lib/dates");
+  const todayStr = todayInBogota();
+  const weekStart = isoWeekStartInBogota();
+  const monthStart = monthStartInBogota();
 
   const closedDays = await db
     .select({ id: businessDays.id, openedAt: businessDays.openedAt })
     .from(businessDays)
     .where(not(sql`${businessDays.closedAt} IS NULL`));
 
+  // T07R-R6: exclude already-paid days from summaries
+  const paidDayRows = await db
+    .select({ businessDayId: payoutPeriodDays.businessDayId })
+    .from(payoutPeriodDays)
+    .where(eq(payoutPeriodDays.employeeId, emp.id));
+  const paidDayIds = new Set(paidDayRows.map((r) => r.businessDayId));
+
   function filterDays(from: Date) {
-    return closedDays.filter((d) => new Date(d.openedAt) >= from).map((d) => d.id);
+    return closedDays
+      .filter((d) => new Date(d.openedAt) >= from && !paidDayIds.has(d.id))
+      .map((d) => d.id);
   }
 
   const todayDays = filterDays(new Date(todayStr));
@@ -579,7 +638,6 @@ export async function getMyEarnings(): Promise<ActionResult<MyEarningsSummary>> 
       adjustmentReason: payouts.adjustmentReason,
       method: payouts.method,
       paidAt: payouts.paidAt,
-      periodBusinessDayIds: payouts.periodBusinessDayIds,
       notes: payouts.notes,
       createdAt: payouts.createdAt,
     })
@@ -589,8 +647,28 @@ export async function getMyEarnings(): Promise<ActionResult<MyEarningsSummary>> 
     .where(eq(payouts.employeeId, emp.id))
     .orderBy(payouts.paidAt);
 
+  // Day counts per payout
+  const dayCounts = await db
+    .select({ payoutId: payoutPeriodDays.payoutId, cnt: sql<number>`count(*)::int` })
+    .from(payoutPeriodDays)
+    .where(
+      history.length > 0
+        ? inArray(
+            payoutPeriodDays.payoutId,
+            history.map((h) => h.id),
+          )
+        : sql`false`,
+    )
+    .groupBy(payoutPeriodDays.payoutId);
+  const dayCountMap = new Map(dayCounts.map((r) => [r.payoutId, r.cnt]));
+
   return {
     success: true,
-    data: { today: todayAmt, thisWeek: weekAmt, thisMonth: monthAmt, payoutHistory: history },
+    data: {
+      today: todayAmt,
+      thisWeek: weekAmt,
+      thisMonth: monthAmt,
+      payoutHistory: history.map((h) => ({ ...h, periodDayCount: dayCountMap.get(h.id) ?? 0 })),
+    },
   };
 }

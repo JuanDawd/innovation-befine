@@ -4,14 +4,20 @@ import { PayrollScreen } from "./payroll-screen";
 import { UnsettledAlert } from "./unsettled-alert";
 import { listActiveEmployeesForAbsence } from "../absences/actions";
 
-export default async function PayrollPage() {
+export default async function PayrollPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ employeeId?: string }>;
+}) {
   const t = await getTranslations("payroll");
+  const sp = await searchParams;
+  const employeeId = sp.employeeId;
 
   const [daysResult, employeesResult, unsettledResult, historyResult] = await Promise.all([
-    listClosedBusinessDays(),
+    listClosedBusinessDays(employeeId),
     listActiveEmployeesForAbsence(),
     getUnsettledEmployees(),
-    listPayouts(),
+    listPayouts(employeeId),
   ]);
 
   const days = daysResult.success ? daysResult.data : [];
@@ -23,7 +29,12 @@ export default async function PayrollPage() {
     <div className="space-y-6">
       <h1 className="text-4xl font-bold">{t("pageTitle")}</h1>
       <UnsettledAlert unsettled={unsettled} />
-      <PayrollScreen days={days} employees={employees} history={history} />
+      <PayrollScreen
+        days={days}
+        employees={employees}
+        history={history}
+        initialEmployeeId={employeeId}
+      />
     </div>
   );
 }

@@ -38,4 +38,4 @@ export { batchPieceStatusEnum, claimSourceEnum, clothBatches, batchPieces } from
 export { appointmentStatusEnum, appointments } from "./appointments";
 export { largeOrderStatusEnum, largeOrders, largeOrderPayments } from "./large-orders";
 export { absenceTypeEnum, employeeAbsences } from "./absences";
-export { payouts, payoutTicketItems, payoutBatchPieces } from "./payouts";
+export { payouts, payoutPeriodDays, payoutTicketItems, payoutBatchPieces } from "./payouts";

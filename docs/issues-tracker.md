@@ -116,6 +116,46 @@
 
 ---
 
+### C-12 — `recordPayout` double-pay check is outside the transaction (race condition)
+
+- **Severity:** Critical
+- **Status:** Open
+- **Affected:** T067, T068 (`apps/web/src/app/(protected)/admin/payroll/actions.ts:252–344`)
+- **Description:** The T068 conflict scan (`for (const existing of existingPayouts)`) runs against `getDb()` BEFORE `txDb.transaction(...)`. Two admins clicking "Confirm" within the same window for the same employee + business days both pass the check, then both insert payouts that overlap. The `payouts` table has no unique constraint on `(employee_id, period_business_day_ids[])`, no `version` column, and no `SELECT … FOR UPDATE` on a parent row. CLAUDE.md mandates either optimistic locking or `SELECT … FOR UPDATE` for every concurrent financial mutation. Result: a stylist can be paid twice for the same closed business day with no DB-level guard.
+- **Fix:** Move the conflict check inside `txDb.transaction(...)` and add a guard that locks the relevant rows: either (a) `SELECT id, period_business_day_ids FROM payouts WHERE employee_id = $1 FOR UPDATE` followed by the in-tx overlap check, or (b) introduce a `payout_period_days(payout_id, business_day_id, employee_id)` junction table with `UNIQUE(employee_id, business_day_id)` and replace the `period_business_day_ids` array with rows in this table — the unique index then physically prevents double-pay even under concurrency. Option (b) is preferable because it removes the array-scan in `getUnsettledEmployees` and `getUnsettledPeriodsForEmployee` too.
+
+---
+
+### C-13 — `payouts` is missing `idempotency_key` (financial mutation guarantee broken)
+
+- **Severity:** Critical
+- **Status:** Open
+- **Affected:** T066, T067 (`packages/db/src/schema/payouts.ts`, `apps/web/src/app/(protected)/admin/payroll/actions.ts`)
+- **Description:** CLAUDE.md "Financial mutations — mandatory checklist" requires every money-movement mutation to include a client-generated `idempotency_key` UUID with a unique constraint, and to use `INSERT … ON CONFLICT (idempotency_key) DO NOTHING RETURNING *`. The `payouts` table has no such column; `recordPayout` accepts no key from the client. Any retry — accidental double-click during loading, network retry, fast-mode replay — silently creates a duplicate payout (which then also tricks T068 because the second `recordPayout` call computes its check before the first row is committed). This is the same class of bug we fixed for `processCheckout` in T04R-R3.
+- **Fix:** Add `idempotency_key uuid NOT NULL UNIQUE` to the `payouts` schema (migration), generate a UUID on the client when the user opens the preview screen, pass it through `recordPayout`, and use the conflict-aware insert pattern. Refetch and return the existing payout when the conflict fires (same shape as T04R-R3).
+
+---
+
+### C-14 — `getUnsettledPeriodsForEmployee` blocks deactivation for every employee, always
+
+- **Severity:** Critical
+- **Status:** Open
+- **Affected:** T022b (`apps/web/src/app/(protected)/admin/employees/actions/update-employee.ts:220–241`)
+- **Description:** The function returns "every closed business day not covered by a payout for this employee" — but it never checks whether the employee actually worked on those days. So a stylist hired yesterday is treated as having unsettled earnings for every closed business day in the company's history. T022b's third AC ("Deactivation with no outstanding earnings proceeds immediately — no change to T022a flow") is unreachable for any employee unless every previous business day has been paid out for them, which is structurally impossible. Worse, `terminateEmployee` (line 283) inherits the same overcounted set: the termination payout's `period_business_day_ids` includes days the employee never worked, corrupting the audit trail and pre-blocking those days from being paid out to the same employee in the unlikely-but-possible re-hire scenario.
+- **Fix:** Replace the "every closed day not in a payout" rule with role-aware detection: stylist → distinct `tickets.business_day_id` for closed tickets owned by employee not yet covered; clothier → distinct `cloth_batches.business_day_id` for approved pieces assigned to employee not yet covered; secretary → closed business days within hire/termination window minus vacation/approved_absence absences not yet covered. The same logic already exists (correctly, for stylist + clothier; incorrectly, for secretary — see C-15) inside `getUnsettledEmployees` — extract it into a shared helper and reuse from both call sites.
+
+---
+
+### C-15 — Secretary unsettled detection in `getUnsettledEmployees` ignores absences
+
+- **Severity:** Critical
+- **Status:** Open
+- **Affected:** T070, T065 (`apps/web/src/app/(protected)/admin/payroll/actions.ts:467–470`)
+- **Description:** For secretaries the alert logic is `unsettledDays = closedDays.filter((d) => !settled.has(d.id))` — every closed business day that is not yet covered by a payout is treated as unsettled, regardless of whether the secretary was on vacation/approved_absence on that day. T065 explicitly excludes vacation + approved_absence from the daysWorked count. Result: the unsettled alert always lists secretaries with day counts higher than what `previewEarnings` will actually compute, and admins are pushed to "liquidate" days that compute to $0 work. This also drives part of C-14: the deactivation guard inherits the same wrong inclusion.
+- **Fix:** Mirror T065's exclusion in the secretary branch of `getUnsettledEmployees`: pull `employee_absences` rows for the employee and filter out dates where `type IN ('vacation','approved_absence')`. Same fix needs to be reflected in the C-14 helper.
+
+---
+
 ## High-priority issues
 
 ### H-01 — Phase 0 scope inflation
@@ -213,6 +253,66 @@
 - **Affected:** T005 (Neon setup), T019 (business day open)
 - **Description:** Neon's free tier auto-suspends after inactivity, causing the first query to take slightly longer. For a POS system, the first transaction of the business day (opening the day) could experience a noticeable delay with no user feedback.
 - **Fix:** Added loading state to T019 "Open Day" action. Added "Cold Start Mitigation" section to `docs/research/postgres-providers.md` documenting the chosen approach and alternatives.
+
+---
+
+### H-28 — `recordPayout` skips Zod validation despite handling money
+
+- **Severity:** High
+- **Status:** Open
+- **Affected:** T067 (`apps/web/src/app/(protected)/admin/payroll/actions.ts:201–348`)
+- **Description:** CLAUDE.md "Every server action validates input with a Zod schema before business logic" is unconditional. `recordPayout` accepts a typed object literal, performs only spot checks (`businessDayIds.length`, `amount !== originalComputedAmount` requires reason, `amount < 0` is checked client-side only), and trusts the rest. There is no `payouts` schema in `packages/types/src/schemas/`, so `employeeId` and the day IDs aren't validated as UUIDs, `amount` and `originalComputedAmount` aren't bounded as integers, `notes`/`adjustmentReason` have no max length, and `method` isn't enforced server-side beyond the TS union (which strips at runtime). `terminateEmployee` has the same shape (no Zod, hand-rolled spot checks). For a financial mutation this is a regression of the standard the rest of Phase 4–6 already meets.
+- **Fix:** Create `packages/types/src/schemas/payout.ts` exporting `recordPayoutSchema` and `terminateEmployeeSchema` (uuid IDs, `int().nonnegative()` for money, max-length text, enum for method, idempotency_key after C-13). Replace the typed parameters with `unknown` + `safeParse` in both server actions, returning `VALIDATION_ERROR` with field-level details on failure.
+
+---
+
+### H-29 — `getMyEarnings` exposes already-paid earnings as if unpaid
+
+- **Severity:** High
+- **Status:** Open
+- **Affected:** T069 (`apps/web/src/app/(protected)/admin/payroll/actions.ts:499–596`, `apps/web/src/components/my-earnings-view.tsx`)
+- **Description:** "My earnings — today / this week / this month" calls `computeStylistEarnings` / `computeClothierEarnings` / `computeSecretaryEarnings` over the period's closed business days without checking whether those days have been settled by a prior payout. After a payout is recorded, the same earnings continue to show up under "this week" / "this month" — so the employee sees the same money twice (once in the dashboard, once in the payout history below). T069 ACs: "shows total earned today/this week/this month; breakdown by job/piece; payout history (what has been paid)" — the dashboard half must reflect what's still owed, not lifetime totals over the period.
+- **Fix:** When computing the three summary cards, exclude business_day_ids already covered by any payout for this employee (same pattern as the admin payroll preview). Surface the payout history below as the source of truth for "paid" amounts. Add a unit test ensuring computed today/week/month drop after a payout is recorded.
+
+---
+
+### H-30 — `getMyEarnings` and `previewEarnings` use mismatched week boundaries
+
+- **Severity:** High
+- **Status:** Open
+- **Affected:** T065, T069 (`apps/web/src/app/(protected)/admin/payroll/actions.ts:520–522`, `apps/web/src/lib/payroll/compute-secretary-earnings.ts:27–34`)
+- **Description:** `getMyEarnings` defines "this week" as `now - now.getDay()` (Sunday-baseline, Bogota TZ ignored — uses server UTC). `computeSecretaryEarnings` keys by ISO weeks (Monday-baseline). For a Sunday viewer, "this week" includes only Sunday under the dashboard but the secretary cap applies under the previous ISO week — so a part-time secretary's "this week" earnings can disagree with what the admin sees in payroll preview for the same range. Same applies to all roles via the day filter being inclusive vs exclusive at midnight UTC instead of Bogota.
+- **Fix:** Centralize week-boundary helpers in one place (`lib/dates.ts`) anchored to America/Bogota and ISO week (Monday). Use the same helper for the dashboard summaries and the secretary computation. Same applies to `today` (currently `new Date().toISOString().slice(0,10)` which is UTC, not Bogota — late-night POS sessions can show "today $0" while the cashier is still on the same business day).
+
+---
+
+### H-31 — T022b termination has no UI flow
+
+- **Severity:** High
+- **Status:** Open
+- **Affected:** T022b (`apps/web/src/components/employee-list.tsx`)
+- **Description:** T022b AC requires a UI flow: "enter termination amount → create payout record → deactivate account (all in one transaction)". The server action `terminateEmployee` exists and does the right thing transactionally (apart from the input validation gap in H-28), but the only UI button in `employee-list.tsx` is `handleDeactivate` calling `deactivateEmployee`. When that returns `CONFLICT`, the admin is told "use the termination option" — but no termination option exists in the UI. The entire feature is dead code from an end-user perspective.
+- **Fix:** When `deactivateEmployee` returns `CONFLICT`, open a Termination Dialog showing the unsettled day count, the system-computed termination amount (call `previewEarnings` for the unsettled days), an editable amount field, a method selector, a required reason field, and a destructive Confirm button that calls `terminateEmployee`. Reuse the existing `ConfirmationDialog` pattern from Phase 6R for consistency.
+
+---
+
+### H-32 — Phase 7 financial logic has zero real unit tests
+
+- **Severity:** High
+- **Status:** Open
+- **Affected:** T063, T064, T065, T067, T068 (`apps/web/src/lib/payroll/__tests__/earnings.test.ts`)
+- **Description:** The 23 tests in `earnings.test.ts` reimplement the helper functions inline (`computeStylistItemEarnings`, `computeSecretaryDays`, `bankersRound`, `isoWeekKey`) and assert on those local copies — they never import the real `computeStylistEarnings`, `computeClothierEarnings`, or `computeSecretaryEarnings` from `apps/web/src/lib/payroll/*.ts`. So the production query logic, the `needs_review` exclusion, the `approved`-only filter, the `overridePrice ?? unitPrice` fallback, the dailyRate-null guard, the empty-businessDayIds short circuit, and the database join shape are all untested. Additionally, T068's double-pay check, the role-gate path, the rate-limit path, and the adjustment-reason validation have no tests at all. CLAUDE.md "Earnings computation… commission… status transitions… permission checks… double-pay prevention… financial data integrity" lists every Phase 7 function as **mandatory** unit-test coverage, plus 80% threshold for `packages/db/src/queries/`.
+- **Fix:** Replace the inline reimplementations with imports from the real modules. Add a test harness (in-memory pglite or Drizzle's `pg-mock` against a transaction-rolled-back fixture) so the real functions can be exercised. Cover at minimum: (a) stylist with reopen/needs_review excluded, (b) clothier with done_pending_approval excluded, (c) secretary with vacation excluded but missed counted, (d) secretary part-time cap per week, (e) `recordPayout` double-pay rejection, (f) `recordPayout` requires `adjustmentReason` when `amount !== originalComputedAmount`, (g) role-gate FORBIDDEN paths.
+
+---
+
+### H-33 — Earnings views are unreachable from navigation
+
+- **Severity:** High
+- **Status:** Open
+- **Affected:** T069 (`apps/web/src/components/nav-config.ts`)
+- **Description:** `/stylist/earnings`, `/clothier/earnings`, `/secretary/earnings` exist as routes and the page components mount `MyEarningsView`, but `NAV_ITEMS` for these three roles has no entry pointing to them. Stylist nav has only "myTickets"; clothier has only "myWork"; secretary has dashboard/largeOrders/batches/appointments. Employees with `show_earnings = true` cannot discover their own earnings page. T069 AC: "Build the 'My earnings' screen for stylists, clothiers, and secretaries" — implicitly requires it to be reachable.
+- **Fix:** Add a conditional nav entry per role pointing to `/{role}/earnings`. Visibility should respect `employees.show_earnings` — fetch the flag in the layout that builds the nav (or hide the link until the flag is true on the server). On mobile (stylist + clothier) add as second tab in the bottom bar.
 
 ---
 
@@ -417,6 +517,46 @@
 - **Affected:** T109 (price-change acknowledge)
 - **Description:** Per CLAUDE.md "General mutations: 60/min per user", every server-action mutation should call `checkRateLimit(rateLimits.general, userId)` before doing work. `acknowledgeAppointmentPriceChange` (in `apps/web/src/app/(protected)/appointments/actions.ts`) is missing this guard, while sibling actions (`createAppointment`, `transitionAppointment`) include it. A logged-in user could pound the action in a loop and bypass the project-wide cap.
 - **Fix:** Add the standard rate-limit block to `acknowledgeAppointmentPriceChange`. Tracked as T05R-R6.
+
+---
+
+### M-36 — `recordPayout` returns existing payout history scoped to all employees, not the selected one
+
+- **Severity:** Medium
+- **Status:** Open
+- **Affected:** T067 (`apps/web/src/app/(protected)/admin/payroll/page.tsx:14`)
+- **Description:** `PayrollPage` calls `listPayouts()` with no `employeeId`, so the history table at the bottom of `PayrollScreen` shows every payout for every employee even after the admin has selected a specific employee in the "Liquidate" flow. The action signature already supports filtering (`listPayouts(employeeId?)`), and the URL query string carries `?employeeId=` after a click in `UnsettledAlert`. Behaviorally the screen is functional but the history table becomes noisy in production.
+- **Fix:** Read `searchParams.employeeId` in `page.tsx` and pass it to `listPayouts()`. Optionally add an employee filter dropdown above the history table for ad-hoc filtering.
+
+---
+
+### M-37 — `listClosedBusinessDays` flattens settled-day check across all employees
+
+- **Severity:** Medium
+- **Status:** Open
+- **Affected:** T067 (`apps/web/src/app/(protected)/admin/payroll/actions.ts:117–119`)
+- **Description:** `isSettled` is computed as `settledIds.has(r.id)` where `settledIds` aggregates **every** payout's day IDs across **every** employee. So once any employee has been paid for business day X, the day disappears from the unsettled-days picker for every other employee — the admin can never select that day to pay a different employee for the same day. The screen does have a "settledDaysNote" but the days are not selectable. Functionally this means: if the secretary is paid first for the week, none of the stylists or clothiers can be paid for the same week.
+- **Fix:** Make `listClosedBusinessDays` accept the selected `employeeId` and compute settled-ness scoped to that employee only. Move the call from `page.tsx` (which has no employee context) into `payroll-screen.tsx` using a server-action call inside a `useEffect` after the employee is selected, or use `searchParams.employeeId` and re-render with the right list per employee.
+
+---
+
+### M-38 — Hardcoded Spanish day-of-week labels bypass i18n
+
+- **Severity:** Medium
+- **Status:** Open
+- **Affected:** T021 (`apps/web/src/app/(protected)/admin/absences/absence-calendar.tsx:23`)
+- **Description:** `const DAYS_OF_WEEK = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"]` is hardcoded Spanish, breaking the i18n contract. With the English locale active, the calendar header still renders in Spanish.
+- **Fix:** Either pull the labels from `next-intl` (`t("absences.dayLabels.0")` … `t("absences.dayLabels.6")`) or compute them from `Intl.DateTimeFormat(locale, { weekday: "short" })` driven by `useLocale()`.
+
+---
+
+### M-39 — `editEmployee` returns role/dailyRate updates without optimistic lock
+
+- **Severity:** Medium
+- **Status:** Open
+- **Affected:** T014, T065 (`apps/web/src/app/(protected)/admin/employees/actions/update-employee.ts:35–119`)
+- **Description:** Two admins editing the same employee concurrently can clobber each other's changes — `editEmployee` simply does `UPDATE employees SET … WHERE id = $1` with no `version` column or last-write-wins safeguard. For a row whose `dailyRate` and `expectedWorkDays` directly drive payroll, a stale write produces silently wrong settlements. The same call also updates `users.name` and `auth.api.setRole` outside any transaction — if the auth role update fails the employee row is already changed.
+- **Fix:** Add `version` to the `employees` table (if not present), include `WHERE id = $1 AND version = $expected` in the `UPDATE`, return `STALE_DATA` on zero-row update. Wrap the three writes (employees update, users name update, auth role update) into a single sequence with a try/rollback semantic — auth.api.setRole isn't transactional, so capture the prior role and restore on failure.
 
 ---
 
@@ -872,6 +1012,36 @@
 - **Affected:** T059
 - **Description:** CLAUDE.md: "Destructive actions require a `ConfirmationDialog` before executing." The current cancel flow shows a secondary button that reveals an inline reason input next to a red Cancel button. There is no modal, no summary of consequences, no typed-to-confirm pattern. Click-through velocity is high. Related to H-27 but tracked separately because even orders with no deposits should get a confirmation.
 - **Fix:** Wrap the cancel action in the shared `ConfirmationDialog` primitive. The dialog owns the reason input and the destructive confirm button. Tracked as T06R-R12.
+
+---
+
+### L-30 — `MyEarningsView` empty state only triggers on empty payout history
+
+- **Severity:** Low
+- **Status:** Open
+- **Affected:** T069 (`apps/web/src/components/my-earnings-view.tsx:38`)
+- **Description:** T069 AC explicitly: "Empty state shown when no earnings exist for the period (message: 'No earnings recorded for this period')". The component only shows the empty state when `payoutHistory.length === 0` — but a brand-new employee with $0 today/week/month and no payouts shows the message; an established employee viewing their first slow week sees three "$0" cards with no contextual message and no payout history block at all. Mismatch with AC wording.
+- **Fix:** Render the empty-state line when `today === 0 && thisWeek === 0 && thisMonth === 0 && payoutHistory.length === 0` — but also when the period summaries are zero, regardless of history, surface a softer "Sin movimientos en este período" line above the cards.
+
+---
+
+### L-31 — Mobile "Add absence" button defaults to today, allows future-dated entries silently
+
+- **Severity:** Low
+- **Status:** Open
+- **Affected:** T021 (`apps/web/src/app/(protected)/admin/absences/absence-calendar.tsx:202–207`)
+- **Description:** On mobile, tapping "Registrar ausencia" sets `selectedDate = new Date().toISOString().slice(0, 10)`. The form then accepts any employee + type and saves the absence for today regardless of which month is currently in view. There's no date picker — the admin has to know to navigate to today first. Worse, since absences accept future dates without warning, an admin can pre-load vacation days but the UI gives no signal that it's intentional vs accidental.
+- **Fix:** On mobile, swap the inline form for a sheet/drawer with an explicit `<input type="date">` defaulted to "today in Bogota" but freely editable. On desktop, keep click-on-cell as the date picker (current UX is fine there).
+
+---
+
+### L-32 — `payouts.period_business_day_ids` array prevents efficient unsettled queries
+
+- **Severity:** Low
+- **Status:** Open
+- **Affected:** T066 (`packages/db/src/schema/payouts.ts:31`)
+- **Description:** Storing covered days as `uuid[]` requires every "is this day settled?" check to either (a) load every payout into memory and `flatMap` (current code in `listClosedBusinessDays`, `getUnsettledEmployees`, `getUnsettledPeriodsForEmployee`) or (b) write a `ANY(period_business_day_ids)` query that can't use a normal B-tree index. As payout volume grows, all three call sites become O(payouts × closedDays). Resolved together with C-12 if the suggested junction table approach is taken.
+- **Fix:** When fixing C-12, prefer a `payout_period_days(payout_id, business_day_id, employee_id)` table with `UNIQUE(employee_id, business_day_id)` plus indexes on each FK. Drop `period_business_day_ids` from `payouts`.
 
 ---
 

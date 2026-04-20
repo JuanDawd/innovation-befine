@@ -42,6 +42,12 @@ export {
   type TransitionAppointmentInput,
 } from "./schemas/appointment";
 export {
+  recordPayoutSchema,
+  terminateEmployeeSchema,
+  type RecordPayoutInput,
+  type TerminateEmployeeInput,
+} from "./schemas/payout";
+export {
   logAbsenceSchema,
   deleteAbsenceSchema,
   type LogAbsenceInput,
