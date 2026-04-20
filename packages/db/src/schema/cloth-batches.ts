@@ -1,4 +1,4 @@
-import { pgEnum, pgTable, uuid, text, timestamp, integer } from "drizzle-orm/pg-core";
+import { pgEnum, pgTable, uuid, text, timestamp, integer, index } from "drizzle-orm/pg-core";
 import { businessDays } from "./business-days";
 import { employees } from "./employees";
 import { clothPieces } from "./cloth-pieces";
@@ -35,23 +35,32 @@ export const clothBatches = pgTable("cloth_batches", {
  * One row per cloth piece within a batch. Tracks assignment, self-claim, and approval.
  * Uses optimistic locking (version) to prevent two clothiers claiming the same piece.
  */
-export const batchPieces = pgTable("batch_pieces", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  batchId: uuid("batch_id")
-    .notNull()
-    .references(() => clothBatches.id, { onDelete: "restrict" }),
-  clothPieceId: uuid("cloth_piece_id")
-    .notNull()
-    .references(() => clothPieces.id, { onDelete: "restrict" }),
-  assignedToEmployeeId: uuid("assigned_to_employee_id").references(() => employees.id, {
-    onDelete: "restrict",
-  }),
-  claimSource: claimSourceEnum("claim_source"),
-  claimedAt: timestamp("claimed_at", { withTimezone: true }),
-  status: batchPieceStatusEnum("status").notNull().default("pending"),
-  completedAt: timestamp("completed_at", { withTimezone: true }),
-  approvedAt: timestamp("approved_at", { withTimezone: true }),
-  approvedBy: uuid("approved_by").references(() => employees.id, { onDelete: "restrict" }),
-  version: integer("version").notNull().default(1),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+export const batchPieces = pgTable(
+  "batch_pieces",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    batchId: uuid("batch_id")
+      .notNull()
+      .references(() => clothBatches.id, { onDelete: "restrict" }),
+    clothPieceId: uuid("cloth_piece_id")
+      .notNull()
+      .references(() => clothPieces.id, { onDelete: "restrict" }),
+    assignedToEmployeeId: uuid("assigned_to_employee_id").references(() => employees.id, {
+      onDelete: "restrict",
+    }),
+    claimSource: claimSourceEnum("claim_source"),
+    claimedAt: timestamp("claimed_at", { withTimezone: true }),
+    status: batchPieceStatusEnum("status").notNull().default("pending"),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    approvedAt: timestamp("approved_at", { withTimezone: true }),
+    approvedBy: uuid("approved_by").references(() => employees.id, { onDelete: "restrict" }),
+    version: integer("version").notNull().default(1),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    // T075: analytics — covers clothier earnings query filtering by status + employee
+    index("idx_batch_pieces_employee_status").on(t.assignedToEmployeeId, t.status),
+    // T075: analytics — covers JOIN from cloth_batches to batch_pieces
+    index("idx_batch_pieces_batch_id").on(t.batchId),
+  ],
+);

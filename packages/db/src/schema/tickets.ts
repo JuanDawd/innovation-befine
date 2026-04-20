@@ -8,6 +8,7 @@ import {
   timestamp,
   integer,
   check,
+  index,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { employees } from "./employees";
@@ -79,5 +80,9 @@ export const tickets = pgTable(
       "chk_tickets_client_or_guest",
       sql`${t.clientId} IS NOT NULL OR (${t.guestName} IS NOT NULL AND ${t.guestName} <> '')`,
     ),
+    // T075: analytics — covers revenueByPeriod, jobsCountByEmployee, dailyRevenueBreakdown
+    index("idx_tickets_business_day_status").on(t.businessDayId, t.status),
+    // T075: analytics — covers per-employee drill-down
+    index("idx_tickets_employee_status").on(t.employeeId, t.status),
   ],
 );

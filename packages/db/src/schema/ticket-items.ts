@@ -7,6 +7,7 @@ import {
   text,
   timestamp,
   check,
+  index,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { tickets } from "./tickets";
@@ -52,5 +53,7 @@ export const ticketItems = pgTable(
       "chk_ticket_items_override_reason",
       sql`${t.overridePrice} IS NULL OR (${t.overrideReason} IS NOT NULL AND ${t.overrideReason} <> '')`,
     ),
+    // T075: analytics — covers JOIN from tickets to ticket_items in revenue queries
+    index("idx_ticket_items_ticket_id").on(t.ticketId),
   ],
 );
