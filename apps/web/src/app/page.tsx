@@ -32,7 +32,7 @@ export default async function LandingPage() {
       {/* ── Ambient geometry ── */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -top-40 -right-40 h-[600px] w-[600px] rounded-full opacity-20"
+        className="pointer-events-none absolute -top-40 -right-40 h-150 w-150 rounded-full opacity-20"
         style={{ background: "radial-gradient(circle at center,#8B3A62 0%,transparent 70%)" }}
       />
       <div

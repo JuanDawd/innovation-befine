@@ -23,6 +23,7 @@
     "@befine/realtime": "workspace:*",
     "@befine/types": "workspace:*",
     "@better-fetch/fetch": "^1.1.21",
+    "@ducanh2912/next-pwa": "^10.2.9",
     "@hookform/resolvers": "^5.2.2",
     "@react-email/components": "^1.0.12",
     "@sentry/nextjs": "^10.48.0",
