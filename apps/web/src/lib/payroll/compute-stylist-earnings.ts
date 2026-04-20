@@ -35,8 +35,8 @@ export type StylistEarningsResult = {
   lines: (StylistEarningsLine | StylistEarningsExcludedLine)[];
 };
 
-/** Banker's rounding (round half-even) */
-function bankersRound(n: number): number {
+/** Banker's rounding (round half-even) — exported for unit tests */
+export function bankersRound(n: number): number {
   const floor = Math.floor(n);
   const frac = n - floor;
   if (Math.abs(frac - 0.5) > Number.EPSILON) return Math.round(n);
