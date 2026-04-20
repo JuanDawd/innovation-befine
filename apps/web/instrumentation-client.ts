@@ -13,31 +13,29 @@ function scrubRecord(obj: Record<string, unknown>) {
 }
 
 Sentry.init({
-  dsn: process.env.SENTRY_DSN,
+  dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
   tracesSampleRate: 0.1,
-  enabled: !!process.env.SENTRY_DSN,
+  enabled: !!process.env.NEXT_PUBLIC_SENTRY_DSN,
   beforeSend(event) {
     if (event.request?.data) {
       scrubRecord(event.request.data as Record<string, unknown>);
     }
-
     if (event.exception?.values) {
       for (const exc of event.exception.values) {
         if (exc.value) exc.value = scrubString(exc.value);
       }
     }
-
     if (event.breadcrumbs) {
       for (const crumb of event.breadcrumbs) {
         if (crumb.message) crumb.message = scrubString(crumb.message);
         if (crumb.data) scrubRecord(crumb.data as Record<string, unknown>);
       }
     }
-
     if (event.extra) {
       scrubRecord(event.extra as Record<string, unknown>);
     }
-
     return event;
   },
 });
+
+export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;

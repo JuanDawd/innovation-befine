@@ -18,22 +18,20 @@ const nextConfig: NextConfig = {
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 export default withSentryConfig(withNextIntl(nextConfig), {
-  // Sentry organization and project (set in CI via env vars)
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
-
-  // Auth token for source map uploads (CI only)
   authToken: process.env.SENTRY_AUTH_TOKEN,
 
-  // Suppress CLI output in dev
-  silent: process.env.NODE_ENV !== "production",
+  // Suppress all CLI output when no auth token (local/CI without Sentry)
+  silent: !process.env.SENTRY_AUTH_TOKEN,
 
-  // Disable source map upload if no auth token (local dev)
+  telemetry: false,
+
+  // Disable source map upload if no auth token
   sourcemaps: {
     disable: !process.env.SENTRY_AUTH_TOKEN,
   },
 
-  // Tree-shake Sentry debug logging in production
   webpack: {
     treeshake: {
       removeDebugLogging: true,
