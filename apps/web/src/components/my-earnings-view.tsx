@@ -11,10 +11,21 @@ export async function MyEarningsView() {
   }
 
   const { today, thisWeek, thisMonth, payoutHistory } = result.data;
+  const hasCurrentEarnings = today > 0 || thisWeek > 0 || thisMonth > 0;
 
   return (
     <div className="space-y-6 max-w-md">
       <h1 className="text-4xl font-bold">{t("payoutHistory")}</h1>
+
+      {!hasCurrentEarnings && payoutHistory.length === 0 && (
+        <p className="text-sm text-muted-foreground text-center py-4">{t("noEarnings")}</p>
+      )}
+
+      {!hasCurrentEarnings && payoutHistory.length > 0 && (
+        <p className="text-sm text-muted-foreground text-center py-4">
+          {t("noMovementsThisPeriod")}
+        </p>
+      )}
 
       {/* Summary cards — mobile-first */}
       <div className="grid grid-cols-3 gap-3">
@@ -35,9 +46,7 @@ export async function MyEarningsView() {
       </div>
 
       {/* Payout history */}
-      {payoutHistory.length === 0 ? (
-        <p className="text-sm text-muted-foreground text-center py-8">{t("noEarnings")}</p>
-      ) : (
+      {payoutHistory.length > 0 && (
         <div className="space-y-2">
           <h2 className="text-sm font-semibold">{t("payoutHistory")}</h2>
           <div className="rounded-md border overflow-hidden">

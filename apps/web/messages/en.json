@@ -161,7 +161,20 @@
     "deactivateConfirm": "Deactivate {name}?",
     "deactivateDescription": "The employee will lose access immediately. Their history is preserved.",
     "deactivateSuccess": "Employee deactivated",
-    "deactivateError": "Could not deactivate employee"
+    "deactivateError": "Could not deactivate employee",
+    "terminateTitle": "Final settlement",
+    "terminateDescription": "Employee {name} has unsettled earnings. Record the final payment to deactivate them.",
+    "terminateComputed": "Computed amount",
+    "terminateAmount": "Settlement amount",
+    "terminateMethod": "Payment method",
+    "terminateReason": "Reason",
+    "terminateConfirm": "Settle and deactivate",
+    "terminateSuccess": "Employee settled and deactivated",
+    "terminationReasonRequired": "Reason is required",
+    "invalidAmount": "Invalid amount",
+    "cash": "Cash",
+    "card": "Card",
+    "transfer": "Transfer"
   },
   "catalog": {
     "pageTitle": "Catalog",
@@ -498,11 +511,13 @@
     "weekEarnings": "This week",
     "monthEarnings": "This month",
     "noEarnings": "No earnings recorded for this period",
+    "noMovementsThisPeriod": "No activity this period",
     "payoutHistory": "Payout history"
   },
   "absences": {
     "pageTitle": "Absences & Vacation",
     "logAbsence": "Log absence",
+    "selectDate": "Select date",
     "logAbsenceFor": "Log absence for {date}",
     "deleteAbsence": "Delete absence",
     "noAbsences": "No absences recorded for this month.",
@@ -604,6 +619,7 @@
     "largeOrders": "Large orders",
     "absences": "Absences",
     "payroll": "Payroll",
+    "myEarnings": "My earnings",
     "openMenu": "Open menu",
     "closeMenu": "Close menu"
   }

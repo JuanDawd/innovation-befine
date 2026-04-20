@@ -161,7 +161,20 @@
     "deactivateConfirm": "¿Desactivar a {name}?",
     "deactivateDescription": "El empleado perderá acceso inmediatamente. Su historial queda intacto.",
     "deactivateSuccess": "Empleado desactivado",
-    "deactivateError": "No se pudo desactivar el empleado"
+    "deactivateError": "No se pudo desactivar el empleado",
+    "terminateTitle": "Liquidación final",
+    "terminateDescription": "El empleado {name} tiene ganancias sin liquidar. Registra el pago de liquidación para desactivarlo.",
+    "terminateComputed": "Monto calculado",
+    "terminateAmount": "Monto de liquidación",
+    "terminateMethod": "Método de pago",
+    "terminateReason": "Motivo",
+    "terminateConfirm": "Liquidar y desactivar",
+    "terminateSuccess": "Empleado liquidado y desactivado",
+    "terminationReasonRequired": "El motivo es obligatorio",
+    "invalidAmount": "Monto inválido",
+    "cash": "Efectivo",
+    "card": "Tarjeta",
+    "transfer": "Transferencia"
   },
   "catalog": {
     "pageTitle": "Catálogo",
@@ -532,11 +545,13 @@
     "weekEarnings": "Esta semana",
     "monthEarnings": "Este mes",
     "noEarnings": "No hay ganancias registradas para este período",
+    "noMovementsThisPeriod": "Sin movimientos en este período",
     "payoutHistory": "Historial de pagos"
   },
   "absences": {
     "pageTitle": "Ausencias y vacaciones",
     "logAbsence": "Registrar ausencia",
+    "selectDate": "Seleccionar fecha",
     "logAbsenceFor": "Registrar ausencia para el {date}",
     "deleteAbsence": "Eliminar ausencia",
     "noAbsences": "No hay ausencias registradas para este mes.",
@@ -638,6 +653,7 @@
     "largeOrders": "Pedidos grandes",
     "absences": "Ausencias",
     "payroll": "Nómina",
+    "myEarnings": "Mis ganancias",
     "openMenu": "Abrir menú",
     "closeMenu": "Cerrar menú"
   }
