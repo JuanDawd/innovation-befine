@@ -7,15 +7,15 @@
  * Run: pnpm --filter @befine/db db:bench:analytics
  */
 
-import { createDb } from "./index.ts";
+import { createDb } from "./index";
 import {
   revenueByPeriod,
   earningsByEmployee,
   dailyRevenueBreakdown,
   getBusinessDayIdsByPeriod,
   employeeDayBreakdown,
-} from "./queries/analytics.ts";
-import { employees, businessDays } from "./schema/index.ts";
+} from "./queries/analytics";
+import { employees, businessDays } from "./schema/index";
 import { not, sql, eq } from "drizzle-orm";
 
 const DATABASE_URL = process.env.DATABASE_URL;
