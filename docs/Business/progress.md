@@ -527,6 +527,10 @@ Update `apps/web/src/lib/db/README.md` with a short "When to use `getDb()` vs `g
 
 ---
 
+> **Phase 7 is complete.** Switch to Opus (`claude --model claude-opus-4-7`) and prompt: 'Phase 7 is complete. Run the phase completion review.'
+
+---
+
 ## Phase 8 — Analytics
 
 | ID   | Task                                                  | Status  | Dependencies |
