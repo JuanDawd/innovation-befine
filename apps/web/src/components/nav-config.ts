@@ -19,6 +19,7 @@ import {
   Layers,
   ShoppingBag,
   Wallet,
+  BarChart3,
   type LucideIcon,
 } from "lucide-react";
 import type { AppRole } from "@befine/types";
@@ -41,6 +42,7 @@ export const NAV_ITEMS: Record<AppRole, NavItem[]> = {
     { key: "catalog", href: "/admin/catalog", icon: BookOpen },
     { key: "absences", href: "/admin/absences", icon: CalendarOff },
     { key: "payroll", href: "/admin/payroll", icon: Wallet },
+    { key: "analytics", href: "/admin/analytics", icon: BarChart3 },
     { key: "settings", href: "/admin/settings", icon: Settings, disabled: true },
   ],
   secretary: [

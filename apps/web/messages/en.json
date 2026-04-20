@@ -514,6 +514,24 @@
     "noMovementsThisPeriod": "No activity this period",
     "payoutHistory": "Payout history"
   },
+  "analytics": {
+    "pageTitle": "Analytics",
+    "period_day": "Today",
+    "period_week": "This week",
+    "period_month": "This month",
+    "revenue": "Revenue",
+    "jobs": "Jobs",
+    "earnings": "Earnings",
+    "comparisonChart": "Current vs prior period",
+    "dailyBreakdown": "Revenue by day",
+    "byEmployee": "By employee",
+    "colEmployee": "Employee",
+    "colRole": "Role",
+    "colEarnings": "Earnings",
+    "noEmployeeData": "No employee data for this period",
+    "emptyTitle": "No revenue data yet",
+    "emptyDescription": "No revenue data for this period — close tickets to see daily totals"
+  },
   "absences": {
     "pageTitle": "Absences & Vacation",
     "logAbsence": "Log absence",
@@ -619,6 +637,7 @@
     "largeOrders": "Large orders",
     "absences": "Absences",
     "payroll": "Payroll",
+    "analytics": "Analytics",
     "myEarnings": "My earnings",
     "openMenu": "Open menu",
     "closeMenu": "Close menu"

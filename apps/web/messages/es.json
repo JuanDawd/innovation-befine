@@ -548,6 +548,24 @@
     "noMovementsThisPeriod": "Sin movimientos en este período",
     "payoutHistory": "Historial de pagos"
   },
+  "analytics": {
+    "pageTitle": "Analytics",
+    "period_day": "Hoy",
+    "period_week": "Esta semana",
+    "period_month": "Este mes",
+    "revenue": "Ingresos",
+    "jobs": "Trabajos",
+    "earnings": "Ganancias",
+    "comparisonChart": "Actual vs período anterior",
+    "dailyBreakdown": "Ingresos por día",
+    "byEmployee": "Por empleado",
+    "colEmployee": "Empleado",
+    "colRole": "Rol",
+    "colEarnings": "Ganancias",
+    "noEmployeeData": "Sin datos de empleados para este período",
+    "emptyTitle": "Sin datos de ingresos",
+    "emptyDescription": "No hay ingresos para este período — cierra tickets para ver los totales"
+  },
   "absences": {
     "pageTitle": "Ausencias y vacaciones",
     "logAbsence": "Registrar ausencia",
@@ -653,6 +671,7 @@
     "largeOrders": "Pedidos grandes",
     "absences": "Ausencias",
     "payroll": "Nómina",
+    "analytics": "Analytics",
     "myEarnings": "Mis ganancias",
     "openMenu": "Abrir menú",
     "closeMenu": "Cerrar menú"
