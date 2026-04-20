@@ -2,8 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
-import { ChevronLeftIcon, ChevronRightIcon, Loader2Icon, TrashIcon } from "lucide-react";
+import { useTranslations, useLocale } from "next-intl";
+import { ChevronLeftIcon, ChevronRightIcon, Loader2Icon, PlusIcon, TrashIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { logAbsence, deleteAbsence, type AbsenceRow, type EmployeeOption } from "./actions";
 
@@ -20,11 +20,21 @@ const ABSENCE_COLORS = {
   missed: "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300",
 } as const;
 
-const DAYS_OF_WEEK = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+// Generate day headers from Intl (locale-aware, Mon-Sun order for the grid)
+function getDayHeaders(locale: string): string[] {
+  // We want Sun-first order to match getDay() (0=Sun)
+  // Jan 7 2024 = Sun (0), Jan 8 = Mon (1), … Jan 13 = Sat (6)
+  return Array.from({ length: 7 }, (_, i) => {
+    const ref = new Date(Date.UTC(2024, 0, 7 + i)); // 7=Sun, 8=Mon...
+    return ref.toLocaleDateString(locale, { weekday: "short", timeZone: "UTC" });
+  });
+}
 
 export function AbsenceCalendar({ year, month, absences, employees }: Props) {
   const t = useTranslations("absences");
+  const locale = useLocale();
   const router = useRouter();
+  const DAYS_OF_WEEK = getDayHeaders(locale);
   const [isPending, startTransition] = useTransition();
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -194,17 +204,30 @@ export function AbsenceCalendar({ year, month, absences, employees }: Props) {
               ))}
             </div>
           ))}
-        {/* Mobile add button */}
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-full"
-          onClick={() =>
-            setSelectedDate(selectedDate ? null : new Date().toISOString().slice(0, 10))
-          }
-        >
-          {t("logAbsence")}
-        </Button>
+        {/* Mobile add — date picker defaulting to today in Bogota */}
+        <div className="flex gap-2">
+          <input
+            type="date"
+            defaultValue={new Date().toLocaleDateString("en-CA", { timeZone: "America/Bogota" })}
+            aria-label={t("selectDate")}
+            className="h-9 flex-1 rounded-md border border-input bg-transparent px-3 text-sm focus-visible:outline-none focus-visible:border-ring"
+            onChange={(e) => setSelectedDate(e.target.value || null)}
+          />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              const input = document.querySelector<HTMLInputElement>("input[type=date]");
+              const date =
+                input?.value ||
+                new Date().toLocaleDateString("en-CA", { timeZone: "America/Bogota" });
+              setSelectedDate(selectedDate === date ? null : date);
+            }}
+          >
+            <PlusIcon className="h-4 w-4 mr-1" aria-hidden="true" />
+            {t("logAbsence")}
+          </Button>
+        </div>
       </div>
 
       {/* Add absence form (shown when a date is selected on desktop; always available on mobile) */}
