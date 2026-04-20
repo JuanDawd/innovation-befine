@@ -40,7 +40,6 @@ export const addVariantSchema = editServiceVariantSchema;
 export const createClothPieceSchema = z.object({
   name: z.string().min(1, "El nombre es obligatorio").max(100),
   description: z.string().max(500).optional(),
-  pieceRate: z.number().int().min(0, "La tarifa no puede ser negativa"),
 });
 
 export const editClothPieceSchema = createClothPieceSchema;

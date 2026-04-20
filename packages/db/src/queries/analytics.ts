@@ -15,7 +15,7 @@ import {
   ticketItems,
   batchPieces,
   clothBatches,
-  clothPieces,
+  clothPieceVariants,
   employees,
   users,
   businessDays,
@@ -185,12 +185,12 @@ export async function earningsByEmployee(
       employeeId: batchPieces.assignedToEmployeeId,
       employeeName: users.name,
       role: employees.role,
-      totalEarnings: sql<number>`COALESCE(SUM(${clothPieces.pieceRate}), 0)::bigint`,
+      totalEarnings: sql<number>`COALESCE(SUM(${clothPieceVariants.pieceRate}), 0)::bigint`,
       jobCount: sql<number>`COUNT(${batchPieces.id})::int`,
     })
     .from(batchPieces)
     .innerJoin(clothBatches, eq(batchPieces.batchId, clothBatches.id))
-    .innerJoin(clothPieces, eq(batchPieces.clothPieceId, clothPieces.id))
+    .innerJoin(clothPieceVariants, eq(batchPieces.clothPieceVariantId, clothPieceVariants.id))
     .innerJoin(employees, eq(batchPieces.assignedToEmployeeId, employees.id))
     .innerJoin(users, eq(employees.userId, users.id))
     .where(
@@ -506,11 +506,11 @@ export async function employeeDayBreakdown(
         businessDayId: clothBatches.businessDayId,
         openedAt: businessDays.openedAt,
         jobs: sql<number>`COUNT(${batchPieces.id})::int`,
-        earnings: sql<number>`COALESCE(SUM(${clothPieces.pieceRate}), 0)::bigint`,
+        earnings: sql<number>`COALESCE(SUM(${clothPieceVariants.pieceRate}), 0)::bigint`,
       })
       .from(batchPieces)
       .innerJoin(clothBatches, eq(batchPieces.batchId, clothBatches.id))
-      .innerJoin(clothPieces, eq(batchPieces.clothPieceId, clothPieces.id))
+      .innerJoin(clothPieceVariants, eq(batchPieces.clothPieceVariantId, clothPieceVariants.id))
       .innerJoin(businessDays, eq(clothBatches.businessDayId, businessDays.id))
       .where(
         and(

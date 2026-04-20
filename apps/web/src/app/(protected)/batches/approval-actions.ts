@@ -12,7 +12,14 @@ import { headers } from "next/headers";
 import { eq, and, inArray } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import { employees, users, clothBatches, batchPieces, clothPieces } from "@befine/db/schema";
+import {
+  employees,
+  users,
+  clothBatches,
+  batchPieces,
+  clothPieces,
+  clothPieceVariants,
+} from "@befine/db/schema";
 import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
 import { getCurrentBusinessDay } from "@/lib/business-day";
@@ -26,6 +33,7 @@ export type PendingApprovalRow = {
   id: string;
   batchId: string;
   clothPieceName: string;
+  clothPieceVariantName: string;
   assignedToEmployeeId: string | null;
   assignedEmployeeName: string | null;
   claimSource: "assigned" | "self_claimed" | null;
@@ -66,6 +74,7 @@ export async function listPendingApprovals(): Promise<ActionResult<PendingApprov
       id: batchPieces.id,
       batchId: batchPieces.batchId,
       clothPieceName: clothPieces.name,
+      clothPieceVariantName: clothPieceVariants.name,
       assignedToEmployeeId: batchPieces.assignedToEmployeeId,
       assignedEmployeeName: users.name,
       claimSource: batchPieces.claimSource,
@@ -76,6 +85,7 @@ export async function listPendingApprovals(): Promise<ActionResult<PendingApprov
     .from(batchPieces)
     .innerJoin(clothBatches, eq(batchPieces.batchId, clothBatches.id))
     .innerJoin(clothPieces, eq(batchPieces.clothPieceId, clothPieces.id))
+    .innerJoin(clothPieceVariants, eq(batchPieces.clothPieceVariantId, clothPieceVariants.id))
     .leftJoin(employees, eq(batchPieces.assignedToEmployeeId, employees.id))
     .leftJoin(users, eq(employees.userId, users.id))
     .where(

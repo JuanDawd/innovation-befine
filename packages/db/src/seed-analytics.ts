@@ -25,6 +25,7 @@ import {
   businessDays,
   serviceVariants,
   clothPieces,
+  clothPieceVariants,
   clients,
   tickets,
   ticketItems,
@@ -141,9 +142,14 @@ async function run() {
     .where(eq(serviceVariants.isActive, true));
 
   const pieceRows = await db
-    .select({ id: clothPieces.id, pieceRate: clothPieces.pieceRate })
-    .from(clothPieces)
-    .where(eq(clothPieces.isActive, true));
+    .select({
+      variantId: clothPieceVariants.id,
+      clothPieceId: clothPieceVariants.clothPieceId,
+      pieceRate: clothPieceVariants.pieceRate,
+    })
+    .from(clothPieceVariants)
+    .innerJoin(clothPieces, eq(clothPieceVariants.clothPieceId, clothPieces.id))
+    .where(eq(clothPieceVariants.isActive, true));
 
   // Find admin user
   const adminEmp = empRows.find((e) => e.role === "cashier_admin");
@@ -278,7 +284,8 @@ async function run() {
           const piece = pieceRows[randomInt(0, pieceRows.length - 1)];
           await db.insert(batchPieces).values({
             batchId: batch.id,
-            clothPieceId: piece.id,
+            clothPieceId: piece.clothPieceId,
+            clothPieceVariantId: piece.variantId,
             assignedToEmployeeId: clothier.id,
             claimSource: "assigned",
             claimedAt: openedAt,

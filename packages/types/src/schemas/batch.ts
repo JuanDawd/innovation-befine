@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const batchPieceLineSchema = z.object({
   clothPieceId: z.uuid("ID de pieza inválido"),
+  clothPieceVariantId: z.uuid("ID de variante inválido"),
   assignedToEmployeeId: z.uuid("ID de empleado inválido").nullable(),
 });
 

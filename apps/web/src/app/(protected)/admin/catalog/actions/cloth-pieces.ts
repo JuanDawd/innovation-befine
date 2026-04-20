@@ -3,9 +3,10 @@
 /**
  * Cloth piece catalog server actions — T027, T028
  *
- * CRUD for cloth_pieces.
+ * cloth_pieces: garment family (name/description, no price).
+ * cloth_piece_variants: construction types with piece_rate.
+ *
  * Only cashier_admin can mutate; secretary can read (T028).
- * Every mutation writes to catalog_audit_log.
  */
 
 import { headers } from "next/headers";
@@ -13,24 +14,44 @@ import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import { clothPieces, catalogAuditLog } from "@befine/db/schema";
+import { clothPieces, clothPieceVariants, catalogAuditLog } from "@befine/db/schema";
 import { createClothPieceSchema, editClothPieceSchema } from "@befine/types";
+import { z } from "zod";
 import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
 
-// ─── Types ──────────────────────────────────────────────────────────────────
+// ─── Types ───────────────────────────────────────────────────────────────────
 
-export type ClothPieceRow = {
+export type ClothPieceVariantRow = {
   id: string;
+  clothPieceId: string;
   name: string;
-  description: string | null;
   pieceRate: number;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
 };
 
-// ─── Helpers ────────────────────────────────────────────────────────────────
+export type ClothPieceRow = {
+  id: string;
+  name: string;
+  description: string | null;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  variants: ClothPieceVariantRow[];
+};
+
+// ─── Variant schemas ──────────────────────────────────────────────────────────
+
+const createVariantSchema = z.object({
+  name: z.string().min(1).max(100),
+  pieceRate: z.number().int().min(0, "La tarifa no puede ser negativa"),
+});
+
+const editVariantSchema = createVariantSchema;
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 async function getAdminSession() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -59,50 +80,60 @@ function writeAuditLog(
   });
 }
 
-// ─── Read actions (T028) ─────────────────────────────────────────────────────
+// ─── Read actions (T028) ──────────────────────────────────────────────────────
 
-/**
- * List all active cloth pieces.
- * Available to cashier_admin and secretary.
- */
 export async function listActiveClothPieces(): Promise<ActionResult<ClothPieceRow[]>> {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session)
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
-
-  if (!hasRole(session.user, "cashier_admin", "secretary")) {
+  if (!hasRole(session.user, "cashier_admin", "secretary"))
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
-  }
 
   const db = getDb();
-  const rows = await db.query.clothPieces.findMany({
+  const pieces = await db.query.clothPieces.findMany({
     where: eq(clothPieces.isActive, true),
     orderBy: (c, { asc }) => [asc(c.name)],
   });
 
-  return { success: true, data: rows };
+  const result = await Promise.all(
+    pieces.map(async (p) => {
+      const variants = await db.query.clothPieceVariants.findMany({
+        where: eq(clothPieceVariants.clothPieceId, p.id),
+        orderBy: (v, { asc }) => [asc(v.createdAt)],
+      });
+      return { ...p, variants };
+    }),
+  );
+
+  return { success: true, data: result };
 }
 
-/**
- * List ALL cloth pieces including inactive ones (admin-only).
- */
 export async function listAllClothPieces(): Promise<ActionResult<ClothPieceRow[]>> {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session)
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
-  if (!hasRole(session.user, "cashier_admin")) {
+  if (!hasRole(session.user, "cashier_admin"))
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
-  }
 
   const db = getDb();
-  const rows = await db.query.clothPieces.findMany({
+  const pieces = await db.query.clothPieces.findMany({
     orderBy: (c, { asc }) => [asc(c.name)],
   });
 
-  return { success: true, data: rows };
+  const result = await Promise.all(
+    pieces.map(async (p) => {
+      const variants = await db.query.clothPieceVariants.findMany({
+        where: eq(clothPieceVariants.clothPieceId, p.id),
+        orderBy: (v, { asc }) => [asc(v.createdAt)],
+      });
+      return { ...p, variants };
+    }),
+  );
+
+  return { success: true, data: result };
 }
 
-// ─── Create cloth piece ──────────────────────────────────────────────────────
+// ─── Create cloth piece ───────────────────────────────────────────────────────
 
 export async function createClothPiece(rawInput: unknown): Promise<ActionResult<{ id: string }>> {
   const session = await getAdminSession();
@@ -113,28 +144,20 @@ export async function createClothPiece(rawInput: unknown): Promise<ActionResult<
   }
 
   const parsed = createClothPieceSchema.safeParse(rawInput);
-  if (!parsed.success) {
+  if (!parsed.success)
     return {
       success: false,
       error: {
         code: "VALIDATION_ERROR",
         message: "Datos inválidos",
-        details: parsed.error.issues.map((issue) => ({
-          field: issue.path.join("."),
-          message: issue.message,
-        })),
+        details: parsed.error.issues.map((i) => ({ field: i.path.join("."), message: i.message })),
       },
     };
-  }
 
   const db = getDb();
   const [piece] = await db
     .insert(clothPieces)
-    .values({
-      name: parsed.data.name,
-      description: parsed.data.description ?? null,
-      pieceRate: parsed.data.pieceRate,
-    })
+    .values({ name: parsed.data.name, description: parsed.data.description ?? null })
     .returning({ id: clothPieces.id });
 
   await writeAuditLog(db, {
@@ -143,12 +166,11 @@ export async function createClothPiece(rawInput: unknown): Promise<ActionResult<
     changedBy: session.user.id,
     newData: parsed.data,
   });
-
   revalidatePath("/admin/catalog");
   return { success: true, data: { id: piece.id } };
 }
 
-// ─── Edit cloth piece ────────────────────────────────────────────────────────
+// ─── Edit cloth piece ─────────────────────────────────────────────────────────
 
 export async function editClothPiece(
   id: string,
@@ -162,19 +184,15 @@ export async function editClothPiece(
   }
 
   const parsed = editClothPieceSchema.safeParse(rawInput);
-  if (!parsed.success) {
+  if (!parsed.success)
     return {
       success: false,
       error: {
         code: "VALIDATION_ERROR",
         message: "Datos inválidos",
-        details: parsed.error.issues.map((issue) => ({
-          field: issue.path.join("."),
-          message: issue.message,
-        })),
+        details: parsed.error.issues.map((i) => ({ field: i.path.join("."), message: i.message })),
       },
     };
-  }
 
   const db = getDb();
   const existing = await db.query.clothPieces.findFirst({ where: eq(clothPieces.id, id) });
@@ -186,20 +204,14 @@ export async function editClothPiece(
     .set({
       name: parsed.data.name,
       description: parsed.data.description ?? null,
-      pieceRate: parsed.data.pieceRate,
       updatedAt: new Date(),
     })
     .where(eq(clothPieces.id, id));
-
   await writeAuditLog(db, {
     entityId: id,
     action: "update",
     changedBy: session.user.id,
-    previousData: {
-      name: existing.name,
-      description: existing.description,
-      pieceRate: existing.pieceRate,
-    },
+    previousData: { name: existing.name, description: existing.description },
     newData: parsed.data,
   });
 
@@ -207,7 +219,7 @@ export async function editClothPiece(
   return { success: true, data: { id } };
 }
 
-// ─── Soft-delete cloth piece ─────────────────────────────────────────────────
+// ─── Soft-delete / restore cloth piece ───────────────────────────────────────
 
 export async function deactivateClothPiece(id: string): Promise<ActionResult<null>> {
   const session = await getAdminSession();
@@ -216,17 +228,11 @@ export async function deactivateClothPiece(id: string): Promise<ActionResult<nul
     if (!s) return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
   }
-
   const db = getDb();
-  const existing = await db.query.clothPieces.findFirst({ where: eq(clothPieces.id, id) });
-  if (!existing)
-    return { success: false, error: { code: "NOT_FOUND", message: "Pieza no encontrada" } };
-
   await db
     .update(clothPieces)
     .set({ isActive: false, updatedAt: new Date() })
     .where(eq(clothPieces.id, id));
-
   await writeAuditLog(db, {
     entityId: id,
     action: "soft_delete",
@@ -234,12 +240,9 @@ export async function deactivateClothPiece(id: string): Promise<ActionResult<nul
     previousData: { isActive: true },
     newData: { isActive: false },
   });
-
   revalidatePath("/admin/catalog");
   return { success: true, data: null };
 }
-
-// ─── Restore cloth piece ─────────────────────────────────────────────────────
 
 export async function restoreClothPiece(id: string): Promise<ActionResult<null>> {
   const session = await getAdminSession();
@@ -248,20 +251,119 @@ export async function restoreClothPiece(id: string): Promise<ActionResult<null>>
     if (!s) return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
   }
-
   const db = getDb();
   await db
     .update(clothPieces)
     .set({ isActive: true, updatedAt: new Date() })
     .where(eq(clothPieces.id, id));
-
   await writeAuditLog(db, {
     entityId: id,
     action: "restore",
     changedBy: session.user.id,
     newData: { isActive: true },
   });
+  revalidatePath("/admin/catalog");
+  return { success: true, data: null };
+}
 
+// ─── Variant CRUD ─────────────────────────────────────────────────────────────
+
+export async function createClothPieceVariant(
+  clothPieceId: string,
+  rawInput: unknown,
+): Promise<ActionResult<ClothPieceVariantRow>> {
+  const session = await getAdminSession();
+  if (!session) {
+    const s = await auth.api.getSession({ headers: await headers() });
+    if (!s) return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
+    return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
+  }
+
+  const parsed = createVariantSchema.safeParse(rawInput);
+  if (!parsed.success)
+    return {
+      success: false,
+      error: {
+        code: "VALIDATION_ERROR",
+        message: "Datos inválidos",
+        details: parsed.error.issues.map((i) => ({ field: i.path.join("."), message: i.message })),
+      },
+    };
+
+  const db = getDb();
+  const [variant] = await db
+    .insert(clothPieceVariants)
+    .values({ clothPieceId, name: parsed.data.name, pieceRate: parsed.data.pieceRate })
+    .returning();
+
+  revalidatePath("/admin/catalog");
+  return { success: true, data: variant };
+}
+
+export async function editClothPieceVariant(
+  variantId: string,
+  rawInput: unknown,
+): Promise<ActionResult<ClothPieceVariantRow>> {
+  const session = await getAdminSession();
+  if (!session) {
+    const s = await auth.api.getSession({ headers: await headers() });
+    if (!s) return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
+    return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
+  }
+
+  const parsed = editVariantSchema.safeParse(rawInput);
+  if (!parsed.success)
+    return {
+      success: false,
+      error: {
+        code: "VALIDATION_ERROR",
+        message: "Datos inválidos",
+        details: parsed.error.issues.map((i) => ({ field: i.path.join("."), message: i.message })),
+      },
+    };
+
+  const db = getDb();
+  const [updated] = await db
+    .update(clothPieceVariants)
+    .set({ name: parsed.data.name, pieceRate: parsed.data.pieceRate, updatedAt: new Date() })
+    .where(eq(clothPieceVariants.id, variantId))
+    .returning();
+
+  if (!updated)
+    return { success: false, error: { code: "NOT_FOUND", message: "Variante no encontrada" } };
+
+  revalidatePath("/admin/catalog");
+  return { success: true, data: updated };
+}
+
+export async function deactivateClothPieceVariant(variantId: string): Promise<ActionResult<null>> {
+  const session = await getAdminSession();
+  if (!session) {
+    const s = await auth.api.getSession({ headers: await headers() });
+    if (!s) return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
+    return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
+  }
+  const db = getDb();
+  await db
+    .update(clothPieceVariants)
+    .set({ isActive: false, updatedAt: new Date() })
+    .where(eq(clothPieceVariants.id, variantId));
+  revalidatePath("/admin/catalog");
+  return { success: true, data: null };
+}
+
+export async function restoreClothPieceVariant(variantId: string): Promise<ActionResult<null>> {
+  const session = await getAdminSession();
+  if (!session) {
+    const s = await auth.api.getSession({ headers: await headers() });
+    if (!s) return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
+    return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
+  }
+  const db = getDb();
+  await db
+    .update(clothPieceVariants)
+    .set({ isActive: true, updatedAt: new Date() })
+    .where(eq(clothPieceVariants.id, variantId));
   revalidatePath("/admin/catalog");
   return { success: true, data: null };
 }

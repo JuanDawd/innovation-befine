@@ -1,18 +1,19 @@
 /**
  * T064 — Clothier earnings computation
  *
- * Sums cloth_pieces.piece_rate for all approved batch pieces assigned to the employee
- * in the given business days.
+ * Sums cloth_piece_variants.piece_rate for all approved batch pieces
+ * assigned to the employee in the given business days.
  */
 
 import { and, eq, inArray } from "drizzle-orm";
 import type { Database } from "@befine/db";
-import { batchPieces, clothBatches, clothPieces } from "@befine/db/schema";
+import { batchPieces, clothBatches, clothPieces, clothPieceVariants } from "@befine/db/schema";
 
 export type ClothierEarningsLine = {
   batchId: string;
   batchPieceId: string;
   pieceName: string;
+  variantName: string;
   quantity: number;
   pieceRate: number;
   earnings: number;
@@ -38,11 +39,13 @@ export async function computeClothierEarnings(
       batchId: clothBatches.id,
       batchPieceId: batchPieces.id,
       pieceName: clothPieces.name,
-      pieceRate: clothPieces.pieceRate,
+      variantName: clothPieceVariants.name,
+      pieceRate: clothPieceVariants.pieceRate,
     })
     .from(batchPieces)
     .innerJoin(clothBatches, eq(batchPieces.batchId, clothBatches.id))
     .innerJoin(clothPieces, eq(batchPieces.clothPieceId, clothPieces.id))
+    .innerJoin(clothPieceVariants, eq(batchPieces.clothPieceVariantId, clothPieceVariants.id))
     .where(
       and(
         eq(batchPieces.assignedToEmployeeId, employeeId),
@@ -51,7 +54,6 @@ export async function computeClothierEarnings(
       ),
     );
 
-  // Group by batch + piece type for the line breakdown
   const lineMap = new Map<string, ClothierEarningsLine>();
   let totalEarnings = 0;
 
@@ -62,6 +64,7 @@ export async function computeClothierEarnings(
         batchId: row.batchId,
         batchPieceId: row.batchPieceId,
         pieceName: row.pieceName,
+        variantName: row.variantName,
         quantity: 0,
         pieceRate: row.pieceRate,
         earnings: 0,

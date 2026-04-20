@@ -127,6 +127,7 @@ export async function createBatch(rawInput: unknown): Promise<ActionResult<{ id:
         input.pieces.map((p) => ({
           batchId: batch.id,
           clothPieceId: p.clothPieceId,
+          clothPieceVariantId: p.clothPieceVariantId,
           assignedToEmployeeId: p.assignedToEmployeeId ?? null,
           claimSource: p.assignedToEmployeeId ? ("assigned" as const) : null,
           claimedAt: p.assignedToEmployeeId ? new Date() : null,
