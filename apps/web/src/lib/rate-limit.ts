@@ -64,6 +64,8 @@ function makeLimit(tokens: number, windowSeconds: number): Ratelimit {
 export const rateLimits = {
   /** 30 requests / 60s — ticket creation */
   ticketCreate: makeLimit(30, 60),
+  /** 5 requests / 60s — payout recording (admin financial mutation) */
+  payoutRecording: makeLimit(5, 60),
   /** 60 requests / 60s — general mutations (checkout, override, edit-requests, batches, pieces) */
   general: makeLimit(60, 60),
 };

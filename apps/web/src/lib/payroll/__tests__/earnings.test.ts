@@ -119,7 +119,10 @@ describe("Clothier earnings computation", () => {
   });
 
   it("no approved pieces — returns 0", () => {
-    const pieces = [{ pieceRate: 15_000, status: "done_pending_approval" as const }];
+    type PieceStatus = "approved" | "done_pending_approval" | "pending";
+    const pieces: { pieceRate: number; status: PieceStatus }[] = [
+      { pieceRate: 15_000, status: "done_pending_approval" },
+    ];
     const total = pieces
       .filter((p) => p.status === "approved")
       .reduce((s, p) => s + p.pieceRate, 0);

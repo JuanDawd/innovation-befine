@@ -8,11 +8,11 @@
 
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
-import { and, eq } from "drizzle-orm";
+import { and, eq, not, sql } from "drizzle-orm";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
-import { getDb } from "@/lib/db";
-import { employees, users } from "@befine/db/schema";
+import { getDb, getTxDb } from "@/lib/db";
+import { employees, users, payouts, businessDays } from "@befine/db/schema";
 import type { ActionResult } from "@/lib/action-result";
 import type { EmployeeListItem } from "./list-employees";
 import { hasRole } from "@/lib/middleware-helpers";
@@ -165,6 +165,18 @@ export async function deactivateEmployee(
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
   }
 
+  // T022b: block deactivation if employee has unsettled earnings
+  const unsettled = await getUnsettledPeriodsForEmployee(employeeId);
+  if (unsettled) {
+    return {
+      success: false,
+      error: {
+        code: "CONFLICT",
+        message: `El empleado tiene ganancias sin liquidar desde ${unsettled.oldestDate}. Usa la opción de liquidación final (terminateEmployee) o liquida los pagos antes de desactivar.`,
+      },
+    };
+  }
+
   const db = getDb();
   const now = new Date();
 
@@ -196,6 +208,115 @@ export async function deactivateEmployee(
 
   revalidatePath("/admin/employees");
   return { success: true, data: { deactivatedAt: emp.deactivatedAt } };
+}
+
+// ---------------------------------------------------------------------------
+// checkUnsettledEarnings + terminateEmployee — T022b
+// ---------------------------------------------------------------------------
+
+export type UnsettledPeriod = { businessDayIds: string[]; oldestDate: string };
+
+/** Returns unsettled periods for the given employee — used to block deactivation. */
+export async function getUnsettledPeriodsForEmployee(
+  employeeId: string,
+): Promise<UnsettledPeriod | null> {
+  const db = getDb();
+  const existingPayouts = await db
+    .select({ periodBusinessDayIds: payouts.periodBusinessDayIds })
+    .from(payouts)
+    .where(eq(payouts.employeeId, employeeId));
+
+  const settledIds = new Set(existingPayouts.flatMap((p) => p.periodBusinessDayIds));
+
+  const closedDays = await db
+    .select({ id: businessDays.id, openedAt: businessDays.openedAt })
+    .from(businessDays)
+    .where(not(sql`${businessDays.closedAt} IS NULL`));
+
+  const unsettledDays = closedDays.filter((d) => !settledIds.has(d.id));
+  if (!unsettledDays.length) return null;
+
+  const dates = unsettledDays.map((d) => new Date(d.openedAt).toISOString().slice(0, 10)).sort();
+  return { businessDayIds: unsettledDays.map((d) => d.id), oldestDate: dates[0] };
+}
+
+/**
+ * T022b — Termination: record a final payout and deactivate immediately (atomic).
+ * Block deactivation if unsettled earnings exist but no termination amount is given.
+ */
+export async function terminateEmployee(
+  employeeId: string,
+  terminationAmount: number,
+  method: "cash" | "card" | "transfer",
+  reason: string,
+): Promise<ActionResult<{ deactivatedAt: Date }>> {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session)
+    return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
+  if (!hasRole(session.user, "cashier_admin"))
+    return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
+
+  if (terminationAmount < 0)
+    return {
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "El monto de liquidación no puede ser negativo" },
+    };
+  if (!reason.trim())
+    return {
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "Se requiere motivo de liquidación" },
+    };
+
+  const db = getDb();
+  const [adminEmp] = await db
+    .select({ id: employees.id })
+    .from(employees)
+    .where(eq(employees.userId, session.user.id))
+    .limit(1);
+  if (!adminEmp)
+    return { success: false, error: { code: "NOT_FOUND", message: "Empleado no encontrado" } };
+
+  const unsettled = await getUnsettledPeriodsForEmployee(employeeId);
+  const txDb = getTxDb();
+  const now = new Date();
+
+  const deactivatedAt = await txDb.transaction(async (tx) => {
+    // Record termination payout covering all unsettled days
+    if (unsettled) {
+      await tx.insert(payouts).values({
+        employeeId,
+        amount: terminationAmount,
+        originalComputedAmount: terminationAmount,
+        adjustmentReason: reason,
+        method,
+        periodBusinessDayIds: unsettled.businessDayIds,
+        recordedBy: adminEmp.id,
+        notes: "Liquidación final",
+      });
+    }
+
+    const [emp] = await tx
+      .update(employees)
+      .set({ isActive: false, deactivatedAt: now })
+      .where(and(eq(employees.id, employeeId), eq(employees.isActive, true)))
+      .returning({ userId: employees.userId, deactivatedAt: employees.deactivatedAt });
+
+    if (!emp?.deactivatedAt) throw new Error("NOT_FOUND");
+    return { userId: emp.userId, deactivatedAt: emp.deactivatedAt };
+  });
+
+  await auth.api.banUser({
+    body: { userId: deactivatedAt.userId, banReason: "Employee terminated" },
+    headers: await headers(),
+  });
+  await auth.api.revokeUserSessions({
+    body: { userId: deactivatedAt.userId },
+    headers: await headers(),
+  });
+
+  revalidatePath("/admin/employees");
+  revalidatePath("/admin/payroll");
+  return { success: true, data: { deactivatedAt: deactivatedAt.deactivatedAt } };
 }
 
 // ---------------------------------------------------------------------------

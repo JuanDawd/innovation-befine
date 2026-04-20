@@ -511,19 +511,19 @@ Update `apps/web/src/lib/db/README.md` with a short "When to use `getDb()` vs `g
 
 > Includes absence tracking (T020, T021) and deactivation guard (T022b) — moved here because they are only consumed by payroll logic.
 
-| ID    | Task                                                              | Status  | Dependencies           |
-| ----- | ----------------------------------------------------------------- | ------- | ---------------------- |
-| T020  | Absences and vacation table migration _(moved from Phase 1)_      | pending | T012                   |
-| T021  | Vacation and absence management UI (admin) _(moved from Phase 1)_ | pending | T020                   |
-| T022b | Deactivation guard + termination payment _(split from T022)_      | pending | T022a, T067            |
-| T063  | Earnings computation: stylists (commission %)                     | pending | T038                   |
-| T064  | Earnings computation: clothiers (per-piece)                       | pending | T047                   |
-| T065  | Earnings computation: secretary (daily rate × days)               | pending | T021, T020             |
-| T066  | Payouts table migration (with junction tables)                    | pending | T006                   |
-| T067  | Payout recording UI (admin)                                       | pending | T063, T064, T065, T066 |
-| T068  | Double-pay prevention                                             | pending | T067                   |
-| T069  | Employee earnings view (own earnings, gated by flag)              | pending | T063, T064, T065, T015 |
-| T070  | Unsettled earnings alert on admin dashboard                       | pending | T067                   |
+| ID    | Task                                                              | Status | Dependencies           |
+| ----- | ----------------------------------------------------------------- | ------ | ---------------------- |
+| T020  | Absences and vacation table migration _(moved from Phase 1)_      | done   | T012                   |
+| T021  | Vacation and absence management UI (admin) _(moved from Phase 1)_ | done   | T020                   |
+| T022b | Deactivation guard + termination payment _(split from T022)_      | done   | T022a, T067            |
+| T063  | Earnings computation: stylists (commission %)                     | done   | T038                   |
+| T064  | Earnings computation: clothiers (per-piece)                       | done   | T047                   |
+| T065  | Earnings computation: secretary (daily rate × days)               | done   | T021, T020             |
+| T066  | Payouts table migration (with junction tables)                    | done   | T006                   |
+| T067  | Payout recording UI (admin)                                       | done   | T063, T064, T065, T066 |
+| T068  | Double-pay prevention                                             | done   | T067                   |
+| T069  | Employee earnings view (own earnings, gated by flag)              | done   | T063, T064, T065, T015 |
+| T070  | Unsettled earnings alert on admin dashboard                       | done   | T067                   |
 
 ---
 
@@ -603,12 +603,12 @@ Update `apps/web/src/lib/db/README.md` with a short "When to use `getDb()` vs `g
 | 5R — Remediation          | 8       | 8       | 0           |
 | 6 — Large orders          | 6       | 6       | 0           |
 | 6R — Remediation          | 12      | 12      | 0           |
-| 7 — Payroll               | 11      | 0       | 0           |
+| 7 — Payroll               | 11      | 11      | 0           |
 | 8 — Analytics             | 8       | 0       | 0           |
 | 9 — Offline               | 5       | 0       | 0           |
 | 10 — Polish               | 9       | 0       | 0           |
 | POST-MVP                  | 2       | 0       | 0           |
-| **Total**                 | **150** | **106** | **0**       |
+| **Total**                 | **150** | **117** | **0**       |
 
 ---
 
