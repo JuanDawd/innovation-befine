@@ -98,6 +98,7 @@ export function EmployeeList({ initialEmployees }: EmployeeListProps) {
     formState: { errors, isSubmitting },
   } = useForm<EditInput>({ resolver: zodResolver(editSchema) });
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const editRole = watch("role");
 
   function openEdit(emp: EmployeeListItem) {

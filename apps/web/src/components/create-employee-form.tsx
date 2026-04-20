@@ -59,6 +59,7 @@ export function CreateEmployeeForm({ onSuccess }: CreateEmployeeFormProps) {
     },
   });
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const selectedRole = watch("role");
   const isStyleist = selectedRole === "stylist";
   const isSecretary = selectedRole === "secretary";
