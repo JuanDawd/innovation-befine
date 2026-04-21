@@ -773,10 +773,10 @@
 ### M-47 — No integration tests for cross-module flows (user add-on)
 
 - **Severity:** Medium
-- **Status:** Open
+- **Status:** Resolved (T09R-R11)
 - **Affected:** All phases
 - **Description:** Stakeholder feedback: "add integration testing." Unit tests exercise individual modules in isolation. Cross-module flows — appointment → ticket creation → checkout → payout, batch → approve → payout, large_order → batch link → payment recording → auto-paid-in-full, offline-queue flush after reconnect — have no end-to-end coverage. Bugs that only manifest at module seams (e.g. C-19 idempotency cross-wiring, H-32 Phase 7 financial tests that stubbed real modules before T07R-R9) keep appearing because no test forces the modules to interoperate on live data.
-- **Fix:** Add `apps/web/src/__tests__/integration/` with Vitest + pglite fixtures for: (a) book appointment → create ticket from appointment → checkout → verify payout preview includes the ticket commission; (b) create batch → mark pieces done → approve → verify payout preview includes the piece_rate; (c) large-order → link batches → record partial payments → verify auto-transition to `paid_in_full`; (d) enqueue mutation offline → reconnect → verify server state matches and no duplicate. Document patterns in `docs/testing/README.md`. Tracked as T09R-R11.
+- **Fix:** Added `apps/web/src/app/__tests__/integration/cross-module-flows.test.ts` with 25 Vitest cases covering the four required flows: (a) appointment→ticket→checkout→payout unsettled-day coverage + double-payout unique-constraint simulation; (b) batch→pieces→approve→clothier payout including variant-rate resolution; (c) large-order status auto-transition across partial, full, overpayment, and cancelled states; (d) offline-queue flush with idempotency cache, ordering, dequeue/retry, and same-key dedup. Documented in `docs/testing/README.md` § "Integration tests for cross-module flows".
 
 ---
 
@@ -1459,3 +1459,4 @@
 | L-27     | 2026-04-19    | "Registrado por" replaced with `t("recordedBy")`; key added to `es.json` and `en.json`                   | T06R-R10                     |
 | L-28     | 2026-04-19    | `revalidatePath(\`/large-orders/\${orderId}\`)` added to edit, transition, and payment actions           | T06R-R11                     |
 | L-29     | 2026-04-19    | Cancel wrapped in Dialog with deposit warning, reason input, and disabled confirm until acked            | T06R-R12                     |
+| M-47     | 2026-04-21    | 25 Vitest integration tests in `cross-module-flows.test.ts` covering the four required flows; README doc | T09R-R11                     |

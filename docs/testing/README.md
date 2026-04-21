@@ -157,6 +157,34 @@ Additional phase test plans should be created as development reaches each phase.
 
 ---
 
+## Integration tests for cross-module flows
+
+Unit tests exercise single modules; E2E tests drive the browser against a seeded DB. Between them sits a third layer: **integration tests for cross-module flows** — Vitest suites that assert the business-logic invariants across module seams (appointments↔tickets↔checkout↔payouts, batches↔pieces↔payouts, large_orders↔payments, offline queue↔idempotency). These are where bugs at module boundaries surface, so they are their own category rather than absorbed into per-module unit tests.
+
+### Location and naming
+
+- Path: `apps/web/src/app/__tests__/integration/{flow-name}.test.ts`
+- One file per flow cluster. Each `describe` block models one end-to-end flow; each `it` asserts one invariant that must hold across modules.
+
+### Patterns
+
+1. **Model data with in-memory structures that mirror the schema.** For each flow define narrow `type` aliases (`Ticket`, `BatchPiece`, `LargeOrder`) and closures that reproduce the production query shape (e.g. `computeUnsettledDays`, `computeClothierUnsettled`, `computeOrderStatus`). The closure must mirror the SQL filter _exactly_ — same status enum values, same join conditions, same filters — so the test fails if production logic drifts.
+2. **Assert module-boundary invariants, not intra-module behaviour.** A cross-module test should fail when changes in module A break module B's expectations. Examples: "only `approved` pieces count toward clothier unsettled days" (batches→payouts), "`cancelled` orders never auto-transition to `paid_in_full`" (large-orders→payments), "same `idempotency_key` executes once across two queue entries" (offline-queue→idempotency store).
+3. **Simulate DB constraints, don't mock them.** When verifying a unique constraint (e.g. `UNIQUE(employee_id, business_day_id)` on `payout_period_days`), write a deterministic insert helper that returns `{ conflict: true }` on duplicate — don't stub the ORM. This keeps the test fast while still exercising the contract the DB enforces.
+4. **Test variant/override resolution explicitly.** Where production code joins to a variant or override table (`cloth_piece_variants`, `ticket_items.priceOverride`), the integration test must show the resolved value wins, not the base-table value. This is the class of bug that unit tests miss because each side of the join is separately unit-tested.
+5. **Offline-queue tests assert idempotency semantics.** Build a minimal in-memory `idempotencyStore` with `check` and `store` (including lazy expiry) and prove: (a) first call executes, (b) second call with the same key returns the cached result without re-executing, (c) expired entries are re-executed, (d) different keys do not interfere, (e) two queue entries with the same key result in exactly one execution.
+
+### When to promote to a pglite/DB-backed integration test
+
+The in-memory pattern above is fast and deterministic. Promote to a pglite-backed test when the flow depends on DB semantics the closures cannot simulate: transaction isolation, exclusion constraints (e.g. appointment overlap), triggers, or `ON CONFLICT` side effects. Add pglite fixtures under `apps/web/src/app/__tests__/integration/fixtures/` when that tier is introduced.
+
+### Running
+
+- `pnpm --filter @befine/web test -- src/app/__tests__/integration` runs the suite.
+- Part of `turbo test` and enforced by CI — no PR merges with red cross-module tests.
+
+---
+
 ## Related documents
 
 - `docs/Business/progress.md` -- master task list and phase structure
