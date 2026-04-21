@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { Temporal } from "@js-temporal/polyfill";
 
 // ─── Helpers under test (pure logic extracted from analytics queries) ─────────
 // These tests cover the pure computational logic used in analytics.
@@ -42,22 +43,22 @@ function weekBoundaries(bogotaToday: string): {
   priorStart: string;
   priorEnd: string;
 } {
-  const today = new Date(bogotaToday + "T12:00:00-05:00");
-  const dow = today.getDay() || 7;
-  const monday = new Date(today);
-  monday.setDate(monday.getDate() - (dow - 1));
-  const sunday = new Date(monday);
-  sunday.setDate(sunday.getDate() + 6);
-  const priorMonday = new Date(monday);
-  priorMonday.setDate(priorMonday.getDate() - 7);
-  const priorSunday = new Date(monday);
-  priorSunday.setDate(priorSunday.getDate() - 1);
-  const fmt = (d: Date) => d.toLocaleDateString("en-CA", { timeZone: "America/Bogota" });
+  const today = Temporal.PlainDate.from(bogotaToday);
+
+  // ISO: Monday = 1, Sunday = 7
+  const dayOfWeek = today.dayOfWeek;
+
+  const currentStart = today.subtract({ days: dayOfWeek - 1 });
+  const currentEnd = currentStart.add({ days: 6 });
+
+  const priorStart = currentStart.subtract({ days: 7 });
+  const priorEnd = currentStart.subtract({ days: 1 });
+
   return {
-    currentStart: fmt(monday),
-    currentEnd: fmt(sunday),
-    priorStart: fmt(priorMonday),
-    priorEnd: fmt(priorSunday),
+    currentStart: currentStart.toString(),
+    currentEnd: currentEnd.toString(),
+    priorStart: priorStart.toString(),
+    priorEnd: priorEnd.toString(),
   };
 }
 
@@ -66,17 +67,24 @@ function monthBoundaries(bogotaToday: string): {
   priorStart: string;
   priorEnd: string;
 } {
-  const today = new Date(bogotaToday + "T12:00:00-05:00");
-  const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-  const priorFirst = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-  const priorLast = new Date(today.getFullYear(), today.getMonth(), 0);
-  const fmt = (d: Date) => d.toLocaleDateString("en-CA", { timeZone: "America/Bogota" });
-  return { currentStart: fmt(firstOfMonth), priorStart: fmt(priorFirst), priorEnd: fmt(priorLast) };
+  const today = Temporal.PlainDate.from(bogotaToday);
+
+  const currentStart = today.with({ day: 1 });
+  const priorStart = currentStart.subtract({ months: 1 });
+  const priorEnd = currentStart.subtract({ days: 1 });
+
+  return {
+    currentStart: currentStart.toString(),
+    priorStart: priorStart.toString(),
+    priorEnd: priorEnd.toString(),
+  };
 }
 
 // Bogota date formatting — mirrors toBogotaDate
 function toBogotaDate(isoUtc: string): string {
-  return new Date(isoUtc).toLocaleDateString("en-CA", { timeZone: "America/Bogota" });
+  const instant = Temporal.Instant.from(isoUtc);
+  const zoned = instant.toZonedDateTimeISO("America/Bogota");
+  return zoned.toPlainDate().toString();
 }
 
 // ─── T08R-R2: secretary earnings ──────────────────────────────────────────────
