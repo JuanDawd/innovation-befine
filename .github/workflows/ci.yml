@@ -53,6 +53,11 @@ jobs:
         env:
           SKIP_ENV_VALIDATION: "1"
 
+      - name: Integration tests (cross-module flows)
+        run: pnpm --filter @befine/web exec vitest run src/app/__tests__/integration
+        env:
+          SKIP_ENV_VALIDATION: "1"
+
   e2e:
     name: E2E Tests
     runs-on: ubuntu-latest
