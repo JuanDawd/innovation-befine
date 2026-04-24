@@ -10,9 +10,9 @@ export default async function LargeOrdersPage() {
   const orders = result.success ? result.data : [];
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6 p-6 ">
       <div className="flex items-center justify-between">
-        <h1 className="text-4xl font-bold">{t("pageTitle")}</h1>
+        <h1 className="text-2xl font-semibold">{t("pageTitle")}</h1>
         <Link
           href="/large-orders/new"
           className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90 transition-colors"

@@ -26,8 +26,8 @@ export default async function PayrollPage({
   const history = historyResult.success ? historyResult.data : [];
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-4xl font-bold">{t("pageTitle")}</h1>
+    <div className="flex flex-col gap-6 p-6">
+      <h1 className="text-2xl font-semibold">{t("pageTitle")}</h1>
       <UnsettledAlert unsettled={unsettled} />
       <PayrollScreen
         days={days}
