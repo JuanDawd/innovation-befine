@@ -13,3 +13,12 @@ export const checkoutSessionSchema = z.object({
 
 export type PaymentLine = z.infer<typeof paymentLineSchema>;
 export type CheckoutSessionInput = z.infer<typeof checkoutSessionSchema>;
+
+export const paidOfflineCheckoutSchema = z.object({
+  ticketIds: z.array(z.uuid()).min(1),
+  paymentMethod: z.enum(["cash", "card", "transfer"]),
+  amount: z.number().int().positive(),
+  idempotencyKey: z.uuid(),
+});
+
+export type PaidOfflineCheckoutInput = z.infer<typeof paidOfflineCheckoutSchema>;

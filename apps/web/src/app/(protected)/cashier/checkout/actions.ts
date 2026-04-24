@@ -21,7 +21,7 @@ import {
   services,
   serviceVariants,
 } from "@befine/db/schema";
-import { checkoutSessionSchema } from "@befine/types";
+import { checkoutSessionSchema, paidOfflineCheckoutSchema } from "@befine/types";
 import { z } from "zod";
 import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
@@ -465,6 +465,154 @@ export async function processCheckout(rawInput: unknown): Promise<ActionResult<C
     return {
       success: false,
       error: { code: "INTERNAL_ERROR", message: "Error al procesar el pago" },
+    };
+  }
+}
+
+// ─── Paid offline checkout — T09R-R1 ─────────────────────────────────────────
+
+/**
+ * Marks tickets as paid_offline while the cashier is offline.
+ * On reconnect, the offline queue flushes and calls this action with the same
+ * idempotencyKey — idempotent via ON CONFLICT on the checkout_sessions.id.
+ * The action also creates a checkout_session and closes the tickets atomically
+ * when called from the sync path (online), so accounting is consistent.
+ */
+export async function processPaidOfflineCheckout(
+  rawInput: unknown,
+): Promise<ActionResult<{ sessionId: string }>> {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session)
+    return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
+  if (!hasRole(session.user, "cashier_admin"))
+    return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
+
+  const rl = await checkRateLimit(rateLimits.general, session.user.id);
+  if (!rl.allowed)
+    return {
+      success: false,
+      error: {
+        code: "RATE_LIMITED",
+        message: "Demasiadas solicitudes. Intenta de nuevo en un momento.",
+      },
+    };
+
+  const parsed = paidOfflineCheckoutSchema.safeParse(rawInput);
+  if (!parsed.success)
+    return {
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "Datos de pago inválidos" },
+    };
+
+  const input = parsed.data;
+
+  const db = getDb();
+  const [cashierEmp] = await db
+    .select({ id: employees.id })
+    .from(employees)
+    .where(eq(employees.userId, session.user.id))
+    .limit(1);
+  if (!cashierEmp)
+    return { success: false, error: { code: "NOT_FOUND", message: "Empleado no encontrado" } };
+
+  const businessDay = await getCurrentBusinessDay();
+  if (!businessDay)
+    return {
+      success: false,
+      error: { code: "CONFLICT", message: "No hay un día laboral abierto" },
+    };
+
+  const txDb = getTxDb();
+  try {
+    const result = await txDb.transaction(async (tx) => {
+      // Idempotent: if session already exists, return it
+      const inserted = await tx
+        .insert(checkoutSessions)
+        .values({
+          id: input.idempotencyKey,
+          businessDayId: businessDay.id,
+          cashierId: cashierEmp.id,
+          clientId: null,
+          totalAmount: input.amount,
+        })
+        .onConflictDoNothing({ target: checkoutSessions.id })
+        .returning({ id: checkoutSessions.id });
+
+      if (inserted.length === 0) {
+        return { sessionId: input.idempotencyKey };
+      }
+
+      const sessionId = inserted[0].id;
+
+      const ticketRows = await tx
+        .select({ id: tickets.id, status: tickets.status, version: tickets.version })
+        .from(tickets)
+        .where(inArray(tickets.id, input.ticketIds));
+
+      if (ticketRows.length !== input.ticketIds.length) throw new Error("TICKET_NOT_FOUND");
+
+      // Accept awaiting_payment (online sync path) or logged/reopened (offline path)
+      const invalid = ticketRows.filter(
+        (t) => !["awaiting_payment", "logged", "reopened", "paid_offline"].includes(t.status),
+      );
+      if (invalid.length > 0) throw new Error("TICKET_INVALID_STATUS");
+
+      // Skip tickets already marked paid_offline (idempotent re-enqueue)
+      const toUpdate = ticketRows.filter((t) => t.status !== "paid_offline");
+
+      const closedAt = new Date();
+      for (const t of toUpdate) {
+        const [updated] = await tx
+          .update(tickets)
+          .set({
+            status: "paid_offline",
+            checkoutSessionId: sessionId,
+            version: t.version + 1,
+          })
+          .where(and(eq(tickets.id, t.id), eq(tickets.version, t.version)))
+          .returning({ id: tickets.id });
+        if (!updated) throw new Error("STALE_DATA");
+      }
+
+      // Insert offline payment record
+      await tx.insert(ticketPayments).values({
+        checkoutSessionId: sessionId,
+        method: input.paymentMethod,
+        amount: input.amount,
+      });
+
+      return { sessionId, closedAt };
+    });
+
+    for (const id of input.ticketIds) {
+      publishEvent("cashier", "ticket_updated", { ticketId: id, status: "paid_offline" });
+    }
+    revalidatePath("/cashier");
+
+    return { success: true, data: { sessionId: result.sessionId } };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "UNKNOWN";
+    if (msg === "TICKET_NOT_FOUND")
+      return {
+        success: false,
+        error: { code: "NOT_FOUND", message: "Uno o más tickets no existen" },
+      };
+    if (msg === "TICKET_INVALID_STATUS")
+      return {
+        success: false,
+        error: { code: "CONFLICT", message: "Estado de ticket inválido para pago offline" },
+      };
+    if (msg === "STALE_DATA")
+      return {
+        success: false,
+        error: {
+          code: "STALE_DATA",
+          message: "Uno o más tickets fueron modificados por otra sesión",
+        },
+      };
+    return {
+      success: false,
+      error: { code: "INTERNAL_ERROR", message: "Error al procesar pago offline" },
     };
   }
 }

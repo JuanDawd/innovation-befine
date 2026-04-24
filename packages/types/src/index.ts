@@ -26,8 +26,10 @@ export { createTicketSchema, type CreateTicketInput } from "./schemas/ticket";
 export {
   checkoutSessionSchema,
   paymentLineSchema,
+  paidOfflineCheckoutSchema,
   type CheckoutSessionInput,
   type PaymentLine,
+  type PaidOfflineCheckoutInput,
 } from "./schemas/checkout";
 export {
   createBatchSchema,

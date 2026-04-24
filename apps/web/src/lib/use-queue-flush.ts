@@ -42,6 +42,14 @@ async function dispatchMutation(
       return { success: true };
     }
 
+    if (mutation.type === "paidOffline") {
+      const { processPaidOfflineCheckout } =
+        await import("@/app/(protected)/cashier/checkout/actions");
+      const result = await processPaidOfflineCheckout(mutation.payload);
+      if (!result.success) return { success: false, error: result.error.message };
+      return { success: true };
+    }
+
     return { success: false, error: `Unknown mutation type: ${mutation.type}` };
   } catch (e) {
     return { success: false, error: e instanceof Error ? e.message : "Unknown error" };
@@ -53,6 +61,8 @@ export function useQueueFlush(): FlushState {
   const [syncing, setSyncing] = useState(false);
   const [failed, setFailed] = useState(0);
   const flushingRef = useRef(false);
+  // T09R-R13: only flush when we transition offline→online, not on cold mount
+  const wentOfflineRef = useRef(false);
 
   const refresh = useCallback(async () => {
     const items = await listQueued();
@@ -84,10 +94,24 @@ export function useQueueFlush(): FlushState {
 
   useEffect(() => {
     refresh();
-    window.addEventListener("online", flush);
-    // Also flush on mount if already online
-    if (navigator.onLine) flush();
-    return () => window.removeEventListener("online", flush);
+
+    const handleOffline = () => {
+      wentOfflineRef.current = true;
+    };
+
+    const handleOnline = () => {
+      if (wentOfflineRef.current) {
+        wentOfflineRef.current = false;
+        flush();
+      }
+    };
+
+    window.addEventListener("offline", handleOffline);
+    window.addEventListener("online", handleOnline);
+    return () => {
+      window.removeEventListener("offline", handleOffline);
+      window.removeEventListener("online", handleOnline);
+    };
   }, [flush, refresh]);
 
   return { pending, syncing, failed, retry: flush };
