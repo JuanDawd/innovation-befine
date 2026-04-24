@@ -5,10 +5,14 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-heading: var(--font-sans);
+  /* Editorial-atelier type pairing.
+     Fraunces = display, Inter Tight = body/UI, JetBrains Mono = figures.
+     The next/font loader sets --font-sans, --font-display, --font-mono. */
+  --font-heading: var(--font-display);
+  --font-display: var(--font-display);
+  --font-serif: var(--font-display);
   --font-sans: var(--font-sans);
-  --font-mono:
-    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --font-mono: var(--font-mono);
 
   /* Shadcn base colors */
   --color-sidebar-ring: var(--sidebar-ring);
@@ -79,119 +83,140 @@
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
 }
 
+/* ─────────────────────────────────────────────────────────────────
+   BEFINE — editorial atelier palette
+   Light: pink #D93079 on warm ivory #F7F2EA
+   Dark:  pink #E9408E on pure black #010101
+   Sidebar stays dark in both themes (brand identity anchor).
+   ───────────────────────────────────────────────────────────────── */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  /* Brand primary: deep rose-mauve */
-  --primary: oklch(0.45 0.14 350);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0.005 350);
-  --secondary-foreground: oklch(0.3 0.06 350);
-  --muted: oklch(0.97 0.005 350);
-  --muted-foreground: oklch(0.52 0.015 350);
-  /* Brand accent: warm gold */
-  --accent: oklch(0.96 0.03 85);
-  --accent-foreground: oklch(0.35 0.08 60);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.92 0.01 350);
-  --input: oklch(0.92 0.01 350);
-  --ring: oklch(0.55 0.1 350);
-  /* Chart colors: rose spectrum */
-  --chart-1: oklch(0.45 0.14 350);
-  --chart-2: oklch(0.62 0.12 10);
-  --chart-3: oklch(0.72 0.09 30);
-  --chart-4: oklch(0.78 0.12 85);
-  --chart-5: oklch(0.55 0.08 200);
-  --radius: 0.625rem;
-  /* Sidebar: clean white with rose tint */
-  --sidebar: oklch(0.99 0.004 350);
-  --sidebar-foreground: oklch(0.2 0.04 350);
-  --sidebar-primary: oklch(0.45 0.14 350);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.95 0.02 350);
-  --sidebar-accent-foreground: oklch(0.35 0.1 350);
-  --sidebar-border: oklch(0.91 0.015 350);
-  --sidebar-ring: oklch(0.55 0.1 350);
+  /* Warm ivory canvas — not cold white */
+  --background: oklch(0.962 0.012 80);
+  --foreground: oklch(0.15 0.005 60);
+  --card: oklch(0.985 0.008 80);
+  --card-foreground: oklch(0.15 0.005 60);
+  --popover: oklch(0.985 0.008 80);
+  --popover-foreground: oklch(0.15 0.005 60);
 
-  /* Status colors: grey=initial, blue=progress, amber=attention, green=success, red=negative */
-  --status-initial: oklch(0.925 0.005 264);
-  --status-initial-foreground: oklch(0.44 0.01 264);
-  --status-progress: oklch(0.91 0.045 240);
-  --status-progress-foreground: oklch(0.37 0.12 240);
-  --status-attention: oklch(0.92 0.07 85);
-  --status-attention-foreground: oklch(0.42 0.12 60);
-  --status-success: oklch(0.92 0.06 155);
-  --status-success-foreground: oklch(0.37 0.12 155);
+  /* Brand primary: Befine pink — slightly deeper on light for contrast */
+  --primary: oklch(0.58 0.22 0);
+  --primary-foreground: oklch(1 0 0);
+
+  --secondary: oklch(0.935 0.015 80);
+  --secondary-foreground: oklch(0.35 0.015 60);
+  --muted: oklch(0.935 0.015 80);
+  --muted-foreground: oklch(0.52 0.015 60);
+
+  /* Accent: cool mint (pairs with pink, reads as "positive / money") */
+  --accent: oklch(0.92 0.045 165);
+  --accent-foreground: oklch(0.4 0.1 165);
+
+  --destructive: oklch(0.58 0.22 25);
+  --border: oklch(0.87 0.018 75);
+  --input: oklch(0.87 0.018 75);
+  --ring: oklch(0.58 0.22 0);
+
+  /* Chart: pink → mint → amber editorial spectrum */
+  --chart-1: oklch(0.58 0.22 0); /* pink */
+  --chart-2: oklch(0.6 0.1 165); /* mint */
+  --chart-3: oklch(0.6 0.12 65); /* amber */
+  --chart-4: oklch(0.45 0.02 60); /* ink */
+  --chart-5: oklch(0.72 0.16 5); /* soft pink */
+
+  --radius: 0.5rem;
+
+  /* Sidebar: stays dark in BOTH themes — brand identity anchor */
+  --sidebar: oklch(0.08 0.002 60);
+  --sidebar-foreground: oklch(0.94 0.013 80);
+  --sidebar-primary: oklch(0.65 0.23 1);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.18 0.015 10);
+  --sidebar-accent-foreground: oklch(0.96 0.015 80);
+  --sidebar-border: oklch(0.22 0.008 30);
+  --sidebar-ring: oklch(0.65 0.23 1);
+
+  /* Status: neutral=initial, pink=progress, amber=attention, mint=success, deep-pink=negative */
+  --status-initial: oklch(0.92 0.01 80);
+  --status-initial-foreground: oklch(0.4 0.01 60);
+  --status-progress: oklch(0.93 0.06 5);
+  --status-progress-foreground: oklch(0.48 0.2 0);
+  --status-attention: oklch(0.93 0.07 75);
+  --status-attention-foreground: oklch(0.5 0.13 65);
+  --status-success: oklch(0.92 0.05 165);
+  --status-success-foreground: oklch(0.45 0.1 165);
   --status-negative: oklch(0.93 0.05 25);
   --status-negative-foreground: oklch(0.5 0.19 25);
 
   /* Semantic feedback */
-  --success: oklch(0.6 0.16 155);
-  --success-foreground: oklch(0.98 0 0);
-  --warning: oklch(0.75 0.15 65);
+  --success: oklch(0.6 0.1 165); /* mint */
+  --success-foreground: oklch(1 0 0);
+  --warning: oklch(0.7 0.14 65); /* amber */
   --warning-foreground: oklch(0.2 0 0);
-  --info: oklch(0.6 0.12 240);
-  --info-foreground: oklch(0.98 0 0);
+  --info: oklch(0.58 0.22 0); /* pink — no blue in this system */
+  --info-foreground: oklch(1 0 0);
 }
 
 .dark {
-  --background: oklch(0.13 0.01 350);
-  --foreground: oklch(0.96 0.005 350);
-  --card: oklch(0.18 0.015 350);
-  --card-foreground: oklch(0.96 0.005 350);
-  --popover: oklch(0.18 0.015 350);
-  --popover-foreground: oklch(0.96 0.005 350);
-  /* Brand primary: lighter rose for dark mode */
-  --primary: oklch(0.72 0.15 350);
-  --primary-foreground: oklch(0.13 0.01 350);
-  --secondary: oklch(0.22 0.02 350);
-  --secondary-foreground: oklch(0.9 0.01 350);
-  --muted: oklch(0.22 0.02 350);
-  --muted-foreground: oklch(0.62 0.02 350);
-  /* Brand accent: warm gold for dark */
-  --accent: oklch(0.26 0.03 85);
-  --accent-foreground: oklch(0.92 0.05 85);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.65 0.12 350);
-  /* Chart colors: rose spectrum dark */
-  --chart-1: oklch(0.72 0.15 350);
-  --chart-2: oklch(0.62 0.12 10);
-  --chart-3: oklch(0.72 0.09 30);
-  --chart-4: oklch(0.78 0.12 85);
-  --chart-5: oklch(0.55 0.08 200);
-  /* Sidebar dark: deep charcoal with rose tint */
-  --sidebar: oklch(0.16 0.015 350);
-  --sidebar-foreground: oklch(0.9 0.005 350);
-  --sidebar-primary: oklch(0.72 0.15 350);
-  --sidebar-primary-foreground: oklch(0.13 0.01 350);
-  --sidebar-accent: oklch(0.22 0.02 350);
-  --sidebar-accent-foreground: oklch(0.85 0.03 350);
-  --sidebar-border: oklch(1 0 0 / 8%);
-  --sidebar-ring: oklch(0.65 0.12 350);
+  /* Pure-black canvas — editorial after-hours */
+  --background: oklch(0.02 0 0);
+  --foreground: oklch(0.94 0.013 80);
+  --card: oklch(0.06 0.002 60);
+  --card-foreground: oklch(0.94 0.013 80);
+  --popover: oklch(0.08 0.002 60);
+  --popover-foreground: oklch(0.94 0.013 80);
 
-  --status-initial: oklch(0.3 0.005 264);
-  --status-initial-foreground: oklch(0.75 0.01 264);
-  --status-progress: oklch(0.3 0.04 240);
-  --status-progress-foreground: oklch(0.72 0.1 240);
-  --status-attention: oklch(0.32 0.06 85);
-  --status-attention-foreground: oklch(0.78 0.1 60);
-  --status-success: oklch(0.3 0.05 155);
-  --status-success-foreground: oklch(0.72 0.1 155);
-  --status-negative: oklch(0.3 0.04 25);
-  --status-negative-foreground: oklch(0.72 0.15 25);
+  /* Brand primary: brand pink in dark mode */
+  --primary: oklch(0.65 0.23 1);
+  --primary-foreground: oklch(1 0 0);
 
-  --success: oklch(0.55 0.16 155);
-  --success-foreground: oklch(0.98 0 0);
-  --warning: oklch(0.7 0.15 65);
-  --warning-foreground: oklch(0.15 0 0);
-  --info: oklch(0.55 0.12 240);
-  --info-foreground: oklch(0.98 0 0);
+  --secondary: oklch(0.12 0.005 60);
+  --secondary-foreground: oklch(0.9 0.01 80);
+  --muted: oklch(0.12 0.005 60);
+  --muted-foreground: oklch(0.62 0.012 75);
+
+  /* Accent: mint for positive / money on dark */
+  --accent: oklch(0.18 0.02 165);
+  --accent-foreground: oklch(0.81 0.09 165);
+
+  --destructive: oklch(0.68 0.22 25);
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 16%);
+  --ring: oklch(0.65 0.23 1);
+
+  /* Chart: pink → mint → amber spectrum, dark-calibrated */
+  --chart-1: oklch(0.65 0.23 1); /* pink */
+  --chart-2: oklch(0.81 0.09 165); /* mint */
+  --chart-3: oklch(0.79 0.13 75); /* amber */
+  --chart-4: oklch(0.72 0.015 80); /* bone */
+  --chart-5: oklch(0.78 0.18 5); /* soft pink */
+
+  /* Sidebar: unchanged from light (stays dark for identity) */
+  --sidebar: oklch(0.02 0 0);
+  --sidebar-foreground: oklch(0.94 0.013 80);
+  --sidebar-primary: oklch(0.65 0.23 1);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.14 0.015 10);
+  --sidebar-accent-foreground: oklch(0.96 0.013 80);
+  --sidebar-border: oklch(0.22 0.008 30);
+  --sidebar-ring: oklch(0.65 0.23 1);
+
+  --status-initial: oklch(0.2 0.005 60);
+  --status-initial-foreground: oklch(0.72 0.012 75);
+  --status-progress: oklch(0.22 0.05 5);
+  --status-progress-foreground: oklch(0.78 0.18 1);
+  --status-attention: oklch(0.24 0.05 75);
+  --status-attention-foreground: oklch(0.8 0.13 75);
+  --status-success: oklch(0.22 0.04 165);
+  --status-success-foreground: oklch(0.81 0.09 165);
+  --status-negative: oklch(0.22 0.04 25);
+  --status-negative-foreground: oklch(0.72 0.18 25);
+
+  --success: oklch(0.81 0.09 165);
+  --success-foreground: oklch(0.1 0 0);
+  --warning: oklch(0.79 0.13 75);
+  --warning-foreground: oklch(0.12 0 0);
+  --info: oklch(0.65 0.23 1);
+  --info-foreground: oklch(1 0 0);
 }
 
 @layer base {
