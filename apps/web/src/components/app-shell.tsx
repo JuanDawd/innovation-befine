@@ -10,6 +10,7 @@ import { signOut } from "@/lib/auth-client";
 import { NAV_ITEMS, MOBILE_BOTTOM_NAV_ROLES, type NavItem } from "./nav-config";
 import { BrandLogo } from "./brand-logo";
 import { NotificationBell } from "./notification-bell";
+import { VersionBanner } from "./version-banner";
 import type { NotificationRow } from "@/app/(protected)/notifications/actions";
 import type { AppRole } from "@befine/types";
 
@@ -275,6 +276,9 @@ export function AppShell({
             <span className="text-sm text-foreground">{userName}</span>
           </Link>
         </header>
+
+        {/* Version update banner — non-blocking, shown when a new deploy is detected */}
+        <VersionBanner />
 
         {/* Page content */}
         <main

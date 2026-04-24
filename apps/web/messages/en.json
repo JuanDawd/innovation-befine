@@ -681,5 +681,10 @@
     "failedCount": "{count} sync error(s)",
     "retry": "Retry",
     "retryWhenOnline": "Retry when online"
+  },
+  "versionBanner": {
+    "message": "A new version is available.",
+    "refresh": "Refresh now",
+    "dismiss": "Dismiss"
   }
 }

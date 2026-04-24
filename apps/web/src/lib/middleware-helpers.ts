@@ -9,7 +9,14 @@
 import type { AppRole } from "@befine/types";
 
 /** Routes that bypass the session check entirely */
-export const PUBLIC_PATHS = ["/login", "/reset-password", "/api/auth", "/403"];
+export const PUBLIC_PATHS = [
+  "/login",
+  "/reset-password",
+  "/api/auth",
+  "/403",
+  "/api/health",
+  "/api/version",
+];
 
 /** Exact-match public paths (cannot use startsWith because "/" matches everything) */
 export const PUBLIC_EXACT_PATHS = ["/"];

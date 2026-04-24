@@ -5,6 +5,9 @@ import withPWA from "@ducanh2912/next-pwa";
 
 const nextConfig: NextConfig = {
   transpilePackages: ["@befine/types", "@befine/db", "@befine/realtime"],
+  env: {
+    NEXT_PUBLIC_BUILD_ID: process.env.VERCEL_GIT_COMMIT_SHA ?? process.env.BUILD_ID ?? "dev",
+  },
   // Required by Sentry's OpenTelemetry instrumentation.
   // pino + thread-stream must be external to avoid Turbopack mangling worker paths.
   serverExternalPackages: [

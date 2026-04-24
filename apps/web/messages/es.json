@@ -715,5 +715,10 @@
     "failedCount": "{count} error(es) de sincronización",
     "retry": "Reintentar",
     "retryWhenOnline": "Reintentar cuando haya conexión"
+  },
+  "versionBanner": {
+    "message": "Hay una nueva versión disponible.",
+    "refresh": "Actualizar ahora",
+    "dismiss": "Ignorar"
   }
 }
