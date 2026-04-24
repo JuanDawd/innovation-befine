@@ -497,6 +497,11 @@
     "liquidate": "Settle",
     "step1": "1. Select employee",
     "step2": "2. Select business days",
+    "payTodayShortcut": "Pay today's day",
+    "noTodayDay": "No closed business day for today",
+    "earningsDescriptorStylist": "Pay for today's services",
+    "earningsDescriptorClothier": "Pay for today's pieces",
+    "earningsDescriptorSecretary": "Pay for today worked",
     "step3": "3. Review and confirm payment",
     "selectEmployee": "Select employee…",
     "noUnsettledDays": "No unsettled business days.",
@@ -674,6 +679,7 @@
     "pendingCount": "{count} action(s) pending",
     "syncing": "Syncing…",
     "failedCount": "{count} sync error(s)",
-    "retry": "Retry"
+    "retry": "Retry",
+    "retryWhenOnline": "Retry when online"
   }
 }

@@ -531,6 +531,11 @@
     "liquidate": "Liquidar",
     "step1": "1. Selecciona el empleado",
     "step2": "2. Selecciona los días laborales",
+    "payTodayShortcut": "Pagar día de hoy",
+    "noTodayDay": "No hay un día laboral cerrado para hoy",
+    "earningsDescriptorStylist": "Pagar por servicios del día",
+    "earningsDescriptorClothier": "Pagar por piezas del día",
+    "earningsDescriptorSecretary": "Pagar por día trabajado",
     "step3": "3. Revisa y confirma el pago",
     "selectEmployee": "Seleccionar empleado…",
     "noUnsettledDays": "No hay días laborales sin liquidar.",
@@ -708,6 +713,7 @@
     "pendingCount": "{count} acción(es) pendientes",
     "syncing": "Sincronizando…",
     "failedCount": "{count} error(es) de sincronización",
-    "retry": "Reintentar"
+    "retry": "Reintentar",
+    "retryWhenOnline": "Reintentar cuando haya conexión"
   }
 }

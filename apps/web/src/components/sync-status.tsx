@@ -12,8 +12,9 @@ import { useTranslations } from "next-intl";
 import { WifiOffIcon, Loader2Icon, AlertCircleIcon, RefreshCwIcon } from "lucide-react";
 import { useQueueFlush } from "@/lib/use-queue-flush";
 import { Button } from "@/components/ui/button";
+import type { AppRole } from "@befine/types";
 
-export function SyncStatus({ role }: { role: string }) {
+export function SyncStatus({ role }: { role: AppRole }) {
   const t = useTranslations("sync");
   const [isOnline, setIsOnline] = useState(() =>
     typeof navigator !== "undefined" ? navigator.onLine : true,
@@ -58,6 +59,20 @@ export function SyncStatus({ role }: { role: string }) {
             {t("pendingCount", { count: pending })}
           </span>
         )}
+        {failed > 0 && (
+          <span className="rounded-full bg-red-200 dark:bg-red-900 px-2 py-0.5 text-xs font-mono text-red-900 dark:text-red-200">
+            {t("failedCount", { count: failed })}
+          </span>
+        )}
+        <button
+          disabled
+          title={t("retryWhenOnline")}
+          aria-label={t("retryWhenOnline")}
+          className="mt-1 flex items-center gap-1 rounded px-2 py-1 text-xs text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-700 opacity-50 cursor-not-allowed select-none"
+        >
+          <RefreshCwIcon className="size-3" aria-hidden="true" />
+          {t("retry")}
+        </button>
       </div>
     );
   }
