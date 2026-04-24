@@ -47,8 +47,17 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   return (
     <html
       lang={locale}
+      suppressHydrationWarning
       className={cn("font-sans", interTight.variable, fraunces.variable, jetbrainsMono.variable)}
     >
+      <head>
+        {/* No-flash theme init — runs before React hydrates */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('befine-theme');if(t!=='light'&&t!=='dark'){t=window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';}document.documentElement.classList.toggle('dark',t==='dark');document.documentElement.setAttribute('data-theme',t);}catch(e){}})();`,
+          }}
+        />
+      </head>
       <body>
         <NextIntlClientProvider messages={messages}>
           {children}

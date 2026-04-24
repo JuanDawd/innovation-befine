@@ -11,6 +11,7 @@ import { NAV_ITEMS, MOBILE_BOTTOM_NAV_ROLES, type NavItem } from "./nav-config";
 import { BrandLogo } from "./brand-logo";
 import { NotificationBell } from "./notification-bell";
 import { VersionBanner } from "./version-banner";
+import { ThemeToggle } from "./theme-toggle";
 import type { NotificationRow } from "@/app/(protected)/notifications/actions";
 import type { AppRole } from "@befine/types";
 
@@ -37,17 +38,46 @@ function NavLink({
   const Icon = item.icon;
   const label = t(item.key as Parameters<typeof t>[0]);
 
+  // Bottom-tab variant for stylist/clothier mobile
+  if (compact) {
+    if (item.disabled) {
+      return (
+        <span
+          className="flex flex-col items-center gap-1 px-2 py-1.5 text-xs text-muted-foreground opacity-40"
+          aria-disabled="true"
+        >
+          <Icon className="size-5 shrink-0" aria-hidden="true" />
+          <span>{label}</span>
+        </span>
+      );
+    }
+    return (
+      <Link
+        href={item.href}
+        onClick={onClick}
+        aria-current={active ? "page" : undefined}
+        className={cn(
+          "flex flex-col items-center gap-1 px-2 py-1.5 text-xs font-medium transition-colors",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring",
+          active ? "text-primary" : "text-muted-foreground",
+        )}
+      >
+        <Icon className="size-5 shrink-0" aria-hidden="true" />
+        <span>{label}</span>
+      </Link>
+    );
+  }
+
+  // Sidebar variant — editorial rule-based row with a pink active bullet
   if (item.disabled) {
     return (
       <span
-        className={cn(
-          "flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground opacity-40 cursor-not-allowed",
-          compact && "flex-col gap-1 px-2 py-1.5 text-xs",
-        )}
+        className="flex items-center gap-2 border-b border-sidebar-border/40 py-2.5 text-sm text-sidebar-foreground/30"
         aria-disabled="true"
       >
-        <Icon className={cn("shrink-0", compact ? "size-5" : "size-4")} aria-hidden="true" />
-        <span>{label}</span>
+        <span className="size-1 shrink-0 rounded-full bg-transparent" aria-hidden="true" />
+        <Icon className="size-4 shrink-0" aria-hidden="true" />
+        <span className="italic">{label}</span>
       </span>
     );
   }
@@ -56,16 +86,23 @@ function NavLink({
     <Link
       href={item.href}
       onClick={onClick}
-      className={cn(
-        "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-        "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring",
-        active ? "bg-sidebar-accent text-sidebar-accent-foreground" : "text-sidebar-foreground",
-        compact && "flex-col gap-1 px-2 py-1.5 text-xs",
-      )}
       aria-current={active ? "page" : undefined}
+      className={cn(
+        "group relative flex items-center gap-2 border-b border-sidebar-border/40 py-2.5 text-sm transition-all",
+        "hover:pl-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring",
+        active
+          ? "font-medium text-sidebar-foreground"
+          : "text-sidebar-foreground/70 hover:text-sidebar-foreground",
+      )}
     >
-      <Icon className={cn("shrink-0", compact ? "size-5" : "size-4")} aria-hidden="true" />
+      <span
+        aria-hidden="true"
+        className={cn(
+          "size-1 shrink-0 rounded-full transition-all",
+          active ? "bg-primary shadow-[0_0_8px_var(--color-primary)]" : "bg-transparent",
+        )}
+      />
+      <Icon className="size-4 shrink-0" aria-hidden="true" />
       <span>{label}</span>
     </Link>
   );
@@ -79,11 +116,33 @@ function UserInitials({ name }: { name: string }) {
     .join("");
   return (
     <span
-      className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground"
+      className="flex size-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/60 text-xs font-semibold text-primary-foreground"
       aria-hidden="true"
+      style={{ fontFamily: "var(--font-display)" }}
     >
       {initials || "?"}
     </span>
+  );
+}
+
+/** Sub-company identifier in the sidebar — Befine / DoWell / Swimwear */
+function CompanyStrip() {
+  return (
+    <div className="mx-4 rounded-sm border border-sidebar-border/60 bg-gradient-to-b from-primary/[0.06] to-transparent px-3 py-2.5">
+      <div className="text-[9px] font-medium uppercase tracking-[0.22em] text-sidebar-foreground/50">
+        Viewing
+      </div>
+      <div
+        className="text-lg font-medium tracking-tight text-primary"
+        style={{ fontFamily: "var(--font-display)" }}
+      >
+        Befine
+      </div>
+      <div className="mt-1 flex gap-2.5 text-[10px] uppercase tracking-[0.14em] text-sidebar-foreground/30">
+        <span className="cursor-not-allowed">DoWell</span>
+        <span className="cursor-not-allowed">Swimwear</span>
+      </div>
+    </div>
   );
 }
 
@@ -115,29 +174,38 @@ export function AppShell({
   return (
     <div className="flex h-dvh overflow-hidden bg-background">
       {/* ── Desktop sidebar ────────────────────────────────────────── */}
-      <aside className="hidden md:flex md:w-56 md:flex-col md:border-r md:border-sidebar-border md:bg-sidebar">
+      <aside className="hidden md:flex md:w-60 md:flex-col md:border-r md:border-sidebar-border md:bg-sidebar">
         {/* Wordmark */}
-        <div className="flex h-14 items-center border-b border-sidebar-border px-4">
+        <div className="flex h-16 items-center border-b border-sidebar-border/60 px-5">
           <BrandLogo />
         </div>
 
+        {/* Sub-company strip */}
+        <div className="py-5">
+          <CompanyStrip />
+        </div>
+
         {/* Nav items */}
-        <nav className="flex-1 space-y-0.5 overflow-y-auto p-2" aria-label="Navegación principal">
+        <nav
+          className="flex flex-1 flex-col gap-0 overflow-y-auto px-5 pb-4"
+          aria-label="Navegación principal"
+        >
           {navItems.map((item) => (
             <NavLink key={item.href} item={item} active={isActive(item)} />
           ))}
         </nav>
 
-        {/* User + logout */}
-        <div className="border-t border-sidebar-border p-3">
-          <div className="flex items-center gap-2">
+        {/* Theme toggle + user + logout */}
+        <div className="flex flex-col gap-3 border-t border-sidebar-border/60 p-4">
+          <ThemeToggle className="self-start" />
+          <div className="flex items-center gap-2.5">
             <UserInitials name={userName} />
             <span className="min-w-0 flex-1 truncate text-sm text-sidebar-foreground">
               {userName}
             </span>
             <button
               onClick={handleLogout}
-              className="shrink-0 rounded-md p-1.5 text-sidebar-foreground opacity-60 transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+              className="shrink-0 rounded-md p-1.5 text-sidebar-foreground/60 transition-colors hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
               aria-label={t("auth.logout")}
             >
               <LogOut className="size-4" aria-hidden="true" />
@@ -161,26 +229,30 @@ export function AppShell({
           {/* Drawer panel */}
           <div
             className={cn(
-              "fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-sidebar shadow-lg transition-transform duration-200 md:hidden",
+              "fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-sidebar shadow-xl transition-transform duration-200 md:hidden",
               drawerOpen ? "translate-x-0" : "-translate-x-full",
             )}
             role="dialog"
             aria-modal="true"
             aria-label="Menú de navegación"
           >
-            <div className="flex h-14 items-center justify-between border-b border-sidebar-border px-4">
+            <div className="flex h-16 items-center justify-between border-b border-sidebar-border/60 px-5">
               <BrandLogo />
               <button
                 onClick={() => setDrawerOpen(false)}
-                className="rounded-md p-1.5 text-sidebar-foreground opacity-60 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+                className="rounded-md p-1.5 text-sidebar-foreground/60 transition-colors hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
                 aria-label={t("nav.closeMenu")}
               >
                 <X className="size-4" aria-hidden="true" />
               </button>
             </div>
 
+            <div className="py-5">
+              <CompanyStrip />
+            </div>
+
             <nav
-              className="flex-1 space-y-0.5 overflow-y-auto p-2"
+              className="flex flex-1 flex-col gap-0 overflow-y-auto px-5 pb-4"
               aria-label="Navegación principal"
             >
               {navItems.map((item) => (
@@ -193,15 +265,16 @@ export function AppShell({
               ))}
             </nav>
 
-            <div className="border-t border-sidebar-border p-3">
-              <div className="flex items-center gap-2">
+            <div className="flex flex-col gap-3 border-t border-sidebar-border/60 p-4">
+              <ThemeToggle className="self-start" />
+              <div className="flex items-center gap-2.5">
                 <UserInitials name={userName} />
                 <span className="min-w-0 flex-1 truncate text-sm text-sidebar-foreground">
                   {userName}
                 </span>
                 <button
                   onClick={handleLogout}
-                  className="shrink-0 rounded-md p-1.5 text-sidebar-foreground opacity-60 transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+                  className="shrink-0 rounded-md p-1.5 text-sidebar-foreground/60 transition-colors hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
                   aria-label={t("auth.logout")}
                 >
                   <LogOut className="size-4" aria-hidden="true" />
@@ -250,15 +323,18 @@ export function AppShell({
               </div>
             </>
           )}
-          {/* Stylist/clothier: show logout on the right */}
+          {/* Stylist/clothier: theme + logout on the right */}
           {usesBottomNav && (
-            <button
-              onClick={handleLogout}
-              className="rounded-md p-1.5 text-foreground opacity-60 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              aria-label={t("auth.logout")}
-            >
-              <LogOut className="size-4" aria-hidden="true" />
-            </button>
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <button
+                onClick={handleLogout}
+                className="rounded-md p-1.5 text-foreground opacity-60 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                aria-label={t("auth.logout")}
+              >
+                <LogOut className="size-4" aria-hidden="true" />
+              </button>
+            </div>
           )}
         </header>
 
