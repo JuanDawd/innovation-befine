@@ -29,6 +29,13 @@ const withPWAConfig = withPWA({
   workboxOptions: {
     runtimeCaching: [
       {
+        // T09R-R4: Explicit NetworkOnly for all mutating methods so they are
+        // never cached regardless of Workbox version defaults.
+        urlPattern: ({ request }: { request: Request }) =>
+          ["POST", "PUT", "DELETE", "PATCH"].includes(request.method),
+        handler: "NetworkOnly",
+      },
+      {
         // App shell — Cache First
         urlPattern: /^https:\/\/.*\.(js|css|woff2|woff|ttf)$/i,
         handler: "CacheFirst",
@@ -38,8 +45,9 @@ const withPWAConfig = withPWA({
         },
       },
       {
-        // Catalog & reference data — Stale While Revalidate
-        urlPattern: /\/api\/(?!realtime).*/i,
+        // Catalog & reference data — Stale While Revalidate (GET only)
+        urlPattern: ({ url, request }: { url: URL; request: Request }) =>
+          request.method === "GET" && /\/api\/(?!realtime)/i.test(url.pathname),
         handler: "StaleWhileRevalidate",
         options: {
           cacheName: "api-cache",
