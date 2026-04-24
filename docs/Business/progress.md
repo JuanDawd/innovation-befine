@@ -652,7 +652,7 @@ Update `apps/web/src/lib/db/README.md` with a short "When to use `getDb()` vs `g
 | ---- | ---------------------------------------------------- | ------- | ---------------------------------------------- |
 | T083 | Responsive QA pass (mobile + desktop, all roles)     | pending | all phases                                     |
 | T084 | Loading states and optimistic UI                     | pending | all phases                                     |
-| T086 | Database backup policy and restore drill             | pending | T005                                           |
+| T086 | Database backup policy and restore drill             | done    | T005                                           |
 | T087 | Uptime monitoring (`/api/health` endpoint + monitor) | done    | T004                                           |
 | T088 | Internal training guide (one page per role)          | pending | all phases                                     |
 | T102 | Stale-tab version detection _(new)_                  | done    | T004                                           |
