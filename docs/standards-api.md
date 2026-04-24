@@ -306,6 +306,62 @@ When rate-limited, return:
 
 ---
 
+## Idempotency
+
+All mutating server actions and API route handlers that create or modify financial records accept an idempotency key to prevent duplicate side effects on retry.
+
+### How the key is resolved (T09R-R3)
+
+The server extracts the key from **either** source, preferring the header:
+
+1. `Idempotency-Key` HTTP request header — preferred for API route handlers
+2. `idempotencyKey` field in the JSON/form body — used by server actions
+
+```typescript
+import { headers } from "next/headers";
+
+async function resolveIdempotencyKey(bodyKey?: string): Promise<string | undefined> {
+  const h = await headers();
+  return h.get("idempotency-key") ?? bodyKey;
+}
+```
+
+Server actions receive the key as part of the validated Zod schema (`idempotencyKey: z.uuid()`). For API route handlers, additionally read the header:
+
+```typescript
+// apps/web/src/app/api/example/route.ts
+export async function POST(req: Request) {
+  const body = await req.json();
+  const h = headers();
+  const idempotencyKey = h.get("idempotency-key") ?? body.idempotencyKey;
+  // ...
+}
+```
+
+### Idempotency key requirements
+
+- Must be a **client-generated UUID v4**
+- Expires after **24 hours**
+- Duplicate requests with the same key return the cached `ActionResult` without re-executing
+- The key is stored alongside the mutation result in `idempotency_keys` table
+
+### Implementation
+
+Use the shared helpers in `apps/web/src/lib/idempotency.ts`. Call `storeIdempotency` **inside** the same DB transaction as the mutation (T09R-R12):
+
+```typescript
+const txResult = await txDb.transaction(async (tx) => {
+  const cached = await checkIdempotency(idempotencyKey, tx);
+  if (cached) return cached as ActionResult<T>;
+
+  const result = await doMutation(tx);
+  await storeIdempotency(idempotencyKey, "routeName", result, tx);
+  return result;
+});
+```
+
+---
+
 ## API Route Handler conventions
 
 For the few endpoints that use Route Handlers instead of Server Actions:
