@@ -3,7 +3,7 @@
 import { useState, useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Loader2Icon, CheckIcon } from "lucide-react";
+import { Loader2Icon, CheckIcon, ZapIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   previewEarnings,
@@ -105,6 +105,40 @@ export function PayrollScreen({ days, employees, history, initialEmployeeId }: P
   const settledDays = days.filter((d) => d.isSettled);
   const isAdjusted = preview && parseInt(adjustedAmount, 10) !== preview.computedAmount;
 
+  // Today's date in business timezone (America/Bogota)
+  const todayStr = new Intl.DateTimeFormat("sv-SE", { timeZone: "America/Bogota" }).format(
+    new Date(),
+  );
+  const todayUnsettledDay = unsettledDays.find((d) => d.date === todayStr);
+
+  // Determine role-aware earnings descriptor
+  const selectedEmployeeObj = employees.find((e) => e.id === selectedEmployee);
+  const earningsDescriptorKey =
+    selectedEmployeeObj?.role === "stylist"
+      ? "earningsDescriptorStylist"
+      : selectedEmployeeObj?.role === "clothier"
+        ? "earningsDescriptorClothier"
+        : "earningsDescriptorSecretary";
+
+  function handlePayToday() {
+    if (!todayUnsettledDay || !selectedEmployee) return;
+    const newSelection = new Set<string>([todayUnsettledDay.id]);
+    setSelectedDays(newSelection);
+    setPreview(null);
+    setSuccess(false);
+    // Trigger preview immediately
+    setError(null);
+    startTransition(async () => {
+      const res = await previewEarnings(selectedEmployee, [todayUnsettledDay.id]);
+      if (!res.success) {
+        setError(res.error.message);
+        return;
+      }
+      setPreview(res.data);
+      setAdjustedAmount(String(res.data.computedAmount));
+    });
+  }
+
   return (
     <div className="space-y-6">
       {/* Step 1: Select employee */}
@@ -135,7 +169,29 @@ export function PayrollScreen({ days, employees, history, initialEmployeeId }: P
       {/* Step 2: Select business days */}
       {selectedEmployee && (
         <div className="space-y-2">
-          <h2 className="text-sm font-semibold">{t("step2")}</h2>
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="text-sm font-semibold">{t("step2")}</h2>
+            {selectedEmployeeObj && (
+              <span className="text-xs text-muted-foreground">
+                {t(earningsDescriptorKey as Parameters<typeof t>[0])}
+              </span>
+            )}
+          </div>
+          {/* Pay today shortcut */}
+          {todayUnsettledDay ? (
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={isPending}
+              onClick={handlePayToday}
+              className="gap-1.5"
+            >
+              <ZapIcon className="size-3.5" aria-hidden="true" />
+              {t("payTodayShortcut")}
+            </Button>
+          ) : (
+            selectedEmployee && <p className="text-xs text-muted-foreground">{t("noTodayDay")}</p>
+          )}
           {unsettledDays.length === 0 ? (
             <p className="text-sm text-muted-foreground">{t("noUnsettledDays")}</p>
           ) : (
