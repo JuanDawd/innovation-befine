@@ -49,18 +49,25 @@ function StatCard({
   return (
     <div
       className={cn(
-        "rounded-xl border bg-card p-5 shadow-sm flex flex-col gap-3",
-        accent && "border-primary/20 bg-primary/5",
+        "flex flex-col gap-3 border-t border-border pt-5 pr-6",
+        accent && "border-t-primary",
       )}
     >
       <div className="flex items-center gap-2 text-muted-foreground">
-        <Icon className="size-4 shrink-0" aria-hidden="true" />
-        <span className="text-xs font-medium uppercase tracking-wide">{label}</span>
+        <Icon className="size-3.5 shrink-0" aria-hidden="true" />
+        <span className="text-[10px] font-medium uppercase tracking-[0.22em]">{label}</span>
       </div>
-      <p className="text-2xl font-bold font-mono tabular-nums" suppressHydrationWarning>
+      <p
+        className={cn(
+          "text-5xl font-light leading-[0.95] tracking-[-0.035em] tabular-nums",
+          accent ? "text-primary" : "text-foreground",
+        )}
+        style={{ fontFamily: "var(--font-display)", fontVariantNumeric: "tabular-nums" }}
+        suppressHydrationWarning
+      >
         {value}
       </p>
-      {sub && <p className="text-xs text-muted-foreground">{sub}</p>}
+      {sub && <p className="border-t border-border/60 pt-2 text-xs text-muted-foreground">{sub}</p>}
     </div>
   );
 }
@@ -135,21 +142,29 @@ export function DayAtAGlance({ revenue, initialOpenCount, isDayOpen }: DayAtAGla
           sub={isDayOpen ? t("openTicketsSub") : t("dayClosedSub")}
         />
         {/* Unsettled earnings stub — wired in T070 */}
-        <div className="rounded-xl border bg-card p-5 shadow-sm flex flex-col gap-3 opacity-60">
+        <div className="flex flex-col gap-3 border-t border-border pt-5 pr-6 opacity-60">
           <div className="flex items-center gap-2 text-muted-foreground">
-            <AlertCircleIcon className="size-4 shrink-0" aria-hidden="true" />
-            <span className="text-xs font-medium uppercase tracking-wide">
+            <AlertCircleIcon className="size-3.5 shrink-0" aria-hidden="true" />
+            <span className="text-[10px] font-medium uppercase tracking-[0.22em]">
               {t("unsettledEarnings")}
             </span>
           </div>
-          <p className="text-2xl font-bold text-muted-foreground">—</p>
-          <p className="text-xs text-muted-foreground">{t("unsettledEarningsSub")}</p>
+          <p
+            className="text-5xl font-light leading-[0.95] tracking-[-0.035em] text-muted-foreground"
+            style={{ fontFamily: "var(--font-display)" }}
+          >
+            —
+          </p>
+          <p className="border-t border-border/60 pt-2 text-xs text-muted-foreground">
+            {t("unsettledEarningsSub")}
+          </p>
         </div>
       </div>
 
       {/* Quick actions */}
       <div>
-        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
+        <p className="mb-3 text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground">
+          <span className="font-serif italic text-primary">§ </span>
           {t("quickActions")}
         </p>
         <div className="flex flex-wrap gap-2">

@@ -24,6 +24,7 @@ import {
   PendingEditRequestsSkeleton,
 } from "@/components/pending-edit-requests";
 import { DayAtAGlance } from "@/components/day-at-a-glance";
+import { PageHeader } from "@/components/page-header";
 import { Skeleton } from "@/components/ui/loading-skeleton";
 
 async function EditRequestsPanel() {
@@ -56,10 +57,10 @@ function StatsAndBoardSkeleton() {
       {/* Stats skeleton */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="rounded-xl border bg-card p-5 shadow-sm flex flex-col gap-3">
+          <div key={i} className="flex flex-col gap-3 border-t border-border pt-5 pr-6">
             <Skeleton className="h-3 w-24" />
-            <Skeleton className="h-8 w-32" />
-            <Skeleton className="h-3 w-40" />
+            <Skeleton className="h-12 w-40" />
+            <Skeleton className="h-3 w-36" />
           </div>
         ))}
       </div>
@@ -78,24 +79,29 @@ export default async function CashierHomePage() {
   ]);
 
   return (
-    <div className="flex flex-col gap-6 p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold">{t("roles.cashier_admin")}</h1>
-          <p className="text-sm text-muted-foreground">{t("home.subtitle")}</p>
-        </div>
-        <div className="flex gap-2">
-          <Link href="/cashier/tickets/new" className={buttonVariants({ variant: "outline" })}>
-            <PlusIcon className="mr-2 size-4" aria-hidden="true" />
-            {t("tickets.logService")}
-          </Link>
-          <Link href="/cashier/checkout" className={buttonVariants()}>
-            <CreditCardIcon className="mr-2 size-4" aria-hidden="true" />
-            {t("dayAtAGlance.actionCheckout")}
-          </Link>
-        </div>
-      </div>
+    <div className="flex flex-col gap-8 p-6 md:p-10">
+      <PageHeader
+        crumbs={["Innovations", "Befine", t("roles.cashier_admin")]}
+        title={
+          <>
+            {t("roles.cashier_admin")}
+            <em>.</em>
+          </>
+        }
+        subtitle={t("home.subtitle")}
+        actions={
+          <>
+            <Link href="/cashier/tickets/new" className={buttonVariants({ variant: "outline" })}>
+              <PlusIcon className="mr-2 size-4" aria-hidden="true" />
+              {t("tickets.logService")}
+            </Link>
+            <Link href="/cashier/checkout" className={buttonVariants()}>
+              <CreditCardIcon className="mr-2 size-4" aria-hidden="true" />
+              {t("dayAtAGlance.actionCheckout")}
+            </Link>
+          </>
+        }
+      />
 
       {/* Business day panel */}
       <div className="max-w-sm">
