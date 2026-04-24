@@ -656,7 +656,7 @@ Update `apps/web/src/lib/db/README.md` with a short "When to use `getDb()` vs `g
 | T087 | Uptime monitoring (`/api/health` endpoint + monitor) | done    | T004                                           |
 | T088 | Internal training guide (one page per role)          | done    | all phases                                     |
 | T102 | Stale-tab version detection _(new)_                  | done    | T004                                           |
-| T100 | Data migration from existing spreadsheets _(new)_    | pending | T029, T030                                     |
+| T100 | Data migration from existing spreadsheets _(new)_    | done    | T029, T030                                     |
 | T106 | User acceptance testing (UAT) _(new — QA review Q7)_ | pending | T088                                           |
 | T089 | Production cutover checklist and go-live             | pending | T083, T084, T086, T087, T088, T100, T102, T106 |
 

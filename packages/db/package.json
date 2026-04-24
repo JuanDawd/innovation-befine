@@ -18,6 +18,7 @@
     "db:seed": "dotenv -e ../../.env.local -- node --import tsx/esm src/seed.ts",
     "db:seed:analytics": "dotenv -e ../../.env.local -- node --import tsx/esm src/seed-analytics.ts --analytics --confirm-destructive",
     "db:bench:analytics": "dotenv -e ../../.env.local -- node --import tsx/esm src/bench-analytics.ts",
+    "db:import:clients": "dotenv -e ../../.env.local -- node --import tsx/esm src/import-clients.ts",
     "lint": "eslint .",
     "format": "prettier --check .",
     "typecheck": "tsc --noEmit"
