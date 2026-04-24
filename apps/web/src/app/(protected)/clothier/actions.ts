@@ -11,7 +11,7 @@
 import { headers } from "next/headers";
 import { eq, and, or, isNull, inArray } from "drizzle-orm";
 import { auth } from "@/lib/auth";
-import { getDb } from "@/lib/db";
+import { getDb, getTxDb } from "@/lib/db";
 import { employees, users, clothBatches, batchPieces, clothPieces } from "@befine/db/schema";
 import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
@@ -185,26 +185,39 @@ export async function markPieceDone(
       },
     };
 
+  const txDb = getTxDb();
   const db = getDb();
 
-  const result = await db
-    .update(batchPieces)
-    .set({
-      status: "done_pending_approval",
-      completedAt: new Date(),
-      version: expectedVersion + 1,
-    })
-    .where(
-      and(
-        eq(batchPieces.id, pieceId),
-        eq(batchPieces.assignedToEmployeeId, ctx.employeeId),
-        eq(batchPieces.status, "pending"),
-        eq(batchPieces.version, expectedVersion),
-      ),
-    )
-    .returning({ id: batchPieces.id });
+  // T09R-R12: storeIdempotency runs inside the same transaction as the mutation
+  const successResult: ActionResult<void> = { success: true, data: undefined };
+  const txResult = await txDb.transaction(async (tx) => {
+    const result = await tx
+      .update(batchPieces)
+      .set({
+        status: "done_pending_approval",
+        completedAt: new Date(),
+        version: expectedVersion + 1,
+      })
+      .where(
+        and(
+          eq(batchPieces.id, pieceId),
+          eq(batchPieces.assignedToEmployeeId, ctx.employeeId),
+          eq(batchPieces.status, "pending"),
+          eq(batchPieces.version, expectedVersion),
+        ),
+      )
+      .returning({ id: batchPieces.id });
 
-  if (result.length === 0)
+    if (result.length === 0) return null;
+
+    if (idempotencyKey) {
+      await storeIdempotency(idempotencyKey, "markPieceDone", successResult, tx as never);
+    }
+
+    return result[0].id;
+  });
+
+  if (!txResult)
     return {
       success: false,
       error: {
@@ -234,7 +247,5 @@ export async function markPieceDone(
   );
 
   revalidatePath("/clothier");
-  const successResult: ActionResult<void> = { success: true, data: undefined };
-  if (idempotencyKey) await storeIdempotency(idempotencyKey, "markPieceDone", successResult);
   return successResult;
 }
