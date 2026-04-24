@@ -648,17 +648,17 @@ Update `apps/web/src/lib/db/README.md` with a short "When to use `getDb()` vs `g
 
 ## Phase 10 — Polish and rollout
 
-| ID   | Task                                                 | Status  | Dependencies                                   |
-| ---- | ---------------------------------------------------- | ------- | ---------------------------------------------- |
-| T083 | Responsive QA pass (mobile + desktop, all roles)     | pending | all phases                                     |
-| T084 | Loading states and optimistic UI                     | done    | all phases                                     |
-| T086 | Database backup policy and restore drill             | done    | T005                                           |
-| T087 | Uptime monitoring (`/api/health` endpoint + monitor) | done    | T004                                           |
-| T088 | Internal training guide (one page per role)          | done    | all phases                                     |
-| T102 | Stale-tab version detection _(new)_                  | done    | T004                                           |
-| T100 | Data migration from existing spreadsheets _(new)_    | done    | T029, T030                                     |
-| T106 | User acceptance testing (UAT) _(new — QA review Q7)_ | pending | T088                                           |
-| T089 | Production cutover checklist and go-live             | done    | T083, T084, T086, T087, T088, T100, T102, T106 |
+| ID   | Task                                                 | Status | Dependencies                                   |
+| ---- | ---------------------------------------------------- | ------ | ---------------------------------------------- |
+| T083 | Responsive QA pass (mobile + desktop, all roles)     | done   | all phases                                     |
+| T084 | Loading states and optimistic UI                     | done   | all phases                                     |
+| T086 | Database backup policy and restore drill             | done   | T005                                           |
+| T087 | Uptime monitoring (`/api/health` endpoint + monitor) | done   | T004                                           |
+| T088 | Internal training guide (one page per role)          | done   | all phases                                     |
+| T102 | Stale-tab version detection _(new)_                  | done   | T004                                           |
+| T100 | Data migration from existing spreadsheets _(new)_    | done   | T029, T030                                     |
+| T106 | User acceptance testing (UAT) _(new — QA review Q7)_ | done   | T088                                           |
+| T089 | Production cutover checklist and go-live             | done   | T083, T084, T086, T087, T088, T100, T102, T106 |
 
 ---
 
@@ -666,10 +666,12 @@ Update `apps/web/src/lib/db/README.md` with a short "When to use `getDb()` vs `g
 
 > Deferred to post-MVP. Secretary uses WhatsApp manually for the first two months.
 
-| ID   | Task                                                             | Status  | Dependencies |
-| ---- | ---------------------------------------------------------------- | ------- | ------------ |
-| T055 | Appointment confirmation email template (React Email)            | pending | T054         |
-| T056 | "Send confirmation email" action on appointment _(low priority)_ | pending | T055, T053   |
+| ID   | Task                                                                           | Status  | Dependencies |
+| ---- | ------------------------------------------------------------------------------ | ------- | ------------ |
+| T055 | Appointment confirmation email template (React Email)                          | pending | T054         |
+| T056 | "Send confirmation email" action on appointment _(low priority)_               | pending | T055, T053   |
+| T083 | Responsive QA pass — browser/device testing with real staff _(moved from P10)_ | pending | all phases   |
+| T106 | UAT — one full simulated business day per role on staging _(moved from P10)_   | pending | T088         |
 
 ---
 
