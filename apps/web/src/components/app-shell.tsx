@@ -195,14 +195,26 @@ export function AppShell({
           ))}
         </nav>
 
-        {/* Theme toggle + user + logout */}
+        {/* Theme toggle + user + notifications + logout */}
         <div className="flex flex-col gap-3 border-t border-sidebar-border/60 p-4">
           <ThemeToggle className="self-start" />
-          <div className="flex items-center gap-2.5">
-            <UserInitials name={userName} />
-            <span className="min-w-0 flex-1 truncate text-sm text-sidebar-foreground">
-              {userName}
-            </span>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/profile"
+              className="flex min-w-0 flex-1 items-center gap-2.5 rounded-md p-1 transition-colors hover:bg-sidebar-accent"
+              aria-label={t("nav.settings")}
+            >
+              <UserInitials name={userName} />
+              <span className="min-w-0 flex-1 truncate text-sm text-sidebar-foreground">
+                {userName}
+              </span>
+            </Link>
+            {employeeId && (
+              <NotificationBell
+                employeeId={employeeId}
+                initialNotifications={initialNotifications}
+              />
+            )}
             <button
               onClick={handleLogout}
               className="shrink-0 rounded-md p-1.5 text-sidebar-foreground/60 transition-colors hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
@@ -267,11 +279,24 @@ export function AppShell({
 
             <div className="flex flex-col gap-3 border-t border-sidebar-border/60 p-4">
               <ThemeToggle className="self-start" />
-              <div className="flex items-center gap-2.5">
-                <UserInitials name={userName} />
-                <span className="min-w-0 flex-1 truncate text-sm text-sidebar-foreground">
-                  {userName}
-                </span>
+              <div className="flex items-center gap-2">
+                <Link
+                  href="/profile"
+                  onClick={() => setDrawerOpen(false)}
+                  className="flex min-w-0 flex-1 items-center gap-2.5 rounded-md p-1 transition-colors hover:bg-sidebar-accent"
+                  aria-label={t("nav.settings")}
+                >
+                  <UserInitials name={userName} />
+                  <span className="min-w-0 flex-1 truncate text-sm text-sidebar-foreground">
+                    {userName}
+                  </span>
+                </Link>
+                {employeeId && (
+                  <NotificationBell
+                    employeeId={employeeId}
+                    initialNotifications={initialNotifications}
+                  />
+                )}
                 <button
                   onClick={handleLogout}
                   className="shrink-0 rounded-md p-1.5 text-sidebar-foreground/60 transition-colors hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
@@ -285,73 +310,40 @@ export function AppShell({
         </>
       )}
 
-      {/* ── Main column: header + content ──────────────────────────── */}
+      {/* ── Main column: content only, no top header ──────────────── */}
       <div className="flex min-w-0 flex-1 flex-col">
-        {/* Mobile header */}
-        <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-background px-4 md:hidden">
-          {usesBottomNav ? (
-            /* Stylist / clothier: just the wordmark, no hamburger */
-            <BrandLogo />
-          ) : (
-            /* Admin / secretary: hamburger to open drawer */
-            <>
-              <button
-                onClick={() => setDrawerOpen(true)}
-                className="rounded-md p-1.5 text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                aria-label={t("nav.openMenu")}
-                aria-expanded={drawerOpen}
-                aria-controls="mobile-drawer"
-              >
-                <Menu className="size-5" aria-hidden="true" />
-              </button>
-              <BrandLogo />
-              {/* Bell + logout on the right */}
-              <div className="flex items-center gap-1">
-                {employeeId && (
-                  <NotificationBell
-                    employeeId={employeeId}
-                    initialNotifications={initialNotifications}
-                  />
-                )}
-                <button
-                  onClick={handleLogout}
-                  className="rounded-md p-1.5 text-foreground opacity-60 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  aria-label={t("auth.logout")}
-                >
-                  <LogOut className="size-4" aria-hidden="true" />
-                </button>
-              </div>
-            </>
-          )}
-          {/* Stylist/clothier: theme + logout on the right */}
-          {usesBottomNav && (
-            <div className="flex items-center gap-2">
-              <ThemeToggle />
-              <button
-                onClick={handleLogout}
-                className="rounded-md p-1.5 text-foreground opacity-60 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                aria-label={t("auth.logout")}
-              >
-                <LogOut className="size-4" aria-hidden="true" />
-              </button>
-            </div>
-          )}
-        </header>
-
-        {/* Desktop header (hidden on mobile — sidebar handles identity there) */}
-        <header className="hidden h-14 shrink-0 items-center justify-end gap-2 border-b border-border bg-background px-4 md:flex">
-          {employeeId && (
-            <NotificationBell employeeId={employeeId} initialNotifications={initialNotifications} />
-          )}
-          <Link
-            href="/profile"
-            className="flex items-center gap-2 rounded-lg px-2 py-1 transition-colors hover:bg-muted"
-            aria-label={t("nav.settings")}
+        {/* Floating mobile hamburger — admin / secretary need drawer access */}
+        {!usesBottomNav && (
+          <button
+            onClick={() => setDrawerOpen(true)}
+            className="fixed left-3 top-3 z-30 flex size-10 items-center justify-center rounded-full border border-border bg-background/90 text-foreground shadow-sm backdrop-blur transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:hidden"
+            aria-label={t("nav.openMenu")}
+            aria-expanded={drawerOpen}
+            aria-controls="mobile-drawer"
           >
-            <UserInitials name={userName} />
-            <span className="text-sm text-foreground">{userName}</span>
-          </Link>
-        </header>
+            <Menu className="size-5" aria-hidden="true" />
+          </button>
+        )}
+
+        {/* Floating mobile utility cluster — stylist / clothier (no sidebar on mobile) */}
+        {usesBottomNav && (
+          <div className="fixed right-3 top-3 z-30 flex items-center gap-1.5 rounded-full border border-border bg-background/90 px-1.5 py-1 shadow-sm backdrop-blur md:hidden">
+            <ThemeToggle />
+            {employeeId && (
+              <NotificationBell
+                employeeId={employeeId}
+                initialNotifications={initialNotifications}
+              />
+            )}
+            <button
+              onClick={handleLogout}
+              className="flex size-8 items-center justify-center rounded-full text-foreground/60 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              aria-label={t("auth.logout")}
+            >
+              <LogOut className="size-4" aria-hidden="true" />
+            </button>
+          </div>
+        )}
 
         {/* Version update banner — non-blocking, shown when a new deploy is detected */}
         <VersionBanner />
