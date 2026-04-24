@@ -1195,6 +1195,16 @@
 
 ---
 
+### H-28 — Lighthouse: background/foreground contrast ratio failure (WCAG AA)
+
+- **Severity:** High
+- **Status:** Open
+- **Affected:** Unknown component (Lighthouse desktop audit, 2026-04-24)
+- **Description:** Lighthouse Accessibility score is 95 (not 100). One or more colour pairs fail the WCAG AA contrast requirement (4.5:1 for normal text, 3:1 for large text). Exact element not identified — requires inspecting the Lighthouse "Accessibility" section in Chrome DevTools to see which element is flagged.
+- **Fix:** Open Chrome DevTools Lighthouse → Accessibility → "Background and foreground colors do not have a sufficient contrast ratio" — click the failing element. Adjust the relevant Tailwind/CSS colour token to meet WCAG AA. Re-run Lighthouse to verify score reaches 100. Must be fixed before T089 (go-live) — CLAUDE.md mandates WCAG AA.
+
+---
+
 ### M-35 — Archived-client TOCTOU in `createLargeOrder`
 
 - **Severity:** Medium
@@ -1352,6 +1362,66 @@
 - **Affected:** T081 (`apps/web/next.config.ts:50–53`)
 - **Description:** Workbox is configured with `skipWaiting: true` and `clientsClaim: true`, which means a new SW version takes over on next navigation without asking the user. Users mid-session on a long-lived tab don't get a prompt when a new release ships — they just see behaviour change mid-action or on reload. For a POS app where cashiers keep the same tab open all day, this is subtly disruptive.
 - **Fix:** Subscribe to the `controllerchange` event on `navigator.serviceWorker` and show a toast "Hay una nueva versión — recarga para actualizar" with a Reload button. Alternative: keep `skipWaiting: false` and explicitly `registration.waiting.postMessage({ type: "SKIP_WAITING" })` after user confirms.
+
+---
+
+### M-49 — Missing meta description on all pages (SEO score 83)
+
+- **Severity:** Medium
+- **Status:** Open
+- **Affected:** All pages (`apps/web/src/app/layout.tsx`)
+- **Description:** Lighthouse SEO audit flags "Document does not have a meta description." Currently no `<meta name="description">` is set in any page's `<head>`. This lowers the SEO score to 83. While this is an internal B2B app, login page and any public-facing paths are indexed by search engines.
+- **Fix:** Add a `description` field to the `metadata` export in `apps/web/src/app/layout.tsx` and override per page where appropriate (login, 403). Example: `export const metadata = { title: "BeFine", description: "Sistema de gestión para salones de belleza" }`.
+
+---
+
+### M-50 — `robots.txt` has 2 validation errors
+
+- **Severity:** Medium
+- **Status:** Open
+- **Affected:** `apps/web/public/robots.txt`
+- **Description:** Lighthouse reports "robots.txt is not valid — 2 errors found." Invalid `robots.txt` can cause Google Search Console to reject the file, making crawl directives unreliable.
+- **Fix:** Validate `public/robots.txt` at `https://search.google.com/search-console/robots-testing-tool`. Fix the two errors (likely missing newlines, invalid directive syntax, or duplicate `User-agent` stanzas). For a private app, a minimal valid file is: `User-agent: *\nDisallow: /`.
+
+---
+
+### M-51 — Browser console errors logged (Lighthouse Best Practices: 96)
+
+- **Severity:** Medium
+- **Status:** Open
+- **Affected:** Unknown — requires browser DevTools inspection
+- **Description:** Lighthouse Best Practices score is 96 (not 100) due to "Browser errors were logged to the console." Likely candidates: hydration mismatch warnings, missing environment variable warnings, or uncaught promise rejections.
+- **Fix:** Open Chrome DevTools Console on the production URL; filter for errors (red). Identify and fix each one. Common sources: `process.env` variables missing at runtime, React hydration mismatches from server/client rendering differences, or uncaught async rejections in event handlers.
+
+---
+
+### L-41 — Legacy JavaScript (est. −13 KB savings)
+
+- **Severity:** Low
+- **Status:** Open
+- **Affected:** Next.js build config (`apps/web/next.config.ts`)
+- **Description:** Lighthouse flags legacy JavaScript that could save ~13 KB. Next.js may be transpiling modern syntax for older browsers due to `browserslist` or `@babel/preset-env` targets.
+- **Fix:** Verify `apps/web/.browserslistrc` or `package.json` `browserslist` field targets modern browsers only (e.g. `> 0.5%, last 2 versions, not dead, not IE 11`). Check if any polyfills are being included unnecessarily. Consider `next.config.ts` `experimental.browsersListQueries` if needed.
+
+---
+
+### L-42 — Unused JavaScript (est. −78 KB savings)
+
+- **Severity:** Low
+- **Status:** Open
+- **Affected:** Analytics dashboard, large dialogs (`apps/web/src/app`)
+- **Description:** Lighthouse flags ~78 KB of unused JavaScript on initial load. Primary suspect: Recharts (~120 KB gzip, loaded eagerly on analytics page). Secondary suspects: large dialog components imported at module level.
+- **Fix:** Apply `next/dynamic` with `{ ssr: false }` to the Recharts area chart and bar chart components on the analytics dashboard. Evaluate other large imports (dialog content, heavy form components) for lazy-loading. Re-run Lighthouse to verify savings. Note: analytics LCP is already at 2.8 s (close to 3.0 s budget) — this fix directly protects that target.
+
+---
+
+### L-43 — Page prevents bfcache restoration (2 failure reasons)
+
+- **Severity:** Low
+- **Status:** Open
+- **Affected:** Unknown pages
+- **Description:** Lighthouse reports the page blocked back/forward cache (bfcache) for 2 reasons. Common causes: `Cache-Control: no-store` response header, `unload` event listener registered, or use of `SharedArrayBuffer`. Blocked bfcache means browser back/forward navigation does a full reload instead of instant restore.
+- **Fix:** Open Chrome DevTools → Application → Back/forward cache → Test. Inspect the listed failure reasons. Remove `unload` listeners (replace with `pagehide` or `visibilitychange`). If `Cache-Control: no-store` is the cause, evaluate whether it's needed or can be scoped more narrowly via Vercel headers config.
 
 ---
 

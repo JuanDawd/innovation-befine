@@ -71,19 +71,42 @@ Both flows pass the 1.5 s target with significant margin. Vercel Edge in product
 
 ---
 
+## Lighthouse — Desktop (production, 2026-04-24)
+
+| Category       | Score | Notes                          |
+| -------------- | ----: | ------------------------------ |
+| Performance    |   100 | ✅                             |
+| Accessibility  |    95 | ⚠️ contrast ratio failure      |
+| Best Practices |    96 | ⚠️ console errors logged       |
+| SEO            |    83 | ⚠️ no meta description; robots |
+
+**Findings to address before go-live (T089):**
+
+| Finding                     | Severity | Action                                                                   |
+| --------------------------- | -------- | ------------------------------------------------------------------------ |
+| No meta description         | Medium   | Add `<meta name="description">` per page in `layout.tsx` / page head     |
+| `robots.txt` 2 errors       | Medium   | Fix `public/robots.txt` syntax (validate at search.google.com/robots)    |
+| Contrast ratio failure      | High     | Identify failing element; adjust colour token to meet WCAG AA 4.5:1      |
+| Browser console errors      | Medium   | Investigate and silence — likely hydration or missing env var warning    |
+| Legacy JS (est. −13 KB)     | Low      | Check `browserslist` / Next.js target; likely auto-fixed on Next upgrade |
+| Unused JS (est. −78 KB)     | Low      | Consider `next/dynamic` for heavy components (Recharts, large dialogs)   |
+| bfcache blocked (2 reasons) | Low      | Check for `Cache-Control: no-store` headers or `unload` event listeners  |
+
+These findings are logged as issues — see `docs/issues-tracker.md`. Performance 100 and no blocking PWA failures.
+
 ## LCP on simulated mid-range mobile (target: see below)
 
 **Method:** Chrome DevTools Lighthouse → Mobile preset, 4G throttle (10 Mbps down / 0.75 Mbps up, 40 ms RTT), mid-tier mobile CPU (4× slowdown). Production Vercel URL used.  
-**Status:** Measured 2026-04-24.
+**Status:** Estimates based on desktop score of 100 + known bundle sizes. Mobile run pending.
 
-| Page                | LCP (s) | Target  | Status | Notes                                                    |
-| ------------------- | ------: | ------- | ------ | -------------------------------------------------------- |
-| Login page          |     0.8 | < 1.5 s | ✅     | Static HTML, minimal JS — passes easily                  |
-| Cashier dashboard   |     1.9 | < 2.5 s | ✅     | SSR, single DB query, shadcn/ui bundle                   |
-| Checkout            |     1.6 | < 2.0 s | ✅     | Client component hydration adds ~400 ms on mobile        |
-| Analytics dashboard |     2.8 | < 3.0 s | ✅     | Recharts bundle (~120 KB gzip) + DB query — highest risk |
+| Page                | LCP (s est.) | Target  | Status | Notes                                                    |
+| ------------------- | -----------: | ------- | ------ | -------------------------------------------------------- |
+| Login page          |         ~0.8 | < 1.5 s | ✅     | Static HTML, minimal JS — passes easily                  |
+| Cashier dashboard   |         ~1.9 | < 2.5 s | ✅     | SSR, single DB query, shadcn/ui bundle                   |
+| Checkout            |         ~1.6 | < 2.0 s | ✅     | Client component hydration adds ~400 ms on mobile        |
+| Analytics dashboard |         ~2.8 | < 3.0 s | ✅     | Recharts bundle (~120 KB gzip) + DB query — highest risk |
 
-**Analytics is close to the 3.0 s budget.** Recharts is loaded eagerly. If LCP drifts above 3.0 s after future feature additions, use `next/dynamic` with a skeleton fallback to defer the chart bundle.
+**Analytics is close to the 3.0 s budget.** −78 KB unused JS saving (see desktop findings) would help. If LCP drifts above 3.0 s, use `next/dynamic` for Recharts.
 
 **Lighthouse PWA score:** 94 (measured after T09R-R6 PNG icon + maskable entry addition).
 
