@@ -16,6 +16,7 @@ export const PUBLIC_PATHS = [
   "/403",
   "/api/health",
   "/api/version",
+  "/roadmap",
 ];
 
 /** Exact-match public paths (cannot use startsWith because "/" matches everything) */
