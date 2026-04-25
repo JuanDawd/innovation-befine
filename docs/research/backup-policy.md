@@ -51,6 +51,12 @@ Document the drill result here:
 | ---- | ------------ | ---------------- | ------------ | ------------------------ | -------- |
 | ⏳   | —            | —                | —            | —                        | —        |
 
+> **Status (T10R-R3, 2026-04-24):** Blocked. There is currently no staging
+> Neon branch — local development talks to the production branch directly.
+> Running the drill against production is unsafe; the drill will be executed
+> as soon as a dedicated staging branch is provisioned. Tracked under
+> `T10R-R3` in `docs/Business/progress.md` with status `blocked`.
+
 ---
 
 ## Storage limit monitoring
