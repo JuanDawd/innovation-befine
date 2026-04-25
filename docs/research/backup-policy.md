@@ -75,10 +75,22 @@ To set up a Neon storage alert:
 
 ## Secondary backup (manual)
 
-For additional safety, export a full dump monthly via:
+For additional safety, export a full dump monthly. `vercel env pull` writes a
+`.env` file rather than emitting a single variable to stdout, so source the
+file before invoking `pg_dump` and remove it immediately after:
 
 ```bash
-pg_dump "$(vercel env pull --environment=production -- DATABASE_URL)" \
+vercel env pull .env.production --environment=production --yes
+set -a; . ./.env.production; set +a
+pg_dump "$DATABASE_URL" --no-owner --no-acl -F c \
+  -f "befine-backup-$(date +%Y%m%d).dump"
+rm .env.production
+```
+
+Alternative (Neon CLI, no Vercel round-trip):
+
+```bash
+pg_dump "$(neonctl connection-string main --project-id <project-id>)" \
   --no-owner --no-acl -F c -f "befine-backup-$(date +%Y%m%d).dump"
 ```
 

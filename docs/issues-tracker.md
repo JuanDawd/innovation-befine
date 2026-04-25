@@ -1528,7 +1528,7 @@
 ### L-46 — Backup policy references non-existent `vercel env pull` subcommand flag
 
 - **Severity:** Low
-- **Status:** Open
+- **Status:** Resolved
 - **Affected:** T086 (`docs/research/backup-policy.md:75-77`)
 - **Description:** The monthly manual dump example uses `vercel env pull --environment=production -- DATABASE_URL`. The `vercel env pull` subcommand downloads a `.env` file; it does not emit a single variable to stdout. The `--` separator is not a documented flag for piping a specific variable value into `pg_dump`. Whoever runs this verbatim gets a `.env.local` file on disk and a failed `pg_dump` call.
 - **Fix:** Replace with a verified command sequence: `vercel env pull .env.production --environment=production --yes && set -a && . .env.production && set +a && pg_dump "$DATABASE_URL" --no-owner --no-acl -F c -f "befine-backup-$(date +%Y%m%d).dump" && rm .env.production`. Or route through the Neon CLI: `neonctl connection-string main --project-id <id> | xargs pg_dump …`.
@@ -1645,3 +1645,4 @@
 | M-55     | 2026-04-25    | Immediate mount check, hidden-tab pause, ±30s jitter, exponential backoff to 30 min, NODE_ENV dev guard  | T10R-R8                      |
 | L-44     | 2026-04-25    | `/api/health` + `/api/version` moved to `PUBLIC_EXACT_PATHS`; 2 new tests reject prefix variants         | T10R-R9                      |
 | L-45     | 2026-04-25    | `checkPublicRateLimit` (IP-keyed): 60/min health, 30/min version; 429 + `retry-after` on exceedance      | T10R-R10                     |
+| L-46     | 2026-04-25    | Replaced bogus `vercel env pull -- DATABASE_URL` with sourced `.env.production` flow; neonctl alt added  | T10R-R11                     |
