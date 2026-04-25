@@ -1508,7 +1508,7 @@
 ### L-44 — `isPublic` uses startsWith, making `/api/health-anything` publicly accessible
 
 - **Severity:** Low
-- **Status:** Open
+- **Status:** Resolved
 - **Affected:** T087 (`apps/web/src/lib/middleware-helpers.ts:68-70`)
 - **Description:** `isPublic(pathname)` returns `PUBLIC_PATHS.some(p => pathname.startsWith(p))`. With `"/api/health"` and `"/api/version"` in the list, any route starting with those prefixes — `/api/healthz`, `/api/healthcheck`, `/api/version-beta`, `/api/versions/old` — will bypass the session check. No such route exists today, but a future developer adding `/api/health-admin` or `/api/version-internal` for legitimately-auth'd purposes could silently expose it to the public.
 - **Fix:** Change these two entries to exact-match: move `/api/health` and `/api/version` into `PUBLIC_EXACT_PATHS` (which already uses `includes`). Leave `/api/auth` as a prefix match since Better Auth mounts multiple sub-routes there. Add a comment explaining the exact-match rationale.
@@ -1643,3 +1643,4 @@
 | M-53     | 2026-04-25    | RFC 4180 `parseCsvLine`, BOM strip, CLI guard, 11 unit tests covering Colombian compound surnames        | T10R-R6                      |
 | M-54     | 2026-04-25    | In-memory phone/email Set dedup, `db.transaction` (createTxDb) wrapper, summary with intra-file skips    | T10R-R7                      |
 | M-55     | 2026-04-25    | Immediate mount check, hidden-tab pause, ±30s jitter, exponential backoff to 30 min, NODE_ENV dev guard  | T10R-R8                      |
+| L-44     | 2026-04-25    | `/api/health` + `/api/version` moved to `PUBLIC_EXACT_PATHS`; 2 new tests reject prefix variants         | T10R-R9                      |

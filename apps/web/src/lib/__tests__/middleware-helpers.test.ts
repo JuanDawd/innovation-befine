@@ -36,6 +36,18 @@ describe("isPublic", () => {
     expect(isPublic("/secretary")).toBe(false);
     expect(isPublic("/admin/employees")).toBe(false);
   });
+
+  it("allows /api/health and /api/version as exact matches only (T10R-R9)", () => {
+    expect(isPublic("/api/health")).toBe(true);
+    expect(isPublic("/api/version")).toBe(true);
+  });
+
+  it("does not allow /api/health or /api/version prefix variants (T10R-R9)", () => {
+    expect(isPublic("/api/healthz")).toBe(false);
+    expect(isPublic("/api/health-admin")).toBe(false);
+    expect(isPublic("/api/version-internal")).toBe(false);
+    expect(isPublic("/api/versions/old")).toBe(false);
+  });
 });
 
 describe("isShared", () => {

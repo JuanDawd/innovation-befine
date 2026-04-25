@@ -9,18 +9,15 @@
 import type { AppRole } from "@befine/types";
 
 /** Routes that bypass the session check entirely */
-export const PUBLIC_PATHS = [
-  "/login",
-  "/reset-password",
-  "/api/auth",
-  "/403",
-  "/api/health",
-  "/api/version",
-  "/roadmap",
-];
+export const PUBLIC_PATHS = ["/login", "/reset-password", "/api/auth", "/403", "/roadmap"];
 
-/** Exact-match public paths (cannot use startsWith because "/" matches everything) */
-export const PUBLIC_EXACT_PATHS = ["/"];
+/**
+ * Exact-match public paths. Used for routes where prefix matching would be
+ * unsafe — `/` would otherwise match everything, and `/api/health` /
+ * `/api/version` would otherwise expose any future `/api/health-admin` or
+ * `/api/version-internal` route to the public (T10R-R9).
+ */
+export const PUBLIC_EXACT_PATHS = ["/", "/api/health", "/api/version"];
 
 /**
  * API paths that bypass session and role-path checks entirely (truly public).
