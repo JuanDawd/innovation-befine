@@ -69,7 +69,11 @@ function isPublicSafe(task: StabilizationTask): boolean {
 }
 
 export function buildPublicSnapshot(snapshot: StabilizationSnapshot): PublicSnapshot {
-  const safe = snapshot.tasks.filter(isPublicSafe);
+  return buildPublicSnapshotFromMany([snapshot]);
+}
+
+export function buildPublicSnapshotFromMany(snapshots: StabilizationSnapshot[]): PublicSnapshot {
+  const safe = snapshots.flatMap((snap) => snap.tasks.filter(isPublicSafe));
 
   const titles = new Set<string>();
   const tasks: PublicTask[] = [];
@@ -85,8 +89,9 @@ export function buildPublicSnapshot(snapshot: StabilizationSnapshot): PublicSnap
   const total = tasks.length;
   const remaining = total - done;
   const progressPct = total === 0 ? 0 : Math.round((done / total) * 100);
+  const phase = snapshots.map((s) => s.phase).join(" + ");
 
-  return { phase: snapshot.phase, total, done, remaining, progressPct, tasks };
+  return { phase, total, done, remaining, progressPct, tasks };
 }
 
 export { simplifyTitle };

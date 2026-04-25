@@ -24,10 +24,13 @@ export interface StabilizationSnapshot {
   progressPct: number;
 }
 
-const FILE_PATH = join(process.cwd(), "..", "..", "docs", "stabilization-phase.md");
+const FILE_PATHS = [
+  join(process.cwd(), "..", "..", "docs", "stabilization-phase.md"),
+  join(process.cwd(), "..", "..", "docs", "stabilization-phase-2.md"),
+];
 
 async function readSource(): Promise<string> {
-  return await readFile(FILE_PATH, "utf8");
+  return await readFile(FILE_PATHS[0], "utf8");
 }
 
 function parseStatus(value: string): StabilizationStatus {
@@ -108,4 +111,20 @@ export function parseStabilization(source: string): StabilizationSnapshot {
 export async function getStabilizationSnapshot(): Promise<StabilizationSnapshot> {
   const source = await readSource();
   return parseStabilization(source);
+}
+
+export async function getStabilizationSnapshots(): Promise<StabilizationSnapshot[]> {
+  const sources = await Promise.all(
+    FILE_PATHS.map(async (path) => {
+      try {
+        return await readFile(path, "utf8");
+      } catch {
+        return null;
+      }
+    }),
+  );
+  return sources
+    .filter((s): s is string => s !== null)
+    .map(parseStabilization)
+    .filter((snap) => snap.total > 0);
 }

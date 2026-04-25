@@ -1,5 +1,5 @@
-import { getStabilizationSnapshot } from "@/lib/stabilization";
-import { buildPublicSnapshot, type PublicTask } from "@/lib/stabilization-public";
+import { getStabilizationSnapshots } from "@/lib/stabilization";
+import { buildPublicSnapshotFromMany, type PublicTask } from "@/lib/stabilization-public";
 import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -11,7 +11,7 @@ const STATUS_COPY: Record<PublicTask["status"], { label: string; className: stri
 };
 
 export default async function PublicRoadmapPage() {
-  const snapshot = buildPublicSnapshot(await getStabilizationSnapshot());
+  const snapshot = buildPublicSnapshotFromMany(await getStabilizationSnapshots());
 
   return (
     <div className="min-h-dvh bg-background">

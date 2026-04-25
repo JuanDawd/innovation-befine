@@ -3,7 +3,8 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { hasRole } from "@/lib/middleware-helpers";
 import {
-  getStabilizationSnapshot,
+  getStabilizationSnapshots,
+  type StabilizationSnapshot,
   type StabilizationStatus,
   type StabilizationType,
 } from "@/lib/stabilization";
@@ -83,7 +84,7 @@ export default async function AdminRoadmapPage() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session || !hasRole(session.user, "cashier_admin")) redirect("/403");
 
-  const [stab, progress] = await Promise.all([getStabilizationSnapshot(), getProgressSnapshot()]);
+  const [stabs, progress] = await Promise.all([getStabilizationSnapshots(), getProgressSnapshot()]);
 
   return (
     <div className="px-6 py-8 max-w-5xl mx-auto space-y-12">
@@ -100,86 +101,10 @@ export default async function AdminRoadmapPage() {
         </p>
       </header>
 
-      {/* ── Stabilization section ───────────────────────────────────────────── */}
-      <section className="space-y-6">
-        <div className="flex items-baseline justify-between">
-          <h2
-            className="text-2xl font-semibold tracking-tight"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
-            {stab.phase}
-          </h2>
-          <span className="text-sm text-muted-foreground">
-            {stab.done}/{stab.total} hechas · {stab.progressPct}%
-          </span>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          <Stat label="Total" value={stab.total} />
-          <Stat label="Hechas" value={stab.done} accent="success" />
-          <Stat label="En curso" value={stab.inProgress} accent="progress" />
-          <Stat label="Pendientes" value={stab.pending} />
-        </div>
-
-        <ProgressBar pct={stab.progressPct} />
-
-        <ul className="space-y-3">
-          {stab.tasks.map((task, idx) => (
-            <li
-              key={`${idx}-${task.title}`}
-              className="rounded-lg border border-border bg-card p-4 shadow-sm"
-            >
-              <div className="flex flex-wrap items-start justify-between gap-2">
-                <div className="min-w-0 flex-1 space-y-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <TypeChip type={task.type} />
-                    <h3 className="text-sm font-semibold leading-snug">{task.title}</h3>
-                  </div>
-                  {task.scope[0] && (
-                    <p className="text-xs text-muted-foreground">{task.scope[0]}</p>
-                  )}
-                </div>
-                <StabStatusBadge status={task.status} />
-              </div>
-
-              {(task.steps.length > 0 || task.acceptance.length > 0) && (
-                <div className="mt-3 grid gap-3 md:grid-cols-2">
-                  {task.steps.length > 0 && (
-                    <Block title="Pasos">
-                      <ol className="ml-4 list-decimal space-y-0.5 text-xs text-muted-foreground">
-                        {task.steps.map((s, i) => (
-                          <li key={i}>{s}</li>
-                        ))}
-                      </ol>
-                    </Block>
-                  )}
-                  {task.acceptance.length > 0 && (
-                    <Block title="Aceptación">
-                      <ul className="ml-4 list-disc space-y-0.5 text-xs text-muted-foreground">
-                        {task.acceptance.map((s, i) => (
-                          <li key={i}>{s}</li>
-                        ))}
-                      </ul>
-                    </Block>
-                  )}
-                </div>
-              )}
-
-              {task.test.length > 0 && (
-                <div className="mt-3">
-                  <Block title="Validación">
-                    <ul className="ml-4 list-disc space-y-0.5 text-xs text-muted-foreground">
-                      {task.test.map((s, i) => (
-                        <li key={i}>{s}</li>
-                      ))}
-                    </ul>
-                  </Block>
-                </div>
-              )}
-            </li>
-          ))}
-        </ul>
-      </section>
+      {/* ── Stabilization sections ──────────────────────────────────────────── */}
+      {stabs.map((stab) => (
+        <StabilizationSection key={stab.phase} stab={stab} />
+      ))}
 
       {/* ── MVP + Post-MVP section ──────────────────────────────────────────── */}
       <section className="space-y-6">
@@ -210,6 +135,88 @@ export default async function AdminRoadmapPage() {
         </div>
       </section>
     </div>
+  );
+}
+
+function StabilizationSection({ stab }: { stab: StabilizationSnapshot }) {
+  return (
+    <section className="space-y-6">
+      <div className="flex items-baseline justify-between">
+        <h2
+          className="text-2xl font-semibold tracking-tight"
+          style={{ fontFamily: "var(--font-display)" }}
+        >
+          {stab.phase}
+        </h2>
+        <span className="text-sm text-muted-foreground">
+          {stab.done}/{stab.total} hechas · {stab.progressPct}%
+        </span>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <Stat label="Total" value={stab.total} />
+        <Stat label="Hechas" value={stab.done} accent="success" />
+        <Stat label="En curso" value={stab.inProgress} accent="progress" />
+        <Stat label="Pendientes" value={stab.pending} />
+      </div>
+
+      <ProgressBar pct={stab.progressPct} />
+
+      <ul className="space-y-3">
+        {stab.tasks.map((task, idx) => (
+          <li
+            key={`${idx}-${task.title}`}
+            className="rounded-lg border border-border bg-card p-4 shadow-sm"
+          >
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div className="min-w-0 flex-1 space-y-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <TypeChip type={task.type} />
+                  <h3 className="text-sm font-semibold leading-snug">{task.title}</h3>
+                </div>
+                {task.scope[0] && <p className="text-xs text-muted-foreground">{task.scope[0]}</p>}
+              </div>
+              <StabStatusBadge status={task.status} />
+            </div>
+
+            {(task.steps.length > 0 || task.acceptance.length > 0) && (
+              <div className="mt-3 grid gap-3 md:grid-cols-2">
+                {task.steps.length > 0 && (
+                  <Block title="Pasos">
+                    <ol className="ml-4 list-decimal space-y-0.5 text-xs text-muted-foreground">
+                      {task.steps.map((s, i) => (
+                        <li key={i}>{s}</li>
+                      ))}
+                    </ol>
+                  </Block>
+                )}
+                {task.acceptance.length > 0 && (
+                  <Block title="Aceptación">
+                    <ul className="ml-4 list-disc space-y-0.5 text-xs text-muted-foreground">
+                      {task.acceptance.map((s, i) => (
+                        <li key={i}>{s}</li>
+                      ))}
+                    </ul>
+                  </Block>
+                )}
+              </div>
+            )}
+
+            {task.test.length > 0 && (
+              <div className="mt-3">
+                <Block title="Validación">
+                  <ul className="ml-4 list-disc space-y-0.5 text-xs text-muted-foreground">
+                    {task.test.map((s, i) => (
+                      <li key={i}>{s}</li>
+                    ))}
+                  </ul>
+                </Block>
+              </div>
+            )}
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 

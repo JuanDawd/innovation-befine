@@ -664,6 +664,8 @@ Update `apps/web/src/lib/db/README.md` with a short "When to use `getDb()` vs `g
 
 ## Phase 10R — Remediation (Opus audit, 2026-04-24)
 
+> **Note (2026-04-25):** T10R-R5 (training-guide screenshots, M-52) moved to Stabilization-2 — see `docs/stabilization-phase-2.md`.
+
 > Created by Phase 10 completion review. Phase 10 shipped `/api/health`, `/api/version`, a shared `loading.tsx`, the version banner, the backup-policy runbook, the CSV client import, four role training guides, and the go-live checklist. Regression: 396 tests pass, typecheck clean, lint clean, full `turbo` cache replay. However the audit surfaces one **Critical** (C-21 no CSP headers despite T089 AC + go-live checklist claiming otherwise), three **High** (H-43 T084 optimistic ticket status update is unimplemented — zero `useOptimistic` usage in the repo; H-44 T086 restore drill has never been executed — runbook table is empty placeholders; H-45 issues-tracker Open-status is badly out of sync with Phase 7R/8R/9R work, so the go-live "no open Critical or High" gate cannot be evaluated meaningfully), four **Medium** (M-52 T088 training guides contain zero screenshots despite explicit AC; M-53 T100 CSV parser breaks on quoted fields with embedded commas — common in Colombian compound surnames; M-54 T100 lacks in-file duplicate detection and transactional boundary; M-55 version banner polls forever with no visibility/backoff/jitter), and three **Low** (L-44 `/api/health`+`/api/version` use `startsWith` public-path matching; L-45 no rate limits on the two new public endpoints; L-46 backup runbook cites an incorrect `vercel env pull` flag). **T089 (go-live cutover) is blocked until C-21, H-43, H-44, and H-45 are resolved — the four stakeholder-critical items that gate the go-live decision. Medium and Low items should be resolved before cutover but may be deferred to a post-launch batch with explicit stakeholder sign-off.**
 
 | ID       | Task                                                                                                  | Status  | Severity | Source     |
@@ -672,7 +674,6 @@ Update `apps/web/src/lib/db/README.md` with a short "When to use `getDb()` vs `g
 | T10R-R2  | Fix: implement `useOptimistic` for ticket status transitions; add revert-on-error test (H-43)         | done    | High     | Opus audit |
 | T10R-R3  | Fix: execute Neon PITR restore drill on staging; fill result table in `backup-policy.md` (H-44)       | blocked | High     | Opus audit |
 | T10R-R4  | Fix: reconcile `docs/issues-tracker.md` Open-status against Phase 7R/8R/9R code; update log (H-45)    | done    | High     | Opus audit |
-| T10R-R5  | Fix: add annotated screenshots to the 2–3 hardest steps in each training guide (M-52)                 | pending | Medium   | Opus audit |
 | T10R-R6  | Fix: replace handroll CSV parser with RFC 4180 parser + Colombian-name unit tests (M-53)              | done    | Medium   | Opus audit |
 | T10R-R7  | Fix: in-file dedup + transactional import + summary with intra-file skip count (M-54)                 | done    | Medium   | Opus audit |
 | T10R-R8  | Fix: version banner — immediate check on mount, visibility pause, backoff, jitter (M-55)              | done    | Medium   | Opus audit |
