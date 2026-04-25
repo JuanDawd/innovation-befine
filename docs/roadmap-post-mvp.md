@@ -7,165 +7,9 @@
 
 ---
 
-## 1. UI / UX redesign
+## 1. Feature additions
 
-The MVP UI was built for correctness and speed of delivery. Post-MVP, a design pass brings it to production quality using the full capability of the already-installed stack (shadcn/ui, Base UI, Lucide Icons, Tailwind).
-
-### 1.1 Icon audit and replacement
-
-**Problem:** Several screens use no icons, wrong icons, or inconsistent icon sizes. Icon-only controls lack `aria-label`.
-
-**Plan:**
-
-| Screen / component                             | Current state            | Target state                                                                                               |
-| ---------------------------------------------- | ------------------------ | ---------------------------------------------------------------------------------------------------------- |
-| Nav sidebar items                              | Text-only links          | Lucide icon + label; icon-only on collapsed sidebar                                                        |
-| Cashier ticket cards                           | Status badge only        | Status-appropriate icon left of badge (e.g. `ClockIcon` for logged, `CreditCardIcon` for awaiting_payment) |
-| Action buttons (Edit, Delete, Approve, Reject) | Text or ad-hoc icons     | Consistent Lucide icons; icon-only on mobile with `aria-label`                                             |
-| Empty states                                   | Text only                | Lucide illustration icon + heading + description                                                           |
-| Toast notifications                            | Text only                | Leading icon (CheckCircle2, AlertCircle, Info, XCircle)                                                    |
-| Form field errors                              | Red text                 | `AlertCircleIcon` inline before message                                                                    |
-| Loading spinners                               | `Loader2Icon` everywhere | Keep `Loader2Icon` but standardise size (`size-4` in buttons, `size-6` standalone)                         |
-| Business day open/closed                       | Text badge               | `SunIcon` / `MoonIcon` with colour token                                                                   |
-
-**Rules:**
-
-- Source: Lucide Icons exclusively — never heroicons, react-icons, or fontawesome.
-- Import individually: `import { IconName } from "lucide-react"` — no barrel imports.
-- Icon-only interactive elements **must** have `aria-label`.
-- Icon size inside buttons: `size-4`. Standalone decorative icons: `size-5` or `size-6`.
-
----
-
-### 1.2 Responsive layout — page-size awareness
-
-**Problem:** Several list and form screens do not adapt to viewport size. Specifically:
-
-- Tables overflow horizontally on mobile instead of switching to a card layout.
-- Forms use full-width inputs on desktop where a max-width constraint would read better.
-- The cashier dashboard card grid has no minimum card width — cards become unusably narrow on small screens.
-- Dialog widths are not capped, making them too wide on large monitors.
-
-**Plan:**
-
-| Context                                                  | Current                                           | Target                                                                                                                               |
-| -------------------------------------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| Data tables (employee list, client list, ticket history) | Fixed columns regardless of viewport              | Mobile: card-per-row layout (`< 768px`); tablet+: table                                                                              |
-| Forms (employee creation, catalog edit)                  | Full-width inputs                                 | Max-width container: `max-w-lg mx-auto` on desktop; full-width on mobile                                                             |
-| Cashier dashboard grid                                   | `sm:grid-cols-2 lg:grid-cols-3` with no min-width | Add `min-w-[280px]` per card; collapse to single column below 480px                                                                  |
-| Dialogs                                                  | Various `max-w-*` values                          | Standardise: `max-w-sm` (confirmations), `max-w-md` (forms), `max-w-lg` (complex forms), `max-w-2xl` (detail views); always `w-full` |
-| Page padding                                             | `p-6` everywhere                                  | `p-4` on mobile (`< 768px`), `p-6` on tablet, `p-8` on desktop                                                                       |
-| Section headings                                         | `text-2xl` regardless of viewport                 | `text-xl` on mobile, `text-2xl` on desktop                                                                                           |
-
-**Breakpoint reference (from wireframes.md):**
-
-```
-mobile  < 768px   → single column, full-width, bottom nav (stylist/clothier)
-tablet  768–1024px → two columns, sidebar collapsed
-desktop > 1024px  → sidebar expanded, multi-column grids
-```
-
----
-
-### 1.3 Catalog variant UI — accordion with mutual exclusion
-
-**Problem:** Service variant rows in the catalog admin screen all expand inline simultaneously, causing visual clutter and loss of context on both mobile and desktop. Creating a new variant and editing an existing one can be open at the same time, which confuses focus.
-
-**Current behaviour:** Variants are listed in a flat table with inline edit forms that all stay open independently.
-
-**Target behaviour:**
-
-- Variants are displayed as an **Accordion** (one open at a time).
-- Opening an edit form for variant A automatically closes the form for variant B.
-- The "Add variant" form is a special accordion item pinned at the bottom, also mutually exclusive with any edit form.
-- On mobile the accordion items are full-width cards; on desktop they remain inside the service card layout.
-
-**Implementation notes:**
-
-- Use **Base UI `Collapsible`** (already installed, consistent with the rest of the component system) or build a simple controlled accordion with `useState<string | null>(openId)`.
-- Do NOT use a library accordion — keep it consistent with the project's Base UI / shadcn/ui components.
-- The controlled state lives in the parent `ServiceCard` component.
-- Closing an open item discards unsaved changes (show a `ConfirmationDialog` if the form is dirty).
-- Animation: `transition-all duration-200 overflow-hidden` on the collapsible content panel.
-
-**Schema of the controlled state:**
-
-```ts
-type AccordionState = { type: "none" } | { type: "edit"; variantId: string } | { type: "add" };
-
-const [open, setOpen] = useState<AccordionState>({ type: "none" });
-
-function requestOpen(next: AccordionState, isDirty: boolean) {
-  if (isDirty) {
-    // show ConfirmationDialog; on confirm → setOpen(next)
-  } else {
-    setOpen(next);
-  }
-}
-```
-
----
-
-### 1.4 Wider use of Dialogs for mutations
-
-**Problem:** Several destructive or multi-step actions navigate to a new page or perform inline mutations without a confirmation step. This creates context loss and accidental actions.
-
-**Target:** Use `Dialog` (from `@/components/ui/dialog`, backed by Base UI) for:
-
-| Action                      | Current                       | Target                                                                            |
-| --------------------------- | ----------------------------- | --------------------------------------------------------------------------------- |
-| Employee deactivation       | Inline button → direct action | `ConfirmationDialog` with employee name in the prompt                             |
-| Client archival             | Inline button → direct action | `ConfirmationDialog`                                                              |
-| Business day close          | Full form in page             | `Dialog` with summary of open tickets (if any)                                    |
-| Service / variant deletion  | Inline button                 | `ConfirmationDialog` with impact warning (e.g. "2 open tickets use this variant") |
-| Payout recording            | Separate page                 | `Dialog` with stepped form (select period → review amounts → confirm)             |
-| Ticket price override       | Inline in checkout            | Already a dialog — keep; standardise width to `max-w-sm`                          |
-| Batch piece approval (T047) | TBD                           | `Dialog` with piece detail and approve / reject buttons                           |
-
-**Rules:**
-
-- Destructive actions (delete, deactivate, archive, close day) always require `ConfirmationDialog`.
-- Complex mutations with 3+ fields use a `Dialog` with a form inside.
-- Simple single-field edits (rename, toggle) can stay inline.
-- Dialogs always have a visible close button and respond to Escape key (Base UI provides this).
-
----
-
-### 1.5 Consistent empty states
-
-**Problem:** Empty states are inconsistent — some screens show a plain text string, others show nothing.
-
-**Target:** Every list/table view uses the existing `EmptyState` component:
-
-```tsx
-<EmptyState
-  icon={UsersIcon}
-  title="No hay empleados activos"
-  description="Crea el primer empleado desde el botón de arriba."
-  action={<Button>Crear empleado</Button>} // optional
-/>
-```
-
-Screens to audit: employee list, client list, ticket history, catalog (no services, no variants), closed tickets, appointment list, batch list, notification dropdown.
-
----
-
-### 1.6 Toast notifications — standardise
-
-**Problem:** Mutation feedback is inconsistent — some use a custom inline `toast` state, others use nothing, a few use different patterns.
-
-**Target:**
-
-- Install and configure a single toast provider (e.g. **Sonner**, which is shadcn/ui's default).
-- Replace all ad-hoc `toast` state variables with `toast.success()` / `toast.error()`.
-- Add a leading icon to every toast (CheckCircle2 for success, XCircle for error, Info for info).
-- Keep duration: 4s for success, 6s for error (gives time to read).
-
----
-
-## 2. Feature additions
-
-### 2.1 Push notifications (browser)
+### 1.1 Push notifications (browser)
 
 > Stretch goal from T048. Requires the service worker from T081.
 
@@ -173,7 +17,7 @@ Screens to audit: employee list, client list, ticket history, catalog (no servic
 - Clothier receives a push when a piece is assigned.
 - Requires: VAPID keys, `PushSubscription` stored per employee in DB, service worker background sync.
 
-### 2.2 Client deduplication tool (admin)
+### 1.2 Client deduplication tool (admin)
 
 > Guest-to-client conversion was deferred post-MVP (stakeholder decision, April 2026).
 
@@ -181,19 +25,19 @@ Screens to audit: employee list, client list, ticket history, catalog (no servic
 - Merge tool: pick a canonical record, redirect all tickets from the duplicate to the canonical.
 - No automatic merging — always requires admin confirmation.
 
-### 2.3 Appointment reminders via WhatsApp / SMS
+### 1.3 Appointment reminders via WhatsApp / SMS
 
 - Triggered 24h before appointment.
 - Requires an SMS/WhatsApp gateway (Twilio, Meta Cloud API).
 - Opt-in per client (adds `reminder_consent` boolean to clients table).
 
-### 2.4 Multi-location support
+### 1.4 Multi-location support
 
 - A single Innovation Befine account may eventually manage multiple salon locations.
 - Requires: `locations` table, employee ↔ location assignment, per-location business days, role scoping per location.
 - **Not in MVP scope** — noted here to avoid schema decisions that would make it impossible to add later. Key constraint: keep `business_day_id` as the primary partitioning key (already done).
 
-### 2.5 Accountant export improvements
+### 1.5 Accountant export improvements
 
 > T076 (CSV export) is already in Phase 8.
 
@@ -203,14 +47,7 @@ Post-MVP additions:
 - DIAN-compatible format for VAT reporting (Colombian tax authority).
 - Scheduled monthly email to accountant with the CSV attached (Resend + cron).
 
-### 2.6 Dark mode support
-
-- Tailwind and the CSS token system already define dark mode variants (`:dark` selectors in `globals.css`).
-- Missing: a user-facing toggle (currently only follows `prefers-color-scheme`).
-- Add a `ThemeToggle` button to the app shell header.
-- Persist preference in `localStorage`.
-
-### 2.7 Appointment confirmation emails
+### 1.6 Appointment confirmation emails
 
 > Deferred from MVP (T055 / T056). Secretary uses WhatsApp manually for the first two months.
 
@@ -221,13 +58,13 @@ Post-MVP additions:
 
 ---
 
-## 3. Client-facing booking app
+## 2. Client-facing booking app
 
 > **Status:** Not in MVP. Decision to build this is not yet made — this section captures the design space so the MVP schema does not foreclose the option.
 
 Clients could book their own appointments through a public-facing mini-app, without staff involvement. This is a significant scope expansion — it adds a new user type, a new auth flow, and a new surface to maintain.
 
-### 3.1 What it would be
+### 2.1 What it would be
 
 A lightweight public web app (or a separate route group on the same Next.js app) where a saved client can:
 
@@ -239,7 +76,7 @@ A lightweight public web app (or a separate route group on the same Next.js app)
 
 **Not in scope for the booking app:** payment, cloth orders, ticket creation, any staff-only data.
 
-### 3.2 Architecture decisions to make before building
+### 2.2 Architecture decisions to make before building
 
 | Question                  | Options                                                                         | Constraint                                                                                                  |
 | ------------------------- | ------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
@@ -250,7 +87,7 @@ A lightweight public web app (or a separate route group on the same Next.js app)
 | Double-booking prevention | DB-level unique constraint on (employee_id, datetime) already planned in T051   | T051 must be complete first                                                                                 |
 | Cancellation policy       | Cutoff window configurable per-business (e.g. no cancel within 2h)              | Needs a `booking_policy` row in `business_settings`                                                         |
 
-### 3.3 MVP schema changes required
+### 2.3 MVP schema changes required
 
 The current schema supports this feature with minimal additions:
 
@@ -274,7 +111,7 @@ CREATE TABLE stylist_availability (
 
 The `appointments` table (T049) already has `status` enum with `booked` — this flow uses it directly.
 
-### 3.4 Stack for the booking app
+### 2.4 Stack for the booking app
 
 Keep the same stack — this is not a reason to introduce new dependencies:
 
@@ -287,7 +124,7 @@ Keep the same stack — this is not a reason to introduce new dependencies:
 | Email confirmation    | Resend + React Email (already integrated in T054/T055)                  |
 | Reminders             | Resend scheduled email or cron (Vercel cron, free tier)                 |
 
-### 3.5 Pre-conditions before building
+### 2.5 Pre-conditions before building
 
 All of these must be complete and stable first:
 
@@ -300,21 +137,21 @@ All of these must be complete and stable first:
 
 ---
 
-## 4. Performance and reliability
+## 3. Performance and reliability
 
-### 4.1 SSE → Postgres LISTEN/NOTIFY in production
+### 3.1 SSE → Postgres LISTEN/NOTIFY in production
 
 The current SSE transport uses an in-process EventEmitter. On Vercel, each serverless function instance is isolated, so SSE events published from a Server Action may not reach SSE subscribers in a different instance. The 30-second polling fallback handles this — it's reliable, not fast.
 
 **Target:** Replace the EventEmitter bus in `packages/realtime/src/server.ts` with Postgres `LISTEN/NOTIFY` using a persistent WebSocket connection (`@neondatabase/serverless` in WS mode). Changes are isolated to that one file.
 
-### 4.2 Edge middleware session verification
+### 3.2 Edge middleware session verification
 
 Currently middleware uses `betterFetch` to call itself (`/api/auth/get-session`), which adds a network round-trip even with `cookieCache` enabled (the cookie is verified inside the handler, which still runs as a serverless function).
 
 **Target:** Move session cookie verification directly into middleware using the Better Auth `jwt` plugin or by verifying the signed cookie with the `BETTER_AUTH_SECRET` directly in the Edge runtime — zero extra round-trips.
 
-### 4.3 Query optimisation pass
+### 3.3 Query optimisation pass
 
 - Add composite indexes identified during analytics query profiling (T075).
 - Review N+1 patterns in `listOpenTickets`, `listPendingEditRequests`, and settlement queries.
@@ -322,15 +159,15 @@ Currently middleware uses `betterFetch` to call itself (`/api/auth/get-session`)
 
 ---
 
-## 5. Developer experience
+## 4. Developer experience
 
-### 5.1 Component Storybook
+### 4.1 Component Storybook
 
 - Document all design system components (`Button`, `Dialog`, `EmptyState`, `StatusBadge`, etc.) with Storybook stories.
 - Catches visual regressions before they reach production.
 - Enables designer hand-off without needing to run the full app.
 
-### 5.2 End-to-end test expansion
+### 4.2 End-to-end test expansion
 
 Phase 4A+ E2E tests cover the checkout lifecycle. Post-MVP:
 
@@ -339,16 +176,16 @@ Phase 4A+ E2E tests cover the checkout lifecycle. Post-MVP:
 - Offline checkout → reconnect sync.
 - Multi-location (when added).
 
-### 5.3 Error boundary per route segment
+### 4.3 Error boundary per route segment
 
 - Add `error.tsx` files per route group so a crash in one section doesn't break the whole app.
 - Include a "Reload" button and a Sentry error ID the user can report.
 
 ---
 
-## 6. Quality and QA
+## 5. Quality and QA
 
-### 6.1 Responsive QA pass — browser/device testing with real staff
+### 5.1 Responsive QA pass — browser/device testing with real staff
 
 > Deferred from MVP Phase 10 (T083). Original scope: a structured pass across browser engines and physical devices that staff actually use, run by the people who will use the system.
 
@@ -357,7 +194,7 @@ Phase 4A+ E2E tests cover the checkout lifecycle. Post-MVP:
 - Capture each defect in `docs/issues-tracker.md` with screenshot, device + browser, repro steps, and severity.
 - Fix or defer each defect with stakeholder sign-off before declaring the pass green.
 
-### 6.2 User acceptance testing — one full simulated business day per role
+### 5.2 User acceptance testing — one full simulated business day per role
 
 > Deferred from MVP Phase 10 (T106). Original scope: each role plays a full day of realistic operations on the staging environment so the system is validated under real-shape data, not synthetic seeds.
 
@@ -369,7 +206,7 @@ Phase 4A+ E2E tests cover the checkout lifecycle. Post-MVP:
 
 ---
 
-## 7. Known issues to track post-MVP
+## 6. Known issues to track post-MVP
 
 These items are logged in `docs/issues-tracker.md` but are deferred to post-MVP:
 

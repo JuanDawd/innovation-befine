@@ -686,7 +686,7 @@ Update `apps/web/src/lib/db/README.md` with a short "When to use `getDb()` vs `g
 ## POST-MVP — Future enhancements
 
 > Tracked in `docs/roadmap-post-mvp.md` (browse by category at `/admin/roadmap`).
-> T055/T056 → 2.7 Appointment confirmation emails. T083 → 6.1 Responsive QA pass. T106 → 6.2 UAT.
+> T055/T056 → 1.6 Appointment confirmation emails. T083 → 5.1 Responsive QA pass. T106 → 5.2 UAT.
 
 ---
 
