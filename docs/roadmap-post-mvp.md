@@ -210,6 +210,15 @@ Post-MVP additions:
 - Add a `ThemeToggle` button to the app shell header.
 - Persist preference in `localStorage`.
 
+### 2.7 Appointment confirmation emails
+
+> Deferred from MVP (T055 / T056). Secretary uses WhatsApp manually for the first two months.
+
+- Build a React Email template for appointment confirmations: salon brand header, appointment date/time/service in `America/Bogota`, stylist name, and a manage-link or contact-CTA.
+- Add a "Send confirmation email" action to each appointment, gated to roles that own appointments (cashier_admin, secretary). The action records who sent the email, when, and which template version, so a re-send does not silently spam the client.
+- Localised in Spanish first, English second (matches `next-intl` setup).
+- Requires: Resend domain verification for the production sender address.
+
 ---
 
 ## 3. Client-facing booking app
@@ -337,7 +346,30 @@ Phase 4A+ E2E tests cover the checkout lifecycle. Post-MVP:
 
 ---
 
-## 6. Known issues to track post-MVP
+## 6. Quality and QA
+
+### 6.1 Responsive QA pass — browser/device testing with real staff
+
+> Deferred from MVP Phase 10 (T083). Original scope: a structured pass across browser engines and physical devices that staff actually use, run by the people who will use the system.
+
+- Walk every primary screen (cashier dashboard, ticket detail, secretary appointment list, stylist home, clothier batch view, admin reports) on at least: latest Chrome desktop, latest Safari desktop, Android Chrome on a mid-range phone, iOS Safari on an iPhone the secretary actually uses.
+- Verify the breakpoints in `wireframes.md` (mobile / tablet / desktop) trigger the right layouts; spot-check the table-to-card switch on data-heavy lists.
+- Capture each defect in `docs/issues-tracker.md` with screenshot, device + browser, repro steps, and severity.
+- Fix or defer each defect with stakeholder sign-off before declaring the pass green.
+
+### 6.2 User acceptance testing — one full simulated business day per role
+
+> Deferred from MVP Phase 10 (T106). Original scope: each role plays a full day of realistic operations on the staging environment so the system is validated under real-shape data, not synthetic seeds.
+
+- Cashier_admin: open the day, log a mix of guest and saved-client tickets, take checkouts with overrides, run a payout, close the day.
+- Secretary: take inbound bookings, reschedule a couple of appointments, mark a no-show, send confirmations (when 2.7 ships).
+- Stylist: see their queue, complete services, see their commission accrual.
+- Clothier: see assigned pieces, mark progress, complete a batch.
+- Each role files defects against the real flows; UAT is signed off by the stakeholder, not by the dev team alone.
+
+---
+
+## 7. Known issues to track post-MVP
 
 These items are logged in `docs/issues-tracker.md` but are deferred to post-MVP:
 

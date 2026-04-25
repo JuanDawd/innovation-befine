@@ -685,14 +685,8 @@ Update `apps/web/src/lib/db/README.md` with a short "When to use `getDb()` vs `g
 
 ## POST-MVP — Future enhancements
 
-> Deferred to post-MVP. Secretary uses WhatsApp manually for the first two months.
-
-| ID   | Task                                                                           | Status  | Dependencies |
-| ---- | ------------------------------------------------------------------------------ | ------- | ------------ |
-| T055 | Appointment confirmation email template (React Email)                          | pending | T054         |
-| T056 | "Send confirmation email" action on appointment _(low priority)_               | pending | T055, T053   |
-| T083 | Responsive QA pass — browser/device testing with real staff _(moved from P10)_ | pending | all phases   |
-| T106 | UAT — one full simulated business day per role on staging _(moved from P10)_   | pending | T088         |
+> Tracked in `docs/roadmap-post-mvp.md` (browse by category at `/admin/roadmap`).
+> T055/T056 → 2.7 Appointment confirmation emails. T083 → 6.1 Responsive QA pass. T106 → 6.2 UAT.
 
 ---
 
@@ -723,8 +717,7 @@ Update `apps/web/src/lib/db/README.md` with a short "When to use `getDb()` vs `g
 | 9 — Offline               | 5       | 5       | 0           |
 | 9R — Remediation          | 16      | 15      | 0           |
 | 10 — Polish               | 9       | 0       | 0           |
-| POST-MVP                  | 2       | 0       | 0           |
-| **Total**                 | **203** | **161** | **0**       |
+| **Total**                 | **201** | **161** | **0**       |
 
 ---
 
