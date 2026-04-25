@@ -671,7 +671,7 @@ Update `apps/web/src/lib/db/README.md` with a short "When to use `getDb()` vs `g
 | T10R-R1  | Fix: add CSP + security headers via `next.config.ts headers()` (C-21)                                 | done    | Critical | Opus audit |
 | T10R-R2  | Fix: implement `useOptimistic` for ticket status transitions; add revert-on-error test (H-43)         | done    | High     | Opus audit |
 | T10R-R3  | Fix: execute Neon PITR restore drill on staging; fill result table in `backup-policy.md` (H-44)       | blocked | High     | Opus audit |
-| T10R-R4  | Fix: reconcile `docs/issues-tracker.md` Open-status against Phase 7R/8R/9R code; update log (H-45)    | pending | High     | Opus audit |
+| T10R-R4  | Fix: reconcile `docs/issues-tracker.md` Open-status against Phase 7R/8R/9R code; update log (H-45)    | done    | High     | Opus audit |
 | T10R-R5  | Fix: add annotated screenshots to the 2–3 hardest steps in each training guide (M-52)                 | pending | Medium   | Opus audit |
 | T10R-R6  | Fix: replace handroll CSV parser with RFC 4180 parser + Colombian-name unit tests (M-53)              | pending | Medium   | Opus audit |
 | T10R-R7  | Fix: in-file dedup + transactional import + summary with intra-file skip count (M-54)                 | pending | Medium   | Opus audit |

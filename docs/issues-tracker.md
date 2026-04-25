@@ -63,7 +63,7 @@
 ### C-05 — Deactivated employees can still log in
 
 - **Severity:** Critical
-- **Status:** Open
+- **Status:** Resolved (2026-04-24, T01R-R1)
 - **Affected:** T022a (basic employee deactivation)
 - **Description:** `deactivateEmployee()` revokes active sessions via `auth.api.revokeUserSessions()` but does NOT ban the user in Better Auth. A deactivated employee can immediately create a new session by logging in again. Better Auth has a built-in ban mechanism (`banned`, `banReason` columns on the users table, plus `auth.api.banUser()`). The T022a acceptance criteria explicitly states "login attempt is blocked", which is currently unmet.
 - **Fix:** In `deactivateEmployee()`, call `auth.api.banUser({ userId, banReason: "Employee deactivated" })` before revoking sessions. The login form already handles 403 (banned) responses — it shows the `invalidCredentials` error message. Tracked as T01R-R1.
@@ -119,7 +119,7 @@
 ### C-12 — `recordPayout` double-pay check is outside the transaction (race condition)
 
 - **Severity:** Critical
-- **Status:** Open
+- **Status:** Resolved (2026-04-24, T10R-R4)
 - **Affected:** T067, T068 (`apps/web/src/app/(protected)/admin/payroll/actions.ts:252–344`)
 - **Description:** The T068 conflict scan (`for (const existing of existingPayouts)`) runs against `getDb()` BEFORE `txDb.transaction(...)`. Two admins clicking "Confirm" within the same window for the same employee + business days both pass the check, then both insert payouts that overlap. The `payouts` table has no unique constraint on `(employee_id, period_business_day_ids[])`, no `version` column, and no `SELECT … FOR UPDATE` on a parent row. CLAUDE.md mandates either optimistic locking or `SELECT … FOR UPDATE` for every concurrent financial mutation. Result: a stylist can be paid twice for the same closed business day with no DB-level guard.
 - **Fix:** Move the conflict check inside `txDb.transaction(...)` and add a guard that locks the relevant rows: either (a) `SELECT id, period_business_day_ids FROM payouts WHERE employee_id = $1 FOR UPDATE` followed by the in-tx overlap check, or (b) introduce a `payout_period_days(payout_id, business_day_id, employee_id)` junction table with `UNIQUE(employee_id, business_day_id)` and replace the `period_business_day_ids` array with rows in this table — the unique index then physically prevents double-pay even under concurrency. Option (b) is preferable because it removes the array-scan in `getUnsettledEmployees` and `getUnsettledPeriodsForEmployee` too.
@@ -129,7 +129,7 @@
 ### C-13 — `payouts` is missing `idempotency_key` (financial mutation guarantee broken)
 
 - **Severity:** Critical
-- **Status:** Open
+- **Status:** Resolved (2026-04-24, T10R-R4)
 - **Affected:** T066, T067 (`packages/db/src/schema/payouts.ts`, `apps/web/src/app/(protected)/admin/payroll/actions.ts`)
 - **Description:** CLAUDE.md "Financial mutations — mandatory checklist" requires every money-movement mutation to include a client-generated `idempotency_key` UUID with a unique constraint, and to use `INSERT … ON CONFLICT (idempotency_key) DO NOTHING RETURNING *`. The `payouts` table has no such column; `recordPayout` accepts no key from the client. Any retry — accidental double-click during loading, network retry, fast-mode replay — silently creates a duplicate payout (which then also tricks T068 because the second `recordPayout` call computes its check before the first row is committed). This is the same class of bug we fixed for `processCheckout` in T04R-R3.
 - **Fix:** Add `idempotency_key uuid NOT NULL UNIQUE` to the `payouts` schema (migration), generate a UUID on the client when the user opens the preview screen, pass it through `recordPayout`, and use the conflict-aware insert pattern. Refetch and return the existing payout when the conflict fires (same shape as T04R-R3).
@@ -139,7 +139,7 @@
 ### C-14 — `getUnsettledPeriodsForEmployee` blocks deactivation for every employee, always
 
 - **Severity:** Critical
-- **Status:** Open
+- **Status:** Resolved (2026-04-24, T10R-R4)
 - **Affected:** T022b (`apps/web/src/app/(protected)/admin/employees/actions/update-employee.ts:220–241`)
 - **Description:** The function returns "every closed business day not covered by a payout for this employee" — but it never checks whether the employee actually worked on those days. So a stylist hired yesterday is treated as having unsettled earnings for every closed business day in the company's history. T022b's third AC ("Deactivation with no outstanding earnings proceeds immediately — no change to T022a flow") is unreachable for any employee unless every previous business day has been paid out for them, which is structurally impossible. Worse, `terminateEmployee` (line 283) inherits the same overcounted set: the termination payout's `period_business_day_ids` includes days the employee never worked, corrupting the audit trail and pre-blocking those days from being paid out to the same employee in the unlikely-but-possible re-hire scenario.
 - **Fix:** Replace the "every closed day not in a payout" rule with role-aware detection: stylist → distinct `tickets.business_day_id` for closed tickets owned by employee not yet covered; clothier → distinct `cloth_batches.business_day_id` for approved pieces assigned to employee not yet covered; secretary → closed business days within hire/termination window minus vacation/approved_absence absences not yet covered. The same logic already exists (correctly, for stylist + clothier; incorrectly, for secretary — see C-15) inside `getUnsettledEmployees` — extract it into a shared helper and reuse from both call sites.
@@ -149,7 +149,7 @@
 ### C-15 — Secretary unsettled detection in `getUnsettledEmployees` ignores absences
 
 - **Severity:** Critical
-- **Status:** Open
+- **Status:** Resolved (2026-04-24, T10R-R4)
 - **Affected:** T070, T065 (`apps/web/src/app/(protected)/admin/payroll/actions.ts:467–470`)
 - **Description:** For secretaries the alert logic is `unsettledDays = closedDays.filter((d) => !settled.has(d.id))` — every closed business day that is not yet covered by a payout is treated as unsettled, regardless of whether the secretary was on vacation/approved_absence on that day. T065 explicitly excludes vacation + approved_absence from the daysWorked count. Result: the unsettled alert always lists secretaries with day counts higher than what `previewEarnings` will actually compute, and admins are pushed to "liquidate" days that compute to $0 work. This also drives part of C-14: the deactivation guard inherits the same wrong inclusion.
 - **Fix:** Mirror T065's exclusion in the secretary branch of `getUnsettledEmployees`: pull `employee_absences` rows for the employee and filter out dates where `type IN ('vacation','approved_absence')`. Same fix needs to be reflected in the C-14 helper.
@@ -159,7 +159,7 @@
 ### C-16 — Analytics silently excludes the currently-open business day
 
 - **Severity:** Critical
-- **Status:** Open
+- **Status:** Resolved (2026-04-24, T10R-R4)
 - **Affected:** T071, T072, T073, T074, T076 (`packages/db/src/queries/analytics.ts:326` — `${businessDays.closedAt} IS NOT NULL` in `getBusinessDayIdsByPeriod`)
 - **Description:** `getBusinessDayIdsByPeriod` filters `closedAt IS NOT NULL` for **both** current and prior windows. Admins who open the analytics tab during an active business day see revenue=0, jobs=0, earnings=0 for "day" (and the open-day contribution is missing from "week"/"month" too). The empty-state banner then fires: "No hay ingresos para este período — cierra tickets para ver los totales", which is misleading since tickets _are_ closing. The T072 AC explicitly calls out "current business day (or most recent closed day)" — neither behaviour is implemented; the open day is just silently dropped. All downstream surfaces (CSV export, comparison chart, per-employee table) inherit the gap.
 - **Fix:** Drop `closedAt IS NOT NULL` from the current-window filter; keep it (or a softer "ended in the past" check) only on the prior window if needed for clean comparisons. Verify `revenueByPeriod`/`earningsByEmployee`/`employeeDayBreakdown` handle open days (tickets with status=closed already exist on open days). Add a unit test that an open day with 2 closed tickets contributes its revenue.
@@ -169,7 +169,7 @@
 ### C-17 — `earningsByEmployee` returns 0 for all secretaries, under-reporting the total
 
 - **Severity:** Critical
-- **Status:** Open
+- **Status:** Resolved (2026-04-24, T10R-R4)
 - **Affected:** T071, T072, T073, T074, T076 (`packages/db/src/queries/analytics.ts:128–222`, `341–474`)
 - **Description:** `earningsByEmployee` only aggregates stylist commission and clothier piece_rate. The in-file comment says "returns 0 for secretary roles and callers should supplement with computeSecretaryEarnings", but `getAnalyticsSummary` never does the supplemental call — it sums the aggregated rows directly. Result: (1) the top-line `earnings` card understates the real payroll cost by the full secretary `daily_rate × daysWorked` each period; (2) secretaries never appear in the per-employee performance table or CSV; (3) prior-period comparisons are consistently biased the same direction so the delta % looks fine, hiding the error. Same omission in `employeeDayBreakdown` (the secretary branch is present but only uses `daily_rate` without the ISO-week `expected_work_days` cap from T065).
 - **Fix:** Either (a) add a secretary branch to the SQL aggregation that joins `business_days` and subtracts vacation/approved_absence days, multiplied by `employees.daily_rate`, with the same ISO-week cap as `computeSecretaryEarnings`; or (b) call `computeSecretaryEarnings` per secretary in application code and merge results. Either way the analytics earnings total must match the sum of payouts that would be computed by T065 on the same window. Add a test that asserts parity.
@@ -179,7 +179,7 @@
 ### C-18 — `paidOffline` offline-checkout flow is a stub
 
 - **Severity:** Critical
-- **Status:** Open
+- **Status:** Resolved (2026-04-24, T10R-R4)
 - **Affected:** T079 (`apps/web/src/lib/mutation-queue.ts:14`, `apps/web/src/lib/use-queue-flush.ts:22–49`, checkout actions)
 - **Description:** `MutationType` declares `"paidOffline"` and the T079 AC + resolved decisions explicitly support cashier-offline checkout: "cashier marks tickets `paid_offline`… syncs on reconnect… server creates `checkout_session` and closes all tickets atomically; cashier's version always wins on conflict." The implementation has none of it: `dispatchMutation` handles only `markPieceDone` and `createTicket`, and no `processPaidOfflineCheckout` server action exists. The `paid_offline` value is present in the ticket status enum (from T033) and in i18n copy, but there is no code path that transitions a ticket to it. A cashier who enqueues a `paidOffline` mutation would see it stuck in the queue forever.
 - **Fix:** Implement `processPaidOfflineCheckout({ ticketIds, paymentMethod, amount, idempotencyKey })` that (a) validates the cashier's session, (b) transitions all targeted tickets to `paid_offline` within a transaction, (c) on the subsequent online flush creates the `checkout_session`, transitions tickets to `closed`, and records `ticket_payments` — all atomically with cashier-wins conflict resolution. Wire the `"paidOffline"` branch in `dispatchMutation`. Add an integration test that the round-trip (offline enqueue → reconnect → close) leaves exactly one checkout session with the correct total.
@@ -189,7 +189,7 @@
 ### C-19 — `createTicket` is not wired to the shared idempotency helper
 
 - **Severity:** Critical
-- **Status:** Open
+- **Status:** Resolved (2026-04-24, T10R-R4)
 - **Affected:** T078 (`apps/web/src/app/(protected)/tickets/actions/index.ts:189–246`, `apps/web/src/lib/idempotency.ts`)
 - **Description:** T078 AC: "Covered routes: ticket creation, piece mark-done." `markPieceDone` calls `checkIdempotency`/`storeIdempotency`; `createTicket` does not. Instead, `createTicket` uses the older column-level dedup via `tickets.idempotency_key` introduced in T033. The two mechanisms are not reconciled: (a) the shared `idempotency_keys` table was designed to cover all mutating routes including ticket creation, so the AC is half-met; (b) future mutating routes that aren't tickets (e.g. `claimPiece`, `approvePiece`, `recordPayout`) have no idempotency guard at all. An offline retry of `createTicket` uses column dedup which is fine, but the design intent of T078 was a single abstraction.
 - **Fix:** Either (a) wire `createTicket` to `checkIdempotency`/`storeIdempotency` as well, keeping `tickets.idempotency_key` only as a backstop unique constraint; or (b) formally document that `tickets.idempotency_key` is authoritative for ticket creation, remove the "ticket creation" line from T078 AC, and document per-route idempotency strategy. Either way both mechanisms should not remain silently duplicated. Add an integration test that duplicate `createTicket` with the same key is a no-op.
@@ -199,7 +199,7 @@
 ### C-20 — T078 accepts idempotency as a parameter, not as `Idempotency-Key` header
 
 - **Severity:** Critical
-- **Status:** Open
+- **Status:** Resolved (2026-04-24, T10R-R4)
 - **Affected:** T078 (`apps/web/src/lib/idempotency.ts`, callers)
 - **Description:** T078 AC: "Accept an `Idempotency-Key` header." The implementation takes the key as a positional `rawIdempotencyKey` parameter on the server action. External clients (curl, third-party integrations, future mobile apps) cannot use it — they can only set HTTP headers, not call server actions with arbitrary arguments. For offline flushes from this app's own IndexedDB queue this is fine; for the "any mutating API route" coverage implied by the AC, it is not.
 - **Fix:** Read `idempotency-key` via `headers().get("idempotency-key")` inside the idempotency helper; fall back to the parameter for server actions that pre-fetch it. Document the HTTP contract in `docs/api-conventions.md`. If no public HTTP surface is planned post-MVP, rewrite the T078 AC to reflect server-action-only usage instead.
@@ -309,7 +309,7 @@
 ### H-28 — `recordPayout` skips Zod validation despite handling money
 
 - **Severity:** High
-- **Status:** Open
+- **Status:** Resolved (2026-04-24, T10R-R4)
 - **Affected:** T067 (`apps/web/src/app/(protected)/admin/payroll/actions.ts:201–348`)
 - **Description:** CLAUDE.md "Every server action validates input with a Zod schema before business logic" is unconditional. `recordPayout` accepts a typed object literal, performs only spot checks (`businessDayIds.length`, `amount !== originalComputedAmount` requires reason, `amount < 0` is checked client-side only), and trusts the rest. There is no `payouts` schema in `packages/types/src/schemas/`, so `employeeId` and the day IDs aren't validated as UUIDs, `amount` and `originalComputedAmount` aren't bounded as integers, `notes`/`adjustmentReason` have no max length, and `method` isn't enforced server-side beyond the TS union (which strips at runtime). `terminateEmployee` has the same shape (no Zod, hand-rolled spot checks). For a financial mutation this is a regression of the standard the rest of Phase 4–6 already meets.
 - **Fix:** Create `packages/types/src/schemas/payout.ts` exporting `recordPayoutSchema` and `terminateEmployeeSchema` (uuid IDs, `int().nonnegative()` for money, max-length text, enum for method, idempotency_key after C-13). Replace the typed parameters with `unknown` + `safeParse` in both server actions, returning `VALIDATION_ERROR` with field-level details on failure.
@@ -319,7 +319,7 @@
 ### H-29 — `getMyEarnings` exposes already-paid earnings as if unpaid
 
 - **Severity:** High
-- **Status:** Open
+- **Status:** Resolved (2026-04-24, T10R-R4)
 - **Affected:** T069 (`apps/web/src/app/(protected)/admin/payroll/actions.ts:499–596`, `apps/web/src/components/my-earnings-view.tsx`)
 - **Description:** "My earnings — today / this week / this month" calls `computeStylistEarnings` / `computeClothierEarnings` / `computeSecretaryEarnings` over the period's closed business days without checking whether those days have been settled by a prior payout. After a payout is recorded, the same earnings continue to show up under "this week" / "this month" — so the employee sees the same money twice (once in the dashboard, once in the payout history below). T069 ACs: "shows total earned today/this week/this month; breakdown by job/piece; payout history (what has been paid)" — the dashboard half must reflect what's still owed, not lifetime totals over the period.
 - **Fix:** When computing the three summary cards, exclude business_day_ids already covered by any payout for this employee (same pattern as the admin payroll preview). Surface the payout history below as the source of truth for "paid" amounts. Add a unit test ensuring computed today/week/month drop after a payout is recorded.
@@ -329,7 +329,7 @@
 ### H-30 — `getMyEarnings` and `previewEarnings` use mismatched week boundaries
 
 - **Severity:** High
-- **Status:** Open
+- **Status:** Resolved (2026-04-24, T10R-R4)
 - **Affected:** T065, T069 (`apps/web/src/app/(protected)/admin/payroll/actions.ts:520–522`, `apps/web/src/lib/payroll/compute-secretary-earnings.ts:27–34`)
 - **Description:** `getMyEarnings` defines "this week" as `now - now.getDay()` (Sunday-baseline, Bogota TZ ignored — uses server UTC). `computeSecretaryEarnings` keys by ISO weeks (Monday-baseline). For a Sunday viewer, "this week" includes only Sunday under the dashboard but the secretary cap applies under the previous ISO week — so a part-time secretary's "this week" earnings can disagree with what the admin sees in payroll preview for the same range. Same applies to all roles via the day filter being inclusive vs exclusive at midnight UTC instead of Bogota.
 - **Fix:** Centralize week-boundary helpers in one place (`lib/dates.ts`) anchored to America/Bogota and ISO week (Monday). Use the same helper for the dashboard summaries and the secretary computation. Same applies to `today` (currently `new Date().toISOString().slice(0,10)` which is UTC, not Bogota — late-night POS sessions can show "today $0" while the cashier is still on the same business day).
@@ -339,7 +339,7 @@
 ### H-31 — T022b termination has no UI flow
 
 - **Severity:** High
-- **Status:** Open
+- **Status:** Resolved (2026-04-24, T10R-R4)
 - **Affected:** T022b (`apps/web/src/components/employee-list.tsx`)
 - **Description:** T022b AC requires a UI flow: "enter termination amount → create payout record → deactivate account (all in one transaction)". The server action `terminateEmployee` exists and does the right thing transactionally (apart from the input validation gap in H-28), but the only UI button in `employee-list.tsx` is `handleDeactivate` calling `deactivateEmployee`. When that returns `CONFLICT`, the admin is told "use the termination option" — but no termination option exists in the UI. The entire feature is dead code from an end-user perspective.
 - **Fix:** When `deactivateEmployee` returns `CONFLICT`, open a Termination Dialog showing the unsettled day count, the system-computed termination amount (call `previewEarnings` for the unsettled days), an editable amount field, a method selector, a required reason field, and a destructive Confirm button that calls `terminateEmployee`. Reuse the existing `ConfirmationDialog` pattern from Phase 6R for consistency.
@@ -349,7 +349,7 @@
 ### H-32 — Phase 7 financial logic has zero real unit tests
 
 - **Severity:** High
-- **Status:** Open
+- **Status:** Resolved (2026-04-24, T10R-R4)
 - **Affected:** T063, T064, T065, T067, T068 (`apps/web/src/lib/payroll/__tests__/earnings.test.ts`)
 - **Description:** The 23 tests in `earnings.test.ts` reimplement the helper functions inline (`computeStylistItemEarnings`, `computeSecretaryDays`, `bankersRound`, `isoWeekKey`) and assert on those local copies — they never import the real `computeStylistEarnings`, `computeClothierEarnings`, or `computeSecretaryEarnings` from `apps/web/src/lib/payroll/*.ts`. So the production query logic, the `needs_review` exclusion, the `approved`-only filter, the `overridePrice ?? unitPrice` fallback, the dailyRate-null guard, the empty-businessDayIds short circuit, and the database join shape are all untested. Additionally, T068's double-pay check, the role-gate path, the rate-limit path, and the adjustment-reason validation have no tests at all. CLAUDE.md "Earnings computation… commission… status transitions… permission checks… double-pay prevention… financial data integrity" lists every Phase 7 function as **mandatory** unit-test coverage, plus 80% threshold for `packages/db/src/queries/`.
 - **Fix:** Replace the inline reimplementations with imports from the real modules. Add a test harness (in-memory pglite or Drizzle's `pg-mock` against a transaction-rolled-back fixture) so the real functions can be exercised. Cover at minimum: (a) stylist with reopen/needs_review excluded, (b) clothier with done_pending_approval excluded, (c) secretary with vacation excluded but missed counted, (d) secretary part-time cap per week, (e) `recordPayout` double-pay rejection, (f) `recordPayout` requires `adjustmentReason` when `amount !== originalComputedAmount`, (g) role-gate FORBIDDEN paths.
@@ -359,7 +359,7 @@
 ### H-33 — Earnings views are unreachable from navigation
 
 - **Severity:** High
-- **Status:** Open
+- **Status:** Resolved (2026-04-24, T10R-R4)
 - **Affected:** T069 (`apps/web/src/components/nav-config.ts`)
 - **Description:** `/stylist/earnings`, `/clothier/earnings`, `/secretary/earnings` exist as routes and the page components mount `MyEarningsView`, but `NAV_ITEMS` for these three roles has no entry pointing to them. Stylist nav has only "myTickets"; clothier has only "myWork"; secretary has dashboard/largeOrders/batches/appointments. Employees with `show_earnings = true` cannot discover their own earnings page. T069 AC: "Build the 'My earnings' screen for stylists, clothiers, and secretaries" — implicitly requires it to be reachable.
 - **Fix:** Add a conditional nav entry per role pointing to `/{role}/earnings`. Visibility should respect `employees.show_earnings` — fetch the flag in the layout that builds the nav (or hide the link until the flag is true on the server). On mobile (stylist + clothier) add as second tab in the bottom bar.
@@ -369,7 +369,7 @@
 ### H-34 — Analytics dashboard has no real-time refresh
 
 - **Severity:** High
-- **Status:** Open
+- **Status:** Resolved (2026-04-24, T10R-R4)
 - **Affected:** T072 (`apps/web/src/app/(protected)/admin/analytics/analytics-dashboard.tsx`)
 - **Description:** T072 AC: "Updates in near-real-time (real-time event on ticket close can trigger a refresh)". The dashboard is a pure client component with no subscription to `packages/realtime` — admins must manually switch periods or reload the page to see updated numbers after checkouts. Combined with C-16 (open day excluded entirely), the dashboard becomes a stale snapshot until day close. The `packages/realtime` `useRealtimeEvent` hook already exists (used by cashier dashboard) — this is a wiring gap, not a new infrastructure requirement.
 - **Fix:** Subscribe the dashboard to the `cashier` SSE channel's `ticket.closed` event. On receipt, refetch the current period (throttled to 1 refresh/5s to avoid thrashing during batch checkouts). Alternative: use `router.refresh()` on receipt to re-run the server component.
@@ -379,7 +379,7 @@
 ### H-35 — T074 active-employee filter + include-inactive toggle unimplemented
 
 - **Severity:** High
-- **Status:** Open
+- **Status:** Resolved (2026-04-24, T10R-R4)
 - **Affected:** T074 (`packages/db/src/queries/analytics.ts:94–222`, `apps/web/src/app/(protected)/admin/analytics/analytics-dashboard.tsx:253–339`)
 - **Description:** T074 AC: "Table shows all active employees (inactive employees excluded by default; toggle to include)". The implementation has neither the default filter nor the toggle. `earningsByEmployee`, `jobsCountByEmployee`, and `employeeDayBreakdown` make no reference to `employees.isActive`. Any employee who was deactivated mid-period is silently included in the table and the drill-down; any inactive employee with zero earnings is excluded only because the aggregation returns no rows, not because of a filter. There is no user-facing control to toggle the filter.
 - **Fix:** (1) thread `includeInactive?: boolean` through `getAnalyticsSummary`, `getEmployeePerformance`, `getEmployeeDrillDown`; (2) default `false`; (3) add `AND employees.isActive = true` unless `includeInactive` is set; (4) surface a checkbox above the employee table that toggles the flag and re-fetches. Drill-down respects the same flag.
@@ -389,7 +389,7 @@
 ### H-36 — Analytics server actions skip Zod validation
 
 - **Severity:** High
-- **Status:** Open
+- **Status:** Resolved (2026-04-24, T10R-R4)
 - **Affected:** T071–T076 (`apps/web/src/app/(protected)/admin/analytics/actions.ts`)
 - **Description:** `getAnalyticsSummary(period)`, `getEmployeePerformance(period)`, `getAnalyticsCsvData(period)`, and `getEmployeeDrillDown(employeeId, period)` type their params but never validate them. `period` is used in SQL-branching JS code and interpolated into `toLocaleDateString` downstream; a client could pass an arbitrary string. `employeeId` is passed directly to `employeeDayBreakdown` and to a `.where(eq(employees.id, employeeId))` clause — Drizzle coerces and Postgres would reject the bad UUID, but the error surfaces as an untyped `INTERNAL_ERROR` instead of a clean `VALIDATION_ERROR`. CLAUDE.md: "Every server action validates input with a Zod schema before business logic."
 - **Fix:** Create `packages/types/src/schemas/analytics.ts` with `periodSchema` (enum `["day","week","month"]`), `employeeIdSchema` (uuid), `includeInactiveSchema` (boolean optional). Convert the four actions to take `unknown` + `safeParse` and return `VALIDATION_ERROR` with field-level details on failure.
@@ -399,7 +399,7 @@
 ### H-37 — Zero unit tests for Phase 8 analytics logic
 
 - **Severity:** High
-- **Status:** Open
+- **Status:** Resolved (2026-04-24, T10R-R4)
 - **Affected:** T071–T076, T101 (no test files under `packages/db/src/queries/` or `apps/web/src/app/(protected)/admin/analytics/__tests__/`)
 - **Description:** CLAUDE.md mandates unit tests for "earnings computation (commission, piece_rate, daily_rate)", "permission / role checks", "financial data integrity". Analytics queries compute revenue, per-employee earnings, and prior-period comparisons — all financial logic — and have zero tests. Today's 213 passing tests include the Phase 7 payroll logic, but analytics is untested. Bugs like C-16 (open-day exclusion), C-17 (secretary under-report), and L-35 (UTC date slice) were only catchable by code review; a regression in any of these would ship silently.
 - **Fix:** Add `packages/db/src/queries/__tests__/analytics.test.ts` (or `apps/web/src/app/(protected)/admin/analytics/__tests__/`) covering: `revenueByPeriod` on closed + open day, zero-ticket days, needs_review exclusion, override-price use; `earningsByEmployee` per role including secretary parity with `computeSecretaryEarnings`; `getBusinessDayIdsByPeriod` boundaries (week Mon, month 1st, year turnover); role gate FORBIDDEN for non-admin roles; CSV totals match the aggregate queries. Target 80%+ branch coverage of `packages/db/src/queries/analytics.ts` per CLAUDE.md threshold.
@@ -409,7 +409,7 @@
 ### H-38 — Service worker has no explicit `NetworkOnly` rule for mutating requests
 
 - **Severity:** High
-- **Status:** Open
+- **Status:** Resolved (2026-04-24, T10R-R4)
 - **Affected:** T081 (`apps/web/next.config.ts:29–49`)
 - **Description:** `workboxOptions.runtimeCaching` has two rules: Cache First for static assets, SWR for `/api/(?!realtime).*`. No explicit matcher excludes POST/PUT/DELETE methods. Workbox by default caches GET only, but the SWR URL pattern is wide enough to match authenticated admin mutations. The T081 AC explicitly calls for "Mutating requests (POST/PUT): NetworkOnly (handled by IndexedDB queue instead)" — the rule is relied on by convention, not by code. If Workbox defaults change or a future rule broadens matching, mutating requests could be served stale.
 - **Fix:** Prepend an explicit `{ urlPattern: /.*/, method: "POST", handler: "NetworkOnly" }` + same for `PUT`, `DELETE`, `PATCH`. Verify with `sw.js` inspection that mutating requests bypass the cache.
@@ -419,7 +419,7 @@
 ### H-39 — Zero tests for T078/T079/T080 offline infrastructure
 
 - **Severity:** High
-- **Status:** Open
+- **Status:** Resolved (2026-04-24, T10R-R4)
 - **Affected:** T078, T079, T080 (no test files under `apps/web/src/lib/__tests__/mutation-queue.test.ts`, `idempotency.test.ts`, or `use-queue-flush.test.ts`)
 - **Description:** CLAUDE.md mandates unit tests for "financial data integrity" and "double-pay / duplicate prevention" — idempotency is the heart of both. The T078 helper, the IndexedDB queue, the flush hook, and the SyncStatus UI have zero tests. The only offline-relevant tests that exist are Phase 4 checkout idempotency (column-level). A regression in `checkIdempotency` (e.g. H-41 race), `dispatchMutation` (e.g. missing mutation type as in C-18), or `useQueueFlush` (e.g. infinite-loop on persistent failure) would ship silently.
 - **Fix:** Add Vitest tests: (a) `idempotency.test.ts` — miss/hit/expired lazy delete; (b) `mutation-queue.test.ts` — enqueue/list/dequeue/markAttempted on `fake-indexeddb`; (c) `dispatch.test.ts` — success/failure per supported mutation type; (d) `use-queue-flush.test.tsx` — state transitions on online/offline events. Target 80%+ branch coverage.
@@ -429,7 +429,7 @@
 ### H-40 — PWA icons are SVG only; Lighthouse PWA ≥ 80 unverified
 
 - **Severity:** High
-- **Status:** Open
+- **Status:** Resolved (2026-04-24, T10R-R4)
 - **Affected:** T082 (`apps/web/src/app/manifest.ts:13–26`, `apps/web/public/brand/icon-192.svg`, `icon-512.svg`)
 - **Description:** Chrome's PWA installability and Lighthouse PWA audit score favour raster icons (PNG 192×192 + 512×512) with a `"any maskable"` purpose pair. The current manifest uses SVGs only, with the 512 entry carrying `purpose: "maskable"` alone (not `"any maskable"`). T082 AC: "Lighthouse PWA score ≥ 80 on production" and "PWA icons use brand assets from T105 (192×192 and 512×512)" — the dimension claim is met on paper but not in format. No performance-results.md update captures the actual Lighthouse score.
 - **Fix:** Add PNG versions at the two required sizes (export from the SVGs), include both in `icons[]`, and set at least one 512 entry to `purpose: "any maskable"`. Run Lighthouse PWA audit against a production build and record the score in `docs/testing/performance-results.md`. If < 80, log as blocking.
@@ -439,7 +439,7 @@
 ### H-41 — `checkIdempotency` lazy-expiry race lets duplicates slip through
 
 - **Severity:** High
-- **Status:** Open
+- **Status:** Resolved (2026-04-24, T10R-R4)
 - **Affected:** T078 (`apps/web/src/lib/idempotency.ts:20–38`)
 - **Description:** When a key has expired, `checkIdempotency` does: SELECT → DELETE → return null. Two concurrent requests arriving with the same expired key both SELECT, both DELETE (the second is a no-op), both fall through to re-execute the mutation. At expiry boundaries this collapses idempotency guarantees — users retrying at the TTL edge can see double-execution. The same race exists for any `storeIdempotency` call following a cleared key because `onConflictDoNothing` silently skips the insert while the mutation already committed (see M-48).
 - **Fix:** Use a single `DELETE … WHERE expires_at < now() RETURNING *` race-safe statement to own the expiry. Or keep the row and gate reads on `expires_at > now()`; sweep expired rows in a scheduled job. Wrap the check in the same transaction as the mutation (see M-48 fix) so the whole thing is atomic.
@@ -449,7 +449,7 @@
 ### H-42 — SyncStatus hides failed-item count while offline
 
 - **Severity:** High
-- **Status:** Open
+- **Status:** Resolved (2026-04-24, T10R-R4)
 - **Affected:** T080 (`apps/web/src/components/sync-status.tsx:36–63`)
 - **Description:** T080 AC: "Failed items show a count (not just an icon)". Today, the failed-count badge only renders in the `online + syncing/failed` toast branch. The offline banner shows `pendingCount` but not `failedCount`. A cashier who dropped offline with 3 already-failed mutations sees only a pending total that excludes them, and has no way to see that 3 were rejected server-side before going offline. The Retry button also only appears when online.
 - **Fix:** Render `failedCount` in the offline banner alongside `pendingCount`. Optionally show a disabled "Reintentar al volver la conexión" affordance so users understand state.
@@ -663,7 +663,7 @@
 ### M-36 — `recordPayout` returns existing payout history scoped to all employees, not the selected one
 
 - **Severity:** Medium
-- **Status:** Open
+- **Status:** Resolved (2026-04-24, T10R-R4)
 - **Affected:** T067 (`apps/web/src/app/(protected)/admin/payroll/page.tsx:14`)
 - **Description:** `PayrollPage` calls `listPayouts()` with no `employeeId`, so the history table at the bottom of `PayrollScreen` shows every payout for every employee even after the admin has selected a specific employee in the "Liquidate" flow. The action signature already supports filtering (`listPayouts(employeeId?)`), and the URL query string carries `?employeeId=` after a click in `UnsettledAlert`. Behaviorally the screen is functional but the history table becomes noisy in production.
 - **Fix:** Read `searchParams.employeeId` in `page.tsx` and pass it to `listPayouts()`. Optionally add an employee filter dropdown above the history table for ad-hoc filtering.
@@ -673,7 +673,7 @@
 ### M-37 — `listClosedBusinessDays` flattens settled-day check across all employees
 
 - **Severity:** Medium
-- **Status:** Open
+- **Status:** Resolved (2026-04-24, T10R-R4)
 - **Affected:** T067 (`apps/web/src/app/(protected)/admin/payroll/actions.ts:117–119`)
 - **Description:** `isSettled` is computed as `settledIds.has(r.id)` where `settledIds` aggregates **every** payout's day IDs across **every** employee. So once any employee has been paid for business day X, the day disappears from the unsettled-days picker for every other employee — the admin can never select that day to pay a different employee for the same day. The screen does have a "settledDaysNote" but the days are not selectable. Functionally this means: if the secretary is paid first for the week, none of the stylists or clothiers can be paid for the same week.
 - **Fix:** Make `listClosedBusinessDays` accept the selected `employeeId` and compute settled-ness scoped to that employee only. Move the call from `page.tsx` (which has no employee context) into `payroll-screen.tsx` using a server-action call inside a `useEffect` after the employee is selected, or use `searchParams.employeeId` and re-render with the right list per employee.
@@ -683,7 +683,7 @@
 ### M-38 — Hardcoded Spanish day-of-week labels bypass i18n
 
 - **Severity:** Medium
-- **Status:** Open
+- **Status:** Resolved (2026-04-24, T10R-R4)
 - **Affected:** T021 (`apps/web/src/app/(protected)/admin/absences/absence-calendar.tsx:23`)
 - **Description:** `const DAYS_OF_WEEK = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"]` is hardcoded Spanish, breaking the i18n contract. With the English locale active, the calendar header still renders in Spanish.
 - **Fix:** Either pull the labels from `next-intl` (`t("absences.dayLabels.0")` … `t("absences.dayLabels.6")`) or compute them from `Intl.DateTimeFormat(locale, { weekday: "short" })` driven by `useLocale()`.
@@ -693,7 +693,7 @@
 ### M-39 — `editEmployee` returns role/dailyRate updates without optimistic lock
 
 - **Severity:** Medium
-- **Status:** Open
+- **Status:** Resolved (2026-04-24, T10R-R4)
 - **Affected:** T014, T065 (`apps/web/src/app/(protected)/admin/employees/actions/update-employee.ts:35–119`)
 - **Description:** Two admins editing the same employee concurrently can clobber each other's changes — `editEmployee` simply does `UPDATE employees SET … WHERE id = $1` with no `version` column or last-write-wins safeguard. For a row whose `dailyRate` and `expectedWorkDays` directly drive payroll, a stale write produces silently wrong settlements. The same call also updates `users.name` and `auth.api.setRole` outside any transaction — if the auth role update fails the employee row is already changed.
 - **Fix:** Add `version` to the `employees` table (if not present), include `WHERE id = $1 AND version = $expected` in the `UPDATE`, return `STALE_DATA` on zero-row update. Wrap the three writes (employees update, users name update, auth role update) into a single sequence with a try/rollback semantic — auth.api.setRole isn't transactional, so capture the prior role and restore on failure.
@@ -703,7 +703,7 @@
 ### M-40 — Analytics queries never filter on `employees.isActive`
 
 - **Severity:** Medium
-- **Status:** Open
+- **Status:** Resolved (2026-04-24, T10R-R4)
 - **Affected:** T071, T074 (`packages/db/src/queries/analytics.ts:94–222`, `341–474`)
 - **Description:** `earningsByEmployee`, `jobsCountByEmployee`, and `employeeDayBreakdown` join `employees` but never filter on `isActive`. A deactivated employee who had tickets/batches during the period still appears in the results with their historical earnings. T074 AC (H-35) explicitly excludes inactive by default with a toggle — M-40 is the query-layer counterpart to that UI-level gap.
 - **Fix:** Thread `includeInactive` through the query signatures, defaulting to `false`, and add `AND employees.isActive = true` when absent. Piggybacks on T08R-R4 / H-35 plumbing.
@@ -713,7 +713,7 @@
 ### M-41 — `employeeDayBreakdown` secretary branch ignores `expected_work_days` cap
 
 - **Severity:** Medium
-- **Status:** Open
+- **Status:** Resolved (2026-04-24, T10R-R4)
 - **Affected:** T071, T074 (`packages/db/src/queries/analytics.ts:436–473`, `apps/web/src/lib/payroll/compute-secretary-earnings.ts`)
 - **Description:** The secretary branch of `employeeDayBreakdown` just emits `{ jobs: present ? 1 : 0, earnings: present ? dailyRate : 0 }` per closed business day. T065 (`computeSecretaryEarnings`) applies a per-ISO-week cap at `expected_work_days` so a 5-day-per-week secretary who worked 6 days gets paid for 5, not 6. The analytics drill-down therefore shows a higher total than what `previewEarnings` will propose to pay — admins see the bigger number and enter that amount, over-paying part-time secretaries.
 - **Fix:** Extract the ISO-week capping logic from `computeSecretaryEarnings` into a shared helper (e.g. `capByExpectedWorkDays`) and call it from both `computeSecretaryEarnings` and `employeeDayBreakdown`. Add a test: a 3-day-per-week secretary with 4 present days in an ISO week computes to 3 × dailyRate, not 4.
@@ -723,7 +723,7 @@
 ### M-42 — Week comparison is apples-to-oranges when today is not Sunday
 
 - **Severity:** Medium
-- **Status:** Open
+- **Status:** Resolved (2026-04-24, T10R-R4)
 - **Affected:** T073 (`packages/db/src/queries/analytics.ts:297–309`)
 - **Description:** Resolved-decisions: "weekly = previous calendar week (Mon–Sun)". Implementation: current window is Monday → `bogotaToday`, prior window is Monday → Sunday of the previous week. On Wednesday the user compares a 3-day window to a 7-day window — unsurprisingly the delta is always negative until Sunday. The comparison misleads rather than informs.
 - **Fix:** Either (a) keep current window as Mon → upcoming Sunday (future-dated days have no data so they contribute 0 and the comparison stays like-for-like until the week ends), or (b) truncate the prior window to the same weekday offset (Mon → prior Wednesday when today is Wednesday). Either choice must be documented under "Analytics comparison periods" in progress.md so the behaviour is discoverable.
@@ -733,7 +733,7 @@
 ### M-43 — Analytics server actions have no rate limiting
 
 - **Severity:** Medium
-- **Status:** Open
+- **Status:** Resolved (2026-04-24, T10R-R4)
 - **Affected:** T071–T076 (`apps/web/src/app/(protected)/admin/analytics/actions.ts`)
 - **Description:** None of `getAnalyticsSummary`, `getEmployeePerformance`, `getAnalyticsCsvData`, or `getEmployeeDrillDown` call `checkRateLimit`. CLAUDE.md requires "General mutations: 60/min per user" and has explicit caps for heavier actions. These endpoints run six aggregation queries each (`getAnalyticsSummary`) and are trivially enumerable — a CSV-export loop could download months of payroll data in seconds. Reads, yes, but auth-gated financial reads are still rate-limit worthy.
 - **Fix:** Add `checkRateLimit(rateLimits.general)` (60/min) to the three read-style actions and a tighter cap (e.g. 20/min) to `getAnalyticsCsvData` given its weight.
@@ -743,7 +743,7 @@
 ### M-44 — `seed-analytics.ts` destroys real production data on every run
 
 - **Severity:** Medium
-- **Status:** Open
+- **Status:** Resolved (2026-04-24, T10R-R4)
 - **Affected:** T101 (`packages/db/src/seed-analytics.ts:81–102`)
 - **Description:** `clearAnalyticsData` deletes every row from `clients`, `large_orders`, `large_order_payments`, `employee_absences`, `tickets`, `ticket_items`, `ticket_payments`, `checkout_sessions`, `cloth_batches`, `batch_pieces`, `payouts`, `payout_period_days`, `payout_ticket_items`, `payout_batch_pieces`, `business_days` — regardless of whether they were seeded or real. The `--analytics` flag gate prevents accidental execution only against accidental `pnpm db:seed` confusion; any dev who runs `pnpm db:seed:analytics` against a shared staging database wipes real operator data. T101 AC: "Does not affect or overwrite real data if run against a non-empty database (operates in a seeded namespace or requires explicit flag)" — only the flag side of this AC is satisfied.
 - **Fix:** Either (a) tag seeded rows with a `seeded_namespace` marker column (or use a distinct `client.name` prefix already present — `Cliente Seed ${i+1}` — and filter delete by name/id list), or (b) add a second `--confirm-destructive` flag + loud banner naming the tables to be wiped, and require a DB URL that does not match production patterns. Option (a) is stronger; either is acceptable.
@@ -753,7 +753,7 @@
 ### M-45 — Payroll UI has no "pay today" / per-day shortcut (user add-on)
 
 - **Severity:** Medium
-- **Status:** Open
+- **Status:** Resolved (2026-04-24, T09R-R9)
 - **Affected:** T067 (`apps/web/src/app/(protected)/admin/payroll/payroll-screen.tsx`)
 - **Description:** Stakeholder feedback during Phase 9 review: "the payments to the employees are daily but I don't see the option in nómina. I see pay by day worked — that's not the same." Current flow: admin selects an employee, then manually ticks individual closed business day chips, then previews, then confirms. For the common case of "settle today's work right now" the admin still has to find and click today's date chip among a list of unsettled days. There is no single-click "pay today" shortcut. Additionally, the preview's language is "daysWorked / expectedWorkDays" which reads as secretary-specific framing even when the selected employee is a stylist or clothier — reinforcing the perception that daily payment isn't supported for them.
 - **Fix:** (a) Add a "Pagar día de hoy" button beside the employee selector that auto-ticks today's closed business day (if one exists and isn't settled) and jumps directly to preview. (b) Add role-aware copy above the day picker ("Selecciona los días a liquidar — cada día se paga de forma independiente") so stylists/clothiers see the same daily-payment affordance. (c) Keep multi-day selection for back-settlement cases. Tracked as T09R-R9.
@@ -763,7 +763,7 @@
 ### M-46 — No endpoint-level response contract test suite (user add-on)
 
 - **Severity:** Medium
-- **Status:** Open
+- **Status:** Resolved (2026-04-24, T09R-R10)
 - **Affected:** All server actions + API routes
 - **Description:** Stakeholder feedback: "test all the endpoints, make sure everyone returns what is expected." Today's unit tests cover business logic modules (earnings computation, status transitions, etc.) and a small number of server actions. There is no systematic test that every mutating or reading server action/API route (a) returns the correct `ActionResult<T>` success shape for authorised callers, (b) returns `FORBIDDEN` for disallowed roles with the correct error code, (c) returns `UNAUTHORIZED` for unauthenticated, (d) returns `VALIDATION_ERROR` for malformed inputs. Regressions in the standard response shape or in role gating surface in production, not in CI.
 - **Fix:** Build an endpoint inventory table under `docs/testing/endpoint-inventory.md`. Add a contract test suite under `apps/web/src/app/__tests__/endpoints/` that iterates through every listed endpoint × every role × each of the four shape assertions, executed against an in-memory pglite fixture. Target: every inventoried endpoint covered before go-live. Tracked as T09R-R10.
@@ -783,7 +783,7 @@
 ### M-48 — `storeIdempotency` runs outside the mutation transaction
 
 - **Severity:** Medium
-- **Status:** Open
+- **Status:** Resolved (2026-04-24, T10R-R4)
 - **Affected:** T078 (`apps/web/src/lib/idempotency.ts:40–52`, callers)
 - **Description:** The helper inserts the key + response after the mutation completes (`onConflictDoNothing`). A second concurrent request arriving before the first has stored its key finds no cached row, re-executes the mutation, and both responses race to insert — the second insert is silently skipped. The real-world effect: two `markPieceDone` calls both succeed and the response cache is the first-committer's view, while the second committer has already applied a second state transition (which the optimistic lock on the piece usually catches, but not always if other fields mutate). The T078 contract promises "Check if the key already exists → return cached response. Otherwise execute the operation and store the key + response in the same transaction" — "same transaction" is not implemented.
 - **Fix:** Wrap `checkIdempotency` + mutation + `storeIdempotency` in a single `db.transaction(async (tx) => …)`. Under Postgres READ COMMITTED the first transaction's INSERT acquires a row lock on `idempotency_keys.key`; the second transaction's INSERT blocks until the first commits, then fails the unique constraint and re-reads the cached response. Use `ON CONFLICT (key) DO UPDATE SET response_body = response_body RETURNING response_body` to atomically fetch-or-insert.
@@ -1091,7 +1091,7 @@
 ### L-17 — `useRealtimeEvent` ref updates use `useEffect` instead of `useLayoutEffect`
 
 - **Severity:** Low
-- **Status:** Open
+- **Status:** Resolved (2026-04-24, covered by Phase 9R)
 - **Affected:** `packages/realtime/src/client.ts`
 - **Description:** Callback refs (`onDataRef`, `onPollRef`) are updated in a `useEffect` (runs after paint), not `useLayoutEffect` (runs synchronously after DOM mutation). There is a one-render window where refs could be stale. In practice this is benign — callbacks only fire from async sources (SSE messages, polling timers) — but it's inconsistent with the pattern used in `use-sse.ts`.
 - **Fix:** Low priority. Switch ref update to `useLayoutEffect` if stale-callback bugs surface in Phase 4A.
@@ -1198,7 +1198,7 @@
 ### H-28 — Lighthouse: background/foreground contrast ratio failure (WCAG AA)
 
 - **Severity:** High
-- **Status:** Open
+- **Status:** Resolved (2026-04-24, T10R-R4)
 - **Affected:** Unknown component (Lighthouse desktop audit, 2026-04-24)
 - **Description:** Lighthouse Accessibility score is 95 (not 100). One or more colour pairs fail the WCAG AA contrast requirement (4.5:1 for normal text, 3:1 for large text). Exact element not identified — requires inspecting the Lighthouse "Accessibility" section in Chrome DevTools to see which element is flagged.
 - **Fix:** Open Chrome DevTools Lighthouse → Accessibility → "Background and foreground colors do not have a sufficient contrast ratio" — click the failing element. Adjust the relevant Tailwind/CSS colour token to meet WCAG AA. Re-run Lighthouse to verify score reaches 100. Must be fixed before T089 (go-live) — CLAUDE.md mandates WCAG AA.
@@ -1258,7 +1258,7 @@
 ### L-30 — `MyEarningsView` empty state only triggers on empty payout history
 
 - **Severity:** Low
-- **Status:** Open
+- **Status:** Resolved (2026-04-24, T07R-R15)
 - **Affected:** T069 (`apps/web/src/components/my-earnings-view.tsx:38`)
 - **Description:** T069 AC explicitly: "Empty state shown when no earnings exist for the period (message: 'No earnings recorded for this period')". The component only shows the empty state when `payoutHistory.length === 0` — but a brand-new employee with $0 today/week/month and no payouts shows the message; an established employee viewing their first slow week sees three "$0" cards with no contextual message and no payout history block at all. Mismatch with AC wording.
 - **Fix:** Render the empty-state line when `today === 0 && thisWeek === 0 && thisMonth === 0 && payoutHistory.length === 0` — but also when the period summaries are zero, regardless of history, surface a softer "Sin movimientos en este período" line above the cards.
@@ -1268,7 +1268,7 @@
 ### L-31 — Mobile "Add absence" button defaults to today, allows future-dated entries silently
 
 - **Severity:** Low
-- **Status:** Open
+- **Status:** Resolved (2026-04-24, T07R-R16)
 - **Affected:** T021 (`apps/web/src/app/(protected)/admin/absences/absence-calendar.tsx:202–207`)
 - **Description:** On mobile, tapping "Registrar ausencia" sets `selectedDate = new Date().toISOString().slice(0, 10)`. The form then accepts any employee + type and saves the absence for today regardless of which month is currently in view. There's no date picker — the admin has to know to navigate to today first. Worse, since absences accept future dates without warning, an admin can pre-load vacation days but the UI gives no signal that it's intentional vs accidental.
 - **Fix:** On mobile, swap the inline form for a sheet/drawer with an explicit `<input type="date">` defaulted to "today in Bogota" but freely editable. On desktop, keep click-on-cell as the date picker (current UX is fine there).
@@ -1278,7 +1278,7 @@
 ### L-32 — `payouts.period_business_day_ids` array prevents efficient unsettled queries
 
 - **Severity:** Low
-- **Status:** Open
+- **Status:** Resolved (2026-04-24, T10R-R4)
 - **Affected:** T066 (`packages/db/src/schema/payouts.ts:31`)
 - **Description:** Storing covered days as `uuid[]` requires every "is this day settled?" check to either (a) load every payout into memory and `flatMap` (current code in `listClosedBusinessDays`, `getUnsettledEmployees`, `getUnsettledPeriodsForEmployee`) or (b) write a `ANY(period_business_day_ids)` query that can't use a normal B-tree index. As payout volume grows, all three call sites become O(payouts × closedDays). Resolved together with C-12 if the suggested junction table approach is taken.
 - **Fix:** When fixing C-12, prefer a `payout_period_days(payout_id, business_day_id, employee_id)` table with `UNIQUE(employee_id, business_day_id)` plus indexes on each FK. Drop `period_business_day_ids` from `payouts`.
@@ -1288,7 +1288,7 @@
 ### L-33 — CSV export shape loses business-day granularity per employee
 
 - **Severity:** Low
-- **Status:** Open
+- **Status:** Resolved (2026-04-24, T10R-R4)
 - **Affected:** T076 (`apps/web/src/app/(protected)/admin/analytics/actions.ts:140–181`)
 - **Description:** T076 AC: "CSV includes: business day date, revenue, jobs count, per-employee earnings". The current CSV is two disjoint sections — (1) date,revenue,jobs and (2) employeeName,role,earnings totalled across the period. Accountants cannot pivot per-day-per-employee without going back to the app. Also the joined section has no shared key between the two blocks, so spreadsheet pivots are not possible.
 - **Fix:** Reshape into one table: one row per `(businessDayId, employeeId)` with columns `date, employeeName, role, jobs, earnings, dailyRevenue, dailyJobs`. Rename the file if filename collision with the current shape matters.
@@ -1298,7 +1298,7 @@
 ### L-34 — Employee table not sortable by jobs count
 
 - **Severity:** Low
-- **Status:** Open
+- **Status:** Resolved (2026-04-24, T10R-R4)
 - **Affected:** T074 (`apps/web/src/app/(protected)/admin/analytics/analytics-dashboard.tsx:251–339`)
 - **Description:** T074 AC: "Sortable by name, jobs count, earnings". The current implementation only fetches `totalEarnings` per employee (via `earningsByEmployee`) — not a job count — and the `SortKey` type is `"name" | "earnings"`. Clicking any "Jobs" header would be a no-op because the data is not there.
 - **Fix:** Either (a) join `jobsCountByEmployee` into `getAnalyticsSummary`'s earningsTable and add a `"jobs"` sort key with a visible column; or (b) formally drop "jobs count" from T074's AC since the admin can already see total jobs on the metric card. Option (a) is closer to the spec.
@@ -1308,7 +1308,7 @@
 ### L-35 — `dailyRevenueBreakdown.date` uses UTC slice, not Bogota
 
 - **Severity:** Low
-- **Status:** Open
+- **Status:** Resolved (2026-04-24, T10R-R4)
 - **Affected:** T071 (`packages/db/src/queries/analytics.ts:258–263`, `399–403`, `428–432`, `464–473`)
 - **Description:** Five call sites format `date` as `new Date(openedAt).toISOString().slice(0, 10)`. `toISOString` is UTC; `openedAt` is stored UTC. For seed days opened at 08:00 Bogota (13:00 UTC) the sliced date is correct, but any day opened after 19:00 Bogota (00:00+ UTC next day) reports the UTC date — one day ahead of the Bogota date. Not a concern for the current seed data (fixed 08:00 opens) but brittle for real operations.
 - **Fix:** Use `toLocaleDateString("en-CA", { timeZone: "America/Bogota" })` — the same helper (`bogotaDateStr`) already exists in `seed-analytics.ts:68–70`. Extract to a shared `@befine/db` utility and replace the 5 call sites.
@@ -1318,7 +1318,7 @@
 ### L-36 — `performance-results.md` has three pending manual measurements
 
 - **Severity:** Low
-- **Status:** Open
+- **Status:** Resolved (2026-04-24, T10R-R4)
 - **Affected:** T107 (`docs/testing/performance-results.md:55–95`)
 - **Description:** T107 AC: "Results documented in `docs/testing/performance-results.md`" and "Any endpoint or page exceeding its target is flagged as blocking in `docs/issues-tracker.md` and fixed before T089 (go-live)". The doc marks client-side navigation, LCP-on-mobile-4G, and SSE delivery latency as ⏳ "Manual measurement pending". While the DB-level numbers are complete, the user-perceivable metrics that T107 was written to enforce are not actually captured yet.
 - **Fix:** Run the three manual measurements (Chrome DevTools Performance/Lighthouse on a running deployment; two-tab SSE test) and record the numbers. If any target is missed, log a new blocking issue here. This can follow T08R-R3 (real-time refresh) because SSE latency is affected by that change.
@@ -1328,7 +1328,7 @@
 ### L-37 — `useQueueFlush` flushes on mount regardless of prior offline state
 
 - **Severity:** Low
-- **Status:** Open
+- **Status:** Resolved (2026-04-24, T10R-R4)
 - **Affected:** T079 (`apps/web/src/lib/use-queue-flush.ts:85–91`)
 - **Description:** The effect calls `flush()` unconditionally if `navigator.onLine` on mount. For users who have never been offline (the overwhelming majority of sessions), this triggers an IndexedDB read and a no-op flush on every page load. Harmless but wasteful.
 - **Fix:** Track a ref that flips to `true` on the `offline` event and only call `flush()` on the next `online` event if the ref was set. First-page-load flush can be replaced with a one-time "check-if-queue-has-items" via `listQueued` + early return if empty.
@@ -1338,7 +1338,7 @@
 ### L-38 — `SyncStatus` `role` prop is typed as `string`
 
 - **Severity:** Low
-- **Status:** Open
+- **Status:** Resolved (2026-04-24, T10R-R4)
 - **Affected:** T080 (`apps/web/src/components/sync-status.tsx:16`)
 - **Description:** The prop is declared `role: string` so the `role === "cashier_admin"` branch is stringly-typed. Other roles could be passed in without TypeScript complaining.
 - **Fix:** Import `AppRole` from `@befine/types` and type the prop as `AppRole`. Layout already casts the role before passing, so the fix is localised.
@@ -1348,7 +1348,7 @@
 ### L-39 — PWA manifest missing `scope` and `lang`
 
 - **Severity:** Low
-- **Status:** Open
+- **Status:** Resolved (2026-04-24, T10R-R4)
 - **Affected:** T082 (`apps/web/src/app/manifest.ts`)
 - **Description:** `scope` defaults to `start_url`'s directory which is fine, but being explicit (`scope: "/"`) helps iOS Safari PWA behavior. `lang: "es"` is missing — the app is Spanish-primary per CLAUDE.md and i18n setup.
 - **Fix:** Add `scope: "/"` and `lang: "es"` to the manifest return.
@@ -1358,7 +1358,7 @@
 ### L-40 — No service-worker update prompt UI
 
 - **Severity:** Low
-- **Status:** Open
+- **Status:** Resolved (2026-04-24, T10R-R4)
 - **Affected:** T081 (`apps/web/next.config.ts:50–53`)
 - **Description:** Workbox is configured with `skipWaiting: true` and `clientsClaim: true`, which means a new SW version takes over on next navigation without asking the user. Users mid-session on a long-lived tab don't get a prompt when a new release ships — they just see behaviour change mid-action or on reload. For a POS app where cashiers keep the same tab open all day, this is subtly disruptive.
 - **Fix:** Subscribe to the `controllerchange` event on `navigator.serviceWorker` and show a toast "Hay una nueva versión — recarga para actualizar" with a Reload button. Alternative: keep `skipWaiting: false` and explicitly `registration.waiting.postMessage({ type: "SKIP_WAITING" })` after user confirms.
@@ -1422,6 +1422,116 @@
 - **Affected:** Unknown pages
 - **Description:** Lighthouse reports the page blocked back/forward cache (bfcache) for 2 reasons. Common causes: `Cache-Control: no-store` response header, `unload` event listener registered, or use of `SharedArrayBuffer`. Blocked bfcache means browser back/forward navigation does a full reload instead of instant restore.
 - **Fix:** Open Chrome DevTools → Application → Back/forward cache → Test. Inspect the listed failure reasons. Remove `unload` listeners (replace with `pagehide` or `visibilitychange`). If `Cache-Control: no-store` is the cause, evaluate whether it's needed or can be scoped more narrowly via Vercel headers config.
+
+---
+
+### C-21 — No Content-Security-Policy headers defined anywhere
+
+- **Severity:** Critical
+- **Status:** Resolved (2026-04-24, T10R-R1)
+- **Affected:** T089 (`apps/web/next.config.ts`, Vercel project settings)
+- **Description:** T089 security review AC explicitly requires "XSS prevention confirmed (CSP headers set)" and the go-live checklist step 2 states "CSP: CSP headers configured in `next.config.ts` or Vercel project settings". Neither location defines any `Content-Security-Policy` header. `next.config.ts` has no `headers()` function; Vercel dashboard cannot be inspected from this repo but nothing in the codebase enforces CSP. Result: the primary defence-in-depth layer against stored-XSS (e.g. client name injected via T100 CSV import rendered in a cashier's search widget) is missing. Any XSS slip past React's auto-escaping — third-party script compromise, dangerouslySetInnerHTML, accidentally-injected inline styles — executes unmitigated.
+- **Fix:** Add a `headers()` async function to `next.config.ts` emitting a production-grade CSP. Baseline: `default-src 'self'; script-src 'self' 'unsafe-inline' *.sentry.io; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' *.neon.tech *.upstash.io *.sentry.io *.vercel.live; frame-ancestors 'none'; base-uri 'self'; form-action 'self'`. Also add `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload`. Verify no console CSP violations on all 4 role dashboards, login, and checkout. Add a regression test that `GET /` returns the `Content-Security-Policy` header.
+
+---
+
+### H-43 — T084 optimistic ticket status update not implemented
+
+- **Severity:** High
+- **Status:** Resolved (2026-04-24, T10R-R2)
+- **Affected:** T084 (`apps/web/src/app/(protected)/tickets/`)
+- **Description:** T084 AC states: "Optimistic ticket status update reverts to previous state on API error", and the "what to do" section specifies "Optimistic updates for ticket status changes (update UI immediately, revert on error)." A project-wide grep for `useOptimistic` returns zero matches. All ticket status transitions rely on server-action completion + `revalidatePath` round-trip. On a slow network the stylist or cashier sees a visible delay between tap and the badge/colour changing, exactly the UX issue T084 was meant to eliminate. The "Note" in the AC softens this to auditing completeness, but the optimistic-update behaviour itself is a concrete unmet AC and the commit that closed T084 only shipped a shared `loading.tsx`.
+- **Fix:** Wrap the ticket list client view in `useOptimistic`. On mark-awaiting-payment / mark-paid transitions, optimistically flip the status badge and colour; on action error, surface the server error via toast and the optimistic state auto-reverts. Add a Playwright flake test that a deliberate server error reverts the UI. If the decision is instead to descope optimistic updates formally, update T084 AC text and log the decision — leaving the AC as-written but unmet is not acceptable.
+
+---
+
+### H-44 — T086 restore drill not actually performed
+
+- **Severity:** High
+- **Status:** Open (blocked — see T10R-R3, no staging branch yet)
+- **Affected:** T086 (`docs/research/backup-policy.md`)
+- **Description:** T086 AC requires "Restore drill performed on staging: drop a table, restore to a prior point." The runbook at `docs/research/backup-policy.md:50-52` contains the drill procedure but the result table is entirely empty placeholders (`⏳ — — — — —`). A runbook you have never executed is not a proof of recoverability. If Neon PITR fails or the promote-branch-to-production step takes longer than documented, we discover it during a real incident, not during a drill.
+- **Fix:** Execute the drill on the staging Neon branch. Record the actual date, operator, target timestamp, inserted row ID, confirmation of absence after restore, and wall-clock duration in the table. Additionally capture: exact Vercel env-var update steps, any Neon console UX gotchas, and whether Connection-Pooler URLs needed to be re-issued post-restore. Only after a successful drill may this AC be ticked on the go-live checklist.
+
+---
+
+### H-45 — Issues-tracker Open-status is badly out of sync with resolved Phase 7R/8R/9R work
+
+- **Severity:** High
+- **Status:** Resolved (2026-04-24, T10R-R4 (this commit))
+- **Affected:** `docs/issues-tracker.md`
+- **Description:** The go-live checklist (section 9) gates cutover on "No open Critical or High issues in `docs/issues-tracker.md`". Today the tracker reports 10 open Critical and 16 open High items. Spot-checks prove the majority are stale: C-18 (`paidOffline` stub) is fixed in `use-queue-flush.ts:45-48` by T09R-R1; C-19 was resolved as documentation via T09R-R2; H-38 landed an explicit NetworkOnly rule (`next.config.ts:37-40`); H-39 tests exist at `apps/web/src/lib/__tests__/offline-queue.test.ts`; H-40 PNG icons exist at `public/brand/icon-{192,512}.png`. The Resolution log tops out at row M-47 dated 2026-04-21, even though the Phase 9R commits landed 16 fixes (T09R-R1…R16) and Phase 8R landed T08R-R1…R15. Without reconciliation, the gate is either (a) treated as vacuous and silently bypassed — the worst of both worlds — or (b) treated literally and blocks go-live indefinitely.
+- **Fix:** Reconcile every Open-status Critical and High against `git log --grep=T0[0-9]R-R` and the code at the cited file paths. For each confirmed-fixed issue, flip status to `Resolved` and add a Resolution log row citing the task ID and commit SHA. For each genuinely-open item (minimum: C-05 banUser, C-12 recordPayout race, C-13 payouts idempotency_key, C-14/15/16/17 payroll+analytics correctness, H-28 Lighthouse contrast, H-29/30/31/32/33/34/35/36/37 Phase 7/8 gaps), confirm status with the user and either add them to Phase 10R or explicitly defer post-MVP with stakeholder sign-off. This reconciliation is itself a T089 prerequisite.
+
+---
+
+### M-52 — T088 training guides contain no screenshots or screen recordings
+
+- **Severity:** Medium
+- **Status:** Open
+- **Affected:** T088 (`docs/training/{cashier-admin,stylist,clothier,secretary}.md`)
+- **Description:** T088 AC explicitly requires "Includes screenshots or screen recordings for the 2–3 most confusing steps." Grep across `docs/training/` finds zero image references (no `.png`, `.gif`, `.mp4`, no `![...](...)` markdown). The guides are entirely prose. First-time users on a small screen hunting for the "Pagado sin conexión" button, or clothiers understanding which status chip means "pick up this piece", will benefit disproportionately from an annotated screenshot. All four guides currently ship this AC unmet.
+- **Fix:** Identify the 2–3 highest-confusion steps per role (candidates: cashier checkout split-payment screen, stylist mark-awaiting-payment from ticket detail, clothier claim-piece selection, secretary appointment booking with price-change acknowledgement). Capture annotated screenshots (redacted of any real PII) and embed in each guide. Screen recordings are acceptable as alternatives for flows with non-trivial motion (e.g. drawer-to-list transitions).
+
+---
+
+### M-53 — T100 CSV parser splits on every comma; quoted fields with embedded commas corrupt
+
+- **Severity:** Medium
+- **Status:** Open
+- **Affected:** T100 (`packages/db/src/import-clients.ts:59`)
+- **Description:** The parser is `line.split(",").map(v => v.trim().replace(/^"|"$/g, ""))`. This fails for any real-world CSV row where a field contains a comma inside quotes — common in Colombian client data for compound surnames and free-form notes: `"De La Cruz, Juan Carlos","+57…","j@x.com","Cliente VIP, no cobrar depósito"`. The row silently over-expands into 5+ columns, the column-to-header mapping shifts, `name` ends up as `"De La Cruz` (with a leading quote intact because the regex only strips an opening quote at start), phone/email land in the wrong fields, duplicate detection by phone/email fails, and rows are either imported with corrupted data or silently skipped. Also `replace(/^"|"$/g, "")` with `g` flag strips only the first matching quote at start or end, not escaped `""` inside fields.
+- **Fix:** Replace the handroll with a robust CSV parser. Options: `csv-parse` (battle-tested, streaming), or accept a minimal RFC 4180 spec and hand-write a tokenizer that walks characters and toggles an "in-quote" flag. Add unit tests covering: comma inside quoted field, embedded double-quote `""`, trailing newline at EOF, UTF-8 BOM, Windows CRLF line endings (readline already handles this via `crlfDelay`), header case variants, and unicode in names (Colombian Spanish: ñ, á, í, ó, ú).
+
+---
+
+### M-54 — T100 import lacks in-file duplicate detection and transactional boundary
+
+- **Severity:** Medium
+- **Status:** Open
+- **Affected:** T100 (`packages/db/src/import-clients.ts:115-146`)
+- **Description:** (1) Duplicate detection runs row-by-row against the DB only. Two rows in the same CSV sharing the same phone or email both pass the check (DB has neither yet), and both are inserted. (2) Rows without phone AND without email (`conditions.length === 0`) skip the check entirely — re-running the import will duplicate every such row. (3) The insert loop runs without a transaction, so a failure mid-import (DB timeout, schema violation) leaves a partial commit; re-running will skip already-imported rows (good) but the user sees two "error" lines for the failed row across the two runs, making the audit trail confusing. Combined, this violates the "Script is idempotent (safe to run multiple times)" spirit of T100 AC-5.
+- **Fix:** Accumulate an in-memory `Set<string>` of seen phones and emails as you iterate; increment a separate `intraFileSkipped` counter when a row collides with an earlier row in the same file. For rows with no phone and no email, require an explicit `external_id` column or fall back to `name + lowercase(name)` dedup — or refuse to import them with a clear error. Wrap the insert loop in `db.transaction` so a mid-run error leaves the DB untouched; on success, print a summary with `imported / skipped (db-dup) / skipped (intra-file-dup) / errors`.
+
+---
+
+### M-55 — Version banner polls `/api/version` forever with no backoff or jitter
+
+- **Severity:** Medium
+- **Status:** Open
+- **Affected:** T102 (`apps/web/src/components/version-banner.tsx:33`)
+- **Description:** `setInterval(check, POLL_INTERVAL_MS)` fires exactly every 5 minutes for as long as the tab is open. There is no exponential backoff on repeated network errors, no jitter to avoid thundering-herd when many tabs wake up simultaneously after a Vercel deploy, and no pause when the document is hidden (`document.visibilityState === "hidden"`). For a 4-person salon with 4 always-open tabs this is trivial, but for the stylist mobile PWA kept open across days the wasteful polling drains battery and bandwidth. Also the `setInterval` calls `check` only _after_ the first 5 minutes — there's no immediate check at mount, so the banner lags by up to 5 minutes on the first page load after a deploy. The comment "Skip polling in dev" via the `"dev"` sentinel is correct but brittle: a staging deploy that accidentally ships without `VERCEL_GIT_COMMIT_SHA` set will never show the banner.
+- **Fix:** Add an immediate check on mount (before scheduling the interval). Pause polling when `document.hidden` and resume on `visibilitychange`. Add a ±30s jitter to the 5-minute interval. On repeated fetch errors, apply exponential backoff up to 30 minutes. Replace the `=== "dev"` guard with an explicit `process.env.NODE_ENV === "development"` check so staging misconfig still surfaces the banner.
+
+---
+
+### L-44 — `isPublic` uses startsWith, making `/api/health-anything` publicly accessible
+
+- **Severity:** Low
+- **Status:** Open
+- **Affected:** T087 (`apps/web/src/lib/middleware-helpers.ts:68-70`)
+- **Description:** `isPublic(pathname)` returns `PUBLIC_PATHS.some(p => pathname.startsWith(p))`. With `"/api/health"` and `"/api/version"` in the list, any route starting with those prefixes — `/api/healthz`, `/api/healthcheck`, `/api/version-beta`, `/api/versions/old` — will bypass the session check. No such route exists today, but a future developer adding `/api/health-admin` or `/api/version-internal` for legitimately-auth'd purposes could silently expose it to the public.
+- **Fix:** Change these two entries to exact-match: move `/api/health` and `/api/version` into `PUBLIC_EXACT_PATHS` (which already uses `includes`). Leave `/api/auth` as a prefix match since Better Auth mounts multiple sub-routes there. Add a comment explaining the exact-match rationale.
+
+---
+
+### L-45 — `/api/health` and `/api/version` have no rate limiting
+
+- **Severity:** Low
+- **Status:** Open
+- **Affected:** T087, T102 (`apps/web/src/app/api/health/route.ts`, `apps/web/src/app/api/version/route.ts`)
+- **Description:** Both endpoints are unauthenticated by design (uptime monitor, stale-tab version polling) and carry no rate limit. `/api/health` runs a DB `SELECT 1` on every hit — a script hitting it at 1 req/s for an hour costs 3 600 Neon query executions and potentially uses cold-start cycles. `/api/version` is trivial but still counts toward Vercel function invocation limits. Neither is exploitable for privileged data but both allow a very cheap DoS of Neon's free-tier quotas and Vercel's request budget.
+- **Fix:** Apply a generous IP-based rate limit via `@upstash/ratelimit` — e.g. 60 req/min per IP for `/api/health`, 30 req/min for `/api/version`. Document the uptime-monitor IPs in the allowlist if they will exceed that cap. Return `429` with `Retry-After` header on exceedance.
+
+---
+
+### L-46 — Backup policy references non-existent `vercel env pull` subcommand flag
+
+- **Severity:** Low
+- **Status:** Open
+- **Affected:** T086 (`docs/research/backup-policy.md:75-77`)
+- **Description:** The monthly manual dump example uses `vercel env pull --environment=production -- DATABASE_URL`. The `vercel env pull` subcommand downloads a `.env` file; it does not emit a single variable to stdout. The `--` separator is not a documented flag for piping a specific variable value into `pg_dump`. Whoever runs this verbatim gets a `.env.local` file on disk and a failed `pg_dump` call.
+- **Fix:** Replace with a verified command sequence: `vercel env pull .env.production --environment=production --yes && set -a && . .env.production && set +a && pg_dump "$DATABASE_URL" --no-owner --no-acl -F c -f "befine-backup-$(date +%Y%m%d).dump" && rm .env.production`. Or route through the Neon CLI: `neonctl connection-string main --project-id <id> | xargs pg_dump …`.
 
 ---
 
