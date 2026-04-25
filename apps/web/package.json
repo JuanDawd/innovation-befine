@@ -18,7 +18,7 @@
     "clean": "rm -rf .next .turbo"
   },
   "dependencies": {
-    "@base-ui/react": "^1.3.0",
+    "@base-ui/react": "^1.4.1",
     "@befine/db": "workspace:*",
     "@befine/realtime": "workspace:*",
     "@befine/types": "workspace:*",
