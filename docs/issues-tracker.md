@@ -1498,7 +1498,7 @@
 ### M-55 — Version banner polls `/api/version` forever with no backoff or jitter
 
 - **Severity:** Medium
-- **Status:** Open
+- **Status:** Resolved
 - **Affected:** T102 (`apps/web/src/components/version-banner.tsx:33`)
 - **Description:** `setInterval(check, POLL_INTERVAL_MS)` fires exactly every 5 minutes for as long as the tab is open. There is no exponential backoff on repeated network errors, no jitter to avoid thundering-herd when many tabs wake up simultaneously after a Vercel deploy, and no pause when the document is hidden (`document.visibilityState === "hidden"`). For a 4-person salon with 4 always-open tabs this is trivial, but for the stylist mobile PWA kept open across days the wasteful polling drains battery and bandwidth. Also the `setInterval` calls `check` only _after_ the first 5 minutes — there's no immediate check at mount, so the banner lags by up to 5 minutes on the first page load after a deploy. The comment "Skip polling in dev" via the `"dev"` sentinel is correct but brittle: a staging deploy that accidentally ships without `VERCEL_GIT_COMMIT_SHA` set will never show the banner.
 - **Fix:** Add an immediate check on mount (before scheduling the interval). Pause polling when `document.hidden` and resume on `visibilitychange`. Add a ±30s jitter to the 5-minute interval. On repeated fetch errors, apply exponential backoff up to 30 minutes. Replace the `=== "dev"` guard with an explicit `process.env.NODE_ENV === "development"` check so staging misconfig still surfaces the banner.
@@ -1642,3 +1642,4 @@
 | M-47     | 2026-04-21    | 25 Vitest integration tests in `cross-module-flows.test.ts` covering the four required flows; README doc | T09R-R11                     |
 | M-53     | 2026-04-25    | RFC 4180 `parseCsvLine`, BOM strip, CLI guard, 11 unit tests covering Colombian compound surnames        | T10R-R6                      |
 | M-54     | 2026-04-25    | In-memory phone/email Set dedup, `db.transaction` (createTxDb) wrapper, summary with intra-file skips    | T10R-R7                      |
+| M-55     | 2026-04-25    | Immediate mount check, hidden-tab pause, ±30s jitter, exponential backoff to 30 min, NODE_ENV dev guard  | T10R-R8                      |

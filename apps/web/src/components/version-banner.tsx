@@ -4,7 +4,16 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { RefreshCw } from "lucide-react";
 
-const POLL_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+const BASE_INTERVAL_MS = 5 * 60 * 1000;
+const MAX_BACKOFF_MS = 30 * 60 * 1000;
+const JITTER_MS = 30 * 1000;
+
+function nextDelay(failures: number): number {
+  const base =
+    failures === 0 ? BASE_INTERVAL_MS : Math.min(BASE_INTERVAL_MS * 2 ** failures, MAX_BACKOFF_MS);
+  const jitter = Math.floor(Math.random() * (2 * JITTER_MS + 1)) - JITTER_MS;
+  return base + jitter;
+}
 
 export function VersionBanner() {
   const t = useTranslations("versionBanner");
@@ -13,25 +22,63 @@ export function VersionBanner() {
   const currentBuildId = useRef(process.env.NEXT_PUBLIC_BUILD_ID ?? "dev");
 
   useEffect(() => {
-    // Skip polling in dev where build IDs are always "dev"
-    if (currentBuildId.current === "dev") return;
+    if (process.env.NODE_ENV === "development") return;
 
-    async function check() {
-      try {
-        const res = await fetch("/api/version", { cache: "no-store" });
-        if (!res.ok) return;
-        const { buildId } = (await res.json()) as { buildId: string };
-        if (buildId !== currentBuildId.current) {
-          setOutdated(true);
-          setDismissed(false);
-        }
-      } catch {
-        // network error — ignore silently
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    let cancelled = false;
+    let failures = 0;
+
+    function clear() {
+      if (timer) {
+        clearTimeout(timer);
+        timer = null;
       }
     }
 
-    const id = setInterval(check, POLL_INTERVAL_MS);
-    return () => clearInterval(id);
+    function schedule() {
+      clear();
+      if (cancelled || document.hidden) return;
+      timer = setTimeout(check, nextDelay(failures));
+    }
+
+    async function check() {
+      if (cancelled || document.hidden) return;
+      try {
+        const res = await fetch("/api/version", { cache: "no-store" });
+        if (!res.ok) {
+          failures++;
+        } else {
+          failures = 0;
+          const { buildId } = (await res.json()) as { buildId: string };
+          if (buildId !== currentBuildId.current) {
+            setOutdated(true);
+            setDismissed(false);
+            return;
+          }
+        }
+      } catch {
+        failures++;
+      }
+      schedule();
+    }
+
+    function onVisibility() {
+      if (cancelled) return;
+      if (document.hidden) {
+        clear();
+      } else {
+        check();
+      }
+    }
+
+    check();
+    document.addEventListener("visibilitychange", onVisibility);
+
+    return () => {
+      cancelled = true;
+      clear();
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
   }, []);
 
   if (!outdated || dismissed) return null;

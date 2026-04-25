@@ -675,7 +675,7 @@ Update `apps/web/src/lib/db/README.md` with a short "When to use `getDb()` vs `g
 | T10R-R5  | Fix: add annotated screenshots to the 2–3 hardest steps in each training guide (M-52)                 | pending | Medium   | Opus audit |
 | T10R-R6  | Fix: replace handroll CSV parser with RFC 4180 parser + Colombian-name unit tests (M-53)              | done    | Medium   | Opus audit |
 | T10R-R7  | Fix: in-file dedup + transactional import + summary with intra-file skip count (M-54)                 | done    | Medium   | Opus audit |
-| T10R-R8  | Fix: version banner — immediate check on mount, visibility pause, backoff, jitter (M-55)              | pending | Medium   | Opus audit |
+| T10R-R8  | Fix: version banner — immediate check on mount, visibility pause, backoff, jitter (M-55)              | done    | Medium   | Opus audit |
 | T10R-R9  | Fix: move `/api/health` and `/api/version` into `PUBLIC_EXACT_PATHS` (L-44)                           | pending | Low      | Opus audit |
 | T10R-R10 | Fix: apply IP-based `@upstash/ratelimit` to both public API endpoints (L-45)                          | pending | Low      | Opus audit |
 | T10R-R11 | Fix: replace `vercel env pull --environment=production -- DATABASE_URL` with verified sequence (L-46) | pending | Low      | Opus audit |
