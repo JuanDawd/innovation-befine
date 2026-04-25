@@ -11,7 +11,13 @@
  * directly from the card — T037.
  */
 
-import { useState, useCallback, useTransition } from "react";
+import {
+  useState,
+  useCallback,
+  useTransition,
+  useOptimistic,
+  startTransition as reactStartTransition,
+} from "react";
 import { useTranslations } from "next-intl";
 import { Loader2Icon, CreditCardIcon } from "lucide-react";
 import { useRealtimeEvent } from "@befine/realtime/client";
@@ -22,6 +28,7 @@ import {
   type DashboardTicket,
 } from "@/app/(protected)/tickets/actions";
 import { Button } from "@/components/ui/button";
+import { optimisticStatusReducer } from "./cashier-dashboard-helpers";
 
 type TicketsByEmployee = Map<string, { employeeName: string; tickets: DashboardTicket[] }>;
 
@@ -60,6 +67,10 @@ export function CashierDashboard({ initialTickets }: { initialTickets: Dashboard
   const [errors, setErrors] = useState<Map<string, string>>(new Map());
   const [, startTransition] = useTransition();
 
+  // T10R-R2 — optimistic status update; reverts naturally if the action errors
+  // because we never commit setTickets on the failure branch.
+  const [optimisticTickets, applyOptimistic] = useOptimistic(tickets, optimisticStatusReducer);
+
   const refresh = useCallback(() => {
     startTransition(async () => {
       const result = await listOpenTickets();
@@ -96,6 +107,11 @@ export function CashierDashboard({ initialTickets }: { initialTickets: Dashboard
       return next;
     });
 
+    // Optimistic flip — must run inside a transition per React 19 rules.
+    reactStartTransition(() => {
+      applyOptimistic({ id: ticket.id, status: "awaiting_payment" });
+    });
+
     const action =
       ticket.status === "reopened"
         ? transitionReopenedToAwaitingPayment
@@ -110,14 +126,17 @@ export function CashierDashboard({ initialTickets }: { initialTickets: Dashboard
     });
 
     if (!result.success) {
+      // Failure path — surface the error; the optimistic state reverts
+      // automatically when this transition completes without a setTickets call.
       setErrors((prev) => new Map(prev).set(ticket.id, tt("markReadyError")));
+      return;
     }
-    // On success, SSE/poll will refresh the list automatically
+    // On success, SSE/poll will refresh the list authoritatively.
   }
 
-  const byEmployee = groupByEmployee(tickets);
+  const byEmployee = groupByEmployee(optimisticTickets);
 
-  if (tickets.length === 0) {
+  if (optimisticTickets.length === 0) {
     return (
       <div className="rounded-lg border border-dashed p-12 text-center">
         <p className="text-sm text-muted-foreground">
