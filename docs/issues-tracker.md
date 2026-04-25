@@ -1518,7 +1518,7 @@
 ### L-45 — `/api/health` and `/api/version` have no rate limiting
 
 - **Severity:** Low
-- **Status:** Open
+- **Status:** Resolved
 - **Affected:** T087, T102 (`apps/web/src/app/api/health/route.ts`, `apps/web/src/app/api/version/route.ts`)
 - **Description:** Both endpoints are unauthenticated by design (uptime monitor, stale-tab version polling) and carry no rate limit. `/api/health` runs a DB `SELECT 1` on every hit — a script hitting it at 1 req/s for an hour costs 3 600 Neon query executions and potentially uses cold-start cycles. `/api/version` is trivial but still counts toward Vercel function invocation limits. Neither is exploitable for privileged data but both allow a very cheap DoS of Neon's free-tier quotas and Vercel's request budget.
 - **Fix:** Apply a generous IP-based rate limit via `@upstash/ratelimit` — e.g. 60 req/min per IP for `/api/health`, 30 req/min for `/api/version`. Document the uptime-monitor IPs in the allowlist if they will exceed that cap. Return `429` with `Retry-After` header on exceedance.
@@ -1644,3 +1644,4 @@
 | M-54     | 2026-04-25    | In-memory phone/email Set dedup, `db.transaction` (createTxDb) wrapper, summary with intra-file skips    | T10R-R7                      |
 | M-55     | 2026-04-25    | Immediate mount check, hidden-tab pause, ±30s jitter, exponential backoff to 30 min, NODE_ENV dev guard  | T10R-R8                      |
 | L-44     | 2026-04-25    | `/api/health` + `/api/version` moved to `PUBLIC_EXACT_PATHS`; 2 new tests reject prefix variants         | T10R-R9                      |
+| L-45     | 2026-04-25    | `checkPublicRateLimit` (IP-keyed): 60/min health, 30/min version; 429 + `retry-after` on exceedance      | T10R-R10                     |

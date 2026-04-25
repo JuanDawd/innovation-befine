@@ -70,6 +70,10 @@ export const rateLimits = {
   general: makeLimit(60, 60),
   /** 20 requests / 60s — analytics CSV export (heavier, must not be easily enumerated) */
   analyticsCsv: makeLimit(20, 60),
+  /** 60 requests / 60s — public /api/health endpoint, IP-keyed (T10R-R10) */
+  publicHealth: makeLimit(60, 60),
+  /** 30 requests / 60s — public /api/version endpoint, IP-keyed (T10R-R10) */
+  publicVersion: makeLimit(30, 60),
 };
 
 /**
@@ -82,4 +86,45 @@ export async function checkRateLimit(
 ): Promise<{ allowed: boolean }> {
   const { success } = await limiter.limit(identifier);
   return { allowed: success };
+}
+
+/**
+ * Extract a client IP from a Next.js Request. Vercel sets `x-forwarded-for`
+ * with a comma-separated chain; the leftmost entry is the originating client.
+ * Falls back to `x-real-ip`, then a literal "unknown" so a missing header does
+ * not collapse all callers into a single bucket on a non-Vercel host.
+ */
+export function clientIpFromRequest(req: Request): string {
+  const xff = req.headers.get("x-forwarded-for");
+  if (xff) {
+    const first = xff.split(",")[0]?.trim();
+    if (first) return first;
+  }
+  const real = req.headers.get("x-real-ip");
+  if (real) return real.trim();
+  return "unknown";
+}
+
+/**
+ * IP-keyed rate-limit check for unauthenticated public endpoints. On exceedance
+ * returns a 429 NextResponse with `Retry-After`; on success returns null so the
+ * caller continues. Identifier is namespaced per limiter so different endpoints
+ * do not share buckets.
+ */
+export async function checkPublicRateLimit(
+  limiter: Ratelimit,
+  req: Request,
+  bucket: string,
+): Promise<Response | null> {
+  const ip = clientIpFromRequest(req);
+  const { success, reset } = await limiter.limit(`${bucket}:${ip}`);
+  if (success) return null;
+  const retryAfter = Math.max(1, Math.ceil(reset - Date.now() / 1000));
+  return new Response(JSON.stringify({ error: "Too many requests" }), {
+    status: 429,
+    headers: {
+      "content-type": "application/json",
+      "retry-after": String(retryAfter),
+    },
+  });
 }
