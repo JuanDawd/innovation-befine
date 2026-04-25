@@ -185,7 +185,14 @@ export async function getAnalyticsCsvData(
 
   const parsed = analyticsPeriodSchema.safeParse(rawPeriod);
   if (!parsed.success)
-    return { success: false, error: { code: "VALIDATION_ERROR", message: "Período inválido" } };
+    return {
+      success: false,
+      error: {
+        code: "VALIDATION_ERROR",
+        message: "Período inválido",
+        details: parsed.error.issues.map((i) => ({ field: i.path.join("."), message: i.message })),
+      },
+    };
 
   const period = parsed.data;
   const db = getDb();

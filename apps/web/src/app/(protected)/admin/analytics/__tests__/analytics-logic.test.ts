@@ -253,6 +253,36 @@ describe("Analytics Zod schemas (T08R-R5)", () => {
       }).success,
     ).toBe(true);
   });
+
+  it("analyticsQuerySchema yields field-level issues for the actions to surface", async () => {
+    const { analyticsQuerySchema } = await import("@befine/types");
+    const result = analyticsQuerySchema.safeParse({ period: "year" });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const fields = result.error.issues.map((i) => i.path.join("."));
+      expect(fields).toContain("period");
+    }
+  });
+
+  it("employeeDrillDownSchema yields field-level issues identifying employeeId", async () => {
+    const { employeeDrillDownSchema } = await import("@befine/types");
+    const result = employeeDrillDownSchema.safeParse({
+      employeeId: "not-a-uuid",
+      period: "day",
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const fields = result.error.issues.map((i) => i.path.join("."));
+      expect(fields).toContain("employeeId");
+    }
+  });
+
+  it("includeInactive defaults to false when omitted", async () => {
+    const { analyticsQuerySchema } = await import("@befine/types");
+    const result = analyticsQuerySchema.safeParse({ period: "day" });
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.includeInactive).toBe(false);
+  });
 });
 
 // ─── T08R-R1: open day included in current window ────────────────────────────
