@@ -1488,7 +1488,7 @@
 ### M-54 — T100 import lacks in-file duplicate detection and transactional boundary
 
 - **Severity:** Medium
-- **Status:** Open
+- **Status:** Resolved
 - **Affected:** T100 (`packages/db/src/import-clients.ts:115-146`)
 - **Description:** (1) Duplicate detection runs row-by-row against the DB only. Two rows in the same CSV sharing the same phone or email both pass the check (DB has neither yet), and both are inserted. (2) Rows without phone AND without email (`conditions.length === 0`) skip the check entirely — re-running the import will duplicate every such row. (3) The insert loop runs without a transaction, so a failure mid-import (DB timeout, schema violation) leaves a partial commit; re-running will skip already-imported rows (good) but the user sees two "error" lines for the failed row across the two runs, making the audit trail confusing. Combined, this violates the "Script is idempotent (safe to run multiple times)" spirit of T100 AC-5.
 - **Fix:** Accumulate an in-memory `Set<string>` of seen phones and emails as you iterate; increment a separate `intraFileSkipped` counter when a row collides with an earlier row in the same file. For rows with no phone and no email, require an explicit `external_id` column or fall back to `name + lowercase(name)` dedup — or refuse to import them with a clear error. Wrap the insert loop in `db.transaction` so a mid-run error leaves the DB untouched; on success, print a summary with `imported / skipped (db-dup) / skipped (intra-file-dup) / errors`.
@@ -1641,3 +1641,4 @@
 | L-29     | 2026-04-19    | Cancel wrapped in Dialog with deposit warning, reason input, and disabled confirm until acked            | T06R-R12                     |
 | M-47     | 2026-04-21    | 25 Vitest integration tests in `cross-module-flows.test.ts` covering the four required flows; README doc | T09R-R11                     |
 | M-53     | 2026-04-25    | RFC 4180 `parseCsvLine`, BOM strip, CLI guard, 11 unit tests covering Colombian compound surnames        | T10R-R6                      |
+| M-54     | 2026-04-25    | In-memory phone/email Set dedup, `db.transaction` (createTxDb) wrapper, summary with intra-file skips    | T10R-R7                      |

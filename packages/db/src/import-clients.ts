@@ -17,7 +17,7 @@
 
 import { createReadStream } from "node:fs";
 import { createInterface } from "node:readline";
-import { createDb } from "./index";
+import { createTxDb } from "./index";
 import { clients } from "./schema";
 import { or, eq } from "drizzle-orm";
 
@@ -148,56 +148,91 @@ async function main() {
   const rows = await readCsv(filePath);
   console.log(`Parsed ${rows.length} client row(s)`);
 
+  // Intra-file dedup pass (T10R-R7). A row is rejected up-front if any earlier
+  // row in the same file shared a phone or email. Rows missing both phone and
+  // email cannot be safely deduped against the DB, so we refuse them with a
+  // clear error rather than risk duplicating on re-run.
+  const seenPhones = new Set<string>();
+  const seenEmails = new Set<string>();
+  const candidates: ClientRow[] = [];
+  let intraFileSkipped = 0;
+  const preErrors: Array<{ row: ClientRow; reason: string }> = [];
+
+  for (const row of rows) {
+    if (!row.phone && !row.email) {
+      preErrors.push({
+        row,
+        reason:
+          "Row has no phone and no email — cannot be deduplicated. Add one or remove the row.",
+      });
+      continue;
+    }
+    const phoneHit = row.phone ? seenPhones.has(row.phone) : false;
+    const emailHit = row.email ? seenEmails.has(row.email) : false;
+    if (phoneHit || emailHit) {
+      intraFileSkipped++;
+      continue;
+    }
+    if (row.phone) seenPhones.add(row.phone);
+    if (row.email) seenEmails.add(row.email);
+    candidates.push(row);
+  }
+
   if (dryRun) {
     console.log("\n[DRY RUN] No changes will be written.\n");
-    for (const row of rows.slice(0, 5)) console.log(" ", JSON.stringify(row));
-    if (rows.length > 5) console.log(`  … and ${rows.length - 5} more`);
+    for (const row of candidates.slice(0, 5)) console.log(" ", JSON.stringify(row));
+    if (candidates.length > 5) console.log(`  … and ${candidates.length - 5} more`);
+    console.log(`\nIntra-file duplicates : ${intraFileSkipped}`);
+    console.log(`Rows missing phone+email: ${preErrors.length}`);
     return;
   }
 
-  const db = createDb(databaseUrl);
+  const db = createTxDb(databaseUrl);
 
   let imported = 0;
-  let skipped = 0;
-  const errors: Array<{ row: ClientRow; reason: string }> = [];
+  let dbSkipped = 0;
+  const errors: Array<{ row: ClientRow; reason: string }> = [...preErrors];
 
-  for (const row of rows) {
-    try {
-      const conditions = [];
-      if (row.phone) conditions.push(eq(clients.phone, row.phone));
-      if (row.email) conditions.push(eq(clients.email, row.email));
+  try {
+    await db.transaction(async (tx) => {
+      for (const row of candidates) {
+        const conditions = [];
+        if (row.phone) conditions.push(eq(clients.phone, row.phone));
+        if (row.email) conditions.push(eq(clients.email, row.email));
 
-      if (conditions.length > 0) {
-        const existing = await db
+        const existing = await tx
           .select({ id: clients.id })
           .from(clients)
           .where(or(...conditions))
           .limit(1);
 
         if (existing.length > 0) {
-          skipped++;
+          dbSkipped++;
           continue;
         }
+
+        await tx.insert(clients).values({
+          name: row.name,
+          phone: row.phone,
+          email: row.email,
+          notes: row.notes,
+          noShowCount: row.noShowCount,
+        });
+
+        imported++;
       }
-
-      await db.insert(clients).values({
-        name: row.name,
-        phone: row.phone,
-        email: row.email,
-        notes: row.notes,
-        noShowCount: row.noShowCount,
-      });
-
-      imported++;
-    } catch (err) {
-      errors.push({ row, reason: err instanceof Error ? err.message : String(err) });
-    }
+    });
+  } catch (err) {
+    console.error("\nImport aborted; transaction rolled back.");
+    console.error(err instanceof Error ? err.message : String(err));
+    process.exit(1);
   }
 
   console.log(`\nImport complete:`);
-  console.log(`  Imported : ${imported}`);
-  console.log(`  Skipped  : ${skipped} (duplicates by phone or email)`);
-  console.log(`  Errors   : ${errors.length}`);
+  console.log(`  Imported              : ${imported}`);
+  console.log(`  Skipped (db duplicate): ${dbSkipped}`);
+  console.log(`  Skipped (intra-file)  : ${intraFileSkipped}`);
+  console.log(`  Errors                : ${errors.length}`);
 
   for (const { row, reason } of errors) {
     console.error(`  ERROR [${row.name}]: ${reason}`);
