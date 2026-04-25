@@ -13,6 +13,7 @@ import {
   type ProgressPhase,
   type ProgressStatus,
 } from "@/lib/progress-tracker";
+import { getPostMvpSnapshot, type PostMvpCategory } from "@/lib/post-mvp";
 import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -84,7 +85,11 @@ export default async function AdminRoadmapPage() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session || !hasRole(session.user, "cashier_admin")) redirect("/403");
 
-  const [stabs, progress] = await Promise.all([getStabilizationSnapshots(), getProgressSnapshot()]);
+  const [stabs, progress, postMvp] = await Promise.all([
+    getStabilizationSnapshots(),
+    getProgressSnapshot(),
+    getPostMvpSnapshot(),
+  ]);
 
   return (
     <div className="px-6 py-8 max-w-5xl mx-auto space-y-12">
@@ -106,14 +111,14 @@ export default async function AdminRoadmapPage() {
         <StabilizationSection key={stab.phase} stab={stab} />
       ))}
 
-      {/* ── MVP + Post-MVP section ──────────────────────────────────────────── */}
+      {/* ── MVP section ─────────────────────────────────────────────────────── */}
       <section className="space-y-6">
         <div className="flex items-baseline justify-between">
           <h2
             className="text-2xl font-semibold tracking-tight"
             style={{ fontFamily: "var(--font-display)" }}
           >
-            MVP y Post-MVP
+            MVP
           </h2>
           <span className="text-sm text-muted-foreground">
             {progress.done}/{progress.total} hechas · {progress.progressPct}%
@@ -134,7 +139,68 @@ export default async function AdminRoadmapPage() {
           ))}
         </div>
       </section>
+
+      {/* ── Post-MVP roadmap (browsable) ───────────────────────────────────── */}
+      <section className="space-y-6">
+        <div className="flex items-baseline justify-between">
+          <h2
+            className="text-2xl font-semibold tracking-tight"
+            style={{ fontFamily: "var(--font-display)" }}
+          >
+            Post-MVP
+          </h2>
+          <span className="text-sm text-muted-foreground">{postMvp.totalItems} ideas</span>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Categorías cerradas. Click una para explorar. Origen:{" "}
+          <code className="font-mono">docs/roadmap-post-mvp.md</code>.
+        </p>
+        <div className="space-y-3">
+          {postMvp.categories.map((cat) => (
+            <PostMvpCategoryCard key={cat.slug} category={cat} />
+          ))}
+        </div>
+      </section>
     </div>
+  );
+}
+
+function PostMvpCategoryCard({ category }: { category: PostMvpCategory }) {
+  return (
+    <details className="group rounded-lg border border-border bg-card shadow-sm">
+      <summary className="flex cursor-pointer items-center justify-between gap-3 px-4 py-3 marker:hidden [&::-webkit-details-marker]:hidden">
+        <div className="flex min-w-0 flex-1 items-center gap-3">
+          <span className="font-mono text-xs font-semibold text-muted-foreground tabular-nums">
+            {category.number}.
+          </span>
+          <h3 className="text-sm font-semibold">{category.title}</h3>
+        </div>
+        <span className="shrink-0 text-xs text-muted-foreground">
+          {category.items.length} {category.items.length === 1 ? "elemento" : "elementos"}
+          <span className="ml-2 inline-block transition-transform group-open:rotate-90">›</span>
+        </span>
+      </summary>
+      <div className="space-y-3 border-t border-border px-4 py-3">
+        {category.intro && <p className="text-xs italic text-muted-foreground">{category.intro}</p>}
+        <ul className="space-y-2">
+          {category.items.map((item) => (
+            <li key={item.id}>
+              <details className="rounded-md border border-border bg-background">
+                <summary className="flex cursor-pointer items-center gap-2 px-3 py-2">
+                  <span className="font-mono text-[11px] text-muted-foreground tabular-nums">
+                    {item.id}
+                  </span>
+                  <span className="text-sm">{item.title}</span>
+                </summary>
+                <pre className="whitespace-pre-wrap break-words border-t border-border px-3 py-2 text-xs text-muted-foreground font-sans">
+                  {item.body}
+                </pre>
+              </details>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </details>
   );
 }
 
