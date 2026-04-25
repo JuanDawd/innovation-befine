@@ -1,48 +1,12 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
 import { Moon, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/hooks/use-theme";
 
-type Theme = "light" | "dark";
-const STORAGE_KEY = "befine-theme";
-const EVENT = "befine-theme-change";
-
-function applyTheme(theme: Theme) {
-  const root = document.documentElement;
-  root.classList.toggle("dark", theme === "dark");
-  root.setAttribute("data-theme", theme);
-}
-
-function readTheme(): Theme {
-  const saved = window.localStorage.getItem(STORAGE_KEY);
-  if (saved === "light" || saved === "dark") return saved;
-  return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
-}
-
-function subscribe(onChange: () => void) {
-  window.addEventListener(EVENT, onChange);
-  window.addEventListener("storage", onChange);
-  return () => {
-    window.removeEventListener(EVENT, onChange);
-    window.removeEventListener("storage", onChange);
-  };
-}
-
+/** Segmented day/night pill. Used inside the sidebar footer. */
 export function ThemeToggle({ className }: { className?: string }) {
-  // Returns undefined on the server (serverSnapshot) so the component
-  // renders a neutral state during SSR; after hydration it reads localStorage.
-  const theme = useSyncExternalStore<Theme | undefined>(
-    subscribe,
-    () => readTheme(),
-    () => undefined,
-  );
-
-  function setAndPersist(next: Theme) {
-    applyTheme(next);
-    window.localStorage.setItem(STORAGE_KEY, next);
-    window.dispatchEvent(new Event(EVENT));
-  }
+  const { theme, setTheme } = useTheme();
 
   return (
     <div
@@ -55,7 +19,7 @@ export function ThemeToggle({ className }: { className?: string }) {
     >
       <button
         type="button"
-        onClick={() => setAndPersist("light")}
+        onClick={() => setTheme("light")}
         aria-pressed={theme === "light"}
         aria-label="Tema claro"
         className={cn(
@@ -68,7 +32,7 @@ export function ThemeToggle({ className }: { className?: string }) {
       </button>
       <button
         type="button"
-        onClick={() => setAndPersist("dark")}
+        onClick={() => setTheme("dark")}
         aria-pressed={theme === "dark"}
         aria-label="Tema oscuro"
         className={cn(

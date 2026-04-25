@@ -1,17 +1,37 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Menu, X, LogOut } from "lucide-react";
+import { LogOut, Moon, Sun, UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { signOut } from "@/lib/auth-client";
 import { NAV_ITEMS, MOBILE_BOTTOM_NAV_ROLES, type NavItem } from "./nav-config";
 import { BrandLogo } from "./brand-logo";
 import { NotificationBell } from "./notification-bell";
 import { VersionBanner } from "./version-banner";
-import { ThemeToggle } from "./theme-toggle";
+import { useTheme } from "@/hooks/use-theme";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import type { NotificationRow } from "@/app/(protected)/notifications/actions";
 import type { AppRole } from "@befine/types";
 
@@ -23,92 +43,9 @@ type AppShellProps = {
   children: React.ReactNode;
 };
 
-function NavLink({
-  item,
-  active,
-  onClick,
-  compact,
-}: {
-  item: NavItem;
-  active: boolean;
-  onClick?: () => void;
-  compact?: boolean;
-}) {
-  const t = useTranslations("nav");
-  const Icon = item.icon;
-  const label = t(item.key as Parameters<typeof t>[0]);
+// ─── Shared bits ──────────────────────────────────────────────────────────────
 
-  // Bottom-tab variant for stylist/clothier mobile
-  if (compact) {
-    if (item.disabled) {
-      return (
-        <span
-          className="flex flex-col items-center gap-1 px-2 py-1.5 text-xs text-muted-foreground opacity-40"
-          aria-disabled="true"
-        >
-          <Icon className="size-5 shrink-0" aria-hidden="true" />
-          <span>{label}</span>
-        </span>
-      );
-    }
-    return (
-      <Link
-        href={item.href}
-        onClick={onClick}
-        aria-current={active ? "page" : undefined}
-        className={cn(
-          "flex flex-col items-center gap-1 px-2 py-1.5 text-xs font-medium transition-colors",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring",
-          active ? "text-primary" : "text-muted-foreground",
-        )}
-      >
-        <Icon className="size-5 shrink-0" aria-hidden="true" />
-        <span>{label}</span>
-      </Link>
-    );
-  }
-
-  // Sidebar variant — editorial rule-based row with a pink active bullet
-  if (item.disabled) {
-    return (
-      <span
-        className="flex items-center gap-2 border-b border-sidebar-border/40 py-2.5 text-sm text-sidebar-foreground/30"
-        aria-disabled="true"
-      >
-        <span className="size-1 shrink-0 rounded-full bg-transparent" aria-hidden="true" />
-        <Icon className="size-4 shrink-0" aria-hidden="true" />
-        <span className="italic">{label}</span>
-      </span>
-    );
-  }
-
-  return (
-    <Link
-      href={item.href}
-      onClick={onClick}
-      aria-current={active ? "page" : undefined}
-      className={cn(
-        "group relative flex items-center gap-2 border-b border-sidebar-border/40 py-2.5 text-sm transition-all",
-        "hover:pl-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring",
-        active
-          ? "font-medium text-sidebar-foreground"
-          : "text-sidebar-foreground/70 hover:text-sidebar-foreground",
-      )}
-    >
-      <span
-        aria-hidden="true"
-        className={cn(
-          "size-1 shrink-0 rounded-full transition-all",
-          active ? "bg-primary shadow-[0_0_8px_var(--color-primary)]" : "bg-transparent",
-        )}
-      />
-      <Icon className="size-4 shrink-0" aria-hidden="true" />
-      <span>{label}</span>
-    </Link>
-  );
-}
-
-function UserInitials({ name }: { name: string }) {
+function UserInitials({ name, size = "md" }: { name: string; size?: "sm" | "md" }) {
   const initials = name
     .split(" ")
     .slice(0, 2)
@@ -116,7 +53,10 @@ function UserInitials({ name }: { name: string }) {
     .join("");
   return (
     <span
-      className="flex size-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/60 text-xs font-semibold text-primary-foreground"
+      className={cn(
+        "flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/60 font-semibold text-primary-foreground",
+        size === "sm" ? "size-7 text-[11px]" : "size-8 text-xs",
+      )}
       aria-hidden="true"
       style={{ fontFamily: "var(--font-display)" }}
     >
@@ -125,10 +65,10 @@ function UserInitials({ name }: { name: string }) {
   );
 }
 
-/** Sub-company identifier in the sidebar — Befine / DoWell / Swimwear */
+/** Sub-company identifier — Befine / DoWell / Swimwear */
 function CompanyStrip() {
   return (
-    <div className="mx-4 rounded-sm border border-sidebar-border/60 bg-gradient-to-b from-primary/[0.06] to-transparent px-3 py-2.5">
+    <div className="mx-2 mt-1 rounded-sm border border-sidebar-border/60 bg-gradient-to-b from-primary/[0.06] to-transparent px-3 py-2.5 group-data-[collapsible=icon]:hidden">
       <div className="text-[9px] font-medium uppercase tracking-[0.22em] text-sidebar-foreground/50">
         Viewing
       </div>
@@ -146,6 +86,131 @@ function CompanyStrip() {
   );
 }
 
+/** Avatar + dropdown menu (theme switch + profile link). */
+function UserMenu({ userName }: { userName: string }) {
+  const t = useTranslations();
+  const { theme, setTheme } = useTheme();
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        aria-label={t("nav.settings")}
+        className="flex min-w-0 flex-1 items-center gap-2.5 rounded-md p-1 text-left outline-none transition-colors hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+      >
+        <UserInitials name={userName} />
+        <span className="min-w-0 flex-1 truncate text-sm text-sidebar-foreground group-data-[collapsible=icon]:hidden">
+          {userName}
+        </span>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent side="top" align="start" className="w-56">
+        <DropdownMenuLabel className="truncate">{userName}</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem render={<Link href="/profile" />} className="cursor-pointer">
+          <UserRound className="size-4" aria-hidden="true" />
+          {t("nav.settings")}
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onSelect={(e) => {
+            e.preventDefault();
+            setTheme(theme === "dark" ? "light" : "dark");
+          }}
+          className="cursor-pointer"
+        >
+          {theme === "dark" ? (
+            <>
+              <Sun className="size-4" aria-hidden="true" />
+              Tema claro
+            </>
+          ) : (
+            <>
+              <Moon className="size-4" aria-hidden="true" />
+              Tema oscuro
+            </>
+          )}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+// ─── Sidebar nav row ──────────────────────────────────────────────────────────
+
+function SidebarNavItem({ item, active }: { item: NavItem; active: boolean }) {
+  const t = useTranslations("nav");
+  const Icon = item.icon;
+  const label = t(item.key as Parameters<typeof t>[0]);
+
+  if (item.disabled) {
+    return (
+      <SidebarMenuItem>
+        <SidebarMenuButton disabled tooltip={label} className="cursor-not-allowed opacity-40">
+          <Icon aria-hidden="true" />
+          <span className="italic">{label}</span>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    );
+  }
+
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton
+        render={<Link href={item.href} aria-current={active ? "page" : undefined} />}
+        isActive={active}
+        tooltip={label}
+        className="data-[active=true]:bg-transparent data-[active=true]:font-medium data-[active=true]:text-sidebar-foreground"
+      >
+        <span
+          aria-hidden="true"
+          className={cn(
+            "inline-flex size-1 shrink-0 rounded-full transition-all",
+            active ? "bg-primary shadow-[0_0_8px_var(--color-primary)]" : "bg-transparent",
+          )}
+        />
+        <Icon aria-hidden="true" />
+        <span>{label}</span>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
+  );
+}
+
+// ─── Bottom-tab nav (stylist / clothier mobile) ───────────────────────────────
+
+function BottomTabLink({ item, active }: { item: NavItem; active: boolean }) {
+  const t = useTranslations("nav");
+  const Icon = item.icon;
+  const label = t(item.key as Parameters<typeof t>[0]);
+
+  if (item.disabled) {
+    return (
+      <span
+        className="flex flex-col items-center gap-1 px-2 py-1.5 text-xs text-muted-foreground opacity-40"
+        aria-disabled="true"
+      >
+        <Icon className="size-5 shrink-0" aria-hidden="true" />
+        <span>{label}</span>
+      </span>
+    );
+  }
+
+  return (
+    <Link
+      href={item.href}
+      aria-current={active ? "page" : undefined}
+      className={cn(
+        "flex flex-col items-center gap-1 px-2 py-1.5 text-xs font-medium transition-colors",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        active ? "text-primary" : "text-muted-foreground",
+      )}
+    >
+      <Icon className="size-5 shrink-0" aria-hidden="true" />
+      <span>{label}</span>
+    </Link>
+  );
+}
+
+// ─── Main ─────────────────────────────────────────────────────────────────────
+
 export function AppShell({
   role,
   userName,
@@ -156,7 +221,6 @@ export function AppShell({
   const t = useTranslations();
   const pathname = usePathname();
   const router = useRouter();
-  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const navItems = NAV_ITEMS[role];
   const usesBottomNav = MOBILE_BOTTOM_NAV_ROLES.includes(role);
@@ -171,164 +235,65 @@ export function AppShell({
     router.refresh();
   }
 
-  return (
-    <div className="flex h-dvh overflow-hidden bg-background">
-      {/* ── Desktop sidebar ────────────────────────────────────────── */}
-      <aside className="hidden md:flex md:w-60 md:flex-col md:border-r md:border-sidebar-border md:bg-sidebar">
-        {/* Wordmark */}
-        <div className="flex h-16 items-center border-b border-sidebar-border/60 px-5">
-          <BrandLogo />
+  // Stylist / clothier: mobile-first bottom tabs, no sidebar
+  if (usesBottomNav) {
+    return (
+      <div className="flex h-dvh flex-col overflow-hidden bg-background">
+        {/* Floating utility pill (mobile top-right) */}
+        <div className="fixed right-3 top-3 z-30 flex items-center gap-1.5 rounded-full border border-border bg-background/90 px-1.5 py-1 shadow-sm backdrop-blur">
+          <UserMenu userName={userName} />
+          {employeeId && (
+            <NotificationBell employeeId={employeeId} initialNotifications={initialNotifications} />
+          )}
+          <button
+            onClick={handleLogout}
+            className="flex size-8 items-center justify-center rounded-full text-foreground/60 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label={t("auth.logout")}
+          >
+            <LogOut className="size-4" aria-hidden="true" />
+          </button>
         </div>
 
-        {/* Sub-company strip */}
-        <div className="py-5">
-          <CompanyStrip />
-        </div>
+        <VersionBanner />
 
-        {/* Nav items */}
+        <main className="flex-1 overflow-y-auto pb-16">{children}</main>
+
         <nav
-          className="flex flex-1 flex-col gap-0 overflow-y-auto px-5 pb-4"
+          className="fixed inset-x-0 bottom-0 z-30 flex h-16 items-center justify-around border-t border-border bg-background"
           aria-label="Navegación principal"
         >
           {navItems.map((item) => (
-            <NavLink key={item.href} item={item} active={isActive(item)} />
+            <BottomTabLink key={item.href} item={item} active={isActive(item)} />
           ))}
         </nav>
+      </div>
+    );
+  }
 
-        {/* Theme toggle + user + notifications + logout */}
-        <div className="flex flex-col gap-3 border-t border-sidebar-border/60 p-4">
-          <ThemeToggle className="self-start" />
-          <div className="flex items-center gap-2">
-            <Link
-              href="/profile"
-              className="flex min-w-0 flex-1 items-center gap-2.5 rounded-md p-1 transition-colors hover:bg-sidebar-accent"
-              aria-label={t("nav.settings")}
-            >
-              <UserInitials name={userName} />
-              <span className="min-w-0 flex-1 truncate text-sm text-sidebar-foreground">
-                {userName}
-              </span>
-            </Link>
-            {employeeId && (
-              <NotificationBell
-                employeeId={employeeId}
-                initialNotifications={initialNotifications}
-              />
-            )}
-            <button
-              onClick={handleLogout}
-              className="shrink-0 rounded-md p-1.5 text-sidebar-foreground/60 transition-colors hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
-              aria-label={t("auth.logout")}
-            >
-              <LogOut className="size-4" aria-hidden="true" />
-            </button>
+  // Admin / secretary: shadcn collapsible sidebar
+  return (
+    <SidebarProvider>
+      <Sidebar collapsible="icon">
+        <SidebarHeader>
+          <div className="flex h-12 items-center px-2 group-data-[collapsible=icon]:justify-center">
+            <BrandLogo />
           </div>
-        </div>
-      </aside>
+          <CompanyStrip />
+        </SidebarHeader>
 
-      {/* ── Mobile overlay drawer (admin / secretary) ──────────────── */}
-      {!usesBottomNav && (
-        <>
-          {/* Backdrop */}
-          {drawerOpen && (
-            <div
-              className="fixed inset-0 z-40 bg-black/40 md:hidden"
-              aria-hidden="true"
-              onClick={() => setDrawerOpen(false)}
-            />
-          )}
-
-          {/* Drawer panel */}
-          <div
-            className={cn(
-              "fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-sidebar shadow-xl transition-transform duration-200 md:hidden",
-              drawerOpen ? "translate-x-0" : "-translate-x-full",
-            )}
-            role="dialog"
-            aria-modal="true"
-            aria-label="Menú de navegación"
-          >
-            <div className="flex h-16 items-center justify-between border-b border-sidebar-border/60 px-5">
-              <BrandLogo />
-              <button
-                onClick={() => setDrawerOpen(false)}
-                className="rounded-md p-1.5 text-sidebar-foreground/60 transition-colors hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
-                aria-label={t("nav.closeMenu")}
-              >
-                <X className="size-4" aria-hidden="true" />
-              </button>
-            </div>
-
-            <div className="py-5">
-              <CompanyStrip />
-            </div>
-
-            <nav
-              className="flex flex-1 flex-col gap-0 overflow-y-auto px-5 pb-4"
-              aria-label="Navegación principal"
-            >
+        <SidebarContent>
+          <SidebarGroup>
+            <SidebarMenu>
               {navItems.map((item) => (
-                <NavLink
-                  key={item.href}
-                  item={item}
-                  active={isActive(item)}
-                  onClick={() => setDrawerOpen(false)}
-                />
+                <SidebarNavItem key={item.href} item={item} active={isActive(item)} />
               ))}
-            </nav>
+            </SidebarMenu>
+          </SidebarGroup>
+        </SidebarContent>
 
-            <div className="flex flex-col gap-3 border-t border-sidebar-border/60 p-4">
-              <ThemeToggle className="self-start" />
-              <div className="flex items-center gap-2">
-                <Link
-                  href="/profile"
-                  onClick={() => setDrawerOpen(false)}
-                  className="flex min-w-0 flex-1 items-center gap-2.5 rounded-md p-1 transition-colors hover:bg-sidebar-accent"
-                  aria-label={t("nav.settings")}
-                >
-                  <UserInitials name={userName} />
-                  <span className="min-w-0 flex-1 truncate text-sm text-sidebar-foreground">
-                    {userName}
-                  </span>
-                </Link>
-                {employeeId && (
-                  <NotificationBell
-                    employeeId={employeeId}
-                    initialNotifications={initialNotifications}
-                  />
-                )}
-                <button
-                  onClick={handleLogout}
-                  className="shrink-0 rounded-md p-1.5 text-sidebar-foreground/60 transition-colors hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
-                  aria-label={t("auth.logout")}
-                >
-                  <LogOut className="size-4" aria-hidden="true" />
-                </button>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
-
-      {/* ── Main column: content only, no top header ──────────────── */}
-      <div className="flex min-w-0 flex-1 flex-col">
-        {/* Floating mobile hamburger — admin / secretary need drawer access */}
-        {!usesBottomNav && (
-          <button
-            onClick={() => setDrawerOpen(true)}
-            className="fixed left-3 top-3 z-30 flex size-10 items-center justify-center rounded-full border border-border bg-background/90 text-foreground shadow-sm backdrop-blur transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:hidden"
-            aria-label={t("nav.openMenu")}
-            aria-expanded={drawerOpen}
-            aria-controls="mobile-drawer"
-          >
-            <Menu className="size-5" aria-hidden="true" />
-          </button>
-        )}
-
-        {/* Floating mobile utility cluster — stylist / clothier (no sidebar on mobile) */}
-        {usesBottomNav && (
-          <div className="fixed right-3 top-3 z-30 flex items-center gap-1.5 rounded-full border border-border bg-background/90 px-1.5 py-1 shadow-sm backdrop-blur md:hidden">
-            <ThemeToggle />
+        <SidebarFooter className="gap-2">
+          <div className="flex items-center gap-1 group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:gap-2">
+            <UserMenu userName={userName} />
             {employeeId && (
               <NotificationBell
                 employeeId={employeeId}
@@ -337,39 +302,26 @@ export function AppShell({
             )}
             <button
               onClick={handleLogout}
-              className="flex size-8 items-center justify-center rounded-full text-foreground/60 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="flex size-8 shrink-0 items-center justify-center rounded-md text-sidebar-foreground/60 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
               aria-label={t("auth.logout")}
             >
               <LogOut className="size-4" aria-hidden="true" />
             </button>
           </div>
-        )}
+        </SidebarFooter>
+      </Sidebar>
 
-        {/* Version update banner — non-blocking, shown when a new deploy is detected */}
+      <SidebarInset className="flex min-w-0 flex-1 flex-col overflow-hidden">
+        {/* Mobile trigger — floats top-left, desktop hides (sidebar is always visible there) */}
+        <SidebarTrigger
+          className="fixed left-3 top-3 z-30 size-10 rounded-full border border-border bg-background/90 shadow-sm backdrop-blur md:hidden"
+          aria-label={t("nav.openMenu")}
+        />
+
         <VersionBanner />
 
-        {/* Page content */}
-        <main
-          className={cn(
-            "flex-1 overflow-y-auto",
-            usesBottomNav && "pb-16 md:pb-0", // space for bottom nav on mobile
-          )}
-        >
-          {children}
-        </main>
-
-        {/* ── Mobile bottom tab bar (stylist / clothier) ─────────── */}
-        {usesBottomNav && (
-          <nav
-            className="fixed inset-x-0 bottom-0 z-30 flex h-16 items-center justify-around border-t border-border bg-background md:hidden"
-            aria-label="Navegación principal"
-          >
-            {navItems.map((item) => (
-              <NavLink key={item.href} item={item} active={isActive(item)} compact />
-            ))}
-          </nav>
-        )}
-      </div>
-    </div>
+        <main className="flex-1 overflow-y-auto">{children}</main>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }
