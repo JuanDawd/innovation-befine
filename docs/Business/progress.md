@@ -673,7 +673,7 @@ Update `apps/web/src/lib/db/README.md` with a short "When to use `getDb()` vs `g
 | T10R-R3  | Fix: execute Neon PITR restore drill on staging; fill result table in `backup-policy.md` (H-44)       | blocked | High     | Opus audit |
 | T10R-R4  | Fix: reconcile `docs/issues-tracker.md` Open-status against Phase 7R/8R/9R code; update log (H-45)    | done    | High     | Opus audit |
 | T10R-R5  | Fix: add annotated screenshots to the 2–3 hardest steps in each training guide (M-52)                 | pending | Medium   | Opus audit |
-| T10R-R6  | Fix: replace handroll CSV parser with RFC 4180 parser + Colombian-name unit tests (M-53)              | pending | Medium   | Opus audit |
+| T10R-R6  | Fix: replace handroll CSV parser with RFC 4180 parser + Colombian-name unit tests (M-53)              | done    | Medium   | Opus audit |
 | T10R-R7  | Fix: in-file dedup + transactional import + summary with intra-file skip count (M-54)                 | pending | Medium   | Opus audit |
 | T10R-R8  | Fix: version banner — immediate check on mount, visibility pause, backoff, jitter (M-55)              | pending | Medium   | Opus audit |
 | T10R-R9  | Fix: move `/api/health` and `/api/version` into `PUBLIC_EXACT_PATHS` (L-44)                           | pending | Low      | Opus audit |

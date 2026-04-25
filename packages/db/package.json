@@ -21,7 +21,9 @@
     "db:import:clients": "dotenv -e ../../.env.local -- node --import tsx/esm src/import-clients.ts",
     "lint": "eslint .",
     "format": "prettier --check .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@better-auth/utils": "^0.4.0",

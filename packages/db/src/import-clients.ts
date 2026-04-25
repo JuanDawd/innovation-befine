@@ -23,12 +23,60 @@ import { or, eq } from "drizzle-orm";
 
 // ─── CSV parser ───────────────────────────────────────────────────────────────
 
-interface ClientRow {
+export interface ClientRow {
   name: string;
   phone: string | null;
   email: string | null;
   notes: string | null;
   noShowCount: number;
+}
+
+/**
+ * RFC 4180 CSV line parser (T10R-R6). Handles quoted fields with embedded
+ * commas, doubled-quote escapes ("Andrés ""Pepe"" Gómez"), and trims only
+ * unquoted whitespace. Quoted fields are returned exactly as written.
+ */
+export function parseCsvLine(line: string): string[] {
+  const out: string[] = [];
+  let cur = "";
+  let inQuotes = false;
+  let quotedField = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+
+    if (inQuotes) {
+      if (ch === '"') {
+        if (line[i + 1] === '"') {
+          cur += '"';
+          i++;
+        } else {
+          inQuotes = false;
+        }
+      } else {
+        cur += ch;
+      }
+      continue;
+    }
+
+    if (ch === '"' && cur === "") {
+      inQuotes = true;
+      quotedField = true;
+      continue;
+    }
+
+    if (ch === ",") {
+      out.push(quotedField ? cur : cur.trim());
+      cur = "";
+      quotedField = false;
+      continue;
+    }
+
+    cur += ch;
+  }
+
+  out.push(quotedField ? cur : cur.trim());
+  return out;
 }
 
 function parseRow(headers: string[], values: string[]): ClientRow | null {
@@ -54,9 +102,10 @@ async function readCsv(filePath: string): Promise<ClientRow[]> {
 
     const rl = createInterface({ input: createReadStream(filePath), crlfDelay: Infinity });
 
-    rl.on("line", (line) => {
+    rl.on("line", (raw) => {
       lineNum++;
-      const values = line.split(",").map((v) => v.trim().replace(/^"|"$/g, ""));
+      const line = lineNum === 1 && raw.charCodeAt(0) === 0xfeff ? raw.slice(1) : raw;
+      const values = parseCsvLine(line);
 
       if (lineNum === 1) {
         headers = values.map((h) => h.toLowerCase());
@@ -157,7 +206,15 @@ async function main() {
   if (errors.length > 0) process.exit(1);
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+const isCli =
+  typeof process !== "undefined" &&
+  Array.isArray(process.argv) &&
+  process.argv[1] !== undefined &&
+  /import-clients\.(ts|js|mjs)$/.test(process.argv[1]);
+
+if (isCli) {
+  main().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+}

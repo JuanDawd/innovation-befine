@@ -1478,7 +1478,7 @@
 ### M-53 — T100 CSV parser splits on every comma; quoted fields with embedded commas corrupt
 
 - **Severity:** Medium
-- **Status:** Open
+- **Status:** Resolved
 - **Affected:** T100 (`packages/db/src/import-clients.ts:59`)
 - **Description:** The parser is `line.split(",").map(v => v.trim().replace(/^"|"$/g, ""))`. This fails for any real-world CSV row where a field contains a comma inside quotes — common in Colombian client data for compound surnames and free-form notes: `"De La Cruz, Juan Carlos","+57…","j@x.com","Cliente VIP, no cobrar depósito"`. The row silently over-expands into 5+ columns, the column-to-header mapping shifts, `name` ends up as `"De La Cruz` (with a leading quote intact because the regex only strips an opening quote at start), phone/email land in the wrong fields, duplicate detection by phone/email fails, and rows are either imported with corrupted data or silently skipped. Also `replace(/^"|"$/g, "")` with `g` flag strips only the first matching quote at start or end, not escaped `""` inside fields.
 - **Fix:** Replace the handroll with a robust CSV parser. Options: `csv-parse` (battle-tested, streaming), or accept a minimal RFC 4180 spec and hand-write a tokenizer that walks characters and toggles an "in-quote" flag. Add unit tests covering: comma inside quoted field, embedded double-quote `""`, trailing newline at EOF, UTF-8 BOM, Windows CRLF line endings (readline already handles this via `crlfDelay`), header case variants, and unicode in names (Colombian Spanish: ñ, á, í, ó, ú).
@@ -1640,3 +1640,4 @@
 | L-28     | 2026-04-19    | `revalidatePath(\`/large-orders/\${orderId}\`)` added to edit, transition, and payment actions           | T06R-R11                     |
 | L-29     | 2026-04-19    | Cancel wrapped in Dialog with deposit warning, reason input, and disabled confirm until acked            | T06R-R12                     |
 | M-47     | 2026-04-21    | 25 Vitest integration tests in `cross-module-flows.test.ts` covering the four required flows; README doc | T09R-R11                     |
+| M-53     | 2026-04-25    | RFC 4180 `parseCsvLine`, BOM strip, CLI guard, 11 unit tests covering Colombian compound surnames        | T10R-R6                      |
