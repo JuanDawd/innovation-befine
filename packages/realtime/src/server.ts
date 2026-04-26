@@ -20,9 +20,15 @@
 import { EventEmitter } from "events";
 import type { RealtimeChannel, RealtimeEvent } from "./types";
 
-// Singleton emitter shared across all SSE handlers in the same process
-const bus = new EventEmitter();
-bus.setMaxListeners(200); // one listener per connected client per channel
+// Survive HMR module re-evaluation in dev by persisting on globalThis.
+// In production this is just a plain singleton (no global needed).
+const g = globalThis as typeof globalThis & { __realtimeBus?: EventEmitter };
+if (!g.__realtimeBus) {
+  g.__realtimeBus = new EventEmitter();
+  // Allow up to 50 concurrent SSE connections × 5 event types each
+  g.__realtimeBus.setMaxListeners(300);
+}
+const bus = g.__realtimeBus;
 
 const STREAM_TIMEOUT_MS = 25_000; // close before Vercel's 30s function timeout
 
