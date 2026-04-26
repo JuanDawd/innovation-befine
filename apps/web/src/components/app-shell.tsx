@@ -6,8 +6,8 @@ import { useTranslations } from "next-intl";
 import { LogOut, Moon, Sun, UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { signOut } from "@/lib/auth-client";
-import { NAV_ITEMS, MOBILE_BOTTOM_NAV_ROLES, type NavItem } from "./nav-config";
-import { BrandLogo } from "./brand-logo";
+import { NAV_ITEMS, MOBILE_BOTTOM_NAV_ROLES, type NavItem, resolveGroups } from "./nav-config";
+
 import { NotificationBell } from "./notification-bell";
 import { VersionBanner } from "./version-banner";
 import { useTheme } from "@/hooks/use-theme";
@@ -16,6 +16,7 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarInset,
   SidebarMenu,
@@ -223,11 +224,31 @@ export function AppShell({
   const router = useRouter();
 
   const navItems = NAV_ITEMS[role];
+  const grouped = resolveGroups(NAV_ITEMS[role]);
+
   const usesBottomNav = MOBILE_BOTTOM_NAV_ROLES.includes(role);
 
-  function isActive(item: NavItem) {
-    return pathname === item.href || pathname.startsWith(item.href + "/");
+  function getActiveHref(items: NavItem[], pathname: string): string | null {
+    let bestMatch: string | null = null;
+
+    for (const item of items) {
+      const href = item.href;
+
+      if (pathname === href || pathname.startsWith(href + "/")) {
+        if (!bestMatch || href.length > bestMatch.length) {
+          bestMatch = href;
+        }
+      }
+    }
+
+    return bestMatch;
   }
+
+  function isActive(item: NavItem, activeHref: string | null): boolean {
+    return item.href === activeHref;
+  }
+
+  const activeHref = getActiveHref(NAV_ITEMS[role], pathname);
 
   async function handleLogout() {
     await signOut();
@@ -263,7 +284,7 @@ export function AppShell({
           aria-label="Navegación principal"
         >
           {navItems.map((item) => (
-            <BottomTabLink key={item.href} item={item} active={isActive(item)} />
+            <BottomTabLink key={item.href} item={item} active={isActive(item, activeHref)} />
           ))}
         </nav>
       </div>
@@ -275,20 +296,23 @@ export function AppShell({
     <SidebarProvider>
       <Sidebar collapsible="icon">
         <SidebarHeader>
-          <div className="flex h-12 items-center px-2 group-data-[collapsible=icon]:justify-center">
-            <BrandLogo />
-          </div>
           <CompanyStrip />
         </SidebarHeader>
 
         <SidebarContent>
-          <SidebarGroup>
-            <SidebarMenu>
-              {navItems.map((item) => (
-                <SidebarNavItem key={item.href} item={item} active={isActive(item)} />
-              ))}
-            </SidebarMenu>
-          </SidebarGroup>
+          {grouped.map((group) => (
+            <SidebarGroup key={group.labelKey}>
+              <SidebarGroupLabel>
+                {t(`nav.${group.labelKey}` as Parameters<typeof t>[0])}
+              </SidebarGroupLabel>
+
+              <SidebarMenu>
+                {group.items.map((item) => (
+                  <SidebarNavItem key={item.href} item={item} active={isActive(item, activeHref)} />
+                ))}
+              </SidebarMenu>
+            </SidebarGroup>
+          ))}
         </SidebarContent>
 
         <SidebarFooter className="gap-2">

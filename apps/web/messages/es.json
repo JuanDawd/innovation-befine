@@ -709,7 +709,13 @@
     "analytics": "Analytics",
     "myEarnings": "Mis ganancias",
     "openMenu": "Abrir menú",
-    "closeMenu": "Cerrar menú"
+    "closeMenu": "Cerrar menú",
+    "groupCore": "Principal",
+    "groupOperations": "Operaciones",
+    "groupPeople": "Personas",
+    "groupFinance": "Finanzas",
+    "groupManagement": "Gestión",
+    "groupSystem": "Sistema"
   },
   "sync": {
     "offlineTitle": "Sin conexión",

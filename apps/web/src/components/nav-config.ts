@@ -31,6 +31,8 @@ export type NavItem = {
   disabled?: boolean;
 };
 
+export type NavGroup = { labelKey: string; items: string[] };
+
 export const NAV_ITEMS: Record<AppRole, NavItem[]> = {
   cashier_admin: [
     { key: "dashboard", href: "/cashier", icon: LayoutDashboard },
@@ -62,6 +64,56 @@ export const NAV_ITEMS: Record<AppRole, NavItem[]> = {
     { key: "myEarnings", href: "/clothier/earnings", icon: Wallet },
   ],
 };
+
+export const NAV_GROUPS: NavGroup[] = [
+  {
+    labelKey: "groupCore",
+    items: ["dashboard", "myTickets", "myWork"],
+  },
+  {
+    labelKey: "groupOperations",
+    items: ["appointments", "largeOrders", "batches", "ticketHistory"],
+  },
+  {
+    labelKey: "groupPeople",
+    items: ["employees", "clients"],
+  },
+  {
+    labelKey: "groupFinance",
+    items: ["payroll", "myEarnings"],
+  },
+  {
+    labelKey: "groupManagement",
+    items: ["catalog", "absences", "analytics"],
+  },
+  {
+    labelKey: "groupSystem",
+    items: ["settings"],
+  },
+];
+
+function indexItems(items: NavItem[]) {
+  const map = new Map<string, NavItem>();
+
+  for (const item of items) {
+    map.set(item.key, item);
+  }
+
+  return map;
+}
+
+export function resolveGroups(items: NavItem[]) {
+  const itemMap = indexItems(items);
+
+  return NAV_GROUPS.map((group) => {
+    const resolvedItems = group.items.map((key) => itemMap.get(key)).filter(Boolean) as NavItem[];
+
+    return {
+      labelKey: group.labelKey,
+      items: resolvedItems,
+    };
+  }).filter((group) => group.items.length > 0);
+}
 
 /** Roles whose primary device is mobile — use bottom tab bar instead of sidebar */
 export const MOBILE_BOTTOM_NAV_ROLES: AppRole[] = ["stylist", "clothier"];

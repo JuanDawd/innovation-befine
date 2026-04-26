@@ -187,7 +187,7 @@ Test:
 
 ## Task: Fix sidebar active state — only one route highlighted
 
-Status: pending
+Status: done
 Type: bug
 
 Scope:
@@ -211,7 +211,7 @@ Test:
 
 ## Task: Group nav into Dashboard / Tickets / Appointments sections
 
-Status: pending
+Status: done
 Type: ux
 
 Scope:

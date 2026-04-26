@@ -675,7 +675,13 @@
     "analytics": "Analytics",
     "myEarnings": "My earnings",
     "openMenu": "Open menu",
-    "closeMenu": "Close menu"
+    "closeMenu": "Close menu",
+    "groupCore": "Main",
+    "groupOperations": "Operations",
+    "groupPeople": "People",
+    "groupFinance": "Finance",
+    "groupManagement": "Management",
+    "groupSystem": "System"
   },
   "sync": {
     "offlineTitle": "You're offline",
