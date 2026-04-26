@@ -113,7 +113,7 @@ Test:
 
 ## Task: Default payroll form to current business day
 
-Status: pending
+Status: done
 Type: ux
 
 Scope:

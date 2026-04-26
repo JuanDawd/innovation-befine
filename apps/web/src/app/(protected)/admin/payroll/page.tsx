@@ -30,6 +30,7 @@ export default async function PayrollPage({
       <h1 className="text-2xl font-semibold">{t("pageTitle")}</h1>
       <UnsettledAlert unsettled={unsettled} />
       <PayrollScreen
+        key={employeeId ?? "none"}
         days={days}
         employees={employees}
         history={history}

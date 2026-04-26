@@ -29,7 +29,15 @@ export function PayrollScreen({ days, employees, history, initialEmployeeId }: P
   const idempotencyKeyRef = useRef(crypto.randomUUID());
 
   const [selectedEmployee, setSelectedEmployee] = useState(initialEmployeeId ?? "");
-  const [selectedDays, setSelectedDays] = useState<Set<string>>(new Set());
+  // Pre-select the most-recent unsettled closed day for the chosen employee
+  // so the cashier doesn't have to hunt for it. `days` is already
+  // employee-scoped server-side; the next pick triggers a router refresh
+  // which remounts this component with fresh employee-scoped data.
+  const [selectedDays, setSelectedDays] = useState<Set<string>>(() => {
+    if (!initialEmployeeId) return new Set();
+    const latestUnsettled = [...days].reverse().find((d) => !d.isSettled);
+    return latestUnsettled ? new Set([latestUnsettled.id]) : new Set();
+  });
   const [preview, setPreview] = useState<EarningsPreview | null>(null);
   const [adjustedAmount, setAdjustedAmount] = useState("");
   const [adjustmentReason, setAdjustmentReason] = useState("");
