@@ -16,21 +16,23 @@ import type { AppRole } from "@befine/types";
 
 export function SyncStatus({ role }: { role: AppRole }) {
   const t = useTranslations("sync");
-  const [isOnline, setIsOnline] = useState(() =>
-    typeof navigator !== "undefined" ? navigator.onLine : true,
-  );
+  // null = not yet mounted (SSR); true/false = actual online state after hydration
+  const [isOnline, setIsOnline] = useState<boolean | null>(null);
   const { pending, syncing, failed, retry } = useQueueFlush();
 
   useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
-    window.addEventListener("online", handleOnline);
-    window.addEventListener("offline", handleOffline);
+    const update = () => setIsOnline(navigator.onLine);
+    update();
+    window.addEventListener("online", update);
+    window.addEventListener("offline", update);
     return () => {
-      window.removeEventListener("online", handleOnline);
-      window.removeEventListener("offline", handleOffline);
+      window.removeEventListener("online", update);
+      window.removeEventListener("offline", update);
     };
   }, []);
+
+  // Suppress all output until client has hydrated — prevents server/client mismatch
+  if (isOnline === null) return null;
 
   // Online + nothing pending — hidden
   if (isOnline && pending === 0 && !syncing && failed === 0) return null;

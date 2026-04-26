@@ -28,6 +28,7 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -104,18 +105,17 @@ function UserMenu({ userName }: { userName: string }) {
         </span>
       </DropdownMenuTrigger>
       <DropdownMenuContent side="top" align="start" className="w-56">
-        <DropdownMenuLabel className="truncate">{userName}</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem render={<Link href="/profile" />} className="cursor-pointer">
-          <UserRound className="size-4" aria-hidden="true" />
-          {t("nav.settings")}
-        </DropdownMenuItem>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel className="truncate">{userName}</DropdownMenuLabel>
+          <DropdownMenuItem render={<Link href="/profile" />} className="cursor-pointer">
+            <UserRound className="size-4" aria-hidden="true" />
+            {t("nav.settings")}
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          onSelect={(e) => {
-            e.preventDefault();
-            setTheme(theme === "dark" ? "light" : "dark");
-          }}
+          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+          closeOnClick={false}
           className="cursor-pointer"
         >
           {theme === "dark" ? (
@@ -164,7 +164,7 @@ function SidebarNavItem({ item, active }: { item: NavItem; active: boolean }) {
         <span
           aria-hidden="true"
           className={cn(
-            "inline-flex size-1 shrink-0 rounded-full transition-all",
+            "inline-flex size-1 shrink-0 rounded-full transition-all group-data-[collapsible=icon]:hidden",
             active ? "bg-primary shadow-[0_0_8px_var(--color-primary)]" : "bg-transparent",
           )}
         />
@@ -322,6 +322,7 @@ export function AppShell({
               <NotificationBell
                 employeeId={employeeId}
                 initialNotifications={initialNotifications}
+                side="top"
               />
             )}
             <button
@@ -331,6 +332,10 @@ export function AppShell({
             >
               <LogOut className="size-4" aria-hidden="true" />
             </button>
+            <SidebarTrigger
+              className="ml-auto hidden size-8 shrink-0 text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground md:flex group-data-[collapsible=icon]:ml-0"
+              aria-label={t("nav.openMenu")}
+            />
           </div>
         </SidebarFooter>
       </Sidebar>

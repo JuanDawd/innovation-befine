@@ -9,6 +9,7 @@
  */
 
 import { useState, useEffect, useCallback, useTransition, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { BellIcon, CheckCheckIcon, InboxIcon } from "lucide-react";
@@ -78,6 +79,7 @@ interface NotificationBellProps {
   employeeId: string;
   initialNotifications: NotificationRow[];
   className?: string;
+  side?: "top" | "bottom";
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -86,11 +88,13 @@ export function NotificationBell({
   employeeId,
   initialNotifications,
   className,
+  side = "bottom",
 }: NotificationBellProps) {
   const t = useTranslations("notifications");
   const [open, setOpen] = useState(false);
   const [rows, setRows] = useState<NotificationRow[]>(initialNotifications);
   const [showArchived, setShowArchived] = useState(false);
+  const [panelStyle, setPanelStyle] = useState<React.CSSProperties>({});
   const [, startTransition] = useTransition();
   const panelRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -145,9 +149,21 @@ export function NotificationBell({
     return () => document.removeEventListener("keydown", handleKey);
   }, [open]);
 
-  // Refresh when opening
+  // Refresh when opening, compute portal position from button rect
   function handleToggle() {
-    if (!open) refresh();
+    if (!open) {
+      refresh();
+      if (buttonRef.current) {
+        const rect = buttonRef.current.getBoundingClientRect();
+        const PANEL_WIDTH = 320;
+        const left = Math.max(8, rect.right - PANEL_WIDTH);
+        if (side === "top") {
+          setPanelStyle({ position: "fixed", bottom: window.innerHeight - rect.top + 8, left });
+        } else {
+          setPanelStyle({ position: "fixed", top: rect.bottom + 8, left });
+        }
+      }
+    }
     setOpen((v) => !v);
   }
 
@@ -188,7 +204,7 @@ export function NotificationBell({
         }
         aria-expanded={open}
         aria-haspopup="true"
-        className="relative rounded-md p-1.5 text-foreground opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="relative rounded-md p-1.5 text-background opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <BellIcon className="size-5" aria-hidden="true" />
         {unreadCount > 0 && (
@@ -201,69 +217,67 @@ export function NotificationBell({
         )}
       </button>
 
-      {/* Dropdown panel */}
-      {open && (
-        <div
-          ref={panelRef}
-          role="dialog"
-          aria-label={t("panelLabel")}
-          className={cn(
-            "absolute right-0 top-full z-50 mt-2 w-80 rounded-xl border bg-popover shadow-lg",
-            "flex flex-col overflow-hidden",
-            // On mobile, anchor to viewport edge
-            "max-h-[80dvh]",
-          )}
-        >
-          {/* Header */}
-          <div className="flex items-center justify-between border-b px-4 py-3">
-            <p className="text-sm font-semibold">{t("title")}</p>
-            {unreadCount > 0 && (
-              <button
-                onClick={handleMarkAllRead}
-                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                aria-label={t("markAllRead")}
-              >
-                <CheckCheckIcon className="size-3.5" aria-hidden="true" />
-                {t("markAllRead")}
-              </button>
-            )}
-          </div>
-
-          {/* Notification list */}
-          <div className="overflow-y-auto flex-1">
-            {groups.length === 0 ? (
-              <div className="flex flex-col items-center gap-2 py-10 text-center">
-                <InboxIcon className="size-8 text-muted-foreground/40" aria-hidden="true" />
-                <p className="text-sm text-muted-foreground">{t("empty")}</p>
-              </div>
-            ) : (
-              <ul>
-                {groups.map((group) => (
-                  <li key={group.key}>
-                    <NotificationItem
-                      group={group}
-                      onMarkRead={() => handleMarkRead(group.ids)}
-                      onClose={() => setOpen(false)}
-                    />
-                  </li>
-                ))}
-              </ul>
-            )}
-
-            {/* Show archived */}
-            {!showArchived && archivedCount > 0 && (
-              <div className="border-t px-4 py-3 text-center">
+      {/* Dropdown panel — rendered via portal to escape sidebar overflow/stacking context */}
+      {open &&
+        createPortal(
+          <div
+            ref={panelRef}
+            role="dialog"
+            aria-label={t("panelLabel")}
+            style={panelStyle}
+            className="z-50 w-80 rounded-xl border bg-popover shadow-lg flex flex-col overflow-hidden max-h-[80dvh]"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between border-b px-4 py-3">
+              <p className="text-sm font-semibold">{t("title")}</p>
+              {unreadCount > 0 && (
                 <button
-                  onClick={handleShowArchived}
-                  className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  onClick={handleMarkAllRead}
+                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label={t("markAllRead")}
                 >
-                  {t("showOlder", { count: archivedCount })}
+                  <CheckCheckIcon className="size-3.5" aria-hidden="true" />
+                  {t("markAllRead")}
                 </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+              )}
+            </div>
+
+            {/* Notification list */}
+            <div className="overflow-y-auto flex-1">
+              {groups.length === 0 ? (
+                <div className="flex flex-col items-center gap-2 py-10 text-center">
+                  <InboxIcon className="size-8 text-muted-foreground/40" aria-hidden="true" />
+                  <p className="text-sm text-muted-foreground">{t("empty")}</p>
+                </div>
+              ) : (
+                <ul>
+                  {groups.map((group) => (
+                    <li key={group.key}>
+                      <NotificationItem
+                        group={group}
+                        onMarkRead={() => handleMarkRead(group.ids)}
+                        onClose={() => setOpen(false)}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              {/* Show archived */}
+              {!showArchived && archivedCount > 0 && (
+                <div className="border-t px-4 py-3 text-center">
+                  <button
+                    onClick={handleShowArchived}
+                    className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {t("showOlder", { count: archivedCount })}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
