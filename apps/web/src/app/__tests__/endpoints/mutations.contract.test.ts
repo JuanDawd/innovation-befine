@@ -276,6 +276,15 @@ describe("Role gate: appointments/actions", () => {
 });
 
 describe("Role gate: clients/actions", () => {
+  it("searchClients — allowed: cashier_admin, secretary, stylist", () => {
+    expectOnlyRoles(
+      ["cashier_admin", "secretary", "stylist"],
+      "cashier_admin",
+      "secretary",
+      "stylist",
+    );
+  });
+
   it("createClient — allowed: cashier_admin, secretary", () => {
     expectOnlyRoles(["cashier_admin", "secretary"], "cashier_admin", "secretary");
   });

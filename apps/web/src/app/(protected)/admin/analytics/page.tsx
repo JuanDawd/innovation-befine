@@ -1,9 +1,7 @@
-import { getTranslations } from "next-intl/server";
 import { getAnalyticsSummary } from "./actions";
 import { AnalyticsDashboard } from "./analytics-dashboard";
 
 export default async function AnalyticsPage() {
-  const t = await getTranslations("analytics");
   const result = await getAnalyticsSummary({ period: "day", includeInactive: false });
   const initialData = result.success
     ? result.data
@@ -17,7 +15,6 @@ export default async function AnalyticsPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 md:px-6 md:py-8 flex flex-col gap-6">
-      <h1 className="text-xl md:text-2xl font-semibold print:text-2xl">{t("pageTitle")}</h1>
       <AnalyticsDashboard initialData={initialData} />
     </div>
   );

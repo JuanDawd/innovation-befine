@@ -431,6 +431,10 @@
     "noOpenDay": "No business day is open.",
     "noClothiers": "No active clothiers.",
     "noPieces": "No active pieces in the catalog.",
+    "variant": "Variant",
+    "selectVariant": "Select a variant…",
+    "noVariants": "No active variants",
+    "selectPieceAndVariant": "Select a piece type and variant for each row.",
     "emptyTitle": "No batches today",
     "emptyDescription": "Create the first batch of the day."
   },
@@ -505,6 +509,10 @@
     "noTodayDay": "No closed business day for today",
     "earningsDescriptorStylist": "Pay for today's services",
     "earningsDescriptorClothier": "Pay for today's pieces",
+    "selectAllDays": "Select all days",
+    "selectAllDaysTooltip": "Select all business days for the selected employee",
+    "deselectAllDays": "Deselect all days",
+    "deselectAllDaysTooltip": "Deselect all business days for the selected employee",
     "earningsDescriptorSecretary": "Pay for today worked",
     "step3": "3. Review and confirm payment",
     "selectEmployee": "Select employee…",
@@ -672,7 +680,15 @@
     "manualPrice": "Manual price",
     "overrideReason": "Reason for manual price",
     "overrideReasonPlaceholder": "E.g. Agreed discount with client",
-    "overrideReasonRequired": "Reason is required when using manual price"
+    "overrideReasonRequired": "Reason is required when using manual price",
+    "items": "Order items",
+    "addItem": "Add item",
+    "removeItem": "Remove item",
+    "selectPiece": "Select a piece…",
+    "selectVariant": "Select a variant…",
+    "noVariants": "No variants",
+    "lineTotal": "Total",
+    "grandTotal": "Calculated total"
   },
   "nav": {
     "dashboard": "Dashboard",

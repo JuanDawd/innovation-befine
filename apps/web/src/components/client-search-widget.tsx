@@ -176,9 +176,12 @@ function InlineCreateDialog({
 export function ClientSearchWidget({
   value,
   onChange,
+  allowInlineCreate = true,
 }: {
   value: ClientSelection;
   onChange: (selection: ClientSelection) => void;
+  /** When false, hide “New client” actions (e.g. stylist — createClient is cashier/secretary only). */
+  allowInlineCreate?: boolean;
 }) {
   const t = useTranslations("clients");
   const tc = useTranslations("common");
@@ -189,6 +192,7 @@ export function ClientSearchWidget({
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [guestMode, setGuestMode] = useState(false);
   const [guestName, setGuestName] = useState("");
+  const [searchError, setSearchError] = useState<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -199,8 +203,13 @@ export function ClientSearchWidget({
       startSearchTransition(async () => {
         const result = await searchClients(query);
         if (result.success) {
+          setSearchError(null);
           setResults(result.data);
           setShowDropdown(true);
+        } else {
+          setSearchError(result.error.message);
+          setResults([]);
+          setShowDropdown(false);
         }
       });
     }, 200);
@@ -211,6 +220,7 @@ export function ClientSearchWidget({
 
   function handleQueryChange(value: string) {
     setQuery(value);
+    setSearchError(null);
     if (!value.trim()) {
       setResults([]);
       setShowDropdown(false);
@@ -360,17 +370,24 @@ export function ClientSearchWidget({
           value={query}
           onChange={(e) => handleQueryChange(e.target.value)}
           onFocus={() => {
-            if (results.length > 0) setShowDropdown(true);
+            if (query.trim()) setShowDropdown(true);
           }}
           className="pl-9"
           aria-label={t("searchPlaceholder")}
           aria-autocomplete="list"
           aria-expanded={showDropdown}
+          aria-invalid={!!searchError}
         />
         {isSearching && (
           <Loader2Icon className="absolute right-3 top-1/2 size-4 -translate-y-1/2 animate-spin text-muted-foreground" />
         )}
       </div>
+
+      {searchError && (
+        <p className="mt-1.5 text-sm text-destructive" role="alert">
+          {searchError}
+        </p>
+      )}
 
       {showDropdown && (
         <div
@@ -380,24 +397,28 @@ export function ClientSearchWidget({
           {results.length === 0 ? (
             <div className="px-3 py-4 text-center">
               <p className="text-sm text-muted-foreground">{t("emptySearchDescription")}</p>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="mt-2 gap-1.5"
-                onClick={() => {
-                  setShowDropdown(false);
-                  setShowCreateDialog(true);
-                }}
-              >
-                <UserPlusIcon className="size-4" />
-                {t("createClient")}
-              </Button>
+              {allowInlineCreate && (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  className="mt-2 gap-1.5"
+                  onClick={() => {
+                    setShowDropdown(false);
+                    setShowCreateDialog(true);
+                  }}
+                >
+                  <UserPlusIcon className="size-4" />
+                  {t("createClient")}
+                </Button>
+              )}
             </div>
           ) : (
             <>
               {results.map((client) => (
                 <button
                   key={client.id}
+                  type="button"
                   role="option"
                   aria-selected={false}
                   className="flex w-full items-center gap-3 px-3 py-2.5 text-left hover:bg-accent"
@@ -420,23 +441,27 @@ export function ClientSearchWidget({
                   )}
                 </button>
               ))}
-              <div className="border-t">
-                <button
-                  className="flex w-full items-center gap-2 px-3 py-2.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
-                  onClick={() => {
-                    setShowDropdown(false);
-                    setShowCreateDialog(true);
-                  }}
-                >
-                  <UserPlusIcon className="size-4" />
-                  {t("createClient")}
-                </button>
-              </div>
+              {allowInlineCreate && (
+                <div className="border-t">
+                  <button
+                    type="button"
+                    className="flex w-full items-center gap-2 px-3 py-2.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
+                    onClick={() => {
+                      setShowDropdown(false);
+                      setShowCreateDialog(true);
+                    }}
+                  >
+                    <UserPlusIcon className="size-4" />
+                    {t("createClient")}
+                  </button>
+                </div>
+              )}
             </>
           )}
 
           <div className="border-t">
             <button
+              type="button"
               className="flex w-full items-center gap-2 px-3 py-2.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
               onClick={selectGuest}
             >

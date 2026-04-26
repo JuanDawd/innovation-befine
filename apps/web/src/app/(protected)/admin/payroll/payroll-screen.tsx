@@ -179,11 +179,24 @@ export function PayrollScreen({ days, employees, history, initialEmployeeId }: P
         <div className="space-y-2">
           <div className="flex items-center justify-between gap-2">
             <h2 className="text-sm font-semibold">{t("step2")}</h2>
-            {selectedEmployeeObj && (
-              <span className="text-xs text-muted-foreground">
-                {t(earningsDescriptorKey as Parameters<typeof t>[0])}
-              </span>
-            )}
+            <div className="flex items-center gap-2 mr-4">
+              {selectedEmployeeObj && (
+                <span className="text-xs text-muted-foreground">
+                  {t(earningsDescriptorKey as Parameters<typeof t>[0])}
+                </span>
+              )}
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={(): void =>
+                  setSelectedDays(
+                    new Set(selectedDays.size === days.length ? [] : days.map((d) => d.id)),
+                  )
+                }
+              >
+                {selectedDays.size === days.length ? t("deselectAllDays") : t("selectAllDays")}
+              </Button>
+            </div>
           </div>
           {/* Pay today shortcut */}
           {todayUnsettledDay ? (
@@ -205,7 +218,7 @@ export function PayrollScreen({ days, employees, history, initialEmployeeId }: P
           ) : (
             <div className="flex flex-wrap gap-2">
               {unsettledDays.map((d) => (
-                <button
+                <Button
                   key={d.id}
                   type="button"
                   onClick={() => toggleDay(d.id)}
@@ -216,7 +229,7 @@ export function PayrollScreen({ days, employees, history, initialEmployeeId }: P
                   }`}
                 >
                   {d.date}
-                </button>
+                </Button>
               ))}
             </div>
           )}

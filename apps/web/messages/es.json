@@ -463,6 +463,10 @@
     "noOpenDay": "No hay un día laboral abierto.",
     "noClothiers": "No hay confeccionistas activos.",
     "noPieces": "No hay piezas activas en el catálogo.",
+    "variant": "Variante",
+    "selectVariant": "Selecciona una variante…",
+    "noVariants": "Sin variantes activas",
+    "selectPieceAndVariant": "Selecciona el tipo de pieza y la variante en cada fila.",
     "emptyTitle": "Sin lotes hoy",
     "emptyDescription": "Crea el primer lote del día."
   },
@@ -538,6 +542,10 @@
     "earningsDescriptorStylist": "Pagar por servicios del día",
     "earningsDescriptorClothier": "Pagar por piezas del día",
     "earningsDescriptorSecretary": "Pagar por día trabajado",
+    "selectAllDays": "Seleccionar todos los días",
+    "selectAllDaysTooltip": "Seleccionar todos los días laborales para el empleado seleccionado",
+    "deselectAllDays": "Deseleccionar todos los días",
+    "deselectAllDaysTooltip": "Deseleccionar todos los días laborales para el empleado seleccionado",
     "step3": "3. Revisa y confirma el pago",
     "selectEmployee": "Seleccionar empleado…",
     "noUnsettledDays": "No hay días laborales sin liquidar.",
@@ -704,7 +712,15 @@
     "manualPrice": "Precio manual",
     "overrideReason": "Motivo del precio manual",
     "overrideReasonPlaceholder": "Ej: Descuento acordado con el cliente",
-    "overrideReasonRequired": "El motivo es obligatorio cuando se usa precio manual"
+    "overrideReasonRequired": "El motivo es obligatorio cuando se usa precio manual",
+    "items": "Artículos del pedido",
+    "addItem": "Agregar artículo",
+    "removeItem": "Eliminar artículo",
+    "selectPiece": "Selecciona una pieza…",
+    "selectVariant": "Selecciona una variante…",
+    "noVariants": "Sin variantes",
+    "lineTotal": "Total",
+    "grandTotal": "Total calculado"
   },
   "nav": {
     "dashboard": "Tablero",

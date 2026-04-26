@@ -51,7 +51,8 @@ export async function searchClients(query: string): Promise<ActionResult<ClientR
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session)
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
-  if (!hasRole(session.user, "cashier_admin", "secretary"))
+  // Stylist needs read-only search when logging tickets (LogServiceForm); mutations stay cashier/secretary.
+  if (!hasRole(session.user, "cashier_admin", "secretary", "stylist"))
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
 
   const db = getDb();

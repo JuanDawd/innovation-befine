@@ -1,12 +1,5 @@
 "use client";
 
-/**
- * CreateBatchForm — T045
- *
- * Secretary / admin can create a cloth batch by selecting piece types
- * and optionally assigning each row to a clothier.
- */
-
 import { useState, useTransition, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useToast } from "@/hooks/use-toast";
@@ -20,12 +13,14 @@ import {
 } from "@/app/(protected)/batches/actions";
 import { listActiveClothPieces } from "@/app/(protected)/admin/catalog/actions/cloth-pieces";
 
-type ClothPieceOption = { id: string; name: string };
+type ClothPieceVariantOption = { id: string; name: string; isActive: boolean };
+type ClothPieceOption = { id: string; name: string; variants: ClothPieceVariantOption[] };
 type LargeOrderOption = { id: string; clientName: string; description: string };
 
 type PieceLine = {
   key: number;
   clothPieceId: string;
+  clothPieceVariantId: string;
   assignedToEmployeeId: string | null;
 };
 
@@ -48,7 +43,7 @@ export function CreateBatchForm({
   const [notes, setNotes] = useState("");
   const [largeOrderId, setLargeOrderId] = useState<string>("");
   const [lines, setLines] = useState<PieceLine[]>([
-    { key: 0, clothPieceId: "", assignedToEmployeeId: null },
+    { key: 0, clothPieceId: "", clothPieceVariantId: "", assignedToEmployeeId: null },
   ]);
   const [nextKey, setNextKey] = useState(1);
   const [isPending, startSubmitTransition] = useTransition();
@@ -74,7 +69,10 @@ export function CreateBatchForm({
   }, []);
 
   function addLine() {
-    setLines((prev) => [...prev, { key: nextKey, clothPieceId: "", assignedToEmployeeId: null }]);
+    setLines((prev) => [
+      ...prev,
+      { key: nextKey, clothPieceId: "", clothPieceVariantId: "", assignedToEmployeeId: null },
+    ]);
     setNextKey((k) => k + 1);
   }
 
@@ -83,13 +81,24 @@ export function CreateBatchForm({
   }
 
   function updateLine(key: number, patch: Partial<Omit<PieceLine, "key">>) {
-    setLines((prev) => prev.map((l) => (l.key === key ? { ...l, ...patch } : l)));
+    setLines((prev) =>
+      prev.map((l) => {
+        if (l.key !== key) return l;
+        const updated = { ...l, ...patch };
+        if (patch.clothPieceId !== undefined) {
+          const piece = clothPieces.find((p) => p.id === patch.clothPieceId);
+          const active = piece?.variants.filter((v) => v.isActive) ?? [];
+          updated.clothPieceVariantId = active.length === 1 ? active[0].id : "";
+        }
+        return updated;
+      }),
+    );
   }
 
   function handleSubmit() {
-    const invalidLine = lines.find((l) => !l.clothPieceId);
+    const invalidLine = lines.find((l) => !l.clothPieceId || !l.clothPieceVariantId);
     if (invalidLine) {
-      showToast("error", "Selecciona el tipo de pieza en cada fila.");
+      showToast("error", t("selectPieceAndVariant"));
       return;
     }
 
@@ -99,6 +108,7 @@ export function CreateBatchForm({
         largeOrderId: largeOrderId || undefined,
         pieces: lines.map((l) => ({
           clothPieceId: l.clothPieceId,
+          clothPieceVariantId: l.clothPieceVariantId,
           assignedToEmployeeId: l.assignedToEmployeeId,
         })),
       });
@@ -175,69 +185,105 @@ export function CreateBatchForm({
       <div className="flex flex-col gap-3">
         <p className="text-sm font-medium">{t("pieces")}</p>
 
-        {lines.map((line, idx) => (
-          <div key={line.key} className="flex gap-2 items-start">
-            {/* Piece type */}
-            <div className="flex-1">
-              {idx === 0 && (
-                <label className="text-xs text-muted-foreground mb-1 block">{t("pieceType")}</label>
-              )}
-              <select
-                aria-label={t("pieceType")}
-                value={line.clothPieceId}
-                onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                  updateLine(line.key, { clothPieceId: e.target.value })
-                }
-                className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm focus-visible:outline-none focus-visible:border-ring"
-              >
-                <option value="">{t("selectPieceType")}</option>
-                {clothPieces.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+        {lines.map((line, idx) => {
+          const piece = clothPieces.find((p) => p.id === line.clothPieceId);
+          const activeVariants = piece?.variants.filter((v) => v.isActive) ?? [];
 
-            {/* Assigned clothier */}
-            <div className="flex-1">
-              {idx === 0 && (
-                <label className="text-xs text-muted-foreground mb-1 block">{t("assignTo")}</label>
-              )}
-              <select
-                aria-label={t("assignTo")}
-                value={line.assignedToEmployeeId ?? ""}
-                onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                  updateLine(line.key, {
-                    assignedToEmployeeId: e.target.value || null,
-                  })
-                }
-                className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm focus-visible:outline-none focus-visible:border-ring"
-              >
-                <option value="">{t("unassigned")}</option>
-                {clothiers.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+          return (
+            <div key={line.key} className="flex gap-2 items-start">
+              {/* Piece type */}
+              <div className="flex-1 min-w-0">
+                {idx === 0 && (
+                  <label className="text-xs text-muted-foreground mb-1 block">
+                    {t("pieceType")}
+                  </label>
+                )}
+                <select
+                  aria-label={t("pieceType")}
+                  value={line.clothPieceId}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                    updateLine(line.key, { clothPieceId: e.target.value })
+                  }
+                  className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm focus-visible:outline-none focus-visible:border-ring"
+                >
+                  <option value="">{t("selectPieceType")}</option>
+                  {clothPieces.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-            {/* Remove button */}
-            <div className={idx === 0 ? "mt-5" : ""}>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                aria-label={t("removePiece")}
-                onClick={() => removeLine(line.key)}
-                disabled={lines.length === 1}
-              >
-                <Trash2Icon className="h-4 w-4" />
-              </Button>
+              {/* Variant */}
+              <div className="flex-1 min-w-0">
+                {idx === 0 && (
+                  <label className="text-xs text-muted-foreground mb-1 block">{t("variant")}</label>
+                )}
+                <select
+                  aria-label={t("variant")}
+                  value={line.clothPieceVariantId}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                    updateLine(line.key, { clothPieceVariantId: e.target.value })
+                  }
+                  disabled={!line.clothPieceId || activeVariants.length === 0}
+                  className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm focus-visible:outline-none focus-visible:border-ring disabled:opacity-50"
+                >
+                  <option value="">
+                    {line.clothPieceId && activeVariants.length === 0
+                      ? t("noVariants")
+                      : t("selectVariant")}
+                  </option>
+                  {activeVariants.map((v) => (
+                    <option key={v.id} value={v.id}>
+                      {v.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Assigned clothier */}
+              <div className="flex-1 min-w-0">
+                {idx === 0 && (
+                  <label className="text-xs text-muted-foreground mb-1 block">
+                    {t("assignTo")}
+                  </label>
+                )}
+                <select
+                  aria-label={t("assignTo")}
+                  value={line.assignedToEmployeeId ?? ""}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                    updateLine(line.key, {
+                      assignedToEmployeeId: e.target.value || null,
+                    })
+                  }
+                  className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm focus-visible:outline-none focus-visible:border-ring"
+                >
+                  <option value="">{t("unassigned")}</option>
+                  {clothiers.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Remove button */}
+              <div className={idx === 0 ? "mt-5" : ""}>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  aria-label={t("removePiece")}
+                  onClick={() => removeLine(line.key)}
+                  disabled={lines.length === 1}
+                >
+                  <Trash2Icon className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
 
         <Button type="button" variant="outline" size="sm" onClick={addLine} className="self-start">
           <PlusIcon className="h-4 w-4 mr-1" />
