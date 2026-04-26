@@ -228,7 +228,11 @@ export function LogServiceForm({
       {/* Client */}
       <div className="space-y-1.5">
         <p className="text-sm font-medium">{t("client")}</p>
-        <ClientSearchWidget value={clientSelection} onChange={setClientSelection} />
+        <ClientSearchWidget
+          value={clientSelection}
+          onChange={setClientSelection}
+          allowInlineCreate={!isStylist}
+        />
       </div>
 
       {/* Actions */}
