@@ -333,7 +333,7 @@ Test:
 
 ## Task: Build Large Order ticket flow — product selector
 
-Status: pending
+Status: done
 Type: logic
 
 Scope:
@@ -358,7 +358,7 @@ Test:
 
 ## Task: Large Order — quantity input with auto price
 
-Status: pending
+Status: done
 Type: logic
 
 Scope:
@@ -383,7 +383,7 @@ Test:
 
 ## Task: Large Order — manual price override with reason
 
-Status: pending
+Status: done
 Type: logic
 
 Scope:

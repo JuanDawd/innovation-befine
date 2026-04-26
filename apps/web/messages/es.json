@@ -692,7 +692,17 @@
     "cancelDepositAmount": "Total pagado: {amount}. Revisa la política de reembolso antes de continuar.",
     "cancelDepositAck": "He revisado la política de reembolso y confirmo la cancelación",
     "cancelDialogClose": "Volver",
-    "cancellationReasonRequired": "El motivo de cancelación es obligatorio"
+    "cancellationReasonRequired": "El motivo de cancelación es obligatorio",
+    "productSelector": "Seleccionar producto del catálogo (opcional)",
+    "productSearchPlaceholder": "Buscar por nombre de pieza…",
+    "clearProduct": "Limpiar producto seleccionado",
+    "noProducts": "No se encontraron prendas con ese nombre",
+    "quantity": "Cantidad",
+    "unitPrice": "Precio unitario (referencia)",
+    "manualPrice": "Precio manual",
+    "overrideReason": "Motivo del precio manual",
+    "overrideReasonPlaceholder": "Ej: Descuento acordado con el cliente",
+    "overrideReasonRequired": "El motivo es obligatorio cuando se usa precio manual"
   },
   "nav": {
     "dashboard": "Tablero",

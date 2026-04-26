@@ -658,7 +658,17 @@
     "cancelDepositAmount": "Total paid: {amount}. Review the refund policy before continuing.",
     "cancelDepositAck": "I have reviewed the refund policy and confirm the cancellation",
     "cancelDialogClose": "Go back",
-    "cancellationReasonRequired": "Cancellation reason is required"
+    "cancellationReasonRequired": "Cancellation reason is required",
+    "productSelector": "Select product from catalog (optional)",
+    "productSearchPlaceholder": "Search by garment name…",
+    "clearProduct": "Clear selected product",
+    "noProducts": "No garments found with that name",
+    "quantity": "Quantity",
+    "unitPrice": "Unit price (reference)",
+    "manualPrice": "Manual price",
+    "overrideReason": "Reason for manual price",
+    "overrideReasonPlaceholder": "E.g. Agreed discount with client",
+    "overrideReasonRequired": "Reason is required when using manual price"
   },
   "nav": {
     "dashboard": "Dashboard",
