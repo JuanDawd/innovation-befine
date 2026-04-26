@@ -88,7 +88,7 @@ Test:
 
 ## Task: Block payout creation when prior days unpaid
 
-Status: pending
+Status: done
 Type: logic
 
 Scope:

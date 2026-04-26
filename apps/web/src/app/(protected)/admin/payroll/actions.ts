@@ -34,6 +34,7 @@ import { hasRole } from "@/lib/middleware-helpers";
 import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
 import { revalidatePath } from "next/cache";
 import { recordPayoutSchema } from "@befine/types";
+import { getUnpaidPastBusinessDays } from "@befine/db";
 import { computeStylistEarnings } from "@/lib/payroll/compute-stylist-earnings";
 import { computeClothierEarnings } from "@/lib/payroll/compute-clothier-earnings";
 import { computeSecretaryEarnings } from "@/lib/payroll/compute-secretary-earnings";
@@ -264,6 +265,28 @@ export async function recordPayout(rawInput: unknown): Promise<ActionResult<{ id
     .limit(1);
   if (!emp)
     return { success: false, error: { code: "NOT_FOUND", message: "Empleado no encontrado" } };
+
+  // Stabilization-1: block payouts that skip past unpaid days. If any unpaid
+  // day is strictly older than the earliest day in this payout, the cashier
+  // is paying out of order and must settle the prior gap first.
+  const unpaid = await getUnpaidPastBusinessDays(db, input.employeeId);
+  const targetIds = new Set(input.businessDayIds);
+  const unpaidDates = unpaid.filter((d) => !targetIds.has(d.businessDayId)).map((d) => d.date);
+  const targetDates = unpaid
+    .filter((d) => targetIds.has(d.businessDayId))
+    .map((d) => d.date)
+    .sort();
+  const earliestTarget = targetDates[0];
+  if (earliestTarget && unpaidDates.some((d) => d < earliestTarget)) {
+    return {
+      success: false,
+      error: {
+        code: "CONFLICT",
+        message:
+          "Hay días anteriores sin pagar para este empleado. Liquida primero los pendientes.",
+      },
+    };
+  }
 
   const txDb = getTxDb();
   let payoutId: string;
