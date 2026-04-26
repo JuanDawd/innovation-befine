@@ -19,7 +19,13 @@ import { SyncStatus } from "@/components/sync-status";
 import { listNotifications } from "@/app/(protected)/notifications/actions";
 import type { AppRole } from "@befine/types";
 
-export default async function ProtectedLayout({ children }: { children: ReactNode }) {
+export default async function ProtectedLayout({
+  children,
+  modal,
+}: {
+  children: ReactNode;
+  modal: ReactNode;
+}) {
   const session = await auth.api.getSession({ headers: await headers() });
 
   if (!session) {
@@ -57,6 +63,7 @@ export default async function ProtectedLayout({ children }: { children: ReactNod
       sidebarDefaultOpen={sidebarDefaultOpen}
     >
       {children}
+      {modal}
       <SyncStatus role={role} />
     </AppShell>
   );

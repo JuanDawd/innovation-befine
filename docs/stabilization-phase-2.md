@@ -245,7 +245,7 @@ Test:
 
 ## Task: Convert full-page forms to Dialogs (intercept routes)
 
-Status: pending
+Status: done
 Type: ux
 
 Scope:
