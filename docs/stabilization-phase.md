@@ -63,7 +63,7 @@ Test:
 
 ## Task: Detect unpaid past business days in payroll
 
-Status: pending
+Status: done
 Type: logic
 
 Scope:
