@@ -3,7 +3,8 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { SearchIcon, Loader2Icon, XIcon } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { PlusIcon, Trash2Icon, Loader2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createLargeOrder, type ClientOption } from "./actions";
 import type { ClothPieceRow } from "@/app/(protected)/admin/catalog/actions/cloth-pieces";
@@ -14,43 +15,66 @@ type Props = {
   canOverridePrice: boolean;
 };
 
-export function CreateLargeOrderForm({ clients, clothPieces, canOverridePrice }: Props) {
+type OrderLine = {
+  key: number;
+  clothPieceId: string;
+  clothPieceVariantId: string;
+  quantity: number;
+  unitPrice: number;
+};
+
+export function CreateLargeOrderForm({ clients, clothPieces }: Props) {
   const t = useTranslations("largeOrders");
   const router = useRouter();
+  const { showToast } = useToast();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [withDeposit, setWithDeposit] = useState(false);
 
-  // Product selector state
-  const [search, setSearch] = useState("");
-  const [selectedPiece, setSelectedPiece] = useState<ClothPieceRow | null>(null);
-  const [quantity, setQuantity] = useState(1);
-  const [unitPrice, setUnitPrice] = useState(0);
-  const [withOverride, setWithOverride] = useState(false);
-  const [overrideReason, setOverrideReason] = useState("");
+  const [lines, setLines] = useState<OrderLine[]>([
+    { key: 0, clothPieceId: "", clothPieceVariantId: "", quantity: 1, unitPrice: 0 },
+  ]);
+  const [nextKey, setNextKey] = useState(1);
 
-  const filteredPieces = clothPieces.filter((p) =>
-    p.name.toLowerCase().includes(search.toLowerCase()),
-  );
+  const grandTotal = lines.reduce((sum, l) => sum + l.unitPrice * l.quantity, 0);
 
-  const computedTotal = unitPrice * quantity;
-
-  function handleSelectPiece(piece: ClothPieceRow) {
-    setSelectedPiece(piece);
-    setSearch("");
-    // Use the first active variant's piece_rate as reference price
-    const firstVariant = piece.variants.find((v) => v.isActive);
-    if (firstVariant && unitPrice === 0) {
-      setUnitPrice(firstVariant.pieceRate);
-    }
+  function addLine() {
+    setLines((prev) => [
+      ...prev,
+      { key: nextKey, clothPieceId: "", clothPieceVariantId: "", quantity: 1, unitPrice: 0 },
+    ]);
+    setNextKey((k) => k + 1);
   }
 
-  function handleClearPiece() {
-    setSelectedPiece(null);
-    setUnitPrice(0);
-    setWithOverride(false);
-    setOverrideReason("");
+  function removeLine(key: number) {
+    setLines((prev) => prev.filter((l) => l.key !== key));
+  }
+
+  function updateLine(key: number, patch: Partial<Omit<OrderLine, "key">>) {
+    setLines((prev) =>
+      prev.map((l) => {
+        if (l.key !== key) return l;
+        const updated = { ...l, ...patch };
+        if (patch.clothPieceId !== undefined) {
+          const piece = clothPieces.find((p) => p.id === patch.clothPieceId);
+          const active = piece?.variants.filter((v) => v.isActive) ?? [];
+          if (active.length === 1) {
+            updated.clothPieceVariantId = active[0].id;
+            updated.unitPrice = active[0].pieceRate;
+          } else {
+            updated.clothPieceVariantId = "";
+            updated.unitPrice = 0;
+          }
+        }
+        if (patch.clothPieceVariantId !== undefined) {
+          const piece = clothPieces.find((p) => p.id === l.clothPieceId);
+          const variant = piece?.variants.find((v) => v.id === patch.clothPieceVariantId);
+          if (variant) updated.unitPrice = variant.pieceRate;
+        }
+        return updated;
+      }),
+    );
   }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -58,23 +82,18 @@ export function CreateLargeOrderForm({ clients, clothPieces, canOverridePrice }:
     setError(null);
     setFieldErrors({});
 
-    // Validate override reason
-    if (withOverride && !overrideReason.trim()) {
-      setFieldErrors((prev) => ({ ...prev, overrideReason: t("overrideReasonRequired") }));
-      return;
-    }
-
     const fd = new FormData(e.currentTarget);
     const depositAmountRaw = fd.get("initialDepositAmount") as string;
     const depositAmount = depositAmountRaw ? parseInt(depositAmountRaw, 10) : undefined;
-
     const rawTotalPrice = parseInt(fd.get("totalPrice") as string, 10);
 
     const input = {
       clientId: fd.get("clientId") as string,
       description: fd.get("description") as string,
       totalPrice: rawTotalPrice,
-      estimatedDeliveryAt: (fd.get("estimatedDeliveryAt") as string) || undefined,
+      estimatedDeliveryAt: (fd.get("estimatedDeliveryAt") as string)
+        ? `${fd.get("estimatedDeliveryAt") as string}:00-05:00`
+        : undefined,
       notes: (fd.get("notes") as string) || undefined,
       initialDepositAmount: withDeposit ? depositAmount : undefined,
       initialDepositMethod: withDeposit
@@ -93,140 +112,139 @@ export function CreateLargeOrderForm({ clients, clothPieces, canOverridePrice }:
           setFieldErrors(errs);
         } else {
           setError(res.error.message);
+          showToast("error", res.error.message);
         }
         return;
       }
+      showToast("success", t("createSuccess"));
       router.push(`/large-orders/${res.data.id}`);
     });
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      {/* ─── Product selector ─── */}
+      {/* ─── Items from catalogue ─── */}
       {clothPieces.length > 0 && (
-        <div className="space-y-2 rounded-lg border border-dashed p-4">
-          <p className="text-sm font-medium">{t("productSelector")}</p>
+        <div className="space-y-3 rounded-lg border border-dashed p-4">
+          <p className="text-sm font-medium">
+            {t("items")}
+            <span className="text-muted-foreground font-normal text-xs ml-2">(opcional)</span>
+          </p>
 
-          {selectedPiece ? (
-            <div className="flex items-center justify-between rounded-md bg-muted px-3 py-2">
-              <span className="text-sm font-medium">{selectedPiece.name}</span>
-              <button
-                type="button"
-                onClick={handleClearPiece}
-                className="ml-2 text-muted-foreground hover:text-foreground"
-                aria-label={t("clearProduct")}
-              >
-                <XIcon className="size-4" />
-              </button>
-            </div>
-          ) : (
-            <div className="relative">
-              <SearchIcon className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder={t("productSearchPlaceholder")}
-                className="w-full h-9 rounded-md border border-input bg-transparent pl-8 pr-3 text-sm focus-visible:outline-none focus-visible:border-ring"
-              />
-              {search && filteredPieces.length > 0 && (
-                <ul className="absolute z-10 mt-1 w-full rounded-md border bg-popover shadow-md max-h-48 overflow-y-auto">
-                  {filteredPieces.map((p) => (
-                    <li key={p.id}>
-                      <button
-                        type="button"
-                        onClick={() => handleSelectPiece(p)}
-                        className="w-full px-3 py-2 text-left text-sm hover:bg-muted transition-colors"
-                      >
-                        {p.name}
-                        {p.description && (
-                          <span className="text-xs text-muted-foreground ml-1.5">
-                            {p.description}
-                          </span>
-                        )}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              {search && filteredPieces.length === 0 && (
-                <p className="mt-1 text-xs text-muted-foreground px-1">{t("noProducts")}</p>
-              )}
-            </div>
-          )}
+          {lines.map((line) => {
+            const piece = clothPieces.find((p) => p.id === line.clothPieceId);
+            const activeVariants = piece?.variants.filter((v) => v.isActive) ?? [];
+            const lineTotal = line.unitPrice * line.quantity;
 
-          {/* Quantity + unit price */}
-          {selectedPiece && (
-            <div className="grid grid-cols-2 gap-3 pt-1">
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-muted-foreground">{t("quantity")}</label>
-                <input
-                  type="number"
-                  min={1}
-                  step={1}
-                  value={quantity}
-                  onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value, 10) || 1))}
-                  className="w-full h-9 rounded-md border border-input bg-transparent px-3 text-sm font-mono focus-visible:outline-none focus-visible:border-ring"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-muted-foreground">
-                  {t("unitPrice")}
-                </label>
-                <input
-                  type="number"
-                  min={0}
-                  step={1}
-                  value={unitPrice}
-                  onChange={(e) => setUnitPrice(parseInt(e.target.value, 10) || 0)}
-                  disabled={!withOverride && canOverridePrice}
-                  className="w-full h-9 rounded-md border border-input bg-transparent px-3 text-sm font-mono focus-visible:outline-none focus-visible:border-ring disabled:opacity-50"
-                />
-              </div>
-            </div>
-          )}
+            return (
+              <div key={line.key} className="rounded-md border bg-muted/30 p-3 space-y-2">
+                {/* Piece + variant row */}
+                <div className="flex gap-2">
+                  <div className="flex-1 min-w-0">
+                    <select
+                      aria-label={t("selectPiece")}
+                      value={line.clothPieceId}
+                      onChange={(e) => updateLine(line.key, { clothPieceId: e.target.value })}
+                      className="h-8 w-full rounded-md border border-input bg-background px-2.5 text-sm focus-visible:outline-none focus-visible:border-ring"
+                    >
+                      <option value="">{t("selectPiece")}</option>
+                      {clothPieces.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-          {/* Price override — cashier_admin only */}
-          {selectedPiece && canOverridePrice && (
-            <div className="space-y-2 pt-1">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={withOverride}
-                  onChange={(e) => setWithOverride(e.target.checked)}
-                  className="h-4 w-4 rounded border-input"
-                />
-                <span className="text-sm">{t("manualPrice")}</span>
-              </label>
-              {withOverride && (
-                <div className="space-y-1 pl-6">
-                  <label className="text-xs font-medium text-muted-foreground">
-                    {t("overrideReason")} <span className="text-destructive">*</span>
-                  </label>
-                  <textarea
-                    value={overrideReason}
-                    onChange={(e) => setOverrideReason(e.target.value)}
-                    rows={2}
-                    placeholder={t("overrideReasonPlaceholder")}
-                    className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-ring resize-none"
-                  />
-                  {fieldErrors.overrideReason && (
-                    <p className="text-xs text-destructive">{fieldErrors.overrideReason}</p>
+                  <div className="flex-1 min-w-0">
+                    <select
+                      aria-label={t("selectVariant")}
+                      value={line.clothPieceVariantId}
+                      onChange={(e) =>
+                        updateLine(line.key, { clothPieceVariantId: e.target.value })
+                      }
+                      disabled={!line.clothPieceId || activeVariants.length === 0}
+                      className="h-8 w-full rounded-md border border-input bg-background px-2.5 text-sm focus-visible:outline-none focus-visible:border-ring disabled:opacity-50"
+                    >
+                      <option value="">
+                        {line.clothPieceId && activeVariants.length === 0
+                          ? t("noVariants")
+                          : t("selectVariant")}
+                      </option>
+                      {activeVariants.map((v) => (
+                        <option key={v.id} value={v.id}>
+                          {v.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => removeLine(line.key)}
+                    disabled={lines.length === 1}
+                    aria-label={t("removeItem")}
+                    className="mt-auto mb-0.5 p-1 rounded text-muted-foreground hover:text-foreground disabled:opacity-30"
+                  >
+                    <Trash2Icon className="h-4 w-4" />
+                  </button>
+                </div>
+
+                {/* Qty + unit price + line total */}
+                <div className="flex gap-2 items-end">
+                  <div className="w-20 space-y-1">
+                    <label className="text-xs text-muted-foreground">{t("quantity")}</label>
+                    <input
+                      type="number"
+                      min={1}
+                      step={1}
+                      value={line.quantity}
+                      onChange={(e) =>
+                        updateLine(line.key, {
+                          quantity: Math.max(1, parseInt(e.target.value, 10) || 1),
+                        })
+                      }
+                      className="w-full h-8 rounded-md border border-input bg-background px-2.5 text-sm font-mono focus-visible:outline-none focus-visible:border-ring"
+                    />
+                  </div>
+                  <div className="flex-1 space-y-1">
+                    <label className="text-xs text-muted-foreground">{t("unitPrice")}</label>
+                    <input
+                      type="number"
+                      min={0}
+                      step={1}
+                      value={line.unitPrice}
+                      onChange={(e) =>
+                        updateLine(line.key, { unitPrice: parseInt(e.target.value, 10) || 0 })
+                      }
+                      className="w-full h-8 rounded-md border border-input bg-background px-2.5 text-sm font-mono focus-visible:outline-none focus-visible:border-ring"
+                    />
+                  </div>
+                  {lineTotal > 0 && (
+                    <div className="text-sm font-mono font-semibold text-right pb-0.5 shrink-0">
+                      ${lineTotal.toLocaleString("es-CO")}
+                    </div>
                   )}
                 </div>
-              )}
-            </div>
-          )}
+              </div>
+            );
+          })}
 
-          {/* Computed total preview */}
-          {selectedPiece && computedTotal > 0 && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={addLine}
+            className="self-start"
+          >
+            <PlusIcon className="h-4 w-4 mr-1" />
+            {t("addItem")}
+          </Button>
+
+          {grandTotal > 0 && (
             <div className="flex items-center justify-between rounded-md bg-muted/50 px-3 py-2 text-sm">
-              <span className="text-muted-foreground">
-                {quantity} × ${unitPrice.toLocaleString("es-CO")} =
-              </span>
-              <span className="font-mono font-semibold">
-                ${computedTotal.toLocaleString("es-CO")}
-              </span>
+              <span className="text-muted-foreground">{t("grandTotal")}</span>
+              <span className="font-mono font-semibold">${grandTotal.toLocaleString("es-CO")}</span>
             </div>
           )}
         </div>
@@ -254,7 +272,7 @@ export function CreateLargeOrderForm({ clients, clothPieces, canOverridePrice }:
         {fieldErrors.clientId && <p className="text-xs text-destructive">{fieldErrors.clientId}</p>}
       </div>
 
-      {/* Description — pre-filled from product selector */}
+      {/* Description */}
       <div className="space-y-1">
         <label className="text-sm font-medium" htmlFor="description">
           {t("description")} <span className="text-destructive">*</span>
@@ -265,8 +283,6 @@ export function CreateLargeOrderForm({ clients, clothPieces, canOverridePrice }:
           required
           maxLength={500}
           rows={3}
-          defaultValue={selectedPiece ? selectedPiece.name : ""}
-          key={selectedPiece?.id ?? "none"}
           placeholder={t("descriptionPlaceholder")}
           className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-ring resize-none"
         />
@@ -275,7 +291,7 @@ export function CreateLargeOrderForm({ clients, clothPieces, canOverridePrice }:
         )}
       </div>
 
-      {/* Total price — pre-filled from computed total */}
+      {/* Total price — pre-filled from computed grand total */}
       <div className="space-y-1">
         <label className="text-sm font-medium" htmlFor="totalPrice">
           {t("totalPrice")} <span className="text-destructive">*</span>
@@ -287,8 +303,8 @@ export function CreateLargeOrderForm({ clients, clothPieces, canOverridePrice }:
           required
           min={1}
           step={1}
-          key={computedTotal || "manual"}
-          defaultValue={computedTotal > 0 ? computedTotal : undefined}
+          key={grandTotal || "manual"}
+          defaultValue={grandTotal > 0 ? grandTotal : undefined}
           className="w-full h-9 rounded-md border border-input bg-transparent px-3 text-sm font-mono focus-visible:outline-none focus-visible:border-ring"
         />
         {fieldErrors.totalPrice && (

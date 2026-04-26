@@ -12,6 +12,7 @@ import { useState, useTransition, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
+import { useToast } from "@/hooks/use-toast";
 import {
   PlusIcon,
   PencilIcon,
@@ -75,6 +76,7 @@ function ClientDialog({
 }) {
   const t = useTranslations("clients");
   const tc = useTranslations("common");
+  const { showToast } = useToast();
   const [open, setOpen] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -107,6 +109,7 @@ function ClientDialog({
       const result = isEdit ? await editClient(config.client.id, data) : await createClient(data);
 
       if (result.success) {
+        showToast("success", isEdit ? t("editSuccess") : t("createSuccess"));
         setOpen(false);
         onSuccess(result.data);
       } else {
@@ -208,6 +211,7 @@ function ClientCard({
   onUpdate: (updated: ClientRow | null) => void;
 }) {
   const t = useTranslations("clients");
+  const { showToast } = useToast();
   const [localClient, setLocalClient] = useState(client);
   const [isPending, startTransition] = useTransition();
 
@@ -215,9 +219,12 @@ function ClientCard({
     startTransition(async () => {
       const result = await archiveClient(localClient.id);
       if (result.success) {
+        showToast("success", t("archiveSuccess"));
         const updated = { ...localClient, isActive: false };
         setLocalClient(updated);
         onUpdate(updated);
+      } else {
+        showToast("error", t("archiveError"));
       }
     });
   }
@@ -226,9 +233,12 @@ function ClientCard({
     startTransition(async () => {
       const result = await unarchiveClient(localClient.id);
       if (result.success) {
+        showToast("success", t("unarchiveSuccess"));
         const updated = { ...localClient, isActive: true };
         setLocalClient(updated);
         onUpdate(updated);
+      } else {
+        showToast("error", t("unarchiveError"));
       }
     });
   }

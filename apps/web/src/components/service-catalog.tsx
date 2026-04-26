@@ -11,6 +11,7 @@ import React, { useState, useTransition } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
+import { useToast } from "@/hooks/use-toast";
 import {
   PlusIcon,
   PencilIcon,
@@ -58,6 +59,7 @@ function formatCOP(amount: number): string {
 function CreateServiceDialog({ onSuccess }: { onSuccess: (service: ServiceRow) => void }) {
   const t = useTranslations("catalog");
   const tc = useTranslations("common");
+  const { showToast } = useToast();
   const [open, setOpen] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -94,6 +96,7 @@ function CreateServiceDialog({ onSuccess }: { onSuccess: (service: ServiceRow) =
     startTransition(async () => {
       const result = await createService(data);
       if (result.success) {
+        showToast("success", t("createServiceSuccess"));
         setOpen(false);
         // Build a minimal ServiceRow to satisfy the parent
         onSuccess({
@@ -287,6 +290,7 @@ function EditServiceDialog({
 }) {
   const t = useTranslations("catalog");
   const tc = useTranslations("common");
+  const { showToast } = useToast();
   const [open, setOpen] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -310,6 +314,7 @@ function EditServiceDialog({
     startTransition(async () => {
       const result = await editService(service.id, data);
       if (result.success) {
+        showToast("success", t("editServiceSuccess"));
         setOpen(false);
         onSuccess({ name: data.name, description: data.description ?? null });
       } else {
@@ -394,6 +399,7 @@ function VariantDialog({
 }) {
   const t = useTranslations("catalog");
   const tc = useTranslations("common");
+  const { showToast } = useToast();
   const [open, setOpen] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -427,6 +433,10 @@ function VariantDialog({
           : await editVariant(config.variantId, data);
 
       if (result.success) {
+        showToast(
+          "success",
+          config.mode === "add" ? t("addVariantSuccess") : t("editVariantSuccess"),
+        );
         setOpen(false);
         onSuccess();
       } else {
@@ -540,6 +550,7 @@ function ServiceCard({
   onChange: () => void;
 }) {
   const t = useTranslations("catalog");
+  const { showToast } = useToast();
   const [expanded, setExpanded] = useState(true);
   const [isPending, startTransition] = useTransition();
   const [localService, setLocalService] = useState(service);
@@ -556,7 +567,10 @@ function ServiceCard({
     startTransition(async () => {
       const result = await deactivateService(localService.id);
       if (result.success) {
+        showToast("success", t("deactivateSuccess"));
         setLocalService((prev) => ({ ...prev, isActive: false }));
+      } else {
+        showToast("error", t("deactivateError"));
       }
     });
   }
@@ -565,7 +579,10 @@ function ServiceCard({
     startTransition(async () => {
       const result = await restoreService(localService.id);
       if (result.success) {
+        showToast("success", t("restoreSuccess"));
         setLocalService((prev) => ({ ...prev, isActive: true }));
+      } else {
+        showToast("error", t("restoreError"));
       }
     });
   }
@@ -574,10 +591,13 @@ function ServiceCard({
     startTransition(async () => {
       const result = await deactivateVariant(variantId);
       if (result.success) {
+        showToast("success", t("deactivateSuccess"));
         setLocalService((prev) => ({
           ...prev,
           variants: prev.variants.map((v) => (v.id === variantId ? { ...v, isActive: false } : v)),
         }));
+      } else {
+        showToast("error", t("deactivateError"));
       }
     });
   }
@@ -586,10 +606,13 @@ function ServiceCard({
     startTransition(async () => {
       const result = await restoreVariant(variantId);
       if (result.success) {
+        showToast("success", t("restoreSuccess"));
         setLocalService((prev) => ({
           ...prev,
           variants: prev.variants.map((v) => (v.id === variantId ? { ...v, isActive: true } : v)),
         }));
+      } else {
+        showToast("error", t("restoreError"));
       }
     });
   }

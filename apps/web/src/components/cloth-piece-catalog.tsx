@@ -12,6 +12,7 @@ import React, { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
+import { useToast } from "@/hooks/use-toast";
 import {
   PlusIcon,
   PencilIcon,
@@ -74,6 +75,7 @@ function VariantRow({
   onUpdated: (v: ClothPieceVariantRow) => void;
 }) {
   const t = useTranslations("catalog");
+  const { showToast } = useToast();
   const [editOpen, setEditOpen] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -97,6 +99,7 @@ function VariantRow({
     startTransition(async () => {
       const res = await editClothPieceVariant(variant.id, data);
       if (res.success) {
+        showToast("success", t("editVariantSuccess"));
         onUpdated(res.data);
         setEditOpen(false);
       } else {
@@ -108,14 +111,24 @@ function VariantRow({
   function handleDeactivate() {
     startTransition(async () => {
       const res = await deactivateClothPieceVariant(variant.id);
-      if (res.success) onUpdated({ ...variant, isActive: false });
+      if (res.success) {
+        showToast("success", t("deactivateSuccess"));
+        onUpdated({ ...variant, isActive: false });
+      } else {
+        showToast("error", t("deactivateError"));
+      }
     });
   }
 
   function handleRestore() {
     startTransition(async () => {
       const res = await restoreClothPieceVariant(variant.id);
-      if (res.success) onUpdated({ ...variant, isActive: true });
+      if (res.success) {
+        showToast("success", t("restoreSuccess"));
+        onUpdated({ ...variant, isActive: true });
+      } else {
+        showToast("error", t("restoreError"));
+      }
     });
   }
 
@@ -240,6 +253,7 @@ function AddVariantForm({
 }) {
   const t = useTranslations("catalog");
   const tc = useTranslations("common");
+  const { showToast } = useToast();
   const [serverError, setServerError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -256,6 +270,7 @@ function AddVariantForm({
     startTransition(async () => {
       const res = await createClothPieceVariant(clothPieceId, data);
       if (res.success) {
+        showToast("success", t("addVariantSuccess"));
         onCreated(res.data);
       } else {
         setServerError(res.error.message);
@@ -317,6 +332,7 @@ function PieceDialog({
 }) {
   const t = useTranslations("catalog");
   const tc = useTranslations("common");
+  const { showToast } = useToast();
   const [open, setOpen] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -348,6 +364,7 @@ function PieceDialog({
         ? await editClothPiece(config.piece.id, data)
         : await createClothPiece(data);
       if (result.success) {
+        showToast("success", isEdit ? t("editClothPieceSuccess") : t("createClothPieceSuccess"));
         setOpen(false);
         const piece: ClothPieceRow = isEdit
           ? {
@@ -441,6 +458,7 @@ function PieceRow({
   onChange: (updated: ClothPieceRow) => void;
 }) {
   const t = useTranslations("catalog");
+  const { showToast } = useToast();
   const [localPiece, setLocalPiece] = useState(piece);
   const [expanded, setExpanded] = useState(false);
   const [addingVariant, setAddingVariant] = useState(false);
@@ -454,14 +472,24 @@ function PieceRow({
   function handleDeactivate() {
     startTransition(async () => {
       const res = await deactivateClothPiece(localPiece.id);
-      if (res.success) update({ ...localPiece, isActive: false });
+      if (res.success) {
+        showToast("success", t("deactivateSuccess"));
+        update({ ...localPiece, isActive: false });
+      } else {
+        showToast("error", t("deactivateError"));
+      }
     });
   }
 
   function handleRestore() {
     startTransition(async () => {
       const res = await restoreClothPiece(localPiece.id);
-      if (res.success) update({ ...localPiece, isActive: true });
+      if (res.success) {
+        showToast("success", t("restoreSuccess"));
+        update({ ...localPiece, isActive: true });
+      } else {
+        showToast("error", t("restoreError"));
+      }
     });
   }
 
