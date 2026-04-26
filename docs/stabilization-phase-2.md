@@ -240,3 +240,52 @@ Test:
 
 - From light mode, click the toggle — page enters dark mode immediately, no flash on next refresh.
 - Clear `befine-theme` in DevTools and refresh — theme follows OS setting.
+
+---
+
+## Task: Convert full-page forms to Dialogs (intercept routes)
+
+Status: pending
+Type: ux
+
+Scope:
+
+Several create/action flows navigate to a dedicated page, breaking context. They should open as Dialogs over the parent list/dashboard so the user never loses their place. Use Next.js [parallel + intercepting routes](https://nextjs.org/docs/app/building-your-application/routing/intercepting-routes) (`@modal` slot + `(.)` interception) so direct URL visits still render a standalone page as fallback.
+
+Affected routes and their parent context:
+
+| Route                         | Parent                    | Dialog width |
+| ----------------------------- | ------------------------- | ------------ |
+| `/cashier/checkout`           | `/cashier` (dashboard)    | `max-w-xl`   |
+| `/cashier/appointments/new`   | `/cashier/appointments`   | `max-w-md`   |
+| `/secretary/appointments/new` | `/secretary/appointments` | `max-w-md`   |
+| `/admin/batches/new`          | `/admin/batches`          | `max-w-lg`   |
+| `/secretary/batches/new`      | `/secretary/batches`      | `max-w-lg`   |
+| `/large-orders/new`           | `/large-orders`           | `max-w-xl`   |
+| `/admin/employees/new`        | `/admin/employees`        | `max-w-md`   |
+| `/profile`                    | any (user menu entry)     | `max-w-md`   |
+
+Steps:
+
+1. For each parent layout folder, add a `@modal` slot directory and a `default.tsx` returning `null`.
+2. Inside `@modal`, create a `(.)target-route/page.tsx` intercept that renders the existing page's form content wrapped in `<Dialog open onOpenChange={(open) => { if (!open) router.back(); }}>`.
+3. The parent `layout.tsx` receives the `{ modal }` slot prop and renders `{modal}` beside `{children}` — the Dialog appears over the parent page.
+4. The original `app/(protected)/target-route/page.tsx` stays untouched as the standalone fallback (direct URL visit renders the page normally).
+5. Update every nav `<Link href="/target-route">` and `<Button onClick={() => router.push("/target-route")}>` that currently triggers a full navigation to instead use `<Link href="/target-route">` unchanged — the interception is transparent to links.
+6. The Dialog must: be keyboard-dismissable (Escape), have a visible `×` close button, and call `router.back()` on close to restore the parent URL.
+7. Checkout is special: it must close the Dialog on successful checkout (call `router.replace("/cashier")` instead of `router.back()`).
+8. Profile Dialog close returns to the previous route via `router.back()`.
+
+Acceptance Criteria:
+
+- Clicking "Nueva cita" from the appointments list opens a Dialog over the list — the list URL stays in the address bar.
+- Clicking "Abrir cobro" from the cashier dashboard opens the checkout Dialog — the dashboard stays rendered behind it.
+- Direct navigation to `/cashier/checkout` (e.g. browser refresh, back button from within) still renders the standalone checkout page with no modal chrome.
+- Every Dialog has a `×` button and closes on Escape without submitting.
+- No existing E2E or unit test breaks (routes still exist as standalone pages).
+
+Test:
+
+- Navigate to `/cashier/appointments` → click "Nueva cita" → Dialog opens, URL stays `/cashier/appointments`.
+- Refresh the browser while the Dialog is open → renders the standalone `/cashier/appointments/new` page.
+- Open any Dialog → press Escape → Dialog closes, user is back on the parent page.
