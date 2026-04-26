@@ -1,7 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import Image from "next/image";
-import { ReceiptIcon, ScissorsIcon, WalletIcon, ArrowRightIcon } from "lucide-react";
+import { ArrowRightIcon, ReceiptIcon, ScissorsIcon, WalletIcon } from "lucide-react";
 
 export default async function LandingPage() {
   const t = await getTranslations("landing");
@@ -28,126 +28,302 @@ export default async function LandingPage() {
   ] as const;
 
   return (
-    <div className="relative min-h-screen bg-zinc-950 text-zinc-50 overflow-hidden">
-      {/* ── Ambient geometry ── */}
+    <div
+      className="relative min-h-dvh overflow-hidden"
+      style={{ background: "#010101", color: "#f2ece1" }}
+    >
+      {/* ─── Grain overlay ─── */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -top-40 -right-40 h-150 w-150 rounded-full opacity-20"
-        style={{ background: "radial-gradient(circle at center,#8B3A62 0%,transparent 70%)" }}
-      />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute bottom-0 left-0 h-96 w-96 opacity-[0.04]"
+        className="pointer-events-none fixed inset-0 z-50 opacity-[0.032]"
         style={{
-          backgroundImage:
-            "repeating-linear-gradient(0deg,#fff 0,#fff 1px,transparent 1px,transparent 40px),repeating-linear-gradient(90deg,#fff 0,#fff 1px,transparent 1px,transparent 40px)",
+          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E")`,
+          backgroundRepeat: "repeat",
         }}
       />
 
-      {/* ── Nav ── */}
-      <header className="relative z-10 flex items-center justify-between px-6 py-6 sm:px-10 lg:px-16">
-        <Image
-          src="/brand/wordmark.svg"
-          alt="Innovation Befine"
-          width={140}
-          height={28}
-          priority
-          className="h-7 w-auto brightness-0 invert"
+      {/* ─── Background composition ─── */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+        {/* Pink bloom — top right */}
+        <div
+          className="absolute -top-32 -right-48 h-[600px] w-[600px] rounded-full"
+          style={{
+            background:
+              "radial-gradient(circle at 60% 40%, rgba(233,64,142,0.18) 0%, rgba(233,64,142,0.05) 45%, transparent 70%)",
+          }}
         />
+        {/* Soft pink bloom — bottom left */}
+        <div
+          className="absolute -bottom-24 -left-32 h-[400px] w-[400px] rounded-full"
+          style={{
+            background: "radial-gradient(circle, rgba(233,64,142,0.07) 0%, transparent 70%)",
+          }}
+        />
+        {/* Vertical rule — editorial skeleton */}
+        <div
+          className="absolute top-0 left-[52%] bottom-0 w-px hidden xl:block"
+          style={{
+            background:
+              "linear-gradient(to bottom, transparent 0%, rgba(233,64,142,0.12) 30%, rgba(233,64,142,0.12) 70%, transparent 100%)",
+          }}
+        />
+        {/* Horizontal rule — below hero */}
+        <div
+          className="absolute top-[62%] inset-x-0 h-px hidden lg:block"
+          style={{
+            background:
+              "linear-gradient(to right, transparent 0%, rgba(242,236,225,0.06) 20%, rgba(242,236,225,0.06) 80%, transparent 100%)",
+          }}
+        />
+      </div>
+
+      {/* ─── Navigation ─── */}
+      <header
+        className="relative z-10 flex items-center justify-between px-6 sm:px-10 lg:px-16 xl:px-20"
+        style={{ paddingTop: "1.75rem", paddingBottom: "1.75rem" }}
+      >
+        <div className="flex items-center gap-3">
+          {/* Diamond mark */}
+          <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
+            <rect
+              x="2"
+              y="2"
+              width="10"
+              height="10"
+              rx="1.5"
+              transform="rotate(45 7 7)"
+              fill="#E9408E"
+            />
+          </svg>
+          <Image
+            src="/brand/wordmark.svg"
+            alt="Innovation Befine"
+            width={120}
+            height={24}
+            priority
+            className="h-6 w-auto brightness-0 invert"
+          />
+        </div>
+
         <Link
           href="/login"
-          className="group flex items-center gap-2 rounded-full border border-zinc-700 px-5 py-2 text-sm font-medium text-zinc-300 transition-colors hover:border-[#8B3A62] hover:text-white"
+          className="group flex items-center gap-2 text-sm font-medium transition-colors"
+          style={{ color: "#b8b0a3" }}
+          onMouseEnter={undefined}
         >
-          {t("ctaNav")}
+          <span
+            className="relative"
+            style={{ fontFamily: "'Inter Tight', ui-sans-serif, system-ui, sans-serif" }}
+          >
+            {t("ctaNav")}
+            <span
+              aria-hidden="true"
+              className="absolute -bottom-px left-0 right-0 h-px origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300"
+              style={{ background: "#E9408E" }}
+            />
+          </span>
           <ArrowRightIcon
-            className="size-3.5 transition-transform group-hover:translate-x-0.5"
+            className="size-3 transition-transform duration-300 group-hover:translate-x-1"
             aria-hidden="true"
           />
         </Link>
       </header>
 
-      {/* ── Hero ── */}
-      <main className="relative z-10 mx-auto max-w-6xl px-6 pb-24 pt-20 sm:px-10 sm:pt-28 lg:px-16 lg:pt-36">
-        <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-[#8B3A62]/40 bg-[#8B3A62]/10 px-4 py-1.5">
-          <span className="size-1.5 rounded-full bg-[#8B3A62]" aria-hidden="true" />
-          <span className="text-xs font-medium tracking-widest text-[#c47a9e] uppercase">
-            {t("eyebrow")}
-          </span>
-        </div>
-
-        <h1 className="max-w-3xl text-[clamp(2.5rem,6vw,4.5rem)] font-bold leading-[1.05] tracking-tight">
-          {t("heroLine1")}
-          <br />
-          <span
-            className="italic"
-            style={{
-              background: "linear-gradient(135deg,#8B3A62 0%,#c47a9e 100%)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-            }}
-          >
-            {t("heroLine2")}
-          </span>
-        </h1>
-
-        <p className="mt-6 max-w-md text-base leading-relaxed text-zinc-400">
-          {t("heroParagraph")}
-        </p>
-
-        <div className="mt-10">
-          <Link
-            href="/login"
-            className="group inline-flex items-center gap-3 rounded-full bg-[#8B3A62] px-8 py-3.5 text-sm font-semibold text-white transition-all hover:bg-[#a04475] hover:shadow-[0_0_32px_rgba(139,58,98,0.5)] active:scale-95"
-          >
-            {t("cta")}
-            <ArrowRightIcon
-              className="size-4 transition-transform group-hover:translate-x-1"
-              aria-hidden="true"
-            />
-          </Link>
-        </div>
-
-        {/* ── Divider ── */}
-        <div className="mt-24 mb-16 flex items-center gap-4">
-          <div className="h-px flex-1 bg-zinc-800" />
-          <span className="text-xs tracking-[0.2em] uppercase text-zinc-600">
-            {t("featuresLabel")}
-          </span>
-          <div className="h-px flex-1 bg-zinc-800" />
-        </div>
-
-        {/* ── Feature cards ── */}
-        <div className="grid gap-px bg-zinc-800 sm:grid-cols-3">
-          {features.map(({ icon: Icon, num, title, desc }) => (
+      {/* ─── Hero ─── */}
+      <main className="relative z-10">
+        <div className="mx-auto max-w-[1320px] px-6 sm:px-10 lg:px-16 xl:px-20">
+          {/* Eyebrow */}
+          <div className="pt-16 sm:pt-20 lg:pt-28">
             <div
-              key={num}
-              className="group relative flex flex-col gap-6 bg-zinc-950 p-8 transition-colors hover:bg-zinc-900"
+              className="inline-flex items-center gap-2.5 mb-10"
+              style={{ fontFamily: "'Inter Tight', ui-sans-serif, system-ui, sans-serif" }}
             >
-              <div className="absolute inset-x-0 top-0 h-px origin-left scale-x-0 bg-[#8B3A62] transition-transform duration-300 group-hover:scale-x-100" />
+              <span className="h-px w-8" style={{ background: "#E9408E" }} aria-hidden="true" />
+              <span
+                className="text-[10px] font-semibold tracking-[0.25em] uppercase"
+                style={{ color: "#E9408E" }}
+              >
+                {t("eyebrow")}
+              </span>
+            </div>
 
-              <div className="flex items-start justify-between">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-zinc-800 bg-zinc-900 transition-colors group-hover:border-[#8B3A62]/40">
-                  <Icon className="size-5 text-[#c47a9e]" aria-hidden="true" />
-                </div>
-                <span className="select-none font-mono text-3xl font-bold leading-none text-zinc-800 transition-colors group-hover:text-zinc-700">
-                  {num}
-                </span>
+            {/* Main headline — split layout */}
+            <div className="grid lg:grid-cols-[1fr_auto] lg:gap-16 xl:gap-24 items-end">
+              <div>
+                <h1
+                  className="text-[clamp(3rem,7vw,5.5rem)] leading-[0.95] tracking-tight font-bold"
+                  style={{
+                    fontFamily: "'Fraunces', 'Cormorant Garamond', 'Times New Roman', serif",
+                    fontVariationSettings: "'SOFT' 40, 'WONK' 1",
+                  }}
+                >
+                  <span style={{ color: "#f2ece1" }}>{t("heroLine1")}</span>
+                  <br />
+                  <em
+                    className="not-italic"
+                    style={{
+                      background: "linear-gradient(100deg, #E9408E 0%, #f06aa5 60%, #E9408E 100%)",
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                      backgroundClip: "text",
+                    }}
+                  >
+                    {t("heroLine2")}
+                  </em>
+                </h1>
               </div>
 
-              <div>
-                <h2 className="text-base font-semibold text-zinc-100">{title}</h2>
-                <p className="mt-1.5 text-sm leading-relaxed text-zinc-500">{desc}</p>
+              {/* Right column — descriptor + CTA */}
+              <div className="mt-10 lg:mt-0 lg:mb-2 lg:max-w-[280px] xl:max-w-[320px] flex-shrink-0">
+                <p
+                  className="text-sm leading-relaxed mb-8"
+                  style={{
+                    color: "#807870",
+                    fontFamily: "'Inter Tight', ui-sans-serif, system-ui, sans-serif",
+                  }}
+                >
+                  {t("heroParagraph")}
+                </p>
+                <Link
+                  href="/login"
+                  className="group inline-flex items-center justify-between w-full border px-5 py-3.5 text-sm font-medium transition-all duration-300 hover:pl-6"
+                  style={{
+                    borderColor: "rgba(233,64,142,0.35)",
+                    color: "#f2ece1",
+                    fontFamily: "'Inter Tight', ui-sans-serif, system-ui, sans-serif",
+                    background:
+                      "linear-gradient(to right, rgba(233,64,142,0.06) 0%, transparent 100%)",
+                  }}
+                >
+                  <span>{t("cta")}</span>
+                  <span
+                    className="flex items-center gap-1.5 transition-transform duration-300 group-hover:translate-x-1"
+                    style={{ color: "#E9408E" }}
+                  >
+                    <span
+                      className="h-px w-4 transition-all duration-300 group-hover:w-6"
+                      style={{ background: "#E9408E" }}
+                      aria-hidden="true"
+                    />
+                    <ArrowRightIcon className="size-3.5" aria-hidden="true" />
+                  </span>
+                </Link>
               </div>
             </div>
-          ))}
+          </div>
+
+          {/* ─── Divider with label ─── */}
+          <div
+            className="mt-24 lg:mt-32 mb-12 flex items-center gap-5"
+            style={{ borderTop: "1px solid rgba(242,236,225,0.05)", paddingTop: "2rem" }}
+          >
+            <span
+              className="text-[10px] font-semibold tracking-[0.22em] uppercase shrink-0"
+              style={{
+                color: "#807870",
+                fontFamily: "'Inter Tight', ui-sans-serif, system-ui, sans-serif",
+              }}
+            >
+              {t("featuresLabel")}
+            </span>
+            <div className="h-px flex-1" style={{ background: "rgba(242,236,225,0.05)" }} />
+          </div>
+
+          {/* ─── Feature cards ─── */}
+          <div
+            className="grid sm:grid-cols-3 gap-px mb-24 lg:mb-32"
+            style={{ background: "rgba(242,236,225,0.08)" }}
+          >
+            {features.map(({ icon: Icon, num, title, desc }) => (
+              <article
+                key={num}
+                className="group relative flex flex-col gap-6 p-8 xl:p-10 transition-colors duration-300"
+                style={{ background: "#010101" }}
+              >
+                {/* Hover fill */}
+                <div
+                  className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+                  style={{ background: "rgba(233,64,142,0.03)" }}
+                  aria-hidden="true"
+                />
+                {/* Top accent line */}
+                <div
+                  className="absolute inset-x-0 top-0 h-px origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500"
+                  style={{ background: "#E9408E" }}
+                  aria-hidden="true"
+                />
+
+                <div className="flex items-start justify-between">
+                  <div
+                    className="flex h-9 w-9 items-center justify-center border transition-colors duration-300 group-hover:border-[rgba(233,64,142,0.4)]"
+                    style={{
+                      borderColor: "rgba(242,236,225,0.15)",
+                      background: "rgba(242,236,225,0.03)",
+                    }}
+                  >
+                    <Icon
+                      className="size-4 transition-colors duration-300 group-hover:text-[#E9408E]"
+                      aria-hidden="true"
+                      style={{ color: "#b8b0a3" }}
+                    />
+                  </div>
+                  <span
+                    className="font-mono text-4xl font-bold leading-none select-none transition-colors duration-300 group-hover:opacity-60"
+                    style={{
+                      color: "rgba(242,236,225,0.06)",
+                      fontFamily: "'JetBrains Mono', 'Courier New', monospace",
+                    }}
+                  >
+                    {num}
+                  </span>
+                </div>
+
+                <div>
+                  <h2
+                    className="text-sm font-semibold mb-2 transition-colors duration-300"
+                    style={{
+                      color: "#f2ece1",
+                      fontFamily: "'Inter Tight', ui-sans-serif, system-ui, sans-serif",
+                    }}
+                  >
+                    {title}
+                  </h2>
+                  <p
+                    className="text-sm leading-relaxed"
+                    style={{
+                      color: "#807870",
+                      fontFamily: "'Inter Tight', ui-sans-serif, system-ui, sans-serif",
+                    }}
+                  >
+                    {desc}
+                  </p>
+                </div>
+              </article>
+            ))}
+          </div>
         </div>
       </main>
 
-      {/* ── Footer ── */}
-      <footer className="relative z-10 border-t border-zinc-800/60 px-6 py-6 sm:px-10 lg:px-16">
-        <div className="mx-auto flex max-w-6xl items-center justify-between">
-          <p className="text-xs text-zinc-600">{t("footer")}</p>
-          <div className="size-1.5 rounded-full bg-[#8B3A62]" aria-hidden="true" />
+      {/* ─── Footer ─── */}
+      <footer
+        className="relative z-10 px-6 sm:px-10 lg:px-16 xl:px-20 py-6"
+        style={{ borderTop: "1px solid rgba(242,236,225,0.05)" }}
+      >
+        <div className="mx-auto max-w-[1320px] flex items-center justify-between">
+          <p
+            className="text-xs"
+            style={{
+              color: "#2a2724",
+              fontFamily: "'Inter Tight', ui-sans-serif, system-ui, sans-serif",
+            }}
+          >
+            {t("footer")}
+          </p>
+          <div
+            className="h-px w-8"
+            style={{ background: "rgba(233,64,142,0.3)" }}
+            aria-hidden="true"
+          />
         </div>
       </footer>
     </div>
