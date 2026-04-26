@@ -29,7 +29,7 @@ export default async function LandingPage() {
 
   return (
     <div
-      className="relative min-h-dvh overflow-hidden"
+      className="relative min-h-dvh overflow-hidden flex flex-col"
       style={{ background: "#010101", color: "#f2ece1" }}
     >
       {/* ─── Grain overlay ─── */}
@@ -130,7 +130,7 @@ export default async function LandingPage() {
       </header>
 
       {/* ─── Hero ─── */}
-      <main className="relative z-10">
+      <main className="relative z-10 flex-1">
         <div className="mx-auto max-w-[1320px] px-6 sm:px-10 lg:px-16 xl:px-20">
           {/* Eyebrow */}
           <div className="pt-16 sm:pt-20 lg:pt-28">
