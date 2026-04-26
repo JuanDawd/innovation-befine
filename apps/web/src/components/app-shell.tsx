@@ -30,7 +30,6 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -88,15 +87,30 @@ function CompanyStrip() {
   );
 }
 
-/** Avatar + dropdown menu (theme switch + profile link). */
-function UserMenu({ userName }: { userName: string }) {
+const ROLE_LABELS: Record<AppRole, string> = {
+  cashier_admin: "Admin",
+  secretary: "Secretaria",
+  stylist: "Estilista",
+  clothier: "Confeccionista",
+};
+
+/** Avatar + dropdown menu (profile, theme switch, logout). */
+function UserMenu({
+  userName,
+  role,
+  onLogout,
+}: {
+  userName: string;
+  role: AppRole;
+  onLogout: () => void;
+}) {
   const t = useTranslations();
   const { theme, setTheme } = useTheme();
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        aria-label={t("nav.settings")}
+        aria-label={t("nav.openUserMenu")}
         className="flex min-w-0 flex-1 items-center gap-2.5 rounded-md p-1 text-left outline-none transition-colors hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-sidebar-ring"
       >
         <UserInitials name={userName} />
@@ -105,30 +119,41 @@ function UserMenu({ userName }: { userName: string }) {
         </span>
       </DropdownMenuTrigger>
       <DropdownMenuContent side="top" align="start" className="w-56">
+        <div className="px-3 py-2">
+          <p className="truncate text-sm font-medium">{userName}</p>
+          <p className="text-xs text-muted-foreground">{ROLE_LABELS[role]}</p>
+        </div>
+        <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuLabel className="truncate">{userName}</DropdownMenuLabel>
           <DropdownMenuItem render={<Link href="/profile" />} className="cursor-pointer">
             <UserRound className="size-4" aria-hidden="true" />
-            {t("nav.settings")}
+            {t("nav.profile")}
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            closeOnClick={false}
+            className="cursor-pointer"
+          >
+            {theme === "dark" ? (
+              <>
+                <Sun className="size-4" aria-hidden="true" />
+                {t("nav.themeLight")}
+              </>
+            ) : (
+              <>
+                <Moon className="size-4" aria-hidden="true" />
+                {t("nav.themeDark")}
+              </>
+            )}
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          closeOnClick={false}
-          className="cursor-pointer"
+          onClick={onLogout}
+          className="cursor-pointer text-destructive focus:text-destructive"
         >
-          {theme === "dark" ? (
-            <>
-              <Sun className="size-4" aria-hidden="true" />
-              Tema claro
-            </>
-          ) : (
-            <>
-              <Moon className="size-4" aria-hidden="true" />
-              Tema oscuro
-            </>
-          )}
+          <LogOut className="size-4" aria-hidden="true" />
+          {t("auth.logout")}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -262,17 +287,10 @@ export function AppShell({
       <div className="flex h-dvh flex-col overflow-hidden bg-background">
         {/* Floating utility pill (mobile top-right) */}
         <div className="fixed right-3 top-3 z-30 flex items-center gap-1.5 rounded-full border border-border bg-background/90 px-1.5 py-1 shadow-sm backdrop-blur">
-          <UserMenu userName={userName} />
+          <UserMenu userName={userName} role={role} onLogout={handleLogout} />
           {employeeId && (
             <NotificationBell employeeId={employeeId} initialNotifications={initialNotifications} />
           )}
-          <button
-            onClick={handleLogout}
-            className="flex size-8 items-center justify-center rounded-full text-foreground/60 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            aria-label={t("auth.logout")}
-          >
-            <LogOut className="size-4" aria-hidden="true" />
-          </button>
         </div>
 
         <VersionBanner />
@@ -317,7 +335,7 @@ export function AppShell({
 
         <SidebarFooter className="gap-2">
           <div className="flex items-center gap-1 group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:gap-2">
-            <UserMenu userName={userName} />
+            <UserMenu userName={userName} role={role} onLogout={handleLogout} />
             {employeeId && (
               <NotificationBell
                 employeeId={employeeId}
@@ -325,13 +343,6 @@ export function AppShell({
                 side="top"
               />
             )}
-            <button
-              onClick={handleLogout}
-              className="flex size-8 shrink-0 items-center justify-center rounded-md text-sidebar-foreground/60 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
-              aria-label={t("auth.logout")}
-            >
-              <LogOut className="size-4" aria-hidden="true" />
-            </button>
             <SidebarTrigger
               className="ml-auto hidden size-8 shrink-0 text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground md:flex group-data-[collapsible=icon]:ml-0"
               aria-label={t("nav.openMenu")}

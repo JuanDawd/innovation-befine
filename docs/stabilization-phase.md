@@ -236,7 +236,7 @@ Test:
 
 ## Task: Remove "Disponible en Fase X" placeholders
 
-Status: pending
+Status: done
 Type: ux
 
 Scope:
@@ -261,7 +261,7 @@ Test:
 
 ## Task: Remove "Configuración" sidebar entry until implemented
 
-Status: pending
+Status: done
 Type: ux
 
 Scope:
@@ -285,7 +285,7 @@ Test:
 
 ## Task: Expand user menu with profile and logout entries
 
-Status: pending
+Status: done
 Type: ux
 
 Scope:
@@ -309,7 +309,7 @@ Test:
 
 ## Task: Remove fixed-position logout button from sidebar footer
 
-Status: pending
+Status: done
 Type: ux
 
 Scope:

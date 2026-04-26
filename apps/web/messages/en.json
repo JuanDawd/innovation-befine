@@ -676,12 +676,15 @@
     "myEarnings": "My earnings",
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
+    "openUserMenu": "Open user menu",
+    "profile": "My profile",
+    "themeLight": "Light theme",
+    "themeDark": "Dark theme",
     "groupCore": "Main",
     "groupOperations": "Operations",
     "groupPeople": "People",
     "groupFinance": "Finance",
-    "groupManagement": "Management",
-    "groupSystem": "System"
+    "groupManagement": "Management"
   },
   "sync": {
     "offlineTitle": "You're offline",

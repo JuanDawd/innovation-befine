@@ -9,7 +9,6 @@
 import {
   LayoutDashboard,
   Users,
-  Settings,
   CalendarDays,
   CalendarOff,
   ClipboardList,
@@ -45,7 +44,6 @@ export const NAV_ITEMS: Record<AppRole, NavItem[]> = {
     { key: "absences", href: "/admin/absences", icon: CalendarOff },
     { key: "payroll", href: "/admin/payroll", icon: Wallet },
     { key: "analytics", href: "/admin/analytics", icon: BarChart3 },
-    { key: "settings", href: "/admin/settings", icon: Settings, disabled: true },
   ],
   secretary: [
     { key: "dashboard", href: "/secretary", icon: LayoutDashboard },
@@ -53,7 +51,6 @@ export const NAV_ITEMS: Record<AppRole, NavItem[]> = {
     { key: "batches", href: "/secretary/batches", icon: Layers },
     { key: "appointments", href: "/secretary/appointments", icon: CalendarDays },
     { key: "myEarnings", href: "/secretary/earnings", icon: Wallet },
-    { key: "clients", href: "/secretary/clients", icon: Users, disabled: true },
   ],
   stylist: [
     { key: "myTickets", href: "/stylist", icon: ClipboardList },
@@ -85,10 +82,6 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     labelKey: "groupManagement",
     items: ["catalog", "absences", "analytics"],
-  },
-  {
-    labelKey: "groupSystem",
-    items: ["settings"],
   },
 ];
 

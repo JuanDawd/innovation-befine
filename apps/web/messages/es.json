@@ -710,12 +710,15 @@
     "myEarnings": "Mis ganancias",
     "openMenu": "Abrir menú",
     "closeMenu": "Cerrar menú",
+    "openUserMenu": "Abrir menú de usuario",
+    "profile": "Mi perfil",
+    "themeLight": "Tema claro",
+    "themeDark": "Tema oscuro",
     "groupCore": "Principal",
     "groupOperations": "Operaciones",
     "groupPeople": "Personas",
     "groupFinance": "Finanzas",
-    "groupManagement": "Gestión",
-    "groupSystem": "Sistema"
+    "groupManagement": "Gestión"
   },
   "sync": {
     "offlineTitle": "Sin conexión",
