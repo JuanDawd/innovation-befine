@@ -21,6 +21,15 @@ import {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Next.js prefetch requests don't carry cookies — skip auth so they don't
+  // get redirected to /login and poison the router cache with a bad entry.
+  if (
+    request.headers.get("next-router-prefetch") === "1" ||
+    request.headers.get("purpose") === "prefetch"
+  ) {
+    return NextResponse.next();
+  }
+
   if (isPublic(pathname) || isShared(pathname)) {
     if (pathname === "/login") {
       const session = await auth.api.getSession({ headers: request.headers });
