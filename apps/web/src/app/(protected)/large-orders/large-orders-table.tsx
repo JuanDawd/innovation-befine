@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { ShoppingBagIcon } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { EmptyState } from "@/components/ui/empty-state";
 import type { LargeOrderListRow } from "./actions";
 
 type Props = { orders: LargeOrderListRow[] };
@@ -27,11 +28,11 @@ export function LargeOrdersTable({ orders }: Props) {
 
   if (orders.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-center gap-3">
-        <ShoppingBagIcon className="h-12 w-12 text-muted-foreground" />
-        <p className="text-lg font-semibold">{t("emptyTitle")}</p>
-        <p className="text-sm text-muted-foreground">{t("emptyDescription")}</p>
-      </div>
+      <EmptyState
+        icon={ShoppingBagIcon}
+        title={t("emptyTitle")}
+        description={t("emptyDescription")}
+      />
     );
   }
 

@@ -7,20 +7,10 @@
  * When no business day is open, renders an empty state instead of zero-stats.
  */
 
-import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useState, useCallback, useTransition } from "react";
-import {
-  TrendingUpIcon,
-  TicketIcon,
-  ReceiptIcon,
-  UsersIcon,
-  BookOpenIcon,
-  CheckCircleIcon,
-  CalendarCheckIcon,
-} from "lucide-react";
+import { TrendingUpIcon, TicketIcon, CheckCircleIcon, CalendarCheckIcon } from "lucide-react";
 import { useRealtimeEvent } from "@befine/realtime/client";
-import { buttonVariants } from "@/components/ui/button-variants";
 import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
 import { listOpenTickets } from "@/app/(protected)/tickets/actions";
@@ -72,25 +62,6 @@ function StatCard({
       </p>
       {sub && <p className="border-t border-border/60 pt-2 text-xs text-muted-foreground">{sub}</p>}
     </div>
-  );
-}
-
-// ─── Quick action link ────────────────────────────────────────────────────────
-
-function QuickAction({
-  href,
-  icon: Icon,
-  label,
-}: {
-  href: string;
-  icon: React.ElementType;
-  label: string;
-}) {
-  return (
-    <Link href={href} className={buttonVariants({ variant: "outline" })}>
-      <Icon className="mr-2 size-4" aria-hidden="true" />
-      {label}
-    </Link>
   );
 }
 
@@ -149,24 +120,6 @@ export function DayAtAGlance({
           value={String(closedCount)}
           sub={t("closedTicketsSub")}
         />
-      </div>
-
-      {/* Quick actions */}
-      <div>
-        <p className="mb-3 text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground">
-          <span className="font-serif italic text-primary">§ </span>
-          {t("quickActions")}
-        </p>
-        <div className="flex flex-wrap gap-2">
-          <QuickAction
-            href="/cashier/tickets/history"
-            icon={ReceiptIcon}
-            label={t("actionHistory")}
-          />
-          <QuickAction href="/admin/employees" icon={UsersIcon} label={t("actionEmployees")} />
-          <QuickAction href="/admin/catalog" icon={BookOpenIcon} label={t("actionCatalog")} />
-          <QuickAction href="/admin/payroll" icon={TrendingUpIcon} label={t("actionPayroll")} />
-        </div>
       </div>
     </div>
   );

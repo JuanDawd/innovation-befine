@@ -105,17 +105,14 @@ export default async function CashierHomePage() {
           </>
         }
       />
-
       {/* Business day panel */}
       <div className="max-w-sm">
         <BusinessDayPanel currentDay={currentDay} lastClosedDay={lastClosedDay} />
       </div>
-
       {/* Pending edit requests — T041 */}
       <Suspense fallback={<PendingEditRequestsSkeleton />}>
         <EditRequestsPanel />
       </Suspense>
-
       {/* Day-at-a-glance stats + ticket board */}
       <Suspense fallback={<StatsAndBoardSkeleton />}>
         <StatsAndBoard />

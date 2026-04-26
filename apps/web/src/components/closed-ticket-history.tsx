@@ -22,6 +22,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/loading-skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   Dialog,
   DialogContent,
@@ -230,12 +231,7 @@ export function ClosedTicketHistory({
 
       {/* Ticket list */}
       {!isPending && tickets.length === 0 && (
-        <div className="flex flex-col items-center gap-2 py-12 text-center">
-          <ReceiptIcon className="size-10 text-muted-foreground/40" aria-hidden="true" />
-          <p className="text-sm font-medium text-muted-foreground">
-            {search ? t("emptySearch") : t("emptyDay")}
-          </p>
-        </div>
+        <EmptyState icon={ReceiptIcon} title={search ? t("emptySearch") : t("emptyDay")} />
       )}
 
       {!isPending && tickets.length > 0 && (

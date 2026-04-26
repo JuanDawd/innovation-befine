@@ -11,6 +11,7 @@ import { useState, useTransition, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { CheckCircle2Icon, Loader2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   listPendingApprovals,
   approvePiece,
@@ -78,12 +79,7 @@ export function BatchApprovalBoard({ isAdmin }: { isAdmin: boolean }) {
   }
 
   if (pending.length === 0 && directApprovable.length === 0) {
-    return (
-      <div className="flex items-center gap-2 py-6 text-sm text-muted-foreground">
-        <CheckCircle2Icon className="h-4 w-4" />
-        {t("noApprovals")}
-      </div>
-    );
+    return <EmptyState icon={CheckCircle2Icon} title={t("noApprovals")} />;
   }
 
   const allRows = [...pending, ...(isAdmin ? directApprovable : [])];

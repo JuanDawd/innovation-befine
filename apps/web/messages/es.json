@@ -325,7 +325,9 @@
     "commission": "Comisión",
     "markReady": "Listo para cobrar",
     "markReadyError": "No se pudo actualizar el ticket",
-    "alreadyReady": "Ya listo para cobrar"
+    "alreadyReady": "Ya listo para cobrar",
+    "emptyTitle": "Sin tickets abiertos",
+    "emptyDescription": "Los servicios registrados aparecerán aquí."
   },
   "dayAtAGlance": {
     "revenueToday": "Ingresos hoy",

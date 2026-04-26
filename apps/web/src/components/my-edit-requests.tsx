@@ -10,6 +10,7 @@
 import { useState, useCallback, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { ClipboardListIcon, CreditCardIcon, Loader2Icon } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   listMyOpenTicketItems,
   listMyEditRequests,
@@ -96,7 +97,7 @@ export function MyEditRequests({
       <section aria-label={t("sectionTitle")}>
         <h2 className="mb-3 text-sm font-semibold">{t("sectionTitle")}</h2>
         {items.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{t("sectionEmpty")}</p>
+          <EmptyState icon={ClipboardListIcon} title={t("sectionEmpty")} />
         ) : (
           <div className="flex flex-col gap-2">
             {items.map((item) => {

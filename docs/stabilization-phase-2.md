@@ -159,7 +159,7 @@ Test:
 
 ## Task: Audit and apply EmptyState component everywhere
 
-Status: pending
+Status: done
 Type: ux
 
 Scope:

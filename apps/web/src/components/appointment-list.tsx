@@ -15,9 +15,11 @@ import {
   Loader2Icon,
   PlusIcon,
   TriangleAlertIcon,
+  CalendarDaysIcon,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   listAppointmentsForDate,
   listBookingStylists,
@@ -217,10 +219,11 @@ export function AppointmentList({ newHref }: { newHref: string }) {
       ) : error ? (
         <p className="text-sm text-destructive py-4">{error}</p>
       ) : rows.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground">
-          <p className="text-sm font-medium">{t("emptyTitle")}</p>
-          <p className="text-sm mt-1">{t("emptyDescription")}</p>
-        </div>
+        <EmptyState
+          icon={CalendarDaysIcon}
+          title={t("emptyTitle")}
+          description={t("emptyDescription")}
+        />
       ) : (
         <div className="rounded-lg border overflow-hidden">
           <table className="w-full text-sm">

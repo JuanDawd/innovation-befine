@@ -322,7 +322,11 @@
     "noCatalog": "No active services in the catalog.",
     "noStylists": "No active stylists.",
     "price": "Price",
-    "commission": "Commission"
+    "commission": "Commission",
+    "markReadyError": "Could not update the ticket",
+    "alreadyReady": "Already ready for checkout",
+    "emptyTitle": "No open tickets",
+    "emptyDescription": "Logged services will appear here."
   },
   "dayAtAGlance": {
     "revenueToday": "Revenue today",

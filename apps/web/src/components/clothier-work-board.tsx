@@ -11,6 +11,7 @@ import { useState, useTransition, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { CheckCircle2Icon, CircleIcon, Loader2Icon, PlusCircleIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   listTodayBatchPieces,
   claimPiece,
@@ -80,11 +81,11 @@ export function ClothierWorkBoard({ employeeId }: { employeeId: string }) {
 
   if (myPieces.length === 0 && available.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-3 py-16 text-center px-6">
-        <CheckCircle2Icon className="h-10 w-10 text-muted-foreground" />
-        <p className="font-semibold">{t("emptyTitle")}</p>
-        <p className="text-sm text-muted-foreground">{t("emptyDescription")}</p>
-      </div>
+      <EmptyState
+        icon={CheckCircle2Icon}
+        title={t("emptyTitle")}
+        description={t("emptyDescription")}
+      />
     );
   }
 

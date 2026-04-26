@@ -19,7 +19,8 @@ import {
   startTransition as reactStartTransition,
 } from "react";
 import { useTranslations } from "next-intl";
-import { Loader2Icon, CreditCardIcon } from "lucide-react";
+import { Loader2Icon, CreditCardIcon, TicketIcon } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useRealtimeEvent } from "@befine/realtime/client";
 import {
   listOpenTickets,
@@ -138,11 +139,7 @@ export function CashierDashboard({ initialTickets }: { initialTickets: Dashboard
 
   if (optimisticTickets.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed p-12 text-center">
-        <p className="text-sm text-muted-foreground">
-          No hay tickets abiertos — los servicios aparecerán aquí cuando se registren
-        </p>
-      </div>
+      <EmptyState icon={TicketIcon} title={tt("emptyTitle")} description={tt("emptyDescription")} />
     );
   }
 
