@@ -12,7 +12,7 @@
 
 ## Task: Remove hardcoded disabled on cashier action buttons
 
-Status: pending
+Status: done
 Type: ux
 
 Scope:

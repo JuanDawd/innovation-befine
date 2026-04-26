@@ -78,27 +78,11 @@ function QuickAction({
   href,
   icon: Icon,
   label,
-  disabled,
 }: {
   href: string;
   icon: React.ElementType;
   label: string;
-  disabled?: boolean;
 }) {
-  if (disabled) {
-    return (
-      <span
-        className={cn(
-          buttonVariants({ variant: "outline" }),
-          "opacity-40 cursor-not-allowed pointer-events-none",
-        )}
-        aria-disabled="true"
-      >
-        <Icon className="mr-2 size-4" aria-hidden="true" />
-        {label}
-      </span>
-    );
-  }
   return (
     <Link href={href} className={buttonVariants({ variant: "outline" })}>
       <Icon className="mr-2 size-4" aria-hidden="true" />
@@ -175,13 +159,7 @@ export function DayAtAGlance({ revenue, initialOpenCount, isDayOpen }: DayAtAGla
           />
           <QuickAction href="/admin/employees" icon={UsersIcon} label={t("actionEmployees")} />
           <QuickAction href="/admin/catalog" icon={BookOpenIcon} label={t("actionCatalog")} />
-          {/* Payroll — wired in T067 */}
-          <QuickAction
-            href="/admin/payroll"
-            icon={TrendingUpIcon}
-            label={t("actionPayroll")}
-            disabled
-          />
+          <QuickAction href="/admin/payroll" icon={TrendingUpIcon} label={t("actionPayroll")} />
         </div>
       </div>
     </div>
