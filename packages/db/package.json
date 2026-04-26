@@ -29,7 +29,7 @@
     "@better-auth/utils": "^0.4.0",
     "@neondatabase/serverless": "^1.0.2",
     "@types/ws": "^8.18.1",
-    "drizzle-orm": "^0.44.0",
+    "drizzle-orm": "^0.45.2",
     "ws": "^8.20.0"
   },
   "devDependencies": {
