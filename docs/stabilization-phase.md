@@ -39,7 +39,7 @@ Test:
 
 ## Task: Remove hardcoded disabled on stylist/clothier home buttons
 
-Status: pending
+Status: done
 Type: ux
 
 Scope:
