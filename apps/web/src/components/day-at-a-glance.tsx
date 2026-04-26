@@ -3,8 +3,8 @@
 /**
  * DayAtAGlance — T093
  *
- * Admin home stats panel: revenue today, open ticket count (live), quick actions.
- * Receives initial values as props; open ticket count updates via realtime events.
+ * Admin home stats panel: revenue today, open/closed ticket counts (live), quick actions.
+ * When no business day is open, renders an empty state instead of zero-stats.
  */
 
 import Link from "next/link";
@@ -16,10 +16,12 @@ import {
   ReceiptIcon,
   UsersIcon,
   BookOpenIcon,
-  AlertCircleIcon,
+  CheckCircleIcon,
+  CalendarCheckIcon,
 } from "lucide-react";
 import { useRealtimeEvent } from "@befine/realtime/client";
 import { buttonVariants } from "@/components/ui/button-variants";
+import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
 import { listOpenTickets } from "@/app/(protected)/tickets/actions";
 
@@ -27,6 +29,7 @@ import { listOpenTickets } from "@/app/(protected)/tickets/actions";
 
 interface DayAtAGlanceProps {
   revenue: number;
+  closedCount: number;
   initialOpenCount: number;
   isDayOpen: boolean;
 }
@@ -93,7 +96,12 @@ function QuickAction({
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function DayAtAGlance({ revenue, initialOpenCount, isDayOpen }: DayAtAGlanceProps) {
+export function DayAtAGlance({
+  revenue,
+  closedCount,
+  initialOpenCount,
+  isDayOpen,
+}: DayAtAGlanceProps) {
   const t = useTranslations("dayAtAGlance");
   const [openCount, setOpenCount] = useState(initialOpenCount);
   const [, startTransition] = useTransition();
@@ -108,41 +116,39 @@ export function DayAtAGlance({ revenue, initialOpenCount, isDayOpen }: DayAtAGla
   useRealtimeEvent("cashier", "ticket_created", { onData: refreshCount, onPoll: refreshCount });
   useRealtimeEvent("cashier", "ticket_updated", { onData: refreshCount, onPoll: refreshCount });
 
+  if (!isDayOpen) {
+    return (
+      <EmptyState
+        icon={CalendarCheckIcon}
+        title={t("noDayOpenTitle")}
+        description={t("noDayOpenDescription")}
+      />
+    );
+  }
+
   return (
     <div className="flex flex-col gap-6">
       {/* Stats grid */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           icon={TrendingUpIcon}
           label={t("revenueToday")}
           value={`$${revenue.toLocaleString("es-CO")}`}
-          sub={isDayOpen ? t("revenueSubOpen") : t("revenueSubClosed")}
+          sub={t("revenueSubOpen")}
           accent={revenue > 0}
         />
         <StatCard
           icon={TicketIcon}
           label={t("openTickets")}
           value={String(openCount)}
-          sub={isDayOpen ? t("openTicketsSub") : t("dayClosedSub")}
+          sub={t("openTicketsSub")}
         />
-        {/* Unsettled earnings stub — wired in T070 */}
-        <div className="flex flex-col gap-3 border-t border-border pt-5 pr-6 opacity-60">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <AlertCircleIcon className="size-3.5 shrink-0" aria-hidden="true" />
-            <span className="text-[10px] font-medium uppercase tracking-[0.22em]">
-              {t("unsettledEarnings")}
-            </span>
-          </div>
-          <p
-            className="text-5xl font-light leading-[0.95] tracking-[-0.035em] text-muted-foreground"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
-            —
-          </p>
-          <p className="border-t border-border/60 pt-2 text-xs text-muted-foreground">
-            {t("unsettledEarningsSub")}
-          </p>
-        </div>
+        <StatCard
+          icon={CheckCircleIcon}
+          label={t("closedTickets")}
+          value={String(closedCount)}
+          sub={t("closedTicketsSub")}
+        />
       </div>
 
       {/* Quick actions */}

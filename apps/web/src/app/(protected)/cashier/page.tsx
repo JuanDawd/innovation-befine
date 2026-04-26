@@ -37,12 +37,15 @@ async function StatsAndBoard() {
   const [openResult, statsResult] = await Promise.all([listOpenTickets(), getDayStats()]);
 
   const openTickets = openResult.success ? openResult.data : [];
-  const stats = statsResult.success ? statsResult.data : { revenue: 0, businessDayId: null };
+  const stats = statsResult.success
+    ? statsResult.data
+    : { revenue: 0, closedCount: 0, businessDayId: null };
 
   return (
     <>
       <DayAtAGlance
         revenue={stats.revenue}
+        closedCount={stats.closedCount}
         initialOpenCount={openTickets.length}
         isDayOpen={stats.businessDayId !== null}
       />

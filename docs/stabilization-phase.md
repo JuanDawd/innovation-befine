@@ -409,7 +409,7 @@ Test:
 
 ## Task: Cashier dashboard — promote "Abrir día" as primary CTA
 
-Status: pending
+Status: done
 Type: ux
 
 Scope:
@@ -434,7 +434,7 @@ Test:
 
 ## Task: Cashier dashboard — improve financial clarity
 
-Status: pending
+Status: done
 Type: ux
 
 Scope:
@@ -459,7 +459,7 @@ Test:
 
 ## Task: Cashier dashboard — empty state when day not opened
 
-Status: pending
+Status: done
 Type: ux
 
 Scope:
