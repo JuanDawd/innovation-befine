@@ -93,7 +93,9 @@ export function useQueueFlush(): FlushState {
   }, [refresh]);
 
   useEffect(() => {
-    refresh();
+    const id = window.setTimeout(() => {
+      void refresh();
+    }, 0);
 
     const handleOffline = () => {
       wentOfflineRef.current = true;
@@ -109,6 +111,7 @@ export function useQueueFlush(): FlushState {
     window.addEventListener("offline", handleOffline);
     window.addEventListener("online", handleOnline);
     return () => {
+      window.clearTimeout(id);
       window.removeEventListener("offline", handleOffline);
       window.removeEventListener("online", handleOnline);
     };

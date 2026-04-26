@@ -23,7 +23,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: pnpm
 
       - name: Install dependencies
@@ -58,6 +58,9 @@ jobs:
         env:
           SKIP_ENV_VALIDATION: "1"
 
+  # E2E needs repo secrets: DATABASE_URL, BETTER_AUTH_SECRET (≥32 chars), BETTER_AUTH_URL,
+  # NEXT_PUBLIC_APP_URL, RESEND_API_KEY, RESEND_FROM_EMAIL. Build uses SKIP_ENV_VALIDATION;
+  # `next start` does not — those vars must be present for the server to boot.
   e2e:
     name: E2E Tests
     runs-on: ubuntu-latest
@@ -71,7 +74,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: pnpm
 
       - name: Install dependencies
@@ -92,9 +95,11 @@ jobs:
       - name: Clean Next.js build cache
         run: rm -rf apps/web/.next
 
+      # SKIP_ENV_VALIDATION: compile-time schema skip — runtime still requires secrets for `next start` + E2E.
       - name: Build
         run: pnpm build
         env:
+          SKIP_ENV_VALIDATION: "1"
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
           BETTER_AUTH_URL: ${{ secrets.BETTER_AUTH_URL }}
@@ -112,6 +117,8 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
           BETTER_AUTH_URL: ${{ secrets.BETTER_AUTH_URL }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          RESEND_FROM_EMAIL: ${{ secrets.RESEND_FROM_EMAIL }}
           NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
 
       - name: Wait for server
@@ -123,6 +130,8 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
           BETTER_AUTH_URL: ${{ secrets.BETTER_AUTH_URL }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          RESEND_FROM_EMAIL: ${{ secrets.RESEND_FROM_EMAIL }}
           NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
           PLAYWRIGHT_BASE_URL: "http://localhost:3000"
 

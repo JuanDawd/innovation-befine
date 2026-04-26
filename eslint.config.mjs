@@ -15,6 +15,9 @@ export default tseslint.config(
       "**/.turbo/**",
       "**/coverage/**",
       "**/next-env.d.ts",
+      // Workbox / next-pwa emit minified service-worker bundles into public/
+      "apps/web/public/sw.js",
+      "apps/web/public/workbox-*.js",
     ],
   },
   js.configs.recommended,

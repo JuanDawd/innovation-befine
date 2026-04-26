@@ -84,11 +84,6 @@ export function LogServiceForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Reset variant when service changes
-  useEffect(() => {
-    setVariantId("");
-  }, [serviceId]);
-
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!variantId || !clientSelection) return;
@@ -172,7 +167,10 @@ export function LogServiceForm({
         <select
           id="ls-service"
           value={serviceId}
-          onChange={(e) => setServiceId(e.target.value)}
+          onChange={(e) => {
+            setServiceId(e.target.value);
+            setVariantId("");
+          }}
           className="flex h-8 w-full rounded-lg border border-input bg-background px-2.5 py-1 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50"
         >
           <option value="">{t("servicePlaceholder")}</option>
