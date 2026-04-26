@@ -186,7 +186,7 @@ Test:
 
 ## Task: Replace ad-hoc toasts with a single Sonner provider
 
-Status: pending
+Status: done
 Type: ux
 
 Scope:
@@ -216,7 +216,7 @@ Test:
 
 ## Task: User-facing dark mode toggle
 
-Status: pending
+Status: done
 Type: ux
 
 Scope:

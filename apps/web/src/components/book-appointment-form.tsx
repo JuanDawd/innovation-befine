@@ -68,7 +68,7 @@ export function BookAppointmentForm({ redirectPath }: { redirectPath: string }) 
   const [durationMinutes, setDurationMinutes] = useState(60);
 
   const [isPending, startSubmitTransition] = useTransition();
-  const { toast, setToast } = useToast();
+  const { showToast } = useToast();
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -133,14 +133,14 @@ export function BookAppointmentForm({ redirectPath }: { redirectPath: string }) 
               minute: "2-digit",
             },
           );
-          setToast({ type: "error", message: t("conflictError", { time: conflictTime }) });
+          showToast("error", t("conflictError", { time: conflictTime }));
         } else {
-          setToast({ type: "error", message: result.error.message || t("submitError") });
+          showToast("error", result.error.message || t("submitError"));
         }
         return;
       }
 
-      setToast({ type: "success", message: t("submitSuccess") });
+      showToast("success", t("submitSuccess"));
       setTimeout(() => router.push(redirectPath), 1200);
     });
   }
@@ -260,20 +260,6 @@ export function BookAppointmentForm({ redirectPath }: { redirectPath: string }) 
           </p>
         )}
       </div>
-
-      {/* Toast feedback */}
-      {toast && (
-        <p
-          className={`text-sm rounded-md px-3 py-2 ${
-            toast.type === "success"
-              ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300"
-              : "bg-destructive/10 text-destructive"
-          }`}
-          role="status"
-        >
-          {toast.message}
-        </p>
-      )}
 
       {/* Submit */}
       <Button onClick={handleSubmit} disabled={isPending} className="self-start">

@@ -14,6 +14,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import * as Sentry from "@sentry/nextjs";
+import { toast } from "sonner";
 import { UserIcon, UserXIcon, PencilIcon, Loader2Icon, CheckIcon, XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -89,7 +90,6 @@ export function EmployeeList({ initialEmployees }: EmployeeListProps) {
   const [terminateError, setTerminateError] = useState<string | null>(null);
   const [computedTermination, setComputedTermination] = useState<number | null>(null);
   const [isPending, startTransition] = useTransition();
-  const [toastMsg, setToastMsg] = useState<string | null>(null);
 
   const {
     register,
@@ -117,11 +117,6 @@ export function EmployeeList({ initialEmployees }: EmployeeListProps) {
     setEditOpen(true);
   }
 
-  function showToast(msg: string) {
-    setToastMsg(msg);
-    setTimeout(() => setToastMsg(null), 3000);
-  }
-
   async function onEditSubmit(data: EditInput) {
     if (!editTarget) return;
     setEditError(null);
@@ -129,7 +124,7 @@ export function EmployeeList({ initialEmployees }: EmployeeListProps) {
     if (result.success) {
       setEmployees((prev) => prev.map((e) => (e.id === editTarget.id ? result.data : e)));
       setEditOpen(false);
-      showToast(t("editSuccess"));
+      toast.success(t("editSuccess"));
     } else {
       Sentry.addBreadcrumb({ category: "ui.toast", message: result.error.message, level: "error" });
       setEditError(result.error.message);
@@ -158,7 +153,7 @@ export function EmployeeList({ initialEmployees }: EmployeeListProps) {
               : e,
           ),
         );
-        showToast(t("deactivateSuccess"));
+        toast.success(t("deactivateSuccess"));
         return;
       }
       // T022b: unsettled earnings → open termination dialog
@@ -208,7 +203,7 @@ export function EmployeeList({ initialEmployees }: EmployeeListProps) {
           ),
         );
         setTerminateOpen(false);
-        showToast(t("terminateSuccess"));
+        toast.success(t("terminateSuccess"));
       } else {
         Sentry.addBreadcrumb({
           category: "ui.toast",
@@ -228,16 +223,6 @@ export function EmployeeList({ initialEmployees }: EmployeeListProps) {
 
   return (
     <div className="space-y-4">
-      {/* Toast */}
-      {toastMsg && (
-        <div
-          role="status"
-          className="rounded-md bg-green-50 px-3 py-2 text-sm text-green-700 dark:bg-green-900/20 dark:text-green-400"
-        >
-          {toastMsg}
-        </div>
-      )}
-
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
         <select

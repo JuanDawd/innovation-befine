@@ -1,21 +1,17 @@
-import { useState, useCallback } from "react";
+import { useCallback } from "react";
+import { toast as sonner } from "sonner";
 import * as Sentry from "@sentry/nextjs";
 
-export type ToastState = { type: "success" | "error"; message: string } | null;
-
+/** Thin wrapper so callers use a consistent API and get Sentry breadcrumbs on errors. */
 export function useToast() {
-  const [toast, setToastState] = useState<ToastState>(null);
-
-  const setToast = useCallback((next: ToastState) => {
-    if (next?.type === "error") {
-      Sentry.addBreadcrumb({
-        category: "ui.toast",
-        message: next.message,
-        level: "error",
-      });
+  const showToast = useCallback((type: "success" | "error", message: string) => {
+    if (type === "error") {
+      Sentry.addBreadcrumb({ category: "ui.toast", message, level: "error" });
+      sonner.error(message, { duration: 6000 });
+    } else {
+      sonner.success(message, { duration: 4000 });
     }
-    setToastState(next);
   }, []);
 
-  return { toast, setToast };
+  return { showToast };
 }

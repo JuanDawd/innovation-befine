@@ -52,7 +52,7 @@ export function CreateBatchForm({
   ]);
   const [nextKey, setNextKey] = useState(1);
   const [isPending, startSubmitTransition] = useTransition();
-  const { toast, setToast } = useToast();
+  const { showToast } = useToast();
 
   useEffect(() => {
     startLoadTransition(async () => {
@@ -89,7 +89,7 @@ export function CreateBatchForm({
   function handleSubmit() {
     const invalidLine = lines.find((l) => !l.clothPieceId);
     if (invalidLine) {
-      setToast({ type: "error", message: "Selecciona el tipo de pieza en cada fila." });
+      showToast("error", "Selecciona el tipo de pieza en cada fila.");
       return;
     }
 
@@ -104,11 +104,11 @@ export function CreateBatchForm({
       });
 
       if (!result.success) {
-        setToast({ type: "error", message: result.error.message || t("submitError") });
+        showToast("error", result.error.message || t("submitError"));
         return;
       }
 
-      setToast({ type: "success", message: t("submitSuccess") });
+      showToast("success", t("submitSuccess"));
       setTimeout(() => router.push(redirectPath), 1000);
     });
   }
@@ -244,20 +244,6 @@ export function CreateBatchForm({
           {t("addPiece")}
         </Button>
       </div>
-
-      {/* Toast */}
-      {toast && (
-        <p
-          className={`text-sm rounded-md px-3 py-2 ${
-            toast.type === "success"
-              ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300"
-              : "bg-destructive/10 text-destructive"
-          }`}
-          role="status"
-        >
-          {toast.message}
-        </p>
-      )}
 
       {/* Submit */}
       <Button onClick={handleSubmit} disabled={isPending} className="self-start">

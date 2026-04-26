@@ -48,7 +48,7 @@ export function LogServiceForm({
   const [services, setServices] = useState<Service[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isLoading, startLoadTransition] = useTransition();
-  const { toast, setToast } = useToast();
+  const { showToast } = useToast();
 
   const [employeeId, setEmployeeId] = useState(currentEmployeeId);
   const [serviceId, setServiceId] = useState("");
@@ -106,10 +106,10 @@ export function LogServiceForm({
     startSubmitTransition(async () => {
       const result = await createTicket(input);
       if (result.success) {
-        setToast({ type: "success", message: t("submitSuccess") });
+        showToast("success", t("submitSuccess"));
         setTimeout(() => router.push(redirectPath), 1200);
       } else {
-        setToast({ type: "error", message: result.error.message ?? t("submitError") });
+        showToast("error", result.error.message ?? t("submitError"));
       }
     });
   }
@@ -142,20 +142,6 @@ export function LogServiceForm({
 
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-5">
-      {/* Toast */}
-      {toast && (
-        <div
-          role="status"
-          className={
-            toast.type === "success"
-              ? "rounded-md bg-green-50 px-3 py-2 text-sm text-green-700 dark:bg-green-900/20 dark:text-green-400"
-              : "rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive"
-          }
-        >
-          {toast.message}
-        </div>
-      )}
-
       {/* Employee selector — staff only */}
       {!isStylist && (
         <div className="space-y-1.5">

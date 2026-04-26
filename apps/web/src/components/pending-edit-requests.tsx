@@ -9,6 +9,7 @@
 
 import { useState, useCallback, useTransition } from "react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import { CheckIcon, XIcon, ClipboardEditIcon } from "lucide-react";
 import { useRealtimeEvent } from "@befine/realtime/client";
 import {
@@ -30,7 +31,6 @@ export function PendingEditRequests({
   const t = useTranslations("editRequests");
   const [requests, setRequests] = useState<PendingEditRequest[]>(initialRequests);
   const [resolving, setResolving] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
   const refresh = useCallback(() => {
@@ -47,19 +47,14 @@ export function PendingEditRequests({
 
   async function handleResolve(id: string, decision: "approved" | "rejected") {
     setResolving(id);
-    setError(null);
     const result = await resolveEditRequest(id, decision);
     setResolving(null);
     if (!result.success) {
-      setError(t("resolveError"));
+      toast.error(t("resolveError"));
       return;
     }
-    const successMsg = decision === "approved" ? t("approveSuccess") : t("rejectSuccess");
-    // Remove from local list immediately
     setRequests((prev) => prev.filter((r) => r.id !== id));
-    // Show brief inline feedback via title update (toast would need a provider)
-    // We rely on the notification system (T048) to notify the requester
-    void successMsg; // consumed by notification
+    toast.success(decision === "approved" ? t("approveSuccess") : t("rejectSuccess"));
   }
 
   if (requests.length === 0) {
@@ -80,8 +75,6 @@ export function PendingEditRequests({
           {requests.length}
         </span>
       </h2>
-
-      {error && <p className="mb-2 text-sm text-destructive">{error}</p>}
 
       <div className="flex flex-col gap-2">
         {requests.map((req) => (

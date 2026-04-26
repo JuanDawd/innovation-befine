@@ -14,6 +14,7 @@
 
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import { CalendarCheckIcon, CalendarXIcon, Loader2Icon, RotateCcwIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -43,8 +44,6 @@ export function BusinessDayPanel({ currentDay, lastClosedDay }: BusinessDayPanel
   const tCommon = useTranslations("common");
 
   const [isPending, startTransition] = useTransition();
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   // Reopen dialog state
   const [reopenOpen, setReopenOpen] = useState(false);
@@ -53,32 +52,25 @@ export function BusinessDayPanel({ currentDay, lastClosedDay }: BusinessDayPanel
 
   const isOpen = currentDay !== null;
 
-  function clearMessages() {
-    setErrorMsg(null);
-    setSuccessMsg(null);
-  }
-
   function handleOpen() {
-    clearMessages();
     startTransition(async () => {
       const result = await openBusinessDay();
       if (result.success) {
-        setSuccessMsg(t("openSuccess"));
+        toast.success(t("openSuccess"));
       } else {
-        setErrorMsg(result.error.message);
+        toast.error(result.error.message);
       }
     });
   }
 
   function handleClose() {
     if (!currentDay) return;
-    clearMessages();
     startTransition(async () => {
       const result = await closeBusinessDay(currentDay.id);
       if (result.success) {
-        setSuccessMsg(t("closeSuccess"));
+        toast.success(t("closeSuccess"));
       } else {
-        setErrorMsg(result.error.message);
+        toast.error(result.error.message);
       }
     });
   }
@@ -89,18 +81,17 @@ export function BusinessDayPanel({ currentDay, lastClosedDay }: BusinessDayPanel
       return;
     }
     setReopenReasonError(null);
-    clearMessages();
     startTransition(async () => {
       const result = await reopenBusinessDay({ reason: reopenReason });
       if (result.success) {
-        setSuccessMsg(t("reopenSuccess"));
+        toast.success(t("reopenSuccess"));
         setReopenOpen(false);
         setReopenReason("");
       } else {
         if (result.error.details) {
           setReopenReasonError(result.error.details[0]?.message ?? result.error.message);
         } else {
-          setErrorMsg(result.error.message);
+          toast.error(result.error.message);
           setReopenOpen(false);
         }
       }
@@ -147,24 +138,6 @@ export function BusinessDayPanel({ currentDay, lastClosedDay }: BusinessDayPanel
           )}
         </div>
       </div>
-
-      {/* Feedback messages */}
-      {errorMsg && (
-        <p
-          className="mb-3 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive"
-          role="alert"
-        >
-          {errorMsg}
-        </p>
-      )}
-      {successMsg && (
-        <p
-          className="mb-3 rounded-md bg-green-50 px-3 py-2 text-sm text-green-700 dark:bg-green-900/20 dark:text-green-400"
-          role="status"
-        >
-          {successMsg}
-        </p>
-      )}
 
       {/* Actions */}
       <div className="flex flex-col gap-2 sm:flex-row">
