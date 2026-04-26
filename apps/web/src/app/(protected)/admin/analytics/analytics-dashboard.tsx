@@ -24,8 +24,11 @@ import {
   ChevronUpIcon,
   Loader2Icon,
   DownloadIcon,
+  BarChart3Icon,
+  AlertCircleIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useRealtimeEvent } from "@befine/realtime/client";
 import {
   getAnalyticsSummary,
@@ -42,15 +45,18 @@ function formatCOP(n: number): string {
   return "$" + n.toLocaleString("es-CO");
 }
 
-function delta(current: number, prior: number): { pct: number; dir: "up" | "down" | "flat" } {
-  if (prior === 0) return { pct: 0, dir: "flat" };
+function delta(
+  current: number,
+  prior: number,
+): { pct: number | null; dir: "up" | "down" | "flat" } {
+  if (prior === 0) return { pct: null, dir: "flat" };
   const pct = ((current - prior) / prior) * 100;
   return { pct: Math.abs(pct), dir: pct > 0 ? "up" : pct < 0 ? "down" : "flat" };
 }
 
 function DeltaIndicator({ current, prior }: { current: number; prior: number }) {
   const { pct, dir } = delta(current, prior);
-  if (dir === "flat" && prior === 0) return null;
+  if (pct === null) return null;
   return (
     <span
       className={`inline-flex items-center gap-0.5 text-xs font-semibold ${
@@ -68,7 +74,7 @@ function DeltaIndicator({ current, prior }: { current: number; prior: number }) 
       ) : (
         <MinusIcon className="size-3" />
       )}
-      {dir === "flat" ? "—" : `${pct.toFixed(1)}%`}
+      {pct === null || dir === "flat" ? "—" : `${pct.toFixed(1)}%`}
     </span>
   );
 }
@@ -415,8 +421,12 @@ export function AnalyticsDashboard({ initialData }: { initialData: AnalyticsSumm
   const isEmpty =
     data.current.revenue === 0 && data.current.jobs === 0 && data.current.earnings === 0;
 
+  const totalDays = period === "day" ? 1 : period === "week" ? 7 : new Date().getDate();
+  const daysWithData = data.dailyBreakdown.filter((d) => d.revenue > 0).length;
+  const isSparse = !isEmpty && totalDays > 1 && daysWithData / totalDays < 0.5;
+
   return (
-    <div className="space-y-6 print:space-y-4">
+    <div className="space-y-8 print:space-y-4">
       {/* Period tabs + CSV download */}
       <div className="flex flex-wrap items-center gap-2 print:hidden">
         <div className="flex gap-1 rounded-lg border p-1 w-fit">
@@ -440,7 +450,8 @@ export function AnalyticsDashboard({ initialData }: { initialData: AnalyticsSumm
           variant="outline"
           size="sm"
           onClick={downloadCsv}
-          disabled={csvPending || isPending}
+          disabled={csvPending || isPending || isEmpty}
+          title={isEmpty ? t("csvDisabledTooltip") : undefined}
         >
           {csvPending ? (
             <Loader2Icon className="size-4 animate-spin mr-1.5" aria-hidden="true" />
@@ -451,11 +462,20 @@ export function AnalyticsDashboard({ initialData }: { initialData: AnalyticsSumm
         </Button>
       </div>
 
-      {isEmpty && (
-        <div className="rounded-xl border border-dashed p-12 text-center space-y-2">
-          <p className="text-sm font-medium text-muted-foreground">{t("emptyTitle")}</p>
-          <p className="text-xs text-muted-foreground">{t("emptyDescription")}</p>
+      {/* Sparse-data informational banner */}
+      {isSparse && (
+        <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-300">
+          <AlertCircleIcon className="size-4 mt-0.5 shrink-0" aria-hidden="true" />
+          <span>{t("sparseData", { daysWithData, totalDays })}</span>
         </div>
+      )}
+
+      {isEmpty && (
+        <EmptyState
+          icon={BarChart3Icon}
+          title={t("emptyTitle")}
+          description={t("emptyDescription")}
+        />
       )}
 
       {!isEmpty && (

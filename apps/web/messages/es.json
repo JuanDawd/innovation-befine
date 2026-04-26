@@ -598,7 +598,9 @@
     "includeInactive": "Incluir inactivos",
     "noEmployeeData": "Sin datos de empleados para este período",
     "emptyTitle": "Sin datos de ingresos",
-    "emptyDescription": "No hay ingresos para este período — cierra tickets para ver los totales",
+    "emptyDescription": "No hay días laborales cerrados para este período. Cierra tickets para ver los totales.",
+    "csvDisabledTooltip": "Sin datos para exportar",
+    "sparseData": "{daysWithData} de {totalDays} días tienen datos en este período",
     "downloadCsv": "Descargar CSV"
   },
   "absences": {

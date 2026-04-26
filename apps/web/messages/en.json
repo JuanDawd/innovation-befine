@@ -564,7 +564,9 @@
     "includeInactive": "Include inactive",
     "noEmployeeData": "No employee data for this period",
     "emptyTitle": "No revenue data yet",
-    "emptyDescription": "No revenue data for this period — close tickets to see daily totals",
+    "emptyDescription": "No closed business days for this period. Close tickets to see totals.",
+    "csvDisabledTooltip": "No data to export",
+    "sparseData": "{daysWithData} of {totalDays} days have data in this period",
     "downloadCsv": "Download CSV"
   },
   "absences": {

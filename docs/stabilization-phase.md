@@ -482,7 +482,7 @@ Test:
 
 ## Task: Analytics — add page container max-width
 
-Status: pending
+Status: done
 Type: ux
 
 Scope:
@@ -505,7 +505,7 @@ Test:
 
 ## Task: Analytics — empty state redesign
 
-Status: pending
+Status: done
 Type: ux
 
 Scope:
@@ -529,7 +529,7 @@ Test:
 
 ## Task: Analytics — state-aware messaging per range
 
-Status: pending
+Status: done
 Type: ux
 
 Scope:
@@ -554,7 +554,7 @@ Test:
 
 ## Task: Analytics — disable CSV export when no data
 
-Status: pending
+Status: done
 Type: ux
 
 Scope:
@@ -578,7 +578,7 @@ Test:
 
 ## Task: Analytics — fix layout spacing on stat blocks
 
-Status: pending
+Status: done
 Type: ux
 
 Scope:
@@ -602,7 +602,7 @@ Test:
 
 ## Task: Analytics — fix month-over-month delta calculation
 
-Status: pending
+Status: done
 Type: bug
 
 Scope:

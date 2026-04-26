@@ -351,7 +351,7 @@ export function AppShell({
         </SidebarFooter>
       </Sidebar>
 
-      <SidebarInset className="flex min-w-0 flex-1 flex-col overflow-hidden">
+      <SidebarInset className="flex min-w-0 flex-1 flex-col">
         {/* Mobile trigger — floats top-left, desktop hides (sidebar is always visible there) */}
         <SidebarTrigger
           className="fixed left-3 top-3 z-30 size-10 rounded-full border border-border bg-background/90 shadow-sm backdrop-blur md:hidden"

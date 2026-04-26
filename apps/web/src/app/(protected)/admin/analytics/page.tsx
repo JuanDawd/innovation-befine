@@ -16,7 +16,7 @@ export default async function AnalyticsPage() {
       };
 
   return (
-    <div className="flex flex-col gap-6 p-6">
+    <div className="mx-auto max-w-7xl px-6 py-8 flex flex-col gap-6">
       <h1 className="text-2xl font-semibold print:text-2xl">{t("pageTitle")}</h1>
       <AnalyticsDashboard initialData={initialData} />
     </div>
