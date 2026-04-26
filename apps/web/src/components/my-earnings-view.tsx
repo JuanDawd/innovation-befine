@@ -14,7 +14,7 @@ export async function MyEarningsView() {
   const hasCurrentEarnings = today > 0 || thisWeek > 0 || thisMonth > 0;
 
   return (
-    <div className="flex flex-col gap-6 p-6 max-w-md">
+    <div className="flex flex-col gap-6 p-4 md:p-6 max-w-md mx-auto w-full">
       <h1 className="text-4xl font-bold">{t("payoutHistory")}</h1>
 
       {!hasCurrentEarnings && payoutHistory.length === 0 && (

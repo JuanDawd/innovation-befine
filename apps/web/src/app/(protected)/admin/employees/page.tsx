@@ -24,9 +24,9 @@ export default async function EmployeesPage() {
   const t = await getTranslations("employees");
 
   return (
-    <div className="flex flex-col gap-6 p-6">
+    <div className="flex flex-col gap-6 p-4 md:p-6 lg:p-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">{t("pageTitle")}</h1>
+        <h1 className="text-xl md:text-2xl font-semibold">{t("pageTitle")}</h1>
         <Link
           href="/admin/employees/new"
           className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-primary px-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/80"

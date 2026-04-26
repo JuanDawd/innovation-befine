@@ -23,9 +23,9 @@ export default async function SecretaryCreateBatchPage() {
     : [];
 
   return (
-    <div className="flex flex-col gap-6 p-6 max-w-2xl">
+    <div className="flex flex-col gap-6 p-4 md:p-6 max-w-2xl mx-auto w-full">
       <div>
-        <h1 className="text-2xl font-semibold">{t("createBatch")}</h1>
+        <h1 className="text-xl md:text-2xl font-semibold">{t("createBatch")}</h1>
         <p className="text-sm text-muted-foreground">{t("createBatchDescription")}</p>
       </div>
       <CreateBatchForm redirectPath="/secretary/batches" largeOrders={activeOrders} />

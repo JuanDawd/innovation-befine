@@ -35,8 +35,8 @@ export default async function CatalogPage() {
   const t = await getTranslations("catalog");
 
   return (
-    <div className="flex flex-col gap-6 p-6">
-      <h1 className="text-2xl font-semibold">{t("pageTitle")}</h1>
+    <div className="flex flex-col gap-6 p-4 md:p-6 lg:p-8">
+      <h1 className="text-xl md:text-2xl font-semibold">{t("pageTitle")}</h1>
 
       <Suspense fallback={<PageSkeleton />}>
         <CatalogData />

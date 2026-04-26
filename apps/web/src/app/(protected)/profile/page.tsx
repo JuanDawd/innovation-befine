@@ -12,9 +12,9 @@ export default async function ProfilePage() {
   const t = await getTranslations("auth");
 
   return (
-    <div className="flex flex-col gap-6 p-6">
+    <div className="flex flex-col gap-6 p-4 md:p-6 lg:p-8">
       <div>
-        <h1 className="text-2xl font-semibold">{t("changePassword")}</h1>
+        <h1 className="text-xl md:text-2xl font-semibold">{t("changePassword")}</h1>
         <p className="text-sm text-muted-foreground">{t("resetPasswordDescription")}</p>
       </div>
 

@@ -329,7 +329,7 @@ function EditServiceDialog({
       </button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>{t("editService")}</DialogTitle>
           </DialogHeader>
@@ -446,7 +446,7 @@ function VariantDialog({
         : trigger}
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
           </DialogHeader>

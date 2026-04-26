@@ -22,8 +22,8 @@ export default async function AbsencesPage({
   const employees = employeesResult.success ? employeesResult.data : [];
 
   return (
-    <div className="flex flex-col gap-6 p-6">
-      <h1 className="text-2xl font-semibold">{t("pageTitle")}</h1>
+    <div className="flex flex-col gap-6 p-4 md:p-6 lg:p-8">
+      <h1 className="text-xl md:text-2xl font-semibold">{t("pageTitle")}</h1>
       <AbsenceCalendar year={year} month={month} absences={absences} employees={employees} />
     </div>
   );

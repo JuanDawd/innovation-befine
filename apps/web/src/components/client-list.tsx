@@ -151,7 +151,7 @@ function ClientDialog({
               {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <label htmlFor="client-phone" className="text-sm font-medium">
                   {t("phone")} <span className="text-muted-foreground">{tc("optional")}</span>

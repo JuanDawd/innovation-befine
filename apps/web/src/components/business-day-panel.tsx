@@ -201,7 +201,7 @@ export function BusinessDayPanel({ currentDay, lastClosedDay }: BusinessDayPanel
           }
         }}
       >
-        <DialogContent>
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>{t("confirmReopen")}</DialogTitle>
             <DialogDescription>{t("confirmReopenDescription")}</DialogDescription>

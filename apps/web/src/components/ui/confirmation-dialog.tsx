@@ -44,7 +44,7 @@ function ConfirmationDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger render={trigger as React.ReactElement} />
-      <DialogContent showCloseButton={false}>
+      <DialogContent className="max-w-sm" showCloseButton={false}>
         <DialogHeader>
           <div className="flex items-start gap-3">
             {isDestructive && (

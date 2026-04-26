@@ -66,7 +66,7 @@ Test:
 
 ## Task: Responsive layout pass — page-size awareness
 
-Status: pending
+Status: done
 Type: ux
 
 Scope:

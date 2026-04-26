@@ -14,7 +14,7 @@ export default async function NewEmployeePage() {
   const t = await getTranslations("employees");
 
   return (
-    <div className="flex flex-col gap-6 p-6 max-w-lg">
+    <div className="flex flex-col gap-6 p-4 md:p-6 max-w-lg mx-auto w-full">
       <div className="flex items-center gap-3">
         <Link
           href="/admin/employees"
@@ -24,7 +24,7 @@ export default async function NewEmployeePage() {
           <ArrowLeftIcon className="size-4" aria-hidden="true" />
         </Link>
         <div>
-          <h1 className="text-2xl font-semibold">{t("createEmployee")}</h1>
+          <h1 className="text-xl md:text-2xl font-semibold">{t("createEmployee")}</h1>
           <p className="text-sm text-muted-foreground">{t("createEmployeeDescription")}</p>
         </div>
       </div>

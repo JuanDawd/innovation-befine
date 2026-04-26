@@ -19,9 +19,9 @@ export default async function AdminBatchesPage() {
   if (!session || !hasRole(session.user, "cashier_admin")) redirect("/cashier");
 
   return (
-    <div className="flex flex-col gap-6 p-6">
+    <div className="flex flex-col gap-6 p-4 md:p-6 lg:p-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">{t("pageTitle")}</h1>
+        <h1 className="text-xl md:text-2xl font-semibold">{t("pageTitle")}</h1>
         <Link href="/admin/batches/new" className={cn(buttonVariants())}>
           <PlusIcon className="h-4 w-4 mr-2" />
           {t("createBatch")}

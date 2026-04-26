@@ -326,7 +326,7 @@ export function EmployeeList({ initialEmployees }: EmployeeListProps) {
           setEditError(null);
         }}
       >
-        <DialogContent>
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>{t("editEmployee")}</DialogTitle>
             <DialogDescription>{editTarget?.email}</DialogDescription>
@@ -513,7 +513,7 @@ export function EmployeeList({ initialEmployees }: EmployeeListProps) {
           if (!isPending) setTerminateOpen(o);
         }}
       >
-        <DialogContent showCloseButton={false}>
+        <DialogContent className="max-w-sm" showCloseButton={false}>
           <DialogHeader>
             <DialogTitle className="text-destructive">{t("terminateTitle")}</DialogTitle>
             <DialogDescription>
@@ -529,7 +529,7 @@ export function EmployeeList({ initialEmployees }: EmployeeListProps) {
                 </span>
               </p>
             )}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1">
                 <label className="text-sm font-medium" htmlFor="terminateAmount">
                   {t("terminateAmount")} <span className="text-destructive">*</span>

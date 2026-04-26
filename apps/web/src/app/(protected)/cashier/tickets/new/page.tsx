@@ -20,9 +20,9 @@ export default async function CashierLogServicePage() {
   const currentEmployeeId = empResult.success ? empResult.data.employeeId : "";
 
   return (
-    <div className="flex flex-col gap-6 p-6 max-w-lg">
+    <div className="flex flex-col gap-6 p-4 md:p-6 max-w-lg mx-auto w-full">
       <div>
-        <h1 className="text-2xl font-semibold">{t("logService")}</h1>
+        <h1 className="text-xl md:text-2xl font-semibold">{t("logService")}</h1>
         <p className="text-sm text-muted-foreground">{t("logServiceDescription")}</p>
       </div>
       <LogServiceForm

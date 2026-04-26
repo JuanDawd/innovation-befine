@@ -144,7 +144,7 @@ export function CashierDashboard({ initialTickets }: { initialTickets: Dashboard
   }
 
   return (
-    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-6 grid-cols-1 min-[480px]:grid-cols-2 lg:grid-cols-3 [&>*]:min-w-[280px]">
       {Array.from(byEmployee.entries()).map(([empId, { employeeName, tickets: empTickets }]) => (
         <div key={empId} className="flex flex-col gap-2">
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
@@ -243,7 +243,7 @@ export function CashierDashboard({ initialTickets }: { initialTickets: Dashboard
 
 export function CashierDashboardSkeleton() {
   return (
-    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-6 grid-cols-1 min-[480px]:grid-cols-2 lg:grid-cols-3 [&>*]:min-w-[280px]">
       {[1, 2, 3].map((i) => (
         <div key={i} className="flex flex-col gap-2">
           <div className="h-4 w-24 rounded bg-muted animate-pulse" />
