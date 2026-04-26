@@ -9,6 +9,7 @@
 
 import { useState, useTransition, useEffect } from "react";
 import { useTranslations } from "next-intl";
+import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { PlusIcon, Trash2Icon, Loader2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -51,7 +52,7 @@ export function CreateBatchForm({
   ]);
   const [nextKey, setNextKey] = useState(1);
   const [isPending, startSubmitTransition] = useTransition();
-  const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const { toast, setToast } = useToast();
 
   useEffect(() => {
     startLoadTransition(async () => {

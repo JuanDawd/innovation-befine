@@ -626,7 +626,7 @@ Test:
 
 ## Task: Mobile bottom nav — fix active route detection
 
-Status: pending
+Status: done
 Type: bug
 
 Scope:
@@ -649,7 +649,7 @@ Test:
 
 ## Task: Toast notifications — wire Sentry breadcrumbs on error toast
 
-Status: pending
+Status: done
 Type: infra
 
 Scope:
@@ -672,7 +672,7 @@ Test:
 
 ## Task: Notification bell — keyboard navigation inside panel
 
-Status: pending
+Status: done
 Type: ux
 
 Scope:
@@ -695,7 +695,7 @@ Test:
 
 ## Task: Notification bell — mark-read on link click is racy
 
-Status: pending
+Status: done
 Type: bug
 
 Scope:
@@ -718,7 +718,7 @@ Test:
 
 ## Task: Sidebar collapse persistence
 
-Status: pending
+Status: done
 Type: ux
 
 Scope:

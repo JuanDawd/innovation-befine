@@ -16,6 +16,7 @@
 
 import { useState, useTransition, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
+import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { CalendarIcon, Loader2Icon, ClockIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -67,7 +68,7 @@ export function BookAppointmentForm({ redirectPath }: { redirectPath: string }) 
   const [durationMinutes, setDurationMinutes] = useState(60);
 
   const [isPending, startSubmitTransition] = useTransition();
-  const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const { toast, setToast } = useToast();
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {

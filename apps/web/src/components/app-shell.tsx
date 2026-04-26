@@ -41,6 +41,7 @@ type AppShellProps = {
   userName: string;
   employeeId: string | null;
   initialNotifications: NotificationRow[];
+  sidebarDefaultOpen?: boolean;
   children: React.ReactNode;
 };
 
@@ -242,6 +243,7 @@ export function AppShell({
   userName,
   employeeId,
   initialNotifications,
+  sidebarDefaultOpen = true,
   children,
 }: AppShellProps) {
   const t = useTranslations();
@@ -311,7 +313,7 @@ export function AppShell({
 
   // Admin / secretary: shadcn collapsible sidebar
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={sidebarDefaultOpen}>
       <Sidebar collapsible="icon">
         <SidebarHeader>
           <CompanyStrip />
@@ -334,7 +336,7 @@ export function AppShell({
         </SidebarContent>
 
         <SidebarFooter className="gap-2">
-          <div className="flex items-center gap-1 group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:gap-2">
+          <div className="flex items-center gap-1 group-data-[collapsible=icon]:flex-col-reverse group-data-[collapsible=icon]:gap-2">
             <UserMenu userName={userName} role={role} onLogout={handleLogout} />
             {employeeId && (
               <NotificationBell

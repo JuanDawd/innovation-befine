@@ -7,7 +7,7 @@
  * so session is always present here.
  */
 
-import { headers } from "next/headers";
+import { headers, cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
 import type { ReactNode } from "react";
@@ -43,12 +43,18 @@ export default async function ProtectedLayout({ children }: { children: ReactNod
   const notifResult = employeeId ? await listNotifications() : null;
   const initialNotifications = notifResult?.success ? notifResult.data : [];
 
+  // Read sidebar state cookie for persistence across reloads
+  const cookieStore = await cookies();
+  const sidebarCookie = cookieStore.get("sidebar_state");
+  const sidebarDefaultOpen = sidebarCookie ? sidebarCookie.value === "true" : true;
+
   return (
     <AppShell
       role={role}
       userName={userName}
       employeeId={employeeId}
       initialNotifications={initialNotifications}
+      sidebarDefaultOpen={sidebarDefaultOpen}
     >
       {children}
       <SyncStatus role={role} />

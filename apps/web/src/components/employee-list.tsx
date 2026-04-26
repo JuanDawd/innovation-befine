@@ -13,6 +13,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import * as Sentry from "@sentry/nextjs";
 import { UserIcon, UserXIcon, PencilIcon, Loader2Icon, CheckIcon, XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -130,6 +131,7 @@ export function EmployeeList({ initialEmployees }: EmployeeListProps) {
       setEditOpen(false);
       showToast(t("editSuccess"));
     } else {
+      Sentry.addBreadcrumb({ category: "ui.toast", message: result.error.message, level: "error" });
       setEditError(result.error.message);
     }
   }
@@ -208,6 +210,11 @@ export function EmployeeList({ initialEmployees }: EmployeeListProps) {
         setTerminateOpen(false);
         showToast(t("terminateSuccess"));
       } else {
+        Sentry.addBreadcrumb({
+          category: "ui.toast",
+          message: result.error.message,
+          level: "error",
+        });
         setTerminateError(result.error.message);
       }
     });

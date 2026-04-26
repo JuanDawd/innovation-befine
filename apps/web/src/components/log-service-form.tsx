@@ -9,6 +9,7 @@
  */
 
 import { useState, useTransition, useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { Loader2Icon } from "lucide-react";
@@ -47,7 +48,7 @@ export function LogServiceForm({
   const [services, setServices] = useState<Service[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isLoading, startLoadTransition] = useTransition();
-  const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const { toast, setToast } = useToast();
 
   const [employeeId, setEmployeeId] = useState(currentEmployeeId);
   const [serviceId, setServiceId] = useState("");

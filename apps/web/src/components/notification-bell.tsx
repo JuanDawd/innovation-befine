@@ -11,7 +11,7 @@
 import { useState, useEffect, useCallback, useTransition, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { BellIcon, CheckCheckIcon, InboxIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRealtimeEvent } from "@befine/realtime/client";
@@ -169,11 +169,9 @@ export function NotificationBell({
 
   // ─── Actions ──────────────────────────────────────────────────────────────
 
-  function handleMarkRead(ids: string[]) {
-    startTransition(async () => {
-      await Promise.all(ids.map((id) => markRead(id)));
-      setRows((prev) => prev.map((r) => (ids.includes(r.id) ? { ...r, isRead: true } : r)));
-    });
+  async function handleMarkRead(ids: string[]): Promise<void> {
+    await Promise.all(ids.map((id) => markRead(id)));
+    setRows((prev) => prev.map((r) => (ids.includes(r.id) ? { ...r, isRead: true } : r)));
   }
 
   function handleMarkAllRead() {
@@ -204,7 +202,7 @@ export function NotificationBell({
         }
         aria-expanded={open}
         aria-haspopup="true"
-        className="relative rounded-md p-1.5 text-background opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="relative rounded-md p-1.5 opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <BellIcon className="size-5" aria-hidden="true" />
         {unreadCount > 0 && (
@@ -243,7 +241,31 @@ export function NotificationBell({
             </div>
 
             {/* Notification list */}
-            <div className="overflow-y-auto flex-1">
+            <div
+              role="menu"
+              aria-orientation="vertical"
+              tabIndex={-1}
+              className="overflow-y-auto flex-1"
+              onKeyDown={(e) => {
+                if (e.key === "Escape") {
+                  setOpen(false);
+                  buttonRef.current?.focus();
+                }
+                if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+                  e.preventDefault();
+                  const items =
+                    panelRef.current?.querySelectorAll<HTMLElement>('[role="menuitem"]');
+                  if (!items?.length) return;
+                  const arr = Array.from(items);
+                  const idx = arr.indexOf(document.activeElement as HTMLElement);
+                  const next =
+                    e.key === "ArrowDown"
+                      ? (idx + 1) % arr.length
+                      : (idx - 1 + arr.length) % arr.length;
+                  arr[next]?.focus();
+                }
+              }}
+            >
               {groups.length === 0 ? (
                 <div className="flex flex-col items-center gap-2 py-10 text-center">
                   <InboxIcon className="size-8 text-muted-foreground/40" aria-hidden="true" />
@@ -290,14 +312,16 @@ function NotificationItem({
   onClose,
 }: {
   group: NotificationGroup;
-  onMarkRead: () => void;
+  onMarkRead: () => Promise<void>;
   onClose: () => void;
 }) {
   const t = useTranslations("notifications");
+  const router = useRouter();
 
-  function handleAction() {
-    if (!group.isRead) onMarkRead();
+  async function handleAction() {
+    if (!group.isRead) await onMarkRead();
     onClose();
+    if (group.link) router.push(group.link);
   }
 
   const content = (
@@ -330,21 +354,8 @@ function NotificationItem({
     !group.isRead && "bg-primary/5",
   );
 
-  if (group.link) {
-    return (
-      <Link href={group.link} onClick={handleAction} className={itemClass}>
-        {content}
-      </Link>
-    );
-  }
-
   return (
-    <button
-      onClick={() => {
-        if (!group.isRead) onMarkRead();
-      }}
-      className={itemClass}
-    >
+    <button onClick={handleAction} role="menuitem" className={itemClass}>
       {content}
     </button>
   );
