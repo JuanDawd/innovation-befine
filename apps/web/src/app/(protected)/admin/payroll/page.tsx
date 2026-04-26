@@ -1,7 +1,13 @@
 import { getTranslations } from "next-intl/server";
-import { listClosedBusinessDays, getUnsettledEmployees, listPayouts } from "./actions";
+import {
+  listClosedBusinessDays,
+  getUnsettledEmployees,
+  listPayouts,
+  getPayoutStatusGrid,
+} from "./actions";
 import { PayrollScreen } from "./payroll-screen";
 import { UnsettledAlert } from "./unsettled-alert";
+import { PayoutStatusGrid } from "./payout-status-grid";
 import { listActiveEmployeesForAbsence } from "../absences/actions";
 
 export default async function PayrollPage({
@@ -13,22 +19,26 @@ export default async function PayrollPage({
   const sp = await searchParams;
   const employeeId = sp.employeeId;
 
-  const [daysResult, employeesResult, unsettledResult, historyResult] = await Promise.all([
-    listClosedBusinessDays(employeeId),
-    listActiveEmployeesForAbsence(),
-    getUnsettledEmployees(),
-    listPayouts(employeeId),
-  ]);
+  const [daysResult, employeesResult, unsettledResult, historyResult, gridResult] =
+    await Promise.all([
+      listClosedBusinessDays(employeeId),
+      listActiveEmployeesForAbsence(),
+      getUnsettledEmployees(),
+      listPayouts(employeeId),
+      employeeId ? getPayoutStatusGrid(employeeId) : Promise.resolve(null),
+    ]);
 
   const days = daysResult.success ? daysResult.data : [];
   const employees = employeesResult.success ? employeesResult.data : [];
   const unsettled = unsettledResult.success ? unsettledResult.data : [];
   const history = historyResult.success ? historyResult.data : [];
+  const gridRows = gridResult?.success ? gridResult.data : [];
 
   return (
     <div className="flex flex-col gap-6 p-6">
       <h1 className="text-2xl font-semibold">{t("pageTitle")}</h1>
       <UnsettledAlert unsettled={unsettled} />
+      {employeeId && gridRows.length > 0 && <PayoutStatusGrid rows={gridRows} />}
       <PayrollScreen
         key={employeeId ?? "none"}
         days={days}

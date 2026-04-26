@@ -539,7 +539,12 @@
     "monthEarnings": "This month",
     "noEarnings": "No earnings recorded for this period",
     "noMovementsThisPeriod": "No activity this period",
-    "payoutHistory": "Payout history"
+    "payoutHistory": "Payout history",
+    "statusGridTitle": "Last 14 business days",
+    "colStatus": "Status",
+    "gridStatus_paid": "Paid",
+    "gridStatus_pending": "Pending",
+    "gridStatus_open": "Day open"
   },
   "analytics": {
     "pageTitle": "Analytics",

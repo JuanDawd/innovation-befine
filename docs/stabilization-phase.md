@@ -137,7 +137,7 @@ Test:
 
 ## Task: Show pending payments banner on payroll dashboard
 
-Status: pending
+Status: done
 Type: ux
 
 Scope:
@@ -162,7 +162,7 @@ Test:
 
 ## Task: Show per-day payout status grid
 
-Status: pending
+Status: done
 Type: ux
 
 Scope:

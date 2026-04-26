@@ -695,3 +695,63 @@ export async function getMyEarnings(): Promise<ActionResult<MyEarningsSummary>> 
     },
   };
 }
+
+// ─── Payout status grid (Stabilization-1) ────────────────────────────────────
+
+export type PayoutStatusRow = {
+  businessDayId: string;
+  date: string;
+  /** "paid" = covered by a payout, "pending" = closed but not yet paid, "open" = not yet closed */
+  status: "paid" | "pending" | "open";
+};
+
+export async function getPayoutStatusGrid(
+  employeeId: string,
+): Promise<ActionResult<PayoutStatusRow[]>> {
+  const guard = await requireAdmin();
+  if (!guard.ok)
+    return {
+      success: false,
+      error: {
+        code: guard.code,
+        message: guard.code === "UNAUTHORIZED" ? "No autenticado" : "Sin permisos",
+      },
+    };
+
+  const db = getDb();
+
+  // Last 14 business days ordered newest-first
+  const recent = await db
+    .select({
+      id: businessDays.id,
+      openedAt: businessDays.openedAt,
+      closedAt: businessDays.closedAt,
+    })
+    .from(businessDays)
+    .orderBy(sql`${businessDays.openedAt} DESC`)
+    .limit(14);
+
+  if (recent.length === 0) return { success: true, data: [] };
+
+  const recentIds = recent.map((d) => d.id);
+
+  const settledRows = await db
+    .select({ businessDayId: payoutPeriodDays.businessDayId })
+    .from(payoutPeriodDays)
+    .where(
+      and(
+        eq(payoutPeriodDays.employeeId, employeeId),
+        inArray(payoutPeriodDays.businessDayId, recentIds),
+      ),
+    );
+  const settledIds = new Set(settledRows.map((r) => r.businessDayId));
+
+  return {
+    success: true,
+    data: recent.map((d) => ({
+      businessDayId: d.id,
+      date: new Date(d.openedAt).toISOString().slice(0, 10),
+      status: settledIds.has(d.id) ? "paid" : d.closedAt ? "pending" : "open",
+    })),
+  };
+}
