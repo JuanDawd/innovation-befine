@@ -3,7 +3,18 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Loader2Icon, PencilIcon, CheckIcon, XIcon, AlertTriangleIcon } from "lucide-react";
+import {
+  Loader2Icon,
+  PencilIcon,
+  CheckIcon,
+  XIcon,
+  AlertTriangleIcon,
+  PlusIcon,
+  PackageIcon,
+  CalendarIcon,
+  FileTextIcon,
+  CreditCardIcon,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
 import {
@@ -22,10 +33,18 @@ import {
   type LargeOrderRow,
   type OrderBatchSummary,
 } from "../actions";
+import type { ClothPieceRow } from "@/app/(protected)/admin/catalog/actions/cloth-pieces";
+import {
+  LineAccordion,
+  buildDescription,
+  parseDescription,
+  type OrderLine,
+} from "../line-accordion";
 
 type Props = {
   order: LargeOrderRow;
   batches: OrderBatchSummary[];
+  clothPieces: ClothPieceRow[];
 };
 
 const ACTIONS_BY_STATUS: Record<string, string[]> = {
@@ -35,7 +54,59 @@ const ACTIONS_BY_STATUS: Record<string, string[]> = {
   delivered: ["mark_paid", "cancel"],
 };
 
-export function LargeOrderDetail({ order: initialOrder, batches }: Props) {
+function blankLine(key: number): OrderLine {
+  return {
+    key,
+    clothPieceId: "",
+    clothPieceVariantId: "",
+    quantity: 1,
+    unitPrice: 0,
+    itemDescription: "",
+  };
+}
+
+function matchLineTocatalog(
+  label: string,
+  notes: string,
+  clothPieces: ClothPieceRow[],
+  key: number,
+): OrderLine {
+  // label format: "Nx PieceName (VariantName)" or "Nx PieceName"
+  const qtyMatch = label.match(/^(\d+)x\s+(.+)$/);
+  const quantity = qtyMatch ? parseInt(qtyMatch[1], 10) : 1;
+  const rest = qtyMatch ? qtyMatch[2].trim() : label.trim();
+
+  // Try to extract variant from parentheses: "PieceName (VariantName)"
+  const parenMatch = rest.match(/^(.+?)\s+\((.+)\)$/);
+  const pieceName = parenMatch ? parenMatch[1].trim() : rest;
+  const variantName = parenMatch ? parenMatch[2].trim() : null;
+
+  const piece = clothPieces.find((p) => p.name.toLowerCase() === pieceName.toLowerCase());
+  if (!piece)
+    return {
+      key,
+      clothPieceId: "",
+      clothPieceVariantId: "",
+      quantity,
+      unitPrice: 0,
+      itemDescription: notes,
+    };
+
+  const variant = variantName
+    ? piece.variants.find((v) => v.name.toLowerCase() === variantName.toLowerCase())
+    : (piece.variants.find((v) => v.isActive) ?? piece.variants[0]);
+
+  return {
+    key,
+    clothPieceId: piece.id,
+    clothPieceVariantId: variant?.id ?? "",
+    quantity,
+    unitPrice: variant?.pieceRate ?? 0,
+    itemDescription: notes,
+  };
+}
+
+export function LargeOrderDetail({ order: initialOrder, batches, clothPieces }: Props) {
   const t = useTranslations("largeOrders");
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -49,13 +120,62 @@ export function LargeOrderDetail({ order: initialOrder, batches }: Props) {
 
   const hasDeposits = order.totalPaid > 0;
 
-  // Edit form state
-  const [editDescription, setEditDescription] = useState(order.description);
-  const [editTotalPrice, setEditTotalPrice] = useState(String(order.totalPrice));
+  // Edit form state — lines
+  const [editLines, setEditLines] = useState<OrderLine[]>(() => {
+    const parsed = parseDescription(order.description);
+    if (parsed.length === 0) return [blankLine(0)];
+    return parsed.map((p, i) => matchLineTocatalog(p.label, p.notes, clothPieces, i));
+  });
+  const [nextKey, setNextKey] = useState(editLines.length);
+  const [openEditKey, setOpenEditKey] = useState<number>(editLines[0]?.key ?? 0);
+  const editGrandTotal = editLines.reduce((s, l) => s + l.unitPrice * l.quantity, 0);
+
   const [editEta, setEditEta] = useState(
     order.estimatedDeliveryAt ? new Date(order.estimatedDeliveryAt).toISOString().slice(0, 16) : "",
   );
   const [editNotes, setEditNotes] = useState(order.notes ?? "");
+
+  function addEditLine() {
+    const key = nextKey;
+    setEditLines((prev) => [...prev, blankLine(key)]);
+    setNextKey((k) => k + 1);
+    setOpenEditKey(key);
+  }
+
+  function removeEditLine(key: number) {
+    if (editLines.length === 1) return;
+    setEditLines((prev) => {
+      const next = prev.filter((l) => l.key !== key);
+      if (openEditKey === key) setOpenEditKey(next[next.length - 1].key);
+      return next;
+    });
+  }
+
+  function updateEditLine(key: number, patch: Partial<Omit<OrderLine, "key">>) {
+    setEditLines((prev) =>
+      prev.map((l) => {
+        if (l.key !== key) return l;
+        const updated = { ...l, ...patch };
+        if (patch.clothPieceId !== undefined) {
+          const piece = clothPieces.find((p) => p.id === patch.clothPieceId);
+          const active = piece?.variants.filter((v) => v.isActive) ?? [];
+          if (active.length === 1) {
+            updated.clothPieceVariantId = active[0].id;
+            updated.unitPrice = active[0].pieceRate;
+          } else {
+            updated.clothPieceVariantId = "";
+            updated.unitPrice = 0;
+          }
+        }
+        if (patch.clothPieceVariantId !== undefined) {
+          const piece = clothPieces.find((p) => p.id === l.clothPieceId);
+          const variant = piece?.variants.find((v) => v.id === patch.clothPieceVariantId);
+          if (variant) updated.unitPrice = variant.pieceRate;
+        }
+        return updated;
+      }),
+    );
+  }
 
   function transition(action: string, cancellationReason?: string, ackDeposits?: boolean) {
     setError(null);
@@ -90,10 +210,25 @@ export function LargeOrderDetail({ order: initialOrder, batches }: Props) {
 
   function saveEdit() {
     setError(null);
+
+    // If any line has a piece selected but is missing variant or description, block
+    const partiallyFilled = editLines.some(
+      (l) => l.clothPieceId && (!l.clothPieceVariantId || !l.itemDescription.trim()),
+    );
+    if (partiallyFilled) {
+      setError(t("itemsRequired"));
+      return;
+    }
+
+    // Build description from fully-selected lines; fall back to existing description if none filled
+    const builtDescription = buildDescription(editLines, clothPieces);
+    const description = builtDescription || order.description;
+    const totalPrice = editGrandTotal > 0 ? editGrandTotal : order.totalPrice;
+
     startTransition(async () => {
       const res = await editLargeOrder(order.id, {
-        description: editDescription,
-        totalPrice: parseInt(editTotalPrice, 10),
+        description,
+        totalPrice,
         estimatedDeliveryAt: editEta ? `${editEta}:00-05:00` : null,
         notes: editNotes || null,
         version: order.version,
@@ -129,46 +264,66 @@ export function LargeOrderDetail({ order: initialOrder, batches }: Props) {
 
   const actions = ACTIONS_BY_STATUS[order.status] ?? [];
   const isTerminal = order.status === "paid_in_full" || order.status === "cancelled";
+  const parsedItems = parseDescription(order.description);
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <div className="space-y-5">
+      {/* ── Header ── */}
       <div className="flex items-start justify-between gap-4">
-        <div className="space-y-1">
+        <div className="space-y-1.5">
           <h1 className="text-xl md:text-2xl font-semibold">{order.clientName}</h1>
           <StatusBadge status={order.status} />
         </div>
         {!isTerminal && !editing && (
           <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
-            <PencilIcon className="h-3.5 w-3.5 mr-1" />
+            <PencilIcon className="h-3.5 w-3.5 mr-1.5" />
             {t("editOrder")}
           </Button>
         )}
       </div>
 
-      {/* Edit form */}
+      {/* ── Edit mode ── */}
       {editing ? (
-        <div className="border rounded-md p-4 space-y-4 bg-muted/20">
-          <div className="space-y-1">
-            <label className="text-sm font-medium">{t("description")}</label>
-            <textarea
-              value={editDescription}
-              onChange={(e) => setEditDescription(e.target.value)}
-              rows={3}
-              maxLength={500}
-              className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-ring resize-none"
-            />
+        <div className="rounded-lg border bg-card p-5 space-y-5">
+          <p className="text-sm font-semibold">{t("editOrder")}</p>
+
+          {/* Line items */}
+          <div className="space-y-2">
+            <p className="text-sm font-medium">
+              {t("items")} <span className="text-destructive">*</span>
+            </p>
+            <div className="space-y-2">
+              {editLines.map((line, index) => (
+                <LineAccordion
+                  key={line.key}
+                  line={line}
+                  index={index}
+                  open={openEditKey === line.key}
+                  onToggle={() => setOpenEditKey(openEditKey === line.key ? -1 : line.key)}
+                  onRemove={() => removeEditLine(line.key)}
+                  onUpdate={(patch) => updateEditLine(line.key, patch)}
+                  clothPieces={clothPieces}
+                  canRemove={editLines.length > 1}
+                  hasError={false}
+                />
+              ))}
+            </div>
+            <Button type="button" variant="outline" size="sm" onClick={addEditLine}>
+              <PlusIcon className="size-4" />
+              {t("addItem")}
+            </Button>
           </div>
-          <div className="space-y-1">
-            <label className="text-sm font-medium">{t("totalPrice")}</label>
-            <input
-              type="number"
-              min={1}
-              value={editTotalPrice}
-              onChange={(e) => setEditTotalPrice(e.target.value)}
-              className="w-full h-9 rounded-md border border-input bg-transparent px-3 text-sm font-mono focus-visible:outline-none focus-visible:border-ring"
-            />
-          </div>
+
+          {editGrandTotal > 0 && (
+            <div className="flex items-center justify-between rounded-md bg-muted/50 px-3 py-2 text-sm">
+              <span className="text-muted-foreground">{t("grandTotal")}</span>
+              <span className="font-mono font-semibold">
+                ${editGrandTotal.toLocaleString("es-CO")}
+              </span>
+            </div>
+          )}
+
+          {/* ETA */}
           <div className="space-y-1">
             <label className="text-sm font-medium">{t("estimatedDelivery")}</label>
             <input
@@ -178,6 +333,8 @@ export function LargeOrderDetail({ order: initialOrder, batches }: Props) {
               className="w-full h-9 rounded-md border border-input bg-transparent px-3 text-sm focus-visible:outline-none focus-visible:border-ring"
             />
           </div>
+
+          {/* Notes */}
           <div className="space-y-1">
             <label className="text-sm font-medium">{t("notes")}</label>
             <textarea
@@ -188,107 +345,165 @@ export function LargeOrderDetail({ order: initialOrder, batches }: Props) {
               className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-ring resize-none"
             />
           </div>
+
+          {error && (
+            <p className="text-sm text-destructive" role="alert">
+              {error}
+            </p>
+          )}
+
           <div className="flex gap-2">
             <Button size="sm" disabled={isPending} onClick={saveEdit}>
               {isPending ? (
-                <Loader2Icon className="h-3.5 w-3.5 animate-spin mr-1" />
+                <Loader2Icon className="h-3.5 w-3.5 animate-spin mr-1.5" />
               ) : (
-                <CheckIcon className="h-3.5 w-3.5 mr-1" />
+                <CheckIcon className="h-3.5 w-3.5 mr-1.5" />
               )}
               {t("submit")}
             </Button>
             <Button size="sm" variant="outline" onClick={() => setEditing(false)}>
-              <XIcon className="h-3.5 w-3.5 mr-1" />
+              <XIcon className="h-3.5 w-3.5 mr-1.5" />
               Cancelar
             </Button>
           </div>
         </div>
       ) : (
-        /* Order summary */
-        <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
-          <dt className="text-muted-foreground">{t("description")}</dt>
-          <dd className="font-medium">{order.description}</dd>
+        <>
+          {/* ── Items card ── */}
+          <div className="rounded-lg border bg-card overflow-hidden">
+            <div className="flex items-center gap-2 px-4 py-3 border-b bg-muted/30">
+              <PackageIcon className="size-4 text-muted-foreground" />
+              <span className="text-sm font-semibold">{t("items")}</span>
+            </div>
+            <div className="divide-y">
+              {parsedItems.length > 0 ? (
+                parsedItems.map((item, i) => (
+                  <div key={i} className="px-4 py-3">
+                    <p className="text-sm font-medium">{item.label}</p>
+                    {item.notes && (
+                      <p className="text-xs text-muted-foreground mt-0.5">{item.notes}</p>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className="px-4 py-3">
+                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                    {order.description}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
 
-          <dt className="text-muted-foreground">{t("totalPrice")}</dt>
-          <dd className="font-mono tabular-nums">${order.totalPrice.toLocaleString("es-CO")}</dd>
+          {/* ── Financial summary ── */}
+          <div className="rounded-lg border bg-card overflow-hidden">
+            <div className="flex items-center gap-2 px-4 py-3 border-b bg-muted/30">
+              <CreditCardIcon className="size-4 text-muted-foreground" />
+              <span className="text-sm font-semibold">Resumen financiero</span>
+            </div>
+            <div className="grid grid-cols-3 divide-x">
+              <div className="px-4 py-3 text-center">
+                <p className="text-xs text-muted-foreground mb-1">{t("totalPrice")}</p>
+                <p className="font-mono font-semibold tabular-nums">
+                  ${order.totalPrice.toLocaleString("es-CO")}
+                </p>
+              </div>
+              <div className="px-4 py-3 text-center">
+                <p className="text-xs text-muted-foreground mb-1">{t("colPaid")}</p>
+                <p className="font-mono font-semibold tabular-nums text-green-600 dark:text-green-400">
+                  ${order.totalPaid.toLocaleString("es-CO")}
+                </p>
+              </div>
+              <div className="px-4 py-3 text-center">
+                <p className="text-xs text-muted-foreground mb-1">{t("balanceDue")}</p>
+                <p
+                  className={`font-mono font-semibold tabular-nums ${
+                    order.balanceDue > 0
+                      ? "text-amber-600 dark:text-amber-400"
+                      : "text-green-600 dark:text-green-400"
+                  }`}
+                >
+                  ${order.balanceDue.toLocaleString("es-CO")}
+                </p>
+              </div>
+            </div>
+          </div>
 
-          <dt className="text-muted-foreground">{t("colPaid")}</dt>
-          <dd className="font-mono tabular-nums text-green-600 dark:text-green-400">
-            ${order.totalPaid.toLocaleString("es-CO")}
-          </dd>
-
-          <dt className="text-muted-foreground">{t("balanceDue")}</dt>
-          <dd
-            className={`font-mono tabular-nums font-semibold ${order.balanceDue > 0 ? "text-amber-600 dark:text-amber-400" : "text-green-600 dark:text-green-400"}`}
-          >
-            ${order.balanceDue.toLocaleString("es-CO")}
-          </dd>
-
-          {order.estimatedDeliveryAt && (
-            <>
-              <dt className="text-muted-foreground">{t("estimatedDelivery")}</dt>
-              <dd>
-                {new Date(order.estimatedDeliveryAt).toLocaleDateString("es-CO", {
-                  timeZone: "America/Bogota",
-                  dateStyle: "medium",
-                })}
-              </dd>
-            </>
+          {/* ── Meta ── */}
+          {(order.estimatedDeliveryAt || order.notes || order.cancellationReason) && (
+            <div className="rounded-lg border bg-card overflow-hidden">
+              <div className="flex items-center gap-2 px-4 py-3 border-b bg-muted/30">
+                <FileTextIcon className="size-4 text-muted-foreground" />
+                <span className="text-sm font-semibold">Detalles</span>
+              </div>
+              <dl className="divide-y text-sm">
+                {order.estimatedDeliveryAt && (
+                  <div className="flex items-center gap-3 px-4 py-3">
+                    <CalendarIcon className="size-3.5 text-muted-foreground shrink-0" />
+                    <dt className="text-muted-foreground w-32 shrink-0">
+                      {t("estimatedDelivery")}
+                    </dt>
+                    <dd>
+                      {new Date(order.estimatedDeliveryAt).toLocaleDateString("es-CO", {
+                        timeZone: "America/Bogota",
+                        dateStyle: "medium",
+                      })}
+                    </dd>
+                  </div>
+                )}
+                {order.notes && (
+                  <div className="px-4 py-3">
+                    <dt className="text-xs text-muted-foreground mb-1">{t("notes")}</dt>
+                    <dd className="text-muted-foreground whitespace-pre-wrap">{order.notes}</dd>
+                  </div>
+                )}
+                {order.cancellationReason && (
+                  <div className="px-4 py-3">
+                    <dt className="text-xs text-muted-foreground mb-1">
+                      {t("cancellationReason")}
+                    </dt>
+                    <dd className="text-destructive">{order.cancellationReason}</dd>
+                  </div>
+                )}
+              </dl>
+            </div>
           )}
-
-          {order.notes && (
-            <>
-              <dt className="text-muted-foreground">{t("notes")}</dt>
-              <dd className="text-muted-foreground">{order.notes}</dd>
-            </>
-          )}
-
-          {order.cancellationReason && (
-            <>
-              <dt className="text-muted-foreground">{t("cancellationReason")}</dt>
-              <dd className="text-destructive">{order.cancellationReason}</dd>
-            </>
-          )}
-        </dl>
+        </>
       )}
 
-      {/* Status actions */}
-      {!isTerminal && actions.length > 0 && (
-        <div className="space-y-2">
-          <p className="text-sm font-medium">{t("colActions")}</p>
-          <div className="flex flex-wrap gap-2">
-            {actions
-              .filter((a) => a !== "cancel")
-              .map((action) => (
-                <Button
-                  key={action}
-                  size="sm"
-                  variant="outline"
-                  disabled={isPending}
-                  onClick={() => transition(action)}
-                >
-                  {isPending ? <Loader2Icon className="h-3.5 w-3.5 animate-spin mr-1" /> : null}
-                  {t(`action_${action}` as Parameters<typeof t>[0])}
-                </Button>
-              ))}
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={isPending}
-              className="text-destructive hover:text-destructive"
-              onClick={() => {
-                setError(null);
-                setCancelDialogOpen(true);
-              }}
-            >
-              <XIcon className="h-3.5 w-3.5 mr-1" />
-              {t("action_cancel")}
-            </Button>
-          </div>
+      {/* ── Status actions ── */}
+      {!isTerminal && actions.length > 0 && !editing && (
+        <div className="flex flex-wrap gap-2">
+          {actions
+            .filter((a) => a !== "cancel")
+            .map((action) => (
+              <Button
+                key={action}
+                size="sm"
+                disabled={isPending}
+                onClick={() => transition(action)}
+              >
+                {isPending ? <Loader2Icon className="h-3.5 w-3.5 animate-spin mr-1.5" /> : null}
+                {t(`action_${action}` as Parameters<typeof t>[0])}
+              </Button>
+            ))}
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={isPending}
+            className="text-destructive hover:text-destructive border-destructive/30 hover:border-destructive/60"
+            onClick={() => {
+              setError(null);
+              setCancelDialogOpen(true);
+            }}
+          >
+            <XIcon className="h-3.5 w-3.5 mr-1.5" />
+            {t("action_cancel")}
+          </Button>
         </div>
       )}
 
-      {/* Cancel confirmation dialog */}
+      {/* ── Cancel confirmation dialog ── */}
       <Dialog
         open={cancelDialogOpen}
         onOpenChange={(open) => {
@@ -375,25 +590,26 @@ export function LargeOrderDetail({ order: initialOrder, batches }: Props) {
               disabled={isPending || (hasDeposits && !acknowledgedDeposits)}
               onClick={confirmCancel}
             >
-              {isPending ? <Loader2Icon className="h-3.5 w-3.5 animate-spin mr-1" /> : null}
+              {isPending ? <Loader2Icon className="h-3.5 w-3.5 animate-spin mr-1.5" /> : null}
               {t("action_cancel")}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Record payment */}
-      {!isTerminal && order.status !== "cancelled" && (
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-semibold">{t("payments")}</p>
+      {/* ── Payments ── */}
+      {!isTerminal && (
+        <div className="rounded-lg border bg-card overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/30">
+            <span className="text-sm font-semibold">{t("payments")}</span>
             <Button size="sm" variant="outline" onClick={() => setShowPaymentForm((v) => !v)}>
+              <PlusIcon className="size-3.5 mr-1" />
               {t("recordPayment")}
             </Button>
           </div>
 
           {showPaymentForm && (
-            <form onSubmit={recordPayment} className="border rounded-md p-4 space-y-3 bg-muted/20">
+            <form onSubmit={recordPayment} className="px-4 py-4 space-y-3 border-b bg-muted/10">
               <div className="grid grid-cols-3 gap-3">
                 <div className="space-y-1">
                   <label className="text-sm font-medium" htmlFor="amount">
@@ -435,29 +651,32 @@ export function LargeOrderDetail({ order: initialOrder, batches }: Props) {
                   />
                 </div>
               </div>
+              {error && (
+                <p className="text-sm text-destructive" role="alert">
+                  {error}
+                </p>
+              )}
               <Button type="submit" size="sm" disabled={isPending}>
-                {isPending ? <Loader2Icon className="h-3.5 w-3.5 animate-spin mr-1" /> : null}
+                {isPending ? <Loader2Icon className="h-3.5 w-3.5 animate-spin mr-1.5" /> : null}
                 {t("recordPayment")}
               </Button>
             </form>
           )}
-        </div>
-      )}
 
-      {/* Payment history */}
-      {order.payments.length > 0 && (
-        <div className="space-y-2">
-          {showPaymentForm || <p className="text-sm font-semibold">{t("payments")}</p>}
-          <div className="rounded-md border overflow-hidden">
+          {order.payments.length > 0 ? (
             <table className="w-full text-sm">
-              <thead className="bg-muted/50">
+              <thead className="bg-muted/20">
                 <tr>
-                  <th className="px-3 py-2 text-left font-medium">{t("paymentDate")}</th>
-                  <th className="px-3 py-2 text-right font-medium font-mono">
+                  <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
+                    {t("paymentDate")}
+                  </th>
+                  <th className="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground">
                     {t("paymentAmount")}
                   </th>
-                  <th className="px-3 py-2 text-left font-medium">{t("paymentMethod")}</th>
-                  <th className="px-3 py-2 text-left font-medium text-muted-foreground">
+                  <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
+                    {t("paymentMethod")}
+                  </th>
+                  <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground hidden sm:table-cell">
                     {t("recordedBy")}
                   </th>
                 </tr>
@@ -465,69 +684,81 @@ export function LargeOrderDetail({ order: initialOrder, batches }: Props) {
               <tbody className="divide-y divide-border">
                 {order.payments.map((p) => (
                   <tr key={p.id}>
-                    <td className="px-3 py-2 text-muted-foreground">
+                    <td className="px-4 py-2.5 text-muted-foreground text-sm">
                       {new Date(p.paidAt).toLocaleDateString("es-CO", {
                         timeZone: "America/Bogota",
                         dateStyle: "medium",
                       })}
                     </td>
-                    <td className="px-3 py-2 text-right font-mono tabular-nums">
+                    <td className="px-4 py-2.5 text-right font-mono tabular-nums font-medium">
                       ${p.amount.toLocaleString("es-CO")}
                     </td>
-                    <td className="px-3 py-2 capitalize">
+                    <td className="px-4 py-2.5 capitalize text-sm">
                       {t(p.method as Parameters<typeof t>[0])}
                     </td>
-                    <td className="px-3 py-2 text-muted-foreground text-xs">{p.recordedBy}</td>
+                    <td className="px-4 py-2.5 text-muted-foreground text-xs hidden sm:table-cell">
+                      {p.recordedBy}
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          </div>
+          ) : (
+            <div className="px-4 py-6 text-center">
+              <p className="text-sm text-muted-foreground">Sin pagos registrados</p>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Linked batches (T060) */}
+      {/* ── Linked batches ── */}
       {batches.length > 0 && (
-        <div className="space-y-2">
-          <p className="text-sm font-semibold">{t("batches")}</p>
-          <div className="rounded-md border overflow-hidden">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/50">
-                <tr>
-                  <th className="px-3 py-2 text-left font-medium">{t("batchTotalPieces")}</th>
-                  <th className="px-3 py-2 text-left font-medium">{t("batchApprovedPieces")}</th>
-                  <th className="px-3 py-2 text-left font-medium">{t("batchProgress")}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {batches.map((b) => {
-                  const pct =
-                    b.totalPieces > 0 ? Math.round((b.approvedPieces / b.totalPieces) * 100) : 0;
-                  return (
-                    <tr key={b.batchId}>
-                      <td className="px-3 py-2">{b.totalPieces}</td>
-                      <td className="px-3 py-2">{b.approvedPieces}</td>
-                      <td className="px-3 py-2">
-                        <div className="flex items-center gap-2">
-                          <div className="flex-1 bg-muted rounded-full h-2 max-w-[100px]">
-                            <div
-                              className="bg-primary h-2 rounded-full transition-all"
-                              style={{ width: `${pct}%` }}
-                            />
-                          </div>
-                          <span className="text-xs text-muted-foreground">{pct}%</span>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+        <div className="rounded-lg border bg-card overflow-hidden">
+          <div className="flex items-center gap-2 px-4 py-3 border-b bg-muted/30">
+            <span className="text-sm font-semibold">{t("batches")}</span>
           </div>
+          <table className="w-full text-sm">
+            <thead className="bg-muted/20">
+              <tr>
+                <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
+                  {t("batchTotalPieces")}
+                </th>
+                <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
+                  {t("batchApprovedPieces")}
+                </th>
+                <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
+                  {t("batchProgress")}
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {batches.map((b) => {
+                const pct =
+                  b.totalPieces > 0 ? Math.round((b.approvedPieces / b.totalPieces) * 100) : 0;
+                return (
+                  <tr key={b.batchId}>
+                    <td className="px-4 py-2.5">{b.totalPieces}</td>
+                    <td className="px-4 py-2.5">{b.approvedPieces}</td>
+                    <td className="px-4 py-2.5">
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 bg-muted rounded-full h-2 max-w-[100px]">
+                          <div
+                            className="bg-primary h-2 rounded-full transition-all"
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                        <span className="text-xs text-muted-foreground">{pct}%</span>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       )}
 
-      {error && (
+      {!editing && error && (
         <p className="text-sm text-destructive" role="alert">
           {error}
         </p>
