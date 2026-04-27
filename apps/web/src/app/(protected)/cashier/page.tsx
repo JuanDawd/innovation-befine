@@ -8,13 +8,10 @@
  * - Live ticket board
  */
 
-import Link from "next/link";
 import { Suspense } from "react";
 import { getTranslations } from "next-intl/server";
-import { PlusIcon, CreditCardIcon } from "lucide-react";
 import { getCurrentBusinessDay, getLastClosedBusinessDay } from "@/lib/business-day";
 import { BusinessDayPanel } from "@/components/business-day-panel";
-import { buttonVariants } from "@/components/ui/button-variants";
 import { listOpenTickets } from "@/app/(protected)/tickets/actions";
 import { listPendingEditRequests } from "@/app/(protected)/tickets/edit-requests/actions";
 import { getDayStats } from "@/app/(protected)/cashier/actions/day-stats";
@@ -92,23 +89,9 @@ export default async function CashierHomePage() {
           </>
         }
         subtitle={t("home.subtitle")}
-        actions={
-          <>
-            <Link href="/cashier/tickets/new" className={buttonVariants({ variant: "outline" })}>
-              <PlusIcon className="mr-2 size-4" aria-hidden="true" />
-              {t("tickets.logService")}
-            </Link>
-            <Link href="/cashier/checkout" className={buttonVariants()}>
-              <CreditCardIcon className="mr-2 size-4" aria-hidden="true" />
-              {t("dayAtAGlance.actionCheckout")}
-            </Link>
-          </>
-        }
+        actions={<BusinessDayPanel currentDay={currentDay} lastClosedDay={lastClosedDay} />}
       />
-      {/* Business day panel */}
-      <div className="max-w-sm">
-        <BusinessDayPanel currentDay={currentDay} lastClosedDay={lastClosedDay} />
-      </div>
+
       {/* Pending edit requests — T041 */}
       <Suspense fallback={<PendingEditRequestsSkeleton />}>
         <EditRequestsPanel />

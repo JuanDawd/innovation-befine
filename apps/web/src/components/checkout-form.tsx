@@ -48,7 +48,7 @@ function formatCOP(n: number) {
 // Override state per ticket item
 type OverrideEdit = { price: string; reason: string; saving: boolean };
 
-export function CheckoutForm() {
+export function CheckoutForm({ onClose }: { onClose?: () => void } = {}) {
   const tc = useTranslations("common");
   const router = useRouter();
 
@@ -230,7 +230,9 @@ export function CheckoutForm() {
             <PrinterIcon className="mr-2 size-4" />
             Imprimir recibo
           </Button>
-          <Button onClick={() => router.push("/cashier")}>{tc("back")}</Button>
+          <Button onClick={() => (onClose ? onClose() : router.push("/cashier"))}>
+            {tc("back")}
+          </Button>
         </div>
       </div>
     );
@@ -441,7 +443,7 @@ export function CheckoutForm() {
           {isPending && <Loader2Icon className="mr-2 size-4 animate-spin" />}
           Confirmar cobro
         </Button>
-        <Button variant="outline" onClick={() => router.push("/cashier")}>
+        <Button variant="outline" onClick={() => (onClose ? onClose() : router.push("/cashier"))}>
           {tc("cancel")}
         </Button>
       </div>

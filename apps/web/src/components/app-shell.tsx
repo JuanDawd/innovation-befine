@@ -1,9 +1,17 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { LogOut, Moon, Sun, UserRound } from "lucide-react";
+import {
+  LogOutIcon,
+  MoonIcon,
+  SunIcon,
+  UserRoundIcon,
+  CreditCardIcon,
+  PlusIcon,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { signOut } from "@/lib/auth-client";
 import { NAV_ITEMS, MOBILE_BOTTOM_NAV_ROLES, type NavItem, resolveGroups } from "./nav-config";
@@ -33,6 +41,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { LogServiceForm } from "@/components/log-service-form";
+import { CheckoutForm } from "@/components/checkout-form";
 import type { NotificationRow } from "@/app/(protected)/notifications/actions";
 import type { AppRole } from "@befine/types";
 
@@ -56,7 +67,7 @@ function UserInitials({ name, size = "md" }: { name: string; size?: "sm" | "md" 
   return (
     <span
       className={cn(
-        "flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/60 font-semibold text-primary-foreground",
+        "flex shrink-0 items-center justify-center rounded-full bg-linear-to-br from-primary to-primary/60 font-semibold text-primary-foreground",
         size === "sm" ? "size-7 text-[11px]" : "size-8 text-xs",
       )}
       aria-hidden="true"
@@ -70,7 +81,7 @@ function UserInitials({ name, size = "md" }: { name: string; size?: "sm" | "md" 
 /** Sub-company identifier — Befine / DoWell / Swimwear */
 function CompanyStrip() {
   return (
-    <div className="mx-2 mt-1 rounded-sm border border-sidebar-border/60 bg-gradient-to-b from-primary/[0.06] to-transparent px-3 py-2.5 group-data-[collapsible=icon]:hidden">
+    <div className="mx-2 mt-1 rounded-sm border border-sidebar-border/60 bg-linear-to-b from-primary/6 to-transparent px-3 py-2.5 group-data-[collapsible=icon]:hidden">
       <div className="text-[9px] font-medium uppercase tracking-[0.22em] text-sidebar-foreground/50">
         Viewing
       </div>
@@ -127,23 +138,24 @@ function UserMenu({
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem render={<Link href="/profile" />} className="cursor-pointer">
-            <UserRound className="size-4" aria-hidden="true" />
+            <UserRoundIcon className="size-4" aria-hidden="true" />
             {t("nav.profile")}
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
             closeOnClick={false}
             className="cursor-pointer"
+            suppressHydrationWarning
           >
             {theme === "dark" ? (
               <>
-                <Sun className="size-4" aria-hidden="true" />
-                {t("nav.themeLight")}
+                <SunIcon className="size-4" aria-hidden="true" suppressHydrationWarning />
+                <span suppressHydrationWarning>{t("nav.themeLight")}</span>
               </>
             ) : (
               <>
-                <Moon className="size-4" aria-hidden="true" />
-                {t("nav.themeDark")}
+                <MoonIcon className="size-4" aria-hidden="true" suppressHydrationWarning />
+                <span suppressHydrationWarning>{t("nav.themeDark")}</span>
               </>
             )}
           </DropdownMenuItem>
@@ -153,7 +165,7 @@ function UserMenu({
           onClick={onLogout}
           className="cursor-pointer text-destructive focus:text-destructive"
         >
-          <LogOut className="size-4" aria-hidden="true" />
+          <LogOutIcon className="size-4" aria-hidden="true" />
           {t("auth.logout")}
         </DropdownMenuItem>
       </DropdownMenuContent>
@@ -250,6 +262,9 @@ export function AppShell({
   const pathname = usePathname();
   const router = useRouter();
 
+  const [logServiceOpen, setLogServiceOpen] = useState(false);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
+
   const navItems = NAV_ITEMS[role];
   const grouped = resolveGroups(NAV_ITEMS[role]);
 
@@ -336,6 +351,27 @@ export function AppShell({
         </SidebarContent>
 
         <SidebarFooter className="gap-2">
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                onClick={() => setLogServiceOpen(true)}
+                tooltip={t("tickets.logService")}
+              >
+                <PlusIcon aria-hidden="true" />
+                <span>{t("tickets.logService")}</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                onClick={() => setCheckoutOpen(true)}
+                tooltip={t("dayAtAGlance.actionCheckout")}
+              >
+                <CreditCardIcon aria-hidden="true" />
+                <span>{t("dayAtAGlance.actionCheckout")}</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+
           <div className="flex items-center gap-1 group-data-[collapsible=icon]:flex-col-reverse group-data-[collapsible=icon]:gap-2">
             <UserMenu userName={userName} role={role} onLogout={handleLogout} />
             {employeeId && (
@@ -364,6 +400,31 @@ export function AppShell({
 
         <main className="flex-1 overflow-y-auto">{children}</main>
       </SidebarInset>
+
+      <Dialog open={logServiceOpen} onOpenChange={setLogServiceOpen}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{t("tickets.logService")}</DialogTitle>
+          </DialogHeader>
+          {logServiceOpen && (
+            <LogServiceForm
+              currentEmployeeId={employeeId ?? ""}
+              isStylist={false}
+              redirectPath="/cashier"
+              onClose={() => setLogServiceOpen(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={checkoutOpen} onOpenChange={setCheckoutOpen}>
+        <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{t("dayAtAGlance.actionCheckout")}</DialogTitle>
+          </DialogHeader>
+          {checkoutOpen && <CheckoutForm onClose={() => setCheckoutOpen(false)} />}
+        </DialogContent>
+      </Dialog>
     </SidebarProvider>
   );
 }

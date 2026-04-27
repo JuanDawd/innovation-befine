@@ -35,10 +35,12 @@ export function LogServiceForm({
   currentEmployeeId,
   isStylist,
   redirectPath,
+  onClose,
 }: {
   currentEmployeeId: string;
   isStylist: boolean;
   redirectPath: string;
+  onClose?: () => void;
 }) {
   const t = useTranslations("tickets");
   const tc = useTranslations("common");
@@ -102,7 +104,11 @@ export function LogServiceForm({
       const result = await createTicket(input);
       if (result.success) {
         showToast("success", t("submitSuccess"));
-        setTimeout(() => router.push(redirectPath), 1200);
+        if (onClose) {
+          setTimeout(() => onClose(), 1200);
+        } else {
+          setTimeout(() => router.push(redirectPath), 1200);
+        }
       } else {
         showToast("error", result.error.message ?? t("submitError"));
       }
@@ -244,7 +250,7 @@ export function LogServiceForm({
         <Button
           type="button"
           variant="outline"
-          onClick={() => router.push(redirectPath)}
+          onClick={() => (onClose ? onClose() : router.push(redirectPath))}
           disabled={isPending}
         >
           {tc("cancel")}
