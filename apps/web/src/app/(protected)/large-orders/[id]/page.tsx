@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
+import { ChevronLeftIcon } from "lucide-react";
 import { getLargeOrder, getLargeOrderBatchSummary } from "../actions";
 import { listActiveClothPieces } from "@/app/(protected)/admin/catalog/actions/cloth-pieces";
 import { LargeOrderDetail } from "./large-order-detail";
@@ -29,14 +30,17 @@ export default async function LargeOrderDetailPage({
   const clothPieces = piecesResult.success ? piecesResult.data : [];
 
   return (
-    <div className="max-w-2xl space-y-6">
+    <div className="flex flex-col gap-5 p-4 md:p-6 max-w-2xl mx-auto w-full">
       <Link
         href="/large-orders"
-        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+        className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors w-fit"
       >
+        <ChevronLeftIcon className="size-4" />
         {t("backToList")}
       </Link>
-      <LargeOrderDetail order={orderResult.data} batches={batches} clothPieces={clothPieces} />
+      <div className="rounded-lg border bg-card p-5 md:p-6 shadow-sm">
+        <LargeOrderDetail order={orderResult.data} batches={batches} clothPieces={clothPieces} />
+      </div>
     </div>
   );
 }

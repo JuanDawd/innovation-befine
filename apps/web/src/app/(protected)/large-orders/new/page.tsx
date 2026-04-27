@@ -22,13 +22,18 @@ export default async function NewLargeOrderPage() {
   const isCashierAdmin = hasRole(session.user, "cashier_admin");
 
   return (
-    <div className="flex flex-col gap-6 p-4 md:p-6 max-w-xl mx-auto w-full">
-      <h1 className="text-xl md:text-2xl font-semibold">{t("newOrder")}</h1>
-      <CreateLargeOrderForm
-        clients={clients}
-        clothPieces={clothPieces}
-        canOverridePrice={isCashierAdmin}
-      />
+    <div className="flex flex-col gap-5 p-4 md:p-6 max-w-xl mx-auto w-full">
+      <div>
+        <h1 className="text-xl md:text-2xl font-semibold">{t("newOrder")}</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">{t("newOrderDescription")}</p>
+      </div>
+      <div className="rounded-lg border bg-card p-5 md:p-6 shadow-sm">
+        <CreateLargeOrderForm
+          clients={clients}
+          clothPieces={clothPieces}
+          canOverridePrice={isCashierAdmin}
+        />
+      </div>
     </div>
   );
 }

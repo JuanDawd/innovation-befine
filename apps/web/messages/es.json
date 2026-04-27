@@ -641,6 +641,7 @@
   "largeOrders": {
     "pageTitle": "Pedidos grandes",
     "newOrder": "Nuevo pedido",
+    "newOrderDescription": "Registra un pedido de confección para un cliente.",
     "editOrder": "Editar pedido",
     "client": "Cliente",
     "clientPlaceholder": "Buscar cliente…",
