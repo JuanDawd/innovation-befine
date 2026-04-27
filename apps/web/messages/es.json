@@ -228,7 +228,7 @@
     "expandVariants": "Mostrar variantes",
     "collapseVariants": "Ocultar variantes",
     "deactivateVariantConfirm": "¿Desactivar variante \"{name}\"?",
-    "deactivateVariantDescription": "La variante no estará disponible para nuevos lotes.",
+    "deactivateVariantDescription": "Esta variante dejará de estar disponible. Puedes restaurarla en cualquier momento.",
     "active": "Activo",
     "inactive": "Inactivo",
     "showInactive": "Mostrar inactivos",
@@ -236,8 +236,6 @@
     "restore": "Restaurar",
     "deactivateServiceConfirm": "¿Desactivar \"{name}\"?",
     "deactivateServiceDescription": "El servicio y sus variantes dejarán de aparecer para todos los roles. Puedes restaurarlo en cualquier momento.",
-    "deactivateVariantConfirm": "¿Desactivar variante \"{name}\"?",
-    "deactivateVariantDescription": "Esta variante dejará de estar disponible. Puedes restaurarla en cualquier momento.",
     "deactivateClothPieceConfirm": "¿Desactivar \"{name}\"?",
     "deactivateClothPieceDescription": "Esta pieza dejará de estar disponible para nuevos lotes. Puedes restaurarla en cualquier momento.",
     "createServiceSuccess": "Servicio creado correctamente",
@@ -262,7 +260,11 @@
     "emptyClothPiecesDescription": "Crea el primer tipo de pieza para comenzar.",
     "standardVariantName": "Estándar",
     "auditLogLabel": "Historial de cambios",
-    "auditLogEmpty": "Sin cambios registrados"
+    "auditLogEmpty": "Sin cambios registrados",
+    "impactWarning": "{count, plural, one {# ticket abierto usa esta entidad} other {# tickets abiertos usan esta entidad}}",
+    "discardChanges": "¿Descartar cambios?",
+    "discardChangesDescription": "Tienes cambios sin guardar en esta variante. ¿Seguro que quieres cerrarla?",
+    "discard": "Descartar"
   },
   "clients": {
     "pageTitle": "Clientes",
@@ -468,7 +470,11 @@
     "noVariants": "Sin variantes activas",
     "selectPieceAndVariant": "Selecciona el tipo de pieza y la variante en cada fila.",
     "emptyTitle": "Sin lotes hoy",
-    "emptyDescription": "Crea el primer lote del día."
+    "emptyDescription": "Crea el primer lote del día.",
+    "approveConfirmTitle": "¿Aprobar esta pieza?",
+    "approveConfirmDescription": "La pieza quedará marcada como aprobada y el pago será contabilizado.",
+    "approveDirectlyConfirmTitle": "¿Aprobar directamente?",
+    "approveDirectlyConfirmDescription": "Esta acción marca la pieza como aprobada sin que el empleado haya confirmado su finalización."
   },
   "appointments": {
     "pageTitle": "Citas",
@@ -588,7 +594,9 @@
     "colStatus": "Estado",
     "gridStatus_paid": "Pagado",
     "gridStatus_pending": "Pendiente",
-    "gridStatus_open": "Día abierto"
+    "gridStatus_open": "Día abierto",
+    "confirmPayoutTitle": "¿Confirmar el pago?",
+    "confirmPayoutDescription": "Esta acción registrará el pago de forma permanente. No se puede deshacer."
   },
   "analytics": {
     "pageTitle": "Analytics",

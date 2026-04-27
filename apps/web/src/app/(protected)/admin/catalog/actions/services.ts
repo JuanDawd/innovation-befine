@@ -20,6 +20,8 @@ import {
   catalogAuditLog,
   appointments,
   employees,
+  tickets,
+  ticketItems,
 } from "@befine/db/schema";
 import { createNotification } from "@/lib/notifications";
 import {
@@ -596,4 +598,54 @@ export async function deactivateVariant(variantId: string): Promise<ActionResult
 
   revalidatePath("/admin/catalog");
   return { success: true, data: null };
+}
+
+// ─── Impact check — open ticket count ───────────────────────────────────────
+
+export async function checkVariantOpenTickets(
+  variantId: string,
+): Promise<ActionResult<{ count: number }>> {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session)
+    return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
+
+  const db = getDb();
+  const openStatuses = ["logged", "awaiting_payment", "reopened"] as const;
+  const rows = await db
+    .select({ id: ticketItems.id })
+    .from(ticketItems)
+    .innerJoin(tickets, eq(ticketItems.ticketId, tickets.id))
+    .where(
+      and(eq(ticketItems.serviceVariantId, variantId), inArray(tickets.status, [...openStatuses])),
+    );
+  return { success: true, data: { count: rows.length } };
+}
+
+export async function checkServiceOpenTickets(
+  serviceId: string,
+): Promise<ActionResult<{ count: number }>> {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session)
+    return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
+
+  const db = getDb();
+  const openStatuses = ["logged", "awaiting_payment", "reopened"] as const;
+  const variantRows = await db
+    .select({ id: serviceVariants.id })
+    .from(serviceVariants)
+    .where(eq(serviceVariants.serviceId, serviceId));
+  if (variantRows.length === 0) return { success: true, data: { count: 0 } };
+
+  const variantIds = variantRows.map((v) => v.id);
+  const rows = await db
+    .select({ id: ticketItems.id })
+    .from(ticketItems)
+    .innerJoin(tickets, eq(ticketItems.ticketId, tickets.id))
+    .where(
+      and(
+        inArray(ticketItems.serviceVariantId, variantIds),
+        inArray(tickets.status, [...openStatuses]),
+      ),
+    );
+  return { success: true, data: { count: rows.length } };
 }

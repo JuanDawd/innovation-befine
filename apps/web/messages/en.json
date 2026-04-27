@@ -228,7 +228,7 @@
     "expandVariants": "Show variants",
     "collapseVariants": "Hide variants",
     "deactivateVariantConfirm": "Deactivate variant \"{name}\"?",
-    "deactivateVariantDescription": "The variant will not be available for new batches.",
+    "deactivateVariantDescription": "This variant will no longer be available. You can restore it at any time.",
     "active": "Active",
     "inactive": "Inactive",
     "showInactive": "Show inactive",
@@ -236,8 +236,6 @@
     "restore": "Restore",
     "deactivateServiceConfirm": "Deactivate \"{name}\"?",
     "deactivateServiceDescription": "The service and its variants will no longer appear to any role. You can restore it at any time.",
-    "deactivateVariantConfirm": "Deactivate variant \"{name}\"?",
-    "deactivateVariantDescription": "This variant will no longer be available. You can restore it at any time.",
     "deactivateClothPieceConfirm": "Deactivate \"{name}\"?",
     "deactivateClothPieceDescription": "This piece will no longer be available for new batches. You can restore it at any time.",
     "createServiceSuccess": "Service created successfully",
@@ -262,7 +260,11 @@
     "emptyClothPiecesDescription": "Create the first piece type to get started.",
     "standardVariantName": "Standard",
     "auditLogLabel": "Change history",
-    "auditLogEmpty": "No changes recorded"
+    "auditLogEmpty": "No changes recorded",
+    "impactWarning": "{count, plural, one {# open ticket uses this entity} other {# open tickets use this entity}}",
+    "discardChanges": "Discard changes?",
+    "discardChangesDescription": "You have unsaved changes in this variant. Are you sure you want to close it?",
+    "discard": "Discard"
   },
   "clients": {
     "pageTitle": "Clients",
@@ -436,7 +438,11 @@
     "noVariants": "No active variants",
     "selectPieceAndVariant": "Select a piece type and variant for each row.",
     "emptyTitle": "No batches today",
-    "emptyDescription": "Create the first batch of the day."
+    "emptyDescription": "Create the first batch of the day.",
+    "approveConfirmTitle": "Approve this piece?",
+    "approveConfirmDescription": "The piece will be marked as approved and earnings will be recorded.",
+    "approveDirectlyConfirmTitle": "Approve directly?",
+    "approveDirectlyConfirmDescription": "This marks the piece as approved without the employee confirming completion."
   },
   "appointments": {
     "pageTitle": "Appointments",
@@ -556,7 +562,9 @@
     "colStatus": "Status",
     "gridStatus_paid": "Paid",
     "gridStatus_pending": "Pending",
-    "gridStatus_open": "Day open"
+    "gridStatus_open": "Day open",
+    "confirmPayoutTitle": "Confirm payment?",
+    "confirmPayoutDescription": "This will permanently record the payout. It cannot be undone."
   },
   "analytics": {
     "pageTitle": "Analytics",
