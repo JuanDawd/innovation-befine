@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Loader2Icon, CheckIcon, ZapIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import {
   previewEarnings,
   recordPayout,
@@ -383,14 +384,22 @@ export function PayrollScreen({ days, employees, history, initialEmployeeId }: P
             </p>
           )}
 
-          <Button size="sm" disabled={isPending} onClick={handleRecord}>
-            {isPending ? (
-              <Loader2Icon className="h-3.5 w-3.5 animate-spin mr-1" />
-            ) : (
-              <CheckIcon className="h-3.5 w-3.5 mr-1" />
-            )}
-            {t("confirm")}
-          </Button>
+          <ConfirmationDialog
+            trigger={
+              <Button size="sm" disabled={isPending}>
+                {isPending ? (
+                  <Loader2Icon className="h-3.5 w-3.5 animate-spin mr-1" />
+                ) : (
+                  <CheckIcon className="h-3.5 w-3.5 mr-1" />
+                )}
+                {t("confirm")}
+              </Button>
+            }
+            title={t("confirmPayoutTitle")}
+            description={t("confirmPayoutDescription")}
+            confirmLabel={t("confirm")}
+            onConfirm={handleRecord}
+          />
         </div>
       )}
 

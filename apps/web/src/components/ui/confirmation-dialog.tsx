@@ -20,6 +20,8 @@ interface ConfirmationDialogProps {
   trigger: ReactNode;
   title: string;
   description: string;
+  /** Optional warning line rendered above the description (e.g. open-ticket count). */
+  warning?: string;
   confirmLabel?: string;
   cancelLabel?: string;
   onConfirm: () => void | Promise<void>;
@@ -32,6 +34,7 @@ function ConfirmationDialog({
   trigger,
   title,
   description,
+  warning,
   confirmLabel = "Confirmar",
   cancelLabel = "Cancelar",
   onConfirm,
@@ -54,6 +57,12 @@ function ConfirmationDialog({
             )}
             <div className="space-y-1.5">
               <DialogTitle className={cn(isDestructive && "text-destructive")}>{title}</DialogTitle>
+              {warning && (
+                <p className="flex items-center gap-1.5 text-sm text-amber-700 dark:text-amber-400">
+                  <AlertTriangleIcon className="size-3.5 shrink-0" aria-hidden="true" />
+                  {warning}
+                </p>
+              )}
               <DialogDescription>{description}</DialogDescription>
             </div>
           </div>

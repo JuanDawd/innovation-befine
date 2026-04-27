@@ -12,6 +12,7 @@ import { useTranslations } from "next-intl";
 import { CheckCircle2Icon, Loader2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import {
   listPendingApprovals,
   approvePiece,
@@ -118,31 +119,38 @@ export function BatchApprovalBoard({ isAdmin }: { isAdmin: boolean }) {
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
                     {piece.status === "done_pending_approval" && (
-                      <Button
-                        size="sm"
-                        onClick={() => handleApprove(piece)}
-                        disabled={pendingId === piece.id}
-                      >
-                        {pendingId === piece.id ? (
-                          <Loader2Icon className="h-4 w-4 animate-spin" />
-                        ) : (
-                          t("approve")
-                        )}
-                      </Button>
+                      <ConfirmationDialog
+                        trigger={
+                          <Button size="sm" disabled={pendingId === piece.id}>
+                            {pendingId === piece.id ? (
+                              <Loader2Icon className="h-4 w-4 animate-spin" />
+                            ) : (
+                              t("approve")
+                            )}
+                          </Button>
+                        }
+                        title={t("approveConfirmTitle")}
+                        description={t("approveConfirmDescription")}
+                        confirmLabel={t("approve")}
+                        onConfirm={() => handleApprove(piece)}
+                      />
                     )}
                     {piece.status === "pending" && isAdmin && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleAdminApprove(piece)}
-                        disabled={pendingId === piece.id}
-                      >
-                        {pendingId === piece.id ? (
-                          <Loader2Icon className="h-4 w-4 animate-spin" />
-                        ) : (
-                          t("approveDirectly")
-                        )}
-                      </Button>
+                      <ConfirmationDialog
+                        trigger={
+                          <Button size="sm" variant="outline" disabled={pendingId === piece.id}>
+                            {pendingId === piece.id ? (
+                              <Loader2Icon className="h-4 w-4 animate-spin" />
+                            ) : (
+                              t("approveDirectly")
+                            )}
+                          </Button>
+                        }
+                        title={t("approveDirectlyConfirmTitle")}
+                        description={t("approveDirectlyConfirmDescription")}
+                        confirmLabel={t("approveDirectly")}
+                        onConfirm={() => handleAdminApprove(piece)}
+                      />
                     )}
                     {errorMap[piece.id] && (
                       <p className="text-xs text-destructive">{errorMap[piece.id]}</p>
