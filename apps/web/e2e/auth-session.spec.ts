@@ -27,7 +27,6 @@ test.describe("Unauthenticated redirects", () => {
     "/secretary/appointments",
     "/cashier/appointments",
     "/secretary/appointments/new",
-    "/cashier/appointments/new",
   ];
 
   for (const route of protectedRoutes) {

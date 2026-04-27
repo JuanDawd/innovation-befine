@@ -1,6 +1,6 @@
 "use client";
 
-import { Moon, Sun } from "lucide-react";
+import { MoonIcon, SunIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/hooks/use-theme";
 
@@ -28,7 +28,7 @@ export function ThemeToggle({ className }: { className?: string }) {
           theme === "light" && "bg-sidebar-foreground text-sidebar",
         )}
       >
-        <Sun className="size-3.5" aria-hidden="true" />
+        <SunIcon className="size-3.5" aria-hidden="true" />
       </button>
       <button
         type="button"
@@ -41,7 +41,7 @@ export function ThemeToggle({ className }: { className?: string }) {
           theme === "dark" && "bg-sidebar-foreground text-sidebar",
         )}
       >
-        <Moon className="size-3.5" aria-hidden="true" />
+        <MoonIcon className="size-3.5" aria-hidden="true" />
       </button>
     </div>
   );

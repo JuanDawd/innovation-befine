@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
-import { ChevronLeftIcon, ChevronRightIcon, Loader2Icon, PlusIcon, TrashIcon } from "lucide-react";
+import { ChevronLeftIcon, ChevronRightIcon, Loader2Icon, PlusIcon, Trash2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { logAbsence, deleteAbsence, type AbsenceRow, type EmployeeOption } from "./actions";
 
@@ -161,7 +161,7 @@ export function AbsenceCalendar({ year, month, absences, employees }: Props) {
                           handleDelete(a.id);
                         }}
                       >
-                        <TrashIcon className="h-3 w-3" />
+                        <Trash2Icon className="h-3 w-3" />
                       </button>
                     </div>
                   ))}
@@ -198,7 +198,7 @@ export function AbsenceCalendar({ year, month, absences, employees }: Props) {
                     onClick={() => handleDelete(a.id)}
                     className="opacity-60 hover:opacity-100 ml-2"
                   >
-                    <TrashIcon className="h-3.5 w-3.5" />
+                    <Trash2Icon className="h-3.5 w-3.5" />
                   </button>
                 </div>
               ))}

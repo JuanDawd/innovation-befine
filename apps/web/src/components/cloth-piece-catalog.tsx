@@ -16,7 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   PlusIcon,
   PencilIcon,
-  TrashIcon,
+  Trash2Icon,
   RotateCcwIcon,
   Loader2Icon,
   ChevronDownIcon,
@@ -161,7 +161,7 @@ function VariantRow({
                   className="text-muted-foreground hover:text-destructive"
                   aria-label={t("deactivate")}
                 >
-                  <TrashIcon className="size-3.5" />
+                  <Trash2Icon className="size-3.5" />
                 </button>
               }
               title={t("deactivateVariantConfirm", { name: variant.name })}
@@ -545,7 +545,7 @@ function PieceRow({
                   aria-label={t("deactivate")}
                   disabled={isPending}
                 >
-                  <TrashIcon className="size-4" />
+                  <Trash2Icon className="size-4" />
                 </button>
               }
               title={t("deactivateClothPieceConfirm", { name: localPiece.name })}

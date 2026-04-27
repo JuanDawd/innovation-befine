@@ -20,9 +20,5 @@ export function CreateEmployeeFormPage() {
     setTimeout(() => router.push("/admin/employees"), 1000);
   }
 
-  return (
-    <div className="rounded-xl border bg-card p-6 shadow-sm">
-      <CreateEmployeeForm onSuccess={handleSuccess} />
-    </div>
-  );
+  return <CreateEmployeeForm onSuccess={handleSuccess} />;
 }

@@ -2,7 +2,7 @@
 
 import * as Sentry from "@sentry/nextjs";
 import { Component, type ReactNode } from "react";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangleIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type Props = {
@@ -44,7 +44,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
     return (
       <div className="flex flex-col items-center justify-center gap-4 rounded-lg border border-destructive/20 bg-destructive/5 p-8 text-center">
-        <AlertTriangle className="h-8 w-8 text-destructive" aria-hidden />
+        <AlertTriangleIcon className="h-8 w-8 text-destructive" aria-hidden />
         <div>
           <p className="text-sm font-medium text-destructive">Ocurrió un error inesperado</p>
           {this.state.eventId && (

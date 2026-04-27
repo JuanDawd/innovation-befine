@@ -8,7 +8,7 @@
 
 import { headers } from "next/headers";
 import { getTranslations } from "next-intl/server";
-import { ShieldAlert } from "lucide-react";
+import { ShieldAlertIcon } from "lucide-react";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { ROLE_HOME } from "@/lib/middleware-helpers";
@@ -33,7 +33,7 @@ export default async function ForbiddenPage() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-6 p-8 text-center">
-      <ShieldAlert className="size-12 text-destructive" aria-hidden="true" />
+      <ShieldAlertIcon className="size-12 text-destructive" aria-hidden="true" />
       <div className="space-y-2">
         <h1 className="text-2xl font-bold">{t("forbidden")}</h1>
         <p className="text-sm text-muted-foreground">{t("forbiddenDescription")}</p>

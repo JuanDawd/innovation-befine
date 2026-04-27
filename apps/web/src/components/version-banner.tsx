@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { RefreshCw } from "lucide-react";
+import { RefreshCwIcon } from "lucide-react";
 
 const BASE_INTERVAL_MS = 5 * 60 * 1000;
 const MAX_BACKOFF_MS = 30 * 60 * 1000;
@@ -95,7 +95,7 @@ export function VersionBanner() {
           onClick={() => window.location.reload()}
           className="flex items-center gap-1.5 rounded-md bg-primary-foreground/15 px-3 py-1 text-xs font-medium hover:bg-primary-foreground/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground"
         >
-          <RefreshCw className="size-3" aria-hidden="true" />
+          <RefreshCwIcon className="size-3" aria-hidden="true" />
           {t("refresh")}
         </button>
         <button

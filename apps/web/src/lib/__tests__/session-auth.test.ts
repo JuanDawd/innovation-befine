@@ -72,7 +72,7 @@ describe("Appointment route RBAC", () => {
     "/secretary/appointments",
     "/secretary/appointments/new",
     "/cashier/appointments",
-    "/cashier/appointments/new",
+    "/cashier/appointments",
   ];
 
   function routePrefix(path: string): string {

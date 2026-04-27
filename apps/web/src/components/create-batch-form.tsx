@@ -292,7 +292,7 @@ export function CreateBatchForm({
       </div>
 
       {/* Submit */}
-      <Button onClick={handleSubmit} disabled={isPending} className="self-start">
+      <Button onClick={handleSubmit} disabled={isPending}>
         {isPending && <Loader2Icon className="h-4 w-4 mr-2 animate-spin" />}
         {t("submit")}
       </Button>

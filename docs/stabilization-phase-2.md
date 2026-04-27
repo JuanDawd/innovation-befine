@@ -97,7 +97,7 @@ Test:
 
 ## Task: Catalog variant accordion with mutual exclusion
 
-Status: pending
+Status: done
 Type: ux
 
 Scope:
@@ -128,7 +128,7 @@ Test:
 
 ## Task: Standardise destructive mutations behind Dialogs
 
-Status: pending
+Status: done
 Type: ux
 
 Scope:
@@ -257,7 +257,6 @@ Affected routes and their parent context:
 | Route                         | Parent                    | Dialog width |
 | ----------------------------- | ------------------------- | ------------ |
 | `/cashier/checkout`           | `/cashier` (dashboard)    | `max-w-xl`   |
-| `/cashier/appointments/new`   | `/cashier/appointments`   | `max-w-md`   |
 | `/secretary/appointments/new` | `/secretary/appointments` | `max-w-md`   |
 | `/admin/batches/new`          | `/admin/batches`          | `max-w-lg`   |
 | `/secretary/batches/new`      | `/secretary/batches`      | `max-w-lg`   |
@@ -289,3 +288,100 @@ Test:
 - Navigate to `/cashier/appointments` → click "Nueva cita" → Dialog opens, URL stays `/cashier/appointments`.
 - Refresh the browser while the Dialog is open → renders the standalone `/cashier/appointments/new` page.
 - Open any Dialog → press Escape → Dialog closes, user is back on the parent page.
+
+---
+
+## Task: Service catalog variant accordion with impact warnings
+
+Status: done
+Type: ux
+
+Scope:
+
+- Variant rows in the service catalog lacked mutual exclusion (multiple open at once) and had no impact warning when deactivating a variant or service with open tickets.
+
+Steps:
+
+1. Replace flat variant rows with a controlled accordion — only one open at a time.
+2. Dirty-form guard: opening a second variant when the first has unsaved edits prompts `ConfirmationDialog`.
+3. Add `checkVariantOpenTickets` and `checkServiceOpenTickets` server actions.
+4. Deactivation dialogs show a warning line when open tickets reference the entity.
+5. Replace `TrashIcon` with `Trash2Icon` for icon consistency.
+
+Acceptance Criteria:
+
+- Only one variant row is expanded at a time in the catalog.
+- Deactivating a variant/service with open tickets shows an amber warning in the confirmation dialog.
+- No `TrashIcon` imports remain in service-catalog.
+
+---
+
+## Task: Destructive mutations behind ConfirmationDialog
+
+Status: done
+Type: ux
+
+Scope:
+
+- Batch piece approval, payout recording, and employee deactivation fired immediately without confirmation. Adds `ConfirmationDialog` to each and extends the component with an optional `warning` prop for impact messages.
+
+Steps:
+
+1. Wrap batch-piece approve button in `ConfirmationDialog`.
+2. Wrap payroll payout confirm button in `ConfirmationDialog`.
+3. Wrap employee deactivate in `ConfirmationDialog` (decoupled from the edit dialog).
+4. Add `warning` prop to `ConfirmationDialog` — renders amber alert line above description.
+5. Add i18n keys: `approveConfirmTitle`, `approveConfirmDescription`, `confirmPayoutTitle`, `confirmPayoutDescription`.
+
+Acceptance Criteria:
+
+- Approving a piece, recording a payout, and deactivating an employee all require a confirmation click.
+- `ConfirmationDialog` renders the `warning` prop with `AlertTriangleIcon` in amber.
+
+---
+
+## Task: Sidebar quick-action buttons (Cobrar / Registrar servicio)
+
+Status: done
+Type: ux
+
+Scope:
+
+- "Registrar servicio" and "Cobrar" were missing from the admin/secretary sidebar. The cashier page header duplicated these as page-level links. Buttons should live in the sidebar footer, collapse to icon-only when the sidebar is in icon mode, and open lazy-mounted dialogs.
+
+Steps:
+
+1. Add `SidebarMenuButton` entries in `SidebarFooter` for both actions.
+2. Modals moved outside `<Sidebar>` to `SidebarProvider` level to avoid clipping.
+3. Lazy-mount form content (`{open && <Form />}`) so data fetches only fire on dialog open.
+4. Remove duplicate action buttons from the cashier page header.
+5. Add `onClose` prop to `CheckoutForm` and `LogServiceForm` for dialog close handling.
+
+Acceptance Criteria:
+
+- Both buttons visible in expanded sidebar; icon-only with tooltip in collapsed mode.
+- Clicking either button opens the correct dialog; form loads data only after opening.
+- Cashier page header no longer shows the duplicate action buttons.
+
+---
+
+## Task: Icon and layout polish pass
+
+Status: done
+Type: ux
+
+Scope:
+
+- Minor inconsistencies across components: `TrashIcon` used instead of `Trash2Icon`, submit button alignment, redundant card wrapper, trailing whitespace.
+
+Steps:
+
+1. Replace `TrashIcon` with `Trash2Icon` in absence-calendar, cloth-piece-catalog, create-batch-form.
+2. Fix submit button alignment in book-appointment-form (`self-end`) and create-batch-form (remove `self-start`).
+3. Remove redundant card wrapper from create-employee-form-page.
+4. SW cache version bump.
+
+Acceptance Criteria:
+
+- No `TrashIcon` imports remain in any component (only `Trash2Icon`).
+- Submit buttons are consistently aligned across forms.

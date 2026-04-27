@@ -159,7 +159,7 @@ export function BookAppointmentForm({ redirectPath }: { redirectPath: string }) 
     return <p className="text-sm text-muted-foreground py-4">{t("noStylists")}</p>;
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-5 ">
       {/* Client */}
       <div className="flex flex-col gap-1.5">
         <label className="text-sm font-medium">{t("client")}</label>
@@ -262,7 +262,7 @@ export function BookAppointmentForm({ redirectPath }: { redirectPath: string }) 
       </div>
 
       {/* Submit */}
-      <Button onClick={handleSubmit} disabled={isPending} className="self-start">
+      <Button onClick={handleSubmit} disabled={isPending} className="self-end">
         {isPending && <Loader2Icon className="h-4 w-4 mr-2 animate-spin" />}
         {t("submit")}
       </Button>

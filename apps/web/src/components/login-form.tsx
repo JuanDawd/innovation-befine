@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Loader2 } from "lucide-react";
+import { Loader2Icon } from "lucide-react";
 import { loginSchema, type LoginInput } from "@befine/types";
 import type { AppRole } from "@befine/types";
 import { Button } from "@/components/ui/button";
@@ -106,7 +106,11 @@ export function LoginForm() {
       )}
 
       <Button type="submit" className="w-full" disabled={isSubmitting}>
-        {isSubmitting ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : t("login")}
+        {isSubmitting ? (
+          <Loader2Icon className="size-4 animate-spin" aria-hidden="true" />
+        ) : (
+          t("login")
+        )}
       </Button>
 
       <p className="text-center text-sm text-muted-foreground">
