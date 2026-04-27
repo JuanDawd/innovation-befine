@@ -734,7 +734,8 @@
     "itemDescription": "Colores / notas de diseño",
     "itemDescriptionPlaceholder": "Ej: Azul marino, logo bordado en pecho izquierdo",
     "generatedDescription": "Descripción generada automáticamente",
-    "itemsRequired": "Se requiere al menos un artículo"
+    "itemsRequired": "Se requiere al menos un artículo",
+    "itemsIncomplete": "Completa todos los campos de cada artículo (tipo, variante y descripción)"
   },
   "nav": {
     "dashboard": "Tablero",

@@ -130,6 +130,7 @@ export function LargeOrderDetail({ order: initialOrder, batches, clothPieces }: 
   const [openEditKey, setOpenEditKey] = useState<number>(editLines[0]?.key ?? 0);
   const editGrandTotal = editLines.reduce((s, l) => s + l.unitPrice * l.quantity, 0);
 
+  const [editLineErrors, setEditLineErrors] = useState<Set<number>>(new Set());
   const [editEta, setEditEta] = useState(
     order.estimatedDeliveryAt ? new Date(order.estimatedDeliveryAt).toISOString().slice(0, 16) : "",
   );
@@ -152,6 +153,12 @@ export function LargeOrderDetail({ order: initialOrder, batches, clothPieces }: 
   }
 
   function updateEditLine(key: number, patch: Partial<Omit<OrderLine, "key">>) {
+    setEditLineErrors((prev) => {
+      if (!prev.has(key)) return prev;
+      const next = new Set(prev);
+      next.delete(key);
+      return next;
+    });
     setEditLines((prev) =>
       prev.map((l) => {
         if (l.key !== key) return l;
@@ -211,12 +218,17 @@ export function LargeOrderDetail({ order: initialOrder, batches, clothPieces }: 
   function saveEdit() {
     setError(null);
 
-    // If any line has a piece selected but is missing variant or description, block
-    const partiallyFilled = editLines.some(
-      (l) => l.clothPieceId && (!l.clothPieceVariantId || !l.itemDescription.trim()),
+    // Mark lines that have a piece selected but are missing variant or description
+    const badKeys = new Set(
+      editLines
+        .filter((l) => l.clothPieceId && (!l.clothPieceVariantId || !l.itemDescription.trim()))
+        .map((l) => l.key),
     );
-    if (partiallyFilled) {
-      setError(t("itemsRequired"));
+    setEditLineErrors(badKeys);
+    if (badKeys.size > 0) {
+      const firstBad = editLines.find((l) => badKeys.has(l.key));
+      if (firstBad) setOpenEditKey(firstBad.key);
+      setError(t("itemsIncomplete"));
       return;
     }
 
@@ -304,7 +316,7 @@ export function LargeOrderDetail({ order: initialOrder, batches, clothPieces }: 
                   onUpdate={(patch) => updateEditLine(line.key, patch)}
                   clothPieces={clothPieces}
                   canRemove={editLines.length > 1}
-                  hasError={false}
+                  hasError={editLineErrors.has(line.key)}
                 />
               ))}
             </div>
@@ -361,7 +373,15 @@ export function LargeOrderDetail({ order: initialOrder, batches, clothPieces }: 
               )}
               {t("submit")}
             </Button>
-            <Button size="sm" variant="outline" onClick={() => setEditing(false)}>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                setEditing(false);
+                setEditLineErrors(new Set());
+                setError(null);
+              }}
+            >
               <XIcon className="h-3.5 w-3.5 mr-1.5" />
               Cancelar
             </Button>
