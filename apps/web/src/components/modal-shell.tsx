@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 interface ModalShellProps {
   title: string;
   children: React.ReactNode;
-  maxWidth?: "sm" | "md" | "lg" | "xl";
+  maxWidth?: "sm" | "md" | "lg" | "xl" | "2xl";
 }
 
 const MAX_WIDTH = {
@@ -23,6 +23,7 @@ const MAX_WIDTH = {
   md: "max-w-md",
   lg: "max-w-lg",
   xl: "max-w-xl",
+  "2xl": "max-w-2xl",
 } as const;
 
 export function ModalShell({ title, children, maxWidth = "md" }: ModalShellProps) {
