@@ -4,8 +4,9 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useToast } from "@/hooks/use-toast";
-import { PlusIcon, Trash2Icon, Loader2Icon } from "lucide-react";
+import { PlusIcon, Trash2Icon, Loader2Icon, ChevronDownIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { createLargeOrder, type ClientOption } from "./actions";
 import type { ClothPieceRow } from "@/app/(protected)/admin/catalog/actions/cloth-pieces";
 
@@ -21,7 +22,205 @@ type OrderLine = {
   clothPieceVariantId: string;
   quantity: number;
   unitPrice: number;
+  itemDescription: string;
 };
+
+function buildDescription(lines: OrderLine[], clothPieces: ClothPieceRow[]): string {
+  return lines
+    .filter((l) => l.clothPieceId && l.clothPieceVariantId)
+    .map((l) => {
+      const piece = clothPieces.find((p) => p.id === l.clothPieceId);
+      const variant = piece?.variants.find((v) => v.id === l.clothPieceVariantId);
+      const pieceName = piece?.name ?? "";
+      const variantName = variant?.name ?? "";
+      const label =
+        variantName && variantName !== "Standard" ? `${pieceName} (${variantName})` : pieceName;
+      const desc = l.itemDescription.trim();
+      return `${l.quantity}x ${label}${desc ? ` — ${desc}` : ""}`;
+    })
+    .join("\n");
+}
+
+function LineAccordion({
+  line,
+  index,
+  open,
+  onToggle,
+  onRemove,
+  onUpdate,
+  clothPieces,
+  canRemove,
+  hasError,
+}: {
+  line: OrderLine;
+  index: number;
+  open: boolean;
+  onToggle: () => void;
+  onRemove: () => void;
+  onUpdate: (patch: Partial<Omit<OrderLine, "key">>) => void;
+  clothPieces: ClothPieceRow[];
+  canRemove: boolean;
+  hasError: boolean;
+}) {
+  const t = useTranslations("largeOrders");
+  const piece = clothPieces.find((p) => p.id === line.clothPieceId);
+  const activeVariants = piece?.variants.filter((v) => v.isActive) ?? [];
+  const variant = activeVariants.find((v) => v.id === line.clothPieceVariantId);
+  const lineTotal = line.unitPrice * line.quantity;
+
+  const summaryLabel = piece
+    ? `${line.quantity}x ${piece.name}${variant ? ` (${variant.name})` : ""}`
+    : `${t("item")} ${index + 1}`;
+
+  return (
+    <div
+      className={cn("rounded-md border", hasError && "border-destructive", open && "border-ring")}
+    >
+      {/* Accordion header */}
+      <button
+        type="button"
+        onClick={onToggle}
+        className="flex w-full items-center justify-between px-3 py-2.5 text-left"
+      >
+        <div className="min-w-0 flex-1">
+          <span className="text-sm font-medium truncate block">{summaryLabel}</span>
+          {!open && line.itemDescription && (
+            <span className="text-xs text-muted-foreground truncate block">
+              {line.itemDescription}
+            </span>
+          )}
+        </div>
+        <div className="flex shrink-0 items-center gap-2 ml-2">
+          {lineTotal > 0 && !open && (
+            <span className="text-xs font-mono text-muted-foreground">
+              ${lineTotal.toLocaleString("es-CO")}
+            </span>
+          )}
+          <ChevronDownIcon
+            className={cn(
+              "size-4 text-muted-foreground transition-transform",
+              open && "rotate-180",
+            )}
+            aria-hidden="true"
+          />
+        </div>
+      </button>
+
+      {/* Accordion body */}
+      {open && (
+        <div className="border-t px-3 pb-3 pt-3 space-y-3 bg-muted/20">
+          {/* Piece + variant */}
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-muted-foreground">
+                {t("selectPiece")}
+              </label>
+              <select
+                aria-label={t("selectPiece")}
+                value={line.clothPieceId}
+                onChange={(e) => onUpdate({ clothPieceId: e.target.value })}
+                className="h-8 w-full rounded-md border border-input bg-background px-2.5 text-sm focus-visible:outline-none focus-visible:border-ring"
+              >
+                <option value="">{t("selectPiece")}</option>
+                {clothPieces.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-muted-foreground">
+                {t("selectVariant")}
+              </label>
+              <select
+                aria-label={t("selectVariant")}
+                value={line.clothPieceVariantId}
+                onChange={(e) => onUpdate({ clothPieceVariantId: e.target.value })}
+                disabled={!line.clothPieceId || activeVariants.length === 0}
+                className="h-8 w-full rounded-md border border-input bg-background px-2.5 text-sm focus-visible:outline-none focus-visible:border-ring disabled:opacity-50"
+              >
+                <option value="">
+                  {line.clothPieceId && activeVariants.length === 0
+                    ? t("noVariants")
+                    : t("selectVariant")}
+                </option>
+                {activeVariants.map((v) => (
+                  <option key={v.id} value={v.id}>
+                    {v.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Qty + unit price */}
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-muted-foreground">{t("quantity")}</label>
+              <input
+                type="number"
+                min={1}
+                step={1}
+                value={line.quantity}
+                onChange={(e) =>
+                  onUpdate({ quantity: Math.max(1, parseInt(e.target.value, 10) || 1) })
+                }
+                className="w-full h-8 rounded-md border border-input bg-background px-2.5 text-sm font-mono focus-visible:outline-none focus-visible:border-ring"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-muted-foreground">{t("unitPrice")}</label>
+              <input
+                type="number"
+                min={0}
+                step={1}
+                value={line.unitPrice}
+                onChange={(e) => onUpdate({ unitPrice: parseInt(e.target.value, 10) || 0 })}
+                className="w-full h-8 rounded-md border border-input bg-background px-2.5 text-sm font-mono focus-visible:outline-none focus-visible:border-ring"
+              />
+            </div>
+          </div>
+
+          {/* Item description — required */}
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-muted-foreground">
+              {t("itemDescription")} <span className="text-destructive">*</span>
+            </label>
+            <textarea
+              rows={2}
+              maxLength={300}
+              required
+              value={line.itemDescription}
+              onChange={(e) => onUpdate({ itemDescription: e.target.value })}
+              placeholder={t("itemDescriptionPlaceholder")}
+              className="w-full rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:border-ring resize-none"
+            />
+          </div>
+
+          {/* Line total + remove */}
+          <div className="flex items-center justify-between">
+            {lineTotal > 0 && (
+              <span className="text-sm font-mono font-semibold">
+                ${lineTotal.toLocaleString("es-CO")}
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={onRemove}
+              disabled={!canRemove}
+              aria-label={t("removeItem")}
+              className="ml-auto flex items-center gap-1 rounded px-2 py-1 text-xs text-destructive hover:bg-destructive/10 disabled:opacity-30"
+            >
+              <Trash2Icon className="size-3.5" />
+              {t("removeItem")}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function CreateLargeOrderForm({ clients, clothPieces }: Props) {
   const t = useTranslations("largeOrders");
@@ -31,24 +230,47 @@ export function CreateLargeOrderForm({ clients, clothPieces }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [withDeposit, setWithDeposit] = useState(false);
+  const [openKey, setOpenKey] = useState<number>(0);
 
   const [lines, setLines] = useState<OrderLine[]>([
-    { key: 0, clothPieceId: "", clothPieceVariantId: "", quantity: 1, unitPrice: 0 },
+    {
+      key: 0,
+      clothPieceId: "",
+      clothPieceVariantId: "",
+      quantity: 1,
+      unitPrice: 0,
+      itemDescription: "",
+    },
   ]);
   const [nextKey, setNextKey] = useState(1);
 
   const grandTotal = lines.reduce((sum, l) => sum + l.unitPrice * l.quantity, 0);
+  const generatedDescription = buildDescription(lines, clothPieces);
 
   function addLine() {
+    const key = nextKey;
     setLines((prev) => [
       ...prev,
-      { key: nextKey, clothPieceId: "", clothPieceVariantId: "", quantity: 1, unitPrice: 0 },
+      {
+        key,
+        clothPieceId: "",
+        clothPieceVariantId: "",
+        quantity: 1,
+        unitPrice: 0,
+        itemDescription: "",
+      },
     ]);
     setNextKey((k) => k + 1);
+    setOpenKey(key);
   }
 
   function removeLine(key: number) {
-    setLines((prev) => prev.filter((l) => l.key !== key));
+    if (lines.length === 1) return;
+    setLines((prev) => {
+      const next = prev.filter((l) => l.key !== key);
+      if (openKey === key) setOpenKey(next[next.length - 1].key);
+      return next;
+    });
   }
 
   function updateLine(key: number, patch: Partial<Omit<OrderLine, "key">>) {
@@ -82,15 +304,23 @@ export function CreateLargeOrderForm({ clients, clothPieces }: Props) {
     setError(null);
     setFieldErrors({});
 
+    // Validate: all items need piece + variant + description
+    const incomplete = lines.some(
+      (l) => !l.clothPieceId || !l.clothPieceVariantId || !l.itemDescription.trim(),
+    );
+    if (incomplete) {
+      setError(t("itemsRequired"));
+      return;
+    }
+
     const fd = new FormData(e.currentTarget);
     const depositAmountRaw = fd.get("initialDepositAmount") as string;
     const depositAmount = depositAmountRaw ? parseInt(depositAmountRaw, 10) : undefined;
-    const rawTotalPrice = parseInt(fd.get("totalPrice") as string, 10);
 
     const input = {
       clientId: fd.get("clientId") as string,
-      description: fd.get("description") as string,
-      totalPrice: rawTotalPrice,
+      description: generatedDescription || (fd.get("description") as string),
+      totalPrice: grandTotal > 0 ? grandTotal : parseInt(fd.get("totalPrice") as string, 10),
       estimatedDeliveryAt: (fd.get("estimatedDeliveryAt") as string)
         ? `${fd.get("estimatedDeliveryAt") as string}:00-05:00`
         : undefined,
@@ -123,133 +353,6 @@ export function CreateLargeOrderForm({ clients, clothPieces }: Props) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      {/* ─── Items from catalogue ─── */}
-      {clothPieces.length > 0 && (
-        <div className="space-y-3 rounded-lg border border-dashed p-4">
-          <p className="text-sm font-medium">
-            {t("items")}
-            <span className="text-muted-foreground font-normal text-xs ml-2">(opcional)</span>
-          </p>
-
-          {lines.map((line) => {
-            const piece = clothPieces.find((p) => p.id === line.clothPieceId);
-            const activeVariants = piece?.variants.filter((v) => v.isActive) ?? [];
-            const lineTotal = line.unitPrice * line.quantity;
-
-            return (
-              <div key={line.key} className="rounded-md border bg-muted/30 p-3 space-y-2">
-                {/* Piece + variant row */}
-                <div className="flex gap-2">
-                  <div className="flex-1 min-w-0">
-                    <select
-                      aria-label={t("selectPiece")}
-                      value={line.clothPieceId}
-                      onChange={(e) => updateLine(line.key, { clothPieceId: e.target.value })}
-                      className="h-8 w-full rounded-md border border-input bg-background px-2.5 text-sm focus-visible:outline-none focus-visible:border-ring"
-                    >
-                      <option value="">{t("selectPiece")}</option>
-                      {clothPieces.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <select
-                      aria-label={t("selectVariant")}
-                      value={line.clothPieceVariantId}
-                      onChange={(e) =>
-                        updateLine(line.key, { clothPieceVariantId: e.target.value })
-                      }
-                      disabled={!line.clothPieceId || activeVariants.length === 0}
-                      className="h-8 w-full rounded-md border border-input bg-background px-2.5 text-sm focus-visible:outline-none focus-visible:border-ring disabled:opacity-50"
-                    >
-                      <option value="">
-                        {line.clothPieceId && activeVariants.length === 0
-                          ? t("noVariants")
-                          : t("selectVariant")}
-                      </option>
-                      {activeVariants.map((v) => (
-                        <option key={v.id} value={v.id}>
-                          {v.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => removeLine(line.key)}
-                    disabled={lines.length === 1}
-                    aria-label={t("removeItem")}
-                    className="mt-auto mb-0.5 p-1 rounded text-muted-foreground hover:text-foreground disabled:opacity-30"
-                  >
-                    <Trash2Icon className="h-4 w-4" />
-                  </button>
-                </div>
-
-                {/* Qty + unit price + line total */}
-                <div className="flex gap-2 items-end">
-                  <div className="w-20 space-y-1">
-                    <label className="text-xs text-muted-foreground">{t("quantity")}</label>
-                    <input
-                      type="number"
-                      min={1}
-                      step={1}
-                      value={line.quantity}
-                      onChange={(e) =>
-                        updateLine(line.key, {
-                          quantity: Math.max(1, parseInt(e.target.value, 10) || 1),
-                        })
-                      }
-                      className="w-full h-8 rounded-md border border-input bg-background px-2.5 text-sm font-mono focus-visible:outline-none focus-visible:border-ring"
-                    />
-                  </div>
-                  <div className="flex-1 space-y-1">
-                    <label className="text-xs text-muted-foreground">{t("unitPrice")}</label>
-                    <input
-                      type="number"
-                      min={0}
-                      step={1}
-                      value={line.unitPrice}
-                      onChange={(e) =>
-                        updateLine(line.key, { unitPrice: parseInt(e.target.value, 10) || 0 })
-                      }
-                      className="w-full h-8 rounded-md border border-input bg-background px-2.5 text-sm font-mono focus-visible:outline-none focus-visible:border-ring"
-                    />
-                  </div>
-                  {lineTotal > 0 && (
-                    <div className="text-sm font-mono font-semibold text-right pb-0.5 shrink-0">
-                      ${lineTotal.toLocaleString("es-CO")}
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={addLine}
-            className="self-start"
-          >
-            <PlusIcon className="h-4 w-4 mr-1" />
-            {t("addItem")}
-          </Button>
-
-          {grandTotal > 0 && (
-            <div className="flex items-center justify-between rounded-md bg-muted/50 px-3 py-2 text-sm">
-              <span className="text-muted-foreground">{t("grandTotal")}</span>
-              <span className="font-mono font-semibold">${grandTotal.toLocaleString("es-CO")}</span>
-            </div>
-          )}
-        </div>
-      )}
-
       {/* Client */}
       <div className="space-y-1">
         <label className="text-sm font-medium" htmlFor="clientId">
@@ -272,45 +375,73 @@ export function CreateLargeOrderForm({ clients, clothPieces }: Props) {
         {fieldErrors.clientId && <p className="text-xs text-destructive">{fieldErrors.clientId}</p>}
       </div>
 
-      {/* Description */}
-      <div className="space-y-1">
-        <label className="text-sm font-medium" htmlFor="description">
-          {t("description")} <span className="text-destructive">*</span>
-        </label>
-        <textarea
-          id="description"
-          name="description"
-          required
-          maxLength={500}
-          rows={3}
-          placeholder={t("descriptionPlaceholder")}
-          className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-ring resize-none"
-        />
-        {fieldErrors.description && (
-          <p className="text-xs text-destructive">{fieldErrors.description}</p>
-        )}
+      {/* Items — required, accordion */}
+      <div className="space-y-2">
+        <p className="text-sm font-medium">
+          {t("items")} <span className="text-destructive">*</span>
+        </p>
+        <div className="space-y-2">
+          {lines.map((line, index) => (
+            <LineAccordion
+              key={line.key}
+              line={line}
+              index={index}
+              open={openKey === line.key}
+              onToggle={() => setOpenKey(openKey === line.key ? -1 : line.key)}
+              onRemove={() => removeLine(line.key)}
+              onUpdate={(patch) => updateLine(line.key, patch)}
+              clothPieces={clothPieces}
+              canRemove={lines.length > 1}
+              hasError={false}
+            />
+          ))}
+        </div>
+        <Button type="button" variant="outline" size="sm" onClick={addLine}>
+          <PlusIcon className="size-4" />
+          {t("addItem")}
+        </Button>
       </div>
 
-      {/* Total price — pre-filled from computed grand total */}
-      <div className="space-y-1">
-        <label className="text-sm font-medium" htmlFor="totalPrice">
-          {t("totalPrice")} <span className="text-destructive">*</span>
-        </label>
-        <input
-          id="totalPrice"
-          name="totalPrice"
-          type="number"
-          required
-          min={1}
-          step={1}
-          key={grandTotal || "manual"}
-          defaultValue={grandTotal > 0 ? grandTotal : undefined}
-          className="w-full h-9 rounded-md border border-input bg-transparent px-3 text-sm font-mono focus-visible:outline-none focus-visible:border-ring"
-        />
-        {fieldErrors.totalPrice && (
-          <p className="text-xs text-destructive">{fieldErrors.totalPrice}</p>
-        )}
-      </div>
+      {/* Grand total */}
+      {grandTotal > 0 && (
+        <div className="flex items-center justify-between rounded-md bg-muted/50 px-3 py-2 text-sm">
+          <span className="text-muted-foreground">{t("grandTotal")}</span>
+          <span className="font-mono font-semibold">${grandTotal.toLocaleString("es-CO")}</span>
+        </div>
+      )}
+
+      {/* Auto-generated description preview */}
+      {generatedDescription && (
+        <div className="space-y-1">
+          <p className="text-xs text-muted-foreground font-medium">{t("generatedDescription")}</p>
+          <pre className="w-full rounded-md border border-dashed bg-muted/30 px-3 py-2 text-xs font-sans whitespace-pre-wrap text-muted-foreground">
+            {generatedDescription}
+          </pre>
+        </div>
+      )}
+
+      {/* Total price — hidden if auto-computed, shown for manual override */}
+      {grandTotal === 0 && (
+        <div className="space-y-1">
+          <label className="text-sm font-medium" htmlFor="totalPrice">
+            {t("totalPrice")} <span className="text-destructive">*</span>
+          </label>
+          <input
+            id="totalPrice"
+            name="totalPrice"
+            type="number"
+            required
+            min={1}
+            step={1}
+            className="w-full h-9 rounded-md border border-input bg-transparent px-3 text-sm font-mono focus-visible:outline-none focus-visible:border-ring"
+          />
+          {fieldErrors.totalPrice && (
+            <p className="text-xs text-destructive">{fieldErrors.totalPrice}</p>
+          )}
+        </div>
+      )}
+      {/* Hidden field so totalPrice is always in the form when computed */}
+      {grandTotal > 0 && <input type="hidden" name="totalPrice" value={grandTotal} />}
 
       {/* ETA */}
       <div className="space-y-1">
@@ -395,7 +526,7 @@ export function CreateLargeOrderForm({ clients, clothPieces }: Props) {
       )}
 
       <Button type="submit" disabled={isPending} className="w-full">
-        {isPending ? <Loader2Icon className="h-4 w-4 animate-spin mr-2" /> : null}
+        {isPending ? <Loader2Icon className="size-4 animate-spin" /> : null}
         {t("submit")}
       </Button>
     </form>

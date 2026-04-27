@@ -690,13 +690,18 @@
     "overrideReasonPlaceholder": "E.g. Agreed discount with client",
     "overrideReasonRequired": "Reason is required when using manual price",
     "items": "Order items",
+    "item": "Item",
     "addItem": "Add item",
     "removeItem": "Remove item",
     "selectPiece": "Select a piece…",
     "selectVariant": "Select a variant…",
     "noVariants": "No variants",
     "lineTotal": "Total",
-    "grandTotal": "Calculated total"
+    "grandTotal": "Calculated total",
+    "itemDescription": "Colors / design notes",
+    "itemDescriptionPlaceholder": "e.g. Navy blue, embroidered logo on left chest",
+    "generatedDescription": "Auto-generated description",
+    "itemsRequired": "At least one item is required"
   },
   "nav": {
     "dashboard": "Dashboard",

@@ -722,13 +722,18 @@
     "overrideReasonPlaceholder": "Ej: Descuento acordado con el cliente",
     "overrideReasonRequired": "El motivo es obligatorio cuando se usa precio manual",
     "items": "Artículos del pedido",
+    "item": "Artículo",
     "addItem": "Agregar artículo",
     "removeItem": "Eliminar artículo",
     "selectPiece": "Selecciona una pieza…",
     "selectVariant": "Selecciona una variante…",
     "noVariants": "Sin variantes",
     "lineTotal": "Total",
-    "grandTotal": "Total calculado"
+    "grandTotal": "Total calculado",
+    "itemDescription": "Colores / notas de diseño",
+    "itemDescriptionPlaceholder": "Ej: Azul marino, logo bordado en pecho izquierdo",
+    "generatedDescription": "Descripción generada automáticamente",
+    "itemsRequired": "Se requiere al menos un artículo"
   },
   "nav": {
     "dashboard": "Tablero",
