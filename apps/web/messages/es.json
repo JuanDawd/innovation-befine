@@ -501,7 +501,14 @@
     "statusAllApproved": "Aprobado",
     "viewDetail": "Ver detalle",
     "noAssigned": "Sin asignar",
-    "noOrder": "—"
+    "noOrder": "—",
+    "detailTitle": "Detalle del confeccionable",
+    "colBusinessDay": "Día laboral",
+    "viewNotes": "Ver notas",
+    "editPiece": "Editar pieza",
+    "editPieceError": "No se pudo guardar la pieza",
+    "saveChanges": "Guardar cambios",
+    "back": "Volver"
   },
   "appointments": {
     "pageTitle": "Citas",
@@ -731,7 +738,7 @@
     "craftableApprovedPieces": "Aprobadas",
     "craftableProgress": "Progreso",
     "viewDetail": "Ver detalle",
-    "backToList": "← Pedidos grandes",
+    "backToList": "Pedidos grandes",
     "submit": "Guardar pedido",
     "cash": "Efectivo",
     "card": "Tarjeta",

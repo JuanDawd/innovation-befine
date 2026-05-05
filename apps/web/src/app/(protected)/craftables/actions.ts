@@ -13,8 +13,14 @@ import { eq, and } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { getDb, getTxDb } from "@/lib/db";
 import { employees, users, craftables, craftablePieces } from "@befine/db/schema";
-import { createCraftableSchema, type CreateCraftableInput } from "@befine/types";
-import { getCraftablesDashboard, type CraftableDashboardRow } from "@befine/db";
+import {
+  createCraftableSchema,
+  updateCraftablePieceSchema,
+  type CreateCraftableInput,
+  type UpdateCraftablePieceInput,
+} from "@befine/types";
+import { getCraftablesDashboard, getCraftableDetail } from "@befine/db";
+import type { CraftableDashboardRow, CraftableDetailRow } from "@befine/db";
 import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
 import { getCurrentBusinessDay } from "@/lib/business-day";
@@ -185,4 +191,79 @@ export async function getCraftablesDashboardData(): Promise<ActionResult<Craftab
   const db = getDb();
   const rows = await getCraftablesDashboard(db);
   return { success: true, data: rows };
+}
+
+// ─── Craftable detail ─────────────────────────────────────────────────────────
+
+export async function getCraftableDetailData(
+  craftableId: string,
+): Promise<ActionResult<CraftableDetailRow>> {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session)
+    return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
+  if (!hasRole(session.user, "cashier_admin", "secretary"))
+    return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
+
+  const db = getDb();
+  const row = await getCraftableDetail(db, craftableId);
+  if (!row) return { success: false, error: { code: "NOT_FOUND", message: "No encontrado" } };
+  return { success: true, data: row };
+}
+
+// ─── Update craftable piece ───────────────────────────────────────────────────
+
+export async function updateCraftablePiece(rawInput: unknown): Promise<ActionResult<void>> {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session)
+    return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
+  if (!hasRole(session.user, "cashier_admin", "secretary"))
+    return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
+
+  const rl = await checkRateLimit(rateLimits.general, session.user.id);
+  if (!rl.allowed)
+    return {
+      success: false,
+      error: {
+        code: "RATE_LIMITED",
+        message: "Demasiadas solicitudes. Intenta de nuevo en un momento.",
+      },
+    };
+
+  const parsed = updateCraftablePieceSchema.safeParse(rawInput);
+  if (!parsed.success)
+    return {
+      success: false,
+      error: {
+        code: "VALIDATION_ERROR",
+        message: "Datos inválidos",
+        details: parsed.error.issues.map((e) => ({ field: e.path.join("."), message: e.message })),
+      },
+    };
+
+  const input: UpdateCraftablePieceInput = parsed.data;
+
+  const db = getDb();
+  const result = await db
+    .update(craftablePieces)
+    .set({
+      quantity: input.quantity,
+      color: input.color ?? null,
+      style: input.style ?? null,
+      size: input.size ?? null,
+      instructions: input.instructions ?? null,
+      version: input.version + 1,
+    })
+    .where(and(eq(craftablePieces.id, input.id), eq(craftablePieces.version, input.version)))
+    .returning({ id: craftablePieces.id });
+
+  if (result.length === 0)
+    return {
+      success: false,
+      error: { code: "STALE_DATA", message: "Estado cambiado — recarga la página" },
+    };
+
+  revalidatePath("/secretary/craftables");
+  revalidatePath("/admin/craftables");
+
+  return { success: true, data: undefined };
 }

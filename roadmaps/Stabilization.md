@@ -861,7 +861,7 @@
   - Piece with all four fields null → per-piece notes section not shown.
   - Piece with `instructions = "doblez"` → notes section visible and expandable.
 - **Dependencies:** Task 3.3, Task 3.2, Task 3.9.
-- **Status:** Pending
+- **Status:** Done
 
 ---
 

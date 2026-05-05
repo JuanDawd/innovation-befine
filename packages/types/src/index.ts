@@ -34,8 +34,10 @@ export {
 export {
   createCraftableSchema,
   craftablePieceLineSchema,
+  updateCraftablePieceSchema,
   type CreateCraftableInput,
   type CraftablePieceLine,
+  type UpdateCraftablePieceInput,
 } from "./schemas/batch";
 export {
   createAppointmentSchema,

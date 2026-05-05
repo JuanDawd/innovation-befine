@@ -773,7 +773,7 @@ export function LargeOrderDetail({ order: initialOrder, batches, clothPieces }: 
                     <td className="px-4 py-2.5">{b.approvedPieces}</td>
                     <td className="px-4 py-2.5">
                       <div className="flex items-center gap-2">
-                        <div className="flex-1 bg-muted rounded-full h-2 max-w-[100px]">
+                        <div className="flex-1 bg-muted rounded-full h-2 max-w-25">
                           <div
                             className="bg-primary h-2 rounded-full transition-all"
                             style={{ width: `${pct}%` }}

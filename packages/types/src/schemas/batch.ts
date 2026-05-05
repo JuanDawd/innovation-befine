@@ -21,3 +21,15 @@ export const createCraftableSchema = z.object({
 
 export type CreateCraftableInput = z.infer<typeof createCraftableSchema>;
 export type CraftablePieceLine = z.infer<typeof craftablePieceLineSchema>;
+
+export const updateCraftablePieceSchema = z.object({
+  id: z.uuid("ID de pieza inválido"),
+  version: z.number().int().min(1),
+  quantity: z.number().int().min(1, "La cantidad mínima es 1").max(999),
+  color: z.string().max(80).optional(),
+  style: z.string().max(80).optional(),
+  size: z.string().max(40).optional(),
+  instructions: z.string().max(500).optional(),
+});
+
+export type UpdateCraftablePieceInput = z.infer<typeof updateCraftablePieceSchema>;

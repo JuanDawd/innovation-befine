@@ -18,6 +18,8 @@ import {
   users,
   clients,
   largeOrders,
+  clothPieces,
+  clothPieceVariants,
 } from "../schema";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -172,4 +174,116 @@ export async function getCraftablesDashboard(db: Database): Promise<CraftableDas
   });
 
   return result;
+}
+
+// ─── Craftable detail ─────────────────────────────────────────────────────────
+
+export type CraftablePieceDetailRow = {
+  id: string;
+  clothPieceId: string;
+  clothPieceName: string;
+  clothPieceVariantId: string;
+  clothPieceVariantName: string;
+  assignedToEmployeeId: string | null;
+  assignedEmployeeName: string | null;
+  status: "pending" | "done_pending_approval" | "approved";
+  quantity: number;
+  color: string | null;
+  style: string | null;
+  size: string | null;
+  instructions: string | null;
+  version: number;
+};
+
+export type CraftableDetailRow = {
+  id: string;
+  businessDayId: string;
+  businessDayOpenedAt: Date;
+  source: "manual" | "large_order";
+  autoApproved: boolean;
+  notes: string | null;
+  createdAt: Date;
+  largeOrderId: string | null;
+  largeOrderClientName: string | null;
+  pieces: CraftablePieceDetailRow[];
+};
+
+export async function getCraftableDetail(
+  db: Database,
+  craftableId: string,
+): Promise<CraftableDetailRow | null> {
+  const [craftable] = await db
+    .select({
+      id: craftables.id,
+      businessDayId: craftables.businessDayId,
+      businessDayOpenedAt: businessDays.openedAt,
+      source: craftables.source,
+      autoApproved: craftables.autoApproved,
+      notes: craftables.notes,
+      createdAt: craftables.createdAt,
+      largeOrderId: craftables.largeOrderId,
+    })
+    .from(craftables)
+    .innerJoin(businessDays, eq(craftables.businessDayId, businessDays.id))
+    .where(eq(craftables.id, craftableId))
+    .limit(1);
+
+  if (!craftable) return null;
+
+  const pieceRows = await db
+    .select({
+      id: craftablePieces.id,
+      clothPieceId: craftablePieces.clothPieceId,
+      clothPieceName: clothPieces.name,
+      clothPieceVariantId: craftablePieces.clothPieceVariantId,
+      clothPieceVariantName: clothPieceVariants.name,
+      assignedToEmployeeId: craftablePieces.assignedToEmployeeId,
+      assignedEmployeeName: users.name,
+      status: craftablePieces.status,
+      quantity: craftablePieces.quantity,
+      color: craftablePieces.color,
+      style: craftablePieces.style,
+      size: craftablePieces.size,
+      instructions: craftablePieces.instructions,
+      version: craftablePieces.version,
+    })
+    .from(craftablePieces)
+    .innerJoin(clothPieces, eq(craftablePieces.clothPieceId, clothPieces.id))
+    .innerJoin(clothPieceVariants, eq(craftablePieces.clothPieceVariantId, clothPieceVariants.id))
+    .leftJoin(employees, eq(craftablePieces.assignedToEmployeeId, employees.id))
+    .leftJoin(users, eq(employees.userId, users.id))
+    .where(eq(craftablePieces.craftableId, craftableId))
+    .orderBy(craftablePieces.createdAt);
+
+  let largeOrderClientName: string | null = null;
+  if (craftable.largeOrderId) {
+    const [orderRow] = await db
+      .select({ clientName: clients.name })
+      .from(largeOrders)
+      .innerJoin(clients, eq(largeOrders.clientId, clients.id))
+      .where(eq(largeOrders.id, craftable.largeOrderId))
+      .limit(1);
+    largeOrderClientName = orderRow?.clientName ?? null;
+  }
+
+  return {
+    ...craftable,
+    largeOrderClientName,
+    pieces: pieceRows.map((p) => ({
+      id: p.id,
+      clothPieceId: p.clothPieceId,
+      clothPieceName: p.clothPieceName,
+      clothPieceVariantId: p.clothPieceVariantId,
+      clothPieceVariantName: p.clothPieceVariantName,
+      assignedToEmployeeId: p.assignedToEmployeeId,
+      assignedEmployeeName: p.assignedEmployeeName ?? null,
+      status: p.status,
+      quantity: p.quantity,
+      color: p.color,
+      style: p.style,
+      size: p.size,
+      instructions: p.instructions,
+      version: p.version,
+    })),
+  };
 }

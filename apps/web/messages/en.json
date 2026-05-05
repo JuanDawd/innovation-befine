@@ -469,7 +469,14 @@
     "statusAllApproved": "Approved",
     "viewDetail": "View detail",
     "noAssigned": "Unassigned",
-    "noOrder": "—"
+    "noOrder": "—",
+    "detailTitle": "Craftable Detail",
+    "colBusinessDay": "Business Day",
+    "viewNotes": "View notes",
+    "editPiece": "Edit piece",
+    "editPieceError": "Could not save the piece",
+    "saveChanges": "Save changes",
+    "back": "Back"
   },
   "appointments": {
     "pageTitle": "Appointments",
@@ -698,7 +705,7 @@
     "craftableApprovedPieces": "Approved",
     "craftableProgress": "Progress",
     "viewDetail": "View detail",
-    "backToList": "← Large orders",
+    "backToList": "Large orders",
     "submit": "Save order",
     "cash": "Cash",
     "card": "Card",
