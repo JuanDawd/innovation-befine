@@ -780,7 +780,7 @@
   - Visit `/admin/batches` → 404 or redirect.
   - Check sidebar nav in all three roles → labels show "Confeccionables".
 - **Dependencies:** Task 3.5.
-- **Status:** Pending
+- **Status:** Done
 
 ---
 
@@ -798,7 +798,7 @@
   - Create craftable with piece qty=3 → detail view shows "3" next to the piece name.
   - Add two pieces (qty=2 and qty=5) → list row shows total "7".
 - **Dependencies:** Task 3.2, Task 3.9.
-- **Status:** Pending
+- **Status:** Done
 
 ---
 
