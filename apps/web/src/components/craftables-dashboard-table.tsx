@@ -6,10 +6,8 @@ import { useTranslations } from "next-intl";
 import { type LucideIcon, Loader2Icon, PackageIcon, ClockIcon } from "lucide-react";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { EmptyState } from "@/components/ui/empty-state";
-import {
-  getCraftablesDashboardData,
-  type CraftableDashboardRow,
-} from "@/app/(protected)/craftables/actions";
+import type { CraftableDashboardRow } from "@befine/db";
+import { getCraftablesDashboardData } from "@/app/(protected)/craftables/actions";
 
 type CraftableStatusKey = "not_started" | "in_progress" | "pending_approval" | "all_approved";
 

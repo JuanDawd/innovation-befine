@@ -22,8 +22,6 @@ import { revalidatePath } from "next/cache";
 import { createNotification } from "@/lib/notifications";
 import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
 
-export type { CraftableDashboardRow };
-
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type ClothierOption = {
