@@ -66,7 +66,7 @@ export const rateLimits = {
   ticketCreate: makeLimit(30, 60),
   /** 5 requests / 60s — payout recording (admin financial mutation) */
   payoutRecording: makeLimit(5, 60),
-  /** 60 requests / 60s — general mutations (checkout, override, edit-requests, batches, pieces) */
+  /** 60 requests / 60s — general mutations (checkout, override, edit-requests, craftables, pieces) */
   general: makeLimit(60, 60),
   /** 20 requests / 60s — analytics CSV export (heavier, must not be easily enumerated) */
   analyticsCsv: makeLimit(20, 60),

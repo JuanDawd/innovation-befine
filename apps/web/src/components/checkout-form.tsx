@@ -3,7 +3,7 @@
 /**
  * CheckoutForm — T038, T039, T040
  *
- * Cashier batch checkout:
+ * Cashier bulk checkout:
  * - Shows awaiting_payment tickets, pre-selects all for same client
  * - Line items with snapshotted prices (overrides visible if set)
  * - Payment rows (cash / card / transfer), amounts must sum to total

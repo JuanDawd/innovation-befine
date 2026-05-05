@@ -31,7 +31,7 @@ import {
   editLargeOrder,
   recordLargeOrderPayment,
   type LargeOrderRow,
-  type OrderBatchSummary,
+  type OrderCraftableSummary,
 } from "../actions";
 import type { ClothPieceRow } from "@/app/(protected)/admin/catalog/actions/cloth-pieces";
 import {
@@ -43,7 +43,7 @@ import {
 
 type Props = {
   order: LargeOrderRow;
-  batches: OrderBatchSummary[];
+  batches: OrderCraftableSummary[];
   clothPieces: ClothPieceRow[];
 };
 

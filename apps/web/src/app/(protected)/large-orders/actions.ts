@@ -619,7 +619,7 @@ export async function listLargeOrders(
   };
 }
 
-// ─── Get single large order with payments + batch summary (T060, T062) ───────
+// ─── Get single large order with payments + craftable summary (T060, T062) ───
 
 export async function getLargeOrder(orderId: string): Promise<ActionResult<LargeOrderRow>> {
   const guard = await requireOrderRole();
@@ -714,17 +714,17 @@ export async function listClientsForOrder(): Promise<ActionResult<ClientOption[]
   return { success: true, data: rows };
 }
 
-// ─── Get batch summary for an order (T060) ───────────────────────────────────
+// ─── Get craftable summary for an order (T060) ───────────────────────────────
 
-export type OrderBatchSummary = {
+export type OrderCraftableSummary = {
   craftableId: string;
   totalPieces: number;
   approvedPieces: number;
 };
 
-export async function getLargeOrderBatchSummary(
+export async function getLargeOrderCraftableSummary(
   orderId: string,
-): Promise<ActionResult<OrderBatchSummary[]>> {
+): Promise<ActionResult<OrderCraftableSummary[]>> {
   const guard = await requireOrderRole();
   if (!guard.ok)
     return {
@@ -736,27 +736,27 @@ export async function getLargeOrderBatchSummary(
     };
 
   const db = getDb();
-  const batches = await db
+  const craftableRows = await db
     .select({ id: craftables.id })
     .from(craftables)
     .where(eq(craftables.largeOrderId, orderId));
 
-  if (!batches.length) return { success: true, data: [] };
+  if (!craftableRows.length) return { success: true, data: [] };
 
-  const batchIds = batches.map((b) => b.id);
+  const craftableIds = craftableRows.map((c) => c.id);
   const pieces = await db
     .select({ craftableId: craftablePieces.craftableId, status: craftablePieces.status })
     .from(craftablePieces)
-    .where(inArray(craftablePieces.craftableId, batchIds));
+    .where(inArray(craftablePieces.craftableId, craftableIds));
 
   return {
     success: true,
-    data: batches.map((b) => {
-      const bp = pieces.filter((p) => p.craftableId === b.id);
+    data: craftableRows.map((c) => {
+      const cp = pieces.filter((p) => p.craftableId === c.id);
       return {
-        craftableId: b.id,
-        totalPieces: bp.length,
-        approvedPieces: bp.filter((p) => p.status === "approved").length,
+        craftableId: c.id,
+        totalPieces: cp.length,
+        approvedPieces: cp.filter((p) => p.status === "approved").length,
       };
     }),
   };

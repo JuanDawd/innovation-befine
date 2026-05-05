@@ -1,7 +1,7 @@
 "use server";
 
 /**
- * Batch piece approval actions — T047
+ * Craftable piece approval actions — T047
  *
  * listPendingApprovals: secretary/admin — pieces in done_pending_approval state.
  * approvePiece:         secretary/admin — transition piece to approved.

@@ -229,7 +229,7 @@ export async function listPendingEditRequests(): Promise<ActionResult<PendingEdi
 
   if (rows.length === 0) return { success: true, data: [] };
 
-  // Batch-resolve names
+  // Bulk-resolve names
   const variantIds = [
     ...new Set([...rows.map((r) => r.currentVariantId), ...rows.map((r) => r.newVariantId)]),
   ];

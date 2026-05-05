@@ -1,9 +1,9 @@
 "use client";
 
 /**
- * BatchApprovalBoard — T047
+ * CraftableApprovalBoard — T047
  *
- * Secretary/admin view for approving batch pieces.
+ * Secretary/admin view for approving craftable pieces.
  * Admins also see a "Approve directly" button for pending pieces.
  */
 

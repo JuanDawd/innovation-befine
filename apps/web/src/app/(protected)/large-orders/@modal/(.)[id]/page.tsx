@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getLargeOrder, getLargeOrderBatchSummary } from "../../actions";
+import { getLargeOrder, getLargeOrderCraftableSummary } from "../../actions";
 import { listActiveClothPieces } from "@/app/(protected)/admin/catalog/actions/cloth-pieces";
 import { ModalShell } from "@/components/modal-shell";
 import { LargeOrderDetail } from "../../[id]/large-order-detail";
@@ -18,7 +18,7 @@ export default async function LargeOrderDetailModal({
 
   const [orderResult, batchResult, piecesResult] = await Promise.all([
     getLargeOrder(id),
-    getLargeOrderBatchSummary(id),
+    getLargeOrderCraftableSummary(id),
     listActiveClothPieces(),
   ]);
 

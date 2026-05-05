@@ -391,15 +391,15 @@ export async function restoreClothPieceVariant(variantId: string): Promise<Actio
   return { success: true, data: null };
 }
 
-// ─── Sell batch piece ─────────────────────────────────────────────────────────
+// ─── Sell craftable piece ─────────────────────────────────────────────────────
 
 const sellCraftablePieceSchema = z.object({
-  batchPieceId: z.string().uuid("ID de pieza inválido"),
+  craftablePieceId: z.string().uuid("ID de pieza inválido"),
   priceOverride: z.number().int().min(0).nullable().optional(),
 });
 
 /**
- * Marks an approved batch_piece as sold.
+ * Marks an approved craftable_piece as sold.
  * Snapshots the selling price from the variant (or a cashier override).
  * Gated to cashier_admin.
  */
@@ -440,7 +440,7 @@ export async function sellCraftablePiece(
       clothPieceVariantId: craftablePieces.clothPieceVariantId,
     })
     .from(craftablePieces)
-    .where(eq(craftablePieces.id, parsed.data.batchPieceId))
+    .where(eq(craftablePieces.id, parsed.data.craftablePieceId))
     .limit(1);
 
   if (!piece)
@@ -474,7 +474,10 @@ export async function sellCraftablePiece(
       soldBy: emp?.id ?? null,
     })
     .where(
-      and(eq(craftablePieces.id, parsed.data.batchPieceId), eq(craftablePieces.status, "approved")),
+      and(
+        eq(craftablePieces.id, parsed.data.craftablePieceId),
+        eq(craftablePieces.status, "approved"),
+      ),
     );
 
   return { success: true, data: { soldPrice: effectivePrice } };

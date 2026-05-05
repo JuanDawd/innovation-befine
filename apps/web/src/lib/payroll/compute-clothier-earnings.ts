@@ -1,7 +1,7 @@
 /**
  * T064 — Clothier earnings computation
  *
- * Sums cloth_piece_variants.piece_rate for all approved batch pieces
+ * Sums cloth_piece_variants.piece_rate for all approved craftable pieces
  * assigned to the employee in the given business days.
  */
 

@@ -22,6 +22,7 @@ type PieceLine = {
   clothPieceId: string;
   clothPieceVariantId: string;
   assignedToEmployeeId: string | null;
+  quantity: number;
 };
 
 export function CreateCraftableForm({
@@ -43,7 +44,7 @@ export function CreateCraftableForm({
   const [notes, setNotes] = useState("");
   const [largeOrderId, setLargeOrderId] = useState<string>("");
   const [lines, setLines] = useState<PieceLine[]>([
-    { key: 0, clothPieceId: "", clothPieceVariantId: "", assignedToEmployeeId: null },
+    { key: 0, clothPieceId: "", clothPieceVariantId: "", assignedToEmployeeId: null, quantity: 1 },
   ]);
   const [nextKey, setNextKey] = useState(1);
   const [isPending, startSubmitTransition] = useTransition();
@@ -71,7 +72,13 @@ export function CreateCraftableForm({
   function addLine() {
     setLines((prev) => [
       ...prev,
-      { key: nextKey, clothPieceId: "", clothPieceVariantId: "", assignedToEmployeeId: null },
+      {
+        key: nextKey,
+        clothPieceId: "",
+        clothPieceVariantId: "",
+        assignedToEmployeeId: null,
+        quantity: 1,
+      },
     ]);
     setNextKey((k) => k + 1);
   }
@@ -110,6 +117,7 @@ export function CreateCraftableForm({
           clothPieceId: l.clothPieceId,
           clothPieceVariantId: l.clothPieceVariantId,
           assignedToEmployeeId: l.assignedToEmployeeId,
+          quantity: l.quantity,
         })),
       });
 
@@ -145,12 +153,12 @@ export function CreateCraftableForm({
       {/* Linked large order (T060) */}
       {largeOrders.length > 0 && (
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium" htmlFor="batch-order">
+          <label className="text-sm font-medium" htmlFor="craftable-order">
             Pedido grande vinculado{" "}
             <span className="text-muted-foreground font-normal">{tc("optional")}</span>
           </label>
           <select
-            id="batch-order"
+            id="craftable-order"
             value={largeOrderId}
             onChange={(e) => setLargeOrderId(e.target.value)}
             className="h-9 rounded-md border border-input bg-transparent px-3 text-sm focus-visible:outline-none focus-visible:border-ring"
@@ -167,11 +175,11 @@ export function CreateCraftableForm({
 
       {/* Notes */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium" htmlFor="batch-notes">
+        <label className="text-sm font-medium" htmlFor="craftable-notes">
           {t("notes")} <span className="text-muted-foreground font-normal">{tc("optional")}</span>
         </label>
         <textarea
-          id="batch-notes"
+          id="craftable-notes"
           placeholder={t("notesPlaceholder")}
           value={notes}
           onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value)}
@@ -240,6 +248,27 @@ export function CreateCraftableForm({
                     </option>
                   ))}
                 </select>
+              </div>
+
+              {/* Quantity */}
+              <div className="w-16 shrink-0">
+                {idx === 0 && (
+                  <label className="text-xs text-muted-foreground mb-1 block">
+                    {t("quantity")}
+                  </label>
+                )}
+                <input
+                  type="number"
+                  aria-label={t("quantity")}
+                  min={1}
+                  max={999}
+                  value={line.quantity}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    const v = parseInt(e.target.value, 10);
+                    updateLine(line.key, { quantity: Number.isFinite(v) && v >= 1 ? v : 1 });
+                  }}
+                  className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm text-center focus-visible:outline-none focus-visible:border-ring"
+                />
               </div>
 
               {/* Assigned clothier */}

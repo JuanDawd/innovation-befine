@@ -87,8 +87,9 @@ const createCraftableSchema = z.object({
 });
 
 const markPieceDoneSchema = z.object({
-  batchPieceId: z.uuid(),
-  idempotencyKey: z.uuid(),
+  pieceId: z.uuid(),
+  expectedVersion: z.number().int().nonnegative(),
+  idempotencyKey: z.uuid().optional(),
 });
 
 const createAppointmentSchema = z
@@ -218,7 +219,7 @@ describe("Role gate: admin/payroll/actions", () => {
   });
 });
 
-describe("Role gate: batches/actions", () => {
+describe("Role gate: craftables/actions", () => {
   it("createCraftable — allowed: cashier_admin, secretary", () => {
     expectOnlyRoles(["cashier_admin", "secretary"], "cashier_admin", "secretary");
   });
@@ -228,7 +229,7 @@ describe("Role gate: batches/actions", () => {
   });
 });
 
-describe("Role gate: batches/approval-actions", () => {
+describe("Role gate: craftables/approval-actions", () => {
   it("approveCraftablePiece — allowed: cashier_admin, secretary", () => {
     expectOnlyRoles(["cashier_admin", "secretary"], "cashier_admin", "secretary");
   });
@@ -654,7 +655,7 @@ describe("VALIDATION_ERROR: recordPayoutSchema", () => {
 });
 
 describe("VALIDATION_ERROR: createCraftableSchema", () => {
-  const validBatch = {
+  const validCraftable = {
     pieces: [
       {
         clothPieceId: uid(),
@@ -664,8 +665,8 @@ describe("VALIDATION_ERROR: createCraftableSchema", () => {
     ],
   };
 
-  it("accepts valid batch input", () => {
-    expect(createCraftableSchema.safeParse(validBatch).success).toBe(true);
+  it("accepts valid craftable input", () => {
+    expect(createCraftableSchema.safeParse(validCraftable).success).toBe(true);
   });
 
   it("rejects empty pieces array", () => {
@@ -689,19 +690,21 @@ describe("VALIDATION_ERROR: createCraftableSchema", () => {
 
 describe("VALIDATION_ERROR: markPieceDoneSchema", () => {
   it("accepts valid input", () => {
-    expect(
-      markPieceDoneSchema.safeParse({ batchPieceId: uid(), idempotencyKey: uid() }).success,
-    ).toBe(true);
+    expect(markPieceDoneSchema.safeParse({ pieceId: uid(), expectedVersion: 1 }).success).toBe(
+      true,
+    );
   });
 
-  it("rejects non-uuid batchPieceId", () => {
-    expect(
-      markPieceDoneSchema.safeParse({ batchPieceId: "bad", idempotencyKey: uid() }).success,
-    ).toBe(false);
+  it("rejects non-uuid pieceId", () => {
+    expect(markPieceDoneSchema.safeParse({ pieceId: "bad", expectedVersion: 1 }).success).toBe(
+      false,
+    );
   });
 
-  it("rejects missing idempotencyKey", () => {
-    expect(markPieceDoneSchema.safeParse({ batchPieceId: uid() }).success).toBe(false);
+  it("rejects negative expectedVersion", () => {
+    expect(markPieceDoneSchema.safeParse({ pieceId: uid(), expectedVersion: -1 }).success).toBe(
+      false,
+    );
   });
 });
 

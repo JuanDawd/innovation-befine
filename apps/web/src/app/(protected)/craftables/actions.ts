@@ -1,10 +1,10 @@
 "use server";
 
 /**
- * Cloth batch server actions — T045
+ * Craftable server actions — T045
  *
- * listActiveClothiers: secretary/admin — for batch assignment dropdowns.
- * createBatch: secretary/admin — creates a cloth_batch + batch_pieces, sends notifications.
+ * listActiveClothiers: secretary/admin — for craftable assignment dropdowns.
+ * createCraftable: secretary/admin — creates a craftable + pieces, sends notifications.
  */
 
 import { headers } from "next/headers";
@@ -55,7 +55,7 @@ export async function listActiveClothiers(): Promise<ActionResult<ClothierOption
   return { success: true, data: rows };
 }
 
-// ─── Create batch ─────────────────────────────────────────────────────────────
+// ─── Create craftable ─────────────────────────────────────────────────────────
 
 export async function createCraftable(rawInput: unknown): Promise<ActionResult<{ id: string }>> {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -113,8 +113,8 @@ export async function createCraftable(rawInput: unknown): Promise<ActionResult<{
 
   // Create craftable + pieces atomically
   const txDb = getTxDb();
-  const batchId = await txDb.transaction(async (tx) => {
-    const [batch] = await tx
+  const craftableId = await txDb.transaction(async (tx) => {
+    const [craftable] = await tx
       .insert(craftables)
       .values({
         businessDayId: businessDay.id,
@@ -128,17 +128,18 @@ export async function createCraftable(rawInput: unknown): Promise<ActionResult<{
     if (input.pieces.length > 0) {
       await tx.insert(craftablePieces).values(
         input.pieces.map((p) => ({
-          craftableId: batch.id,
+          craftableId: craftable.id,
           clothPieceId: p.clothPieceId,
           clothPieceVariantId: p.clothPieceVariantId,
           assignedToEmployeeId: p.assignedToEmployeeId ?? null,
           claimSource: p.assignedToEmployeeId ? ("assigned" as const) : null,
           claimedAt: p.assignedToEmployeeId ? new Date() : null,
+          quantity: p.quantity ?? 1,
         })),
       );
     }
 
-    return batch.id;
+    return craftable.id;
   });
 
   // Notify each clothier who received an assignment (post-commit, deduplicated)
@@ -163,5 +164,5 @@ export async function createCraftable(rawInput: unknown): Promise<ActionResult<{
   revalidatePath("/secretary/craftables");
   revalidatePath("/admin/craftables");
 
-  return { success: true, data: { id: batchId } };
+  return { success: true, data: { id: craftableId } };
 }

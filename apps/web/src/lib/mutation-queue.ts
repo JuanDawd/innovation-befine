@@ -6,7 +6,7 @@
  * retries are safe. Works in the browser only — guards against SSR.
  *
  * Supported mutation types:
- *   - "markPieceDone"   — clothier marks a batch piece as done
+ *   - "markPieceDone"   — clothier marks a craftable piece as done
  *   - "createTicket"    — cashier creates a ticket while offline
  *   - "paidOffline"     — cashier marks checkout as paid_offline
  */

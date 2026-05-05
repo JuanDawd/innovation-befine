@@ -425,6 +425,7 @@
     "addPiece": "Add piece",
     "pieceType": "Piece type",
     "selectPieceType": "Select a piece…",
+    "quantity": "Qty.",
     "assignTo": "Assign to",
     "unassigned": "Unassigned",
     "selectClothier": "Select a clothier…",

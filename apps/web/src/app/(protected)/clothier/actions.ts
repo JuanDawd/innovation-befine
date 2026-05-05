@@ -1,11 +1,11 @@
 "use server";
 
 /**
- * Clothier batch actions — T046
+ * Clothier craftable actions — T046
  *
- * listTodayBatchPieces: clothier — returns their assigned + unassigned pieces for the current day.
- * claimPiece:           clothier — self-claim an unassigned piece (optimistic lock).
- * markPieceDone:        clothier — transition piece to done_pending_approval.
+ * listTodayCraftablePieces: clothier — returns their assigned + unassigned pieces for the current day.
+ * claimPiece:               clothier — self-claim an unassigned piece (optimistic lock).
+ * markPieceDone:            clothier — transition piece to done_pending_approval.
  */
 
 import { headers } from "next/headers";
@@ -55,7 +55,7 @@ async function getClothierEmployee(): Promise<{
   return { session, employeeId: emp.id, userId: session.user.id };
 }
 
-// ─── List today's batch pieces for this clothier ──────────────────────────────
+// ─── List today's craftable pieces for this clothier ─────────────────────────
 
 export async function listTodayCraftablePieces(): Promise<ActionResult<CraftablePieceRow[]>> {
   const ctx = await getClothierEmployee();
@@ -66,7 +66,7 @@ export async function listTodayCraftablePieces(): Promise<ActionResult<Craftable
 
   const db = getDb();
 
-  // Pieces assigned to this clothier OR unassigned — from today's batches
+  // Pieces assigned to this clothier OR unassigned — from today's craftables
   const rows = await db
     .select({
       id: craftablePieces.id,

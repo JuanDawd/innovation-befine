@@ -6,8 +6,8 @@
  * rules enforced by each module.
  *
  * Flow (a): appointment → ticket → checkout → payout includes the ticket
- * Flow (b): batch → pieces done → approve → payout includes pieces
- * Flow (c): large-order → link batches → record payments → paid_in_full
+ * Flow (b): craftable → pieces done → approve → payout includes pieces
+ * Flow (c): large-order → link craftables → record payments → paid_in_full
  * Flow (d): offline queue flush deduplicates on retry
  */
 
@@ -171,11 +171,11 @@ describe("Flow (a): appointment → ticket → checkout → payout coverage", ()
   });
 });
 
-// ─── Flow (b): Batch → Pieces Done → Approve → Payout Includes Pieces ─────────
+// ─── Flow (b): Craftable → Pieces Done → Approve → Payout Includes Pieces ────
 
-describe("Flow (b): batch → pieces done → approve → clothier payout coverage", () => {
+describe("Flow (b): craftable → pieces done → approve → clothier payout coverage", () => {
   type PieceStatus = "pending" | "done_pending_approval" | "approved";
-  type BatchPiece = {
+  type CraftablePiece = {
     id: string;
     craftableId: string;
     businessDayId: string;
@@ -185,7 +185,7 @@ describe("Flow (b): batch → pieces done → approve → clothier payout covera
   };
 
   function computeClothierUnsettled(
-    pieces: BatchPiece[],
+    pieces: CraftablePiece[],
     settledDays: { employeeId: string; businessDayId: string }[],
     employeeId: string,
     closedDayIds: string[],
@@ -210,7 +210,7 @@ describe("Flow (b): batch → pieces done → approve → clothier payout covera
     const empId = uuid();
     const dayId = uuid();
 
-    const piece: BatchPiece = {
+    const piece: CraftablePiece = {
       id: uuid(),
       craftableId: uuid(),
       businessDayId: dayId,
@@ -227,7 +227,7 @@ describe("Flow (b): batch → pieces done → approve → clothier payout covera
     const empId = uuid();
     const dayId = uuid();
 
-    const piece: BatchPiece = {
+    const piece: CraftablePiece = {
       id: uuid(),
       craftableId: uuid(),
       businessDayId: dayId,
@@ -243,7 +243,7 @@ describe("Flow (b): batch → pieces done → approve → clothier payout covera
   it("payout total = sum of approved piece rates", () => {
     const empId = uuid();
     const dayId = uuid();
-    const pieces: BatchPiece[] = [
+    const pieces: CraftablePiece[] = [
       {
         id: uuid(),
         craftableId: uuid(),
@@ -280,7 +280,7 @@ describe("Flow (b): batch → pieces done → approve → clothier payout covera
   it("day settles after payout covers it — no more unsettled", () => {
     const empId = uuid();
     const dayId = uuid();
-    const piece: BatchPiece = {
+    const piece: CraftablePiece = {
       id: uuid(),
       craftableId: uuid(),
       businessDayId: dayId,
@@ -296,21 +296,21 @@ describe("Flow (b): batch → pieces done → approve → clothier payout covera
   });
 
   it("piece variant rate is used (not cloth_piece base rate)", () => {
-    // Invariant: batch_pieces joins cloth_piece_variants, not cloth_pieces directly
+    // Invariant: craftable_pieces joins cloth_piece_variants, not cloth_pieces directly
     // Simulate variant resolution
     const variants = [
       { id: "v1", clothPieceId: "cp1", name: "Dos piezas", pieceRate: 12_000 },
       { id: "v2", clothPieceId: "cp1", name: "Entera", pieceRate: 18_000 },
     ];
 
-    const batchPieceVariantId = "v2";
-    const resolvedRate = variants.find((v) => v.id === batchPieceVariantId)?.pieceRate;
+    const craftablePieceVariantId = "v2";
+    const resolvedRate = variants.find((v) => v.id === craftablePieceVariantId)?.pieceRate;
 
     expect(resolvedRate).toBe(18_000);
   });
 });
 
-// ─── Flow (c): Large-order → Link batches → Payments → paid_in_full ───────────
+// ─── Flow (c): Large-order → Link craftables → Payments → paid_in_full ────────
 
 describe("Flow (c): large-order payment auto-transition to paid_in_full", () => {
   type OrderStatus = "pending" | "in_progress" | "paid_in_full" | "cancelled";
@@ -380,9 +380,9 @@ describe("Flow (c): large-order payment auto-transition to paid_in_full", () => 
     expect(computeOrderStatus(order)).toBe("pending");
   });
 
-  it("linked batch pieces are included in order value", () => {
-    // Invariant: batch_pieces.large_order_id links production to the order
-    // Simulate total computation including linked batches
+  it("linked craftable pieces are included in order value", () => {
+    // Invariant: craftable_pieces linked via craftables.large_order_id
+    // Simulate total computation including linked craftables
     const orderTotal = 800_000;
     const craftablePieces = [
       { largeOrderId: "order-1", pieceRate: 15_000, status: "approved" as const },

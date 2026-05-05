@@ -177,7 +177,7 @@ describe("Override price recomputation", () => {
   });
 });
 
-// ─── Batch piece state guards ─────────────────────────────────────────────────
+// ─── Craftable piece state guards ────────────────────────────────────────────
 
 type PieceStatus = "pending" | "done_pending_approval" | "approved";
 
@@ -197,7 +197,7 @@ function canMarkDone(
   return status === "pending" && assignedToEmployeeId === claimantEmployeeId;
 }
 
-describe("Batch piece state guards", () => {
+describe("Craftable piece state guards", () => {
   describe("approveCraftablePiece", () => {
     it("allows approval from done_pending_approval", () => {
       expect(canApprovePiece("done_pending_approval")).toBe(true);

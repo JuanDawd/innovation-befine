@@ -4,6 +4,7 @@ export const craftablePieceLineSchema = z.object({
   clothPieceId: z.uuid("ID de pieza inválido"),
   clothPieceVariantId: z.uuid("ID de variante inválido"),
   assignedToEmployeeId: z.uuid("ID de empleado inválido").nullable(),
+  quantity: z.number().int().min(1, "La cantidad mínima es 1").max(999).default(1),
 });
 
 export const createCraftableSchema = z.object({
@@ -16,9 +17,3 @@ export const createCraftableSchema = z.object({
 
 export type CreateCraftableInput = z.infer<typeof createCraftableSchema>;
 export type CraftablePieceLine = z.infer<typeof craftablePieceLineSchema>;
-
-// Back-compat aliases — remove after Task 3.9 (UI rename)
-export const createBatchSchema = createCraftableSchema;
-export const batchPieceLineSchema = craftablePieceLineSchema;
-export type CreateBatchInput = CreateCraftableInput;
-export type BatchPieceLine = CraftablePieceLine;

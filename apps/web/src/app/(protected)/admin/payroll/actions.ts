@@ -343,7 +343,7 @@ export async function recordPayout(rawInput: unknown): Promise<ActionResult<{ id
             .values(items.map((item) => ({ payoutId: payout.id, ticketItemId: item.id })));
       }
 
-      // Link covered batch pieces (clothiers)
+      // Link covered craftable pieces (clothiers)
       if (emp.role === "clothier") {
         const pieces = await tx
           .select({ id: craftablePieces.id })
