@@ -763,7 +763,7 @@
   - Unit: craftable from today → appears in today's list.
   - Unit: empty seed → returns empty array without error.
 - **Dependencies:** Task 3.1, Task 3.2.
-- **Status:** Pending
+- **Status:** Done
 
 ---
 
