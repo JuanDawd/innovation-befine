@@ -109,6 +109,8 @@ export function CreateLargeOrderForm({ clients, clothPieces }: Props) {
     const depositAmountRaw = fd.get("initialDepositAmount") as string;
     const depositAmount = depositAmountRaw ? parseInt(depositAmountRaw, 10) : undefined;
 
+    const validPieces = lines.filter((l) => l.clothPieceId && l.clothPieceVariantId);
+
     const input = {
       clientId: fd.get("clientId") as string,
       description: generatedDescription || (fd.get("description") as string),
@@ -121,6 +123,11 @@ export function CreateLargeOrderForm({ clients, clothPieces }: Props) {
       initialDepositMethod: withDeposit
         ? (fd.get("initialDepositMethod") as "cash" | "card" | "transfer")
         : undefined,
+      pieces: validPieces.map((l) => ({
+        clothPieceId: l.clothPieceId,
+        clothPieceVariantId: l.clothPieceVariantId,
+        quantity: l.quantity,
+      })),
     };
 
     startTransition(async () => {

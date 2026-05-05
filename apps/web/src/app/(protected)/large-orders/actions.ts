@@ -24,6 +24,7 @@ import {
   craftables,
   craftablePieces,
 } from "@befine/db/schema";
+import { getCurrentBusinessDay } from "@/lib/business-day";
 import {
   createLargeOrderSchema,
   editLargeOrderSchema,
@@ -69,10 +70,11 @@ export type LargeOrderListRow = Omit<LargeOrderRow, "payments">;
 
 async function requireOrderRole() {
   const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) return { ok: false as const, code: "UNAUTHORIZED" as const, userId: null };
+  if (!session)
+    return { ok: false as const, code: "UNAUTHORIZED" as const, userId: null, session: null };
   if (!hasRole(session.user, "cashier_admin", "secretary"))
-    return { ok: false as const, code: "FORBIDDEN" as const, userId: null };
-  return { ok: true as const, code: null, userId: session.user.id };
+    return { ok: false as const, code: "FORBIDDEN" as const, userId: null, session: null };
+  return { ok: true as const, code: null, userId: session.user.id, session };
 }
 
 // ─── Allowed transitions ──────────────────────────────────────────────────────
@@ -139,6 +141,11 @@ export async function createLargeOrder(rawInput: unknown): Promise<ActionResult<
       error: { code: "VALIDATION_ERROR", message: "El cliente está archivado" },
     };
 
+  const autoApproved = hasRole(guard.session!.user, "cashier_admin");
+
+  // Only create a craftable if pieces were provided AND a business day is open
+  const businessDay = parsed.data.pieces?.length ? await getCurrentBusinessDay() : null;
+
   const txDb = getTxDb();
   const orderId = await txDb.transaction(async (tx) => {
     const [order] = await tx
@@ -167,6 +174,32 @@ export async function createLargeOrder(rawInput: unknown): Promise<ActionResult<
         method: parsed.data.initialDepositMethod,
         recordedBy: creatorEmp.id,
       });
+    }
+
+    // Auto-create craftable when pieces are provided and a business day is open
+    if (parsed.data.pieces?.length && businessDay) {
+      const [craftable] = await tx
+        .insert(craftables)
+        .values({
+          businessDayId: businessDay.id,
+          createdBy: creatorEmp.id,
+          largeOrderId: order.id,
+          source: "large_order",
+          autoApproved,
+        })
+        .returning({ id: craftables.id });
+
+      await tx.insert(craftablePieces).values(
+        parsed.data.pieces.map((p) => ({
+          craftableId: craftable.id,
+          clothPieceId: p.clothPieceId,
+          clothPieceVariantId: p.clothPieceVariantId,
+          quantity: p.quantity,
+          assignedToEmployeeId: p.assignedToEmployeeId ?? null,
+          claimSource: p.assignedToEmployeeId ? ("assigned" as const) : null,
+          claimedAt: p.assignedToEmployeeId ? new Date() : null,
+        })),
+      );
     }
 
     return order.id;

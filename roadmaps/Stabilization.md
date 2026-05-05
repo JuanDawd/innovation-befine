@@ -744,7 +744,7 @@
   - Unit: inject failure on 2nd craftable insert → assert 0 rows persisted.
   - Unit: submit with `pieces = []` → assert `VALIDATION_ERROR`.
 - **Dependencies:** Task 3.4, Task 3.3, Task 3.2.
-- **Status:** Pending
+- **Status:** Done
 
 ---
 

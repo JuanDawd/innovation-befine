@@ -1,5 +1,14 @@
 import { z } from "zod";
 
+const largeOrderPieceLineSchema = z.object({
+  clothPieceId: z.uuid("ID de pieza inválido"),
+  clothPieceVariantId: z.uuid("ID de variante inválido"),
+  quantity: z.number().int().min(1).default(1),
+  assignedToEmployeeId: z.uuid("ID de empleado inválido").nullable().optional(),
+});
+
+export type LargeOrderPieceLine = z.infer<typeof largeOrderPieceLineSchema>;
+
 export const createLargeOrderSchema = z
   .object({
     clientId: z.uuid("ID de cliente inválido"),
@@ -10,6 +19,8 @@ export const createLargeOrderSchema = z
     // Optional initial deposit (creates first large_order_payments record)
     initialDepositAmount: z.number().int().min(0).optional(),
     initialDepositMethod: z.enum(["cash", "card", "transfer"]).optional(),
+    // Optional pieces — auto-creates a craftable linked to this order
+    pieces: z.array(largeOrderPieceLineSchema).optional(),
   })
   .refine(
     (d) => {
