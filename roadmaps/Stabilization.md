@@ -428,7 +428,7 @@
 ## Phase 2: UX Polish and Missing Gaps
 
 **Started:** 2026-04-25
-**Status:** In progress — most tasks done; two pending.
+**Status:** Complete — all tasks done.
 
 ---
 
@@ -592,34 +592,6 @@
   - `grep -r "TrashIcon" apps/` → zero matches outside migration/archive files.
 - **Dependencies:** None.
 - **Status:** Done
-
----
-
-### Task 2.12: Icon audit and replacement across screens
-
-- **Description:** Several screens use no icons, wrong icons, or inconsistent sizes. Icon-only controls lack `aria-label`. Audit every surface and replace text-only or ad-hoc icons with Lucide icons. Standardise sizes: `size-4` inside buttons, `size-5` or `size-6` standalone. Add `aria-label` to every icon-only interactive element.
-- **Acceptance Criteria:**
-  - Every screen in the audit table uses a Lucide icon matching the target column.
-  - No icon-only button/link is missing `aria-label`.
-  - Imports are individual (`import { IconName } from "lucide-react"`), no barrel imports.
-- **Testing Steps:**
-  - Visual pass on cashier dashboard, ticket detail, secretary calendar, admin catalog, empty employee list → every interactive icon has a label or visible text.
-- **Dependencies:** Task 2.11.
-- **Status:** Pending
-
----
-
-### Task 2.13: Annotate hardest steps in role training guides
-
-- **Description:** Each of the four training guides (cashier_admin, secretary, stylist, clothier) lacks screenshots on its 2–3 hardest steps. Trainees cannot follow text-only instructions for non-obvious flows. Capture annotated screenshots (red outline + numbered callout) and embed them under the matching step section in each guide's markdown file.
-- **Acceptance Criteria:**
-  - Each role guide has at least 2 annotated screenshots on its hardest steps.
-  - Screenshots use a consistent annotation style (red outline + numbered callout).
-  - Image paths are relative under `docs/training/` so guides remain portable.
-- **Testing Steps:**
-  - Hand a guide to a staff member who has not used the system → they complete the highlighted step without asking for clarification.
-- **Dependencies:** None.
-- **Status:** Pending
 
 ---
 
@@ -898,4 +870,527 @@
   - As clothier on non-auto-approved craftable: mark piece done → amber "Pendiente aprobación" until secretary approves.
   - At 360px: piece with all four per-piece fields → tap "Ver notas" → fields expand inline.
 - **Dependencies:** Task 3.9, Task 3.6, Task 3.3.
+- **Status:** Pending
+
+---
+
+## Phase 4: Production Assignment Model
+
+**Started:** —
+**Status:** Pending — all tasks pending.
+
+> Introduces `order_items` and `cloth_piece_assignments` as the authoritative production tracking layer. All tasks target data consistency and correctness within the defined model. No new features.
+
+---
+
+### Task 4.1: Add `order_items` table to schema
+
+- **Description:** Add `order_items` to `packages/db/src/schema/large-orders.ts`. Columns: `id` (uuid PK), `large_order_id` (FK → `large_orders.id`, onDelete restrict), `cloth_piece_id` (FK → `cloth_pieces.id`, onDelete restrict), `cloth_piece_variant_id` (FK → `cloth_piece_variants.id`, onDelete restrict), `piece_name` (varchar 120, denormalized snapshot), `quantity` (integer, NOT NULL, CHECK ≥ 1), `notes` (text, nullable), `created_at`, `updated_at`. Index: `idx_order_items_large_order` on `large_order_id`.
+- **Acceptance Criteria:**
+  - Drizzle schema compiles with zero type errors.
+  - `turbo db:generate` produces correct SQL with all constraints and the index.
+  - Inserting a row with `quantity = 0` is rejected by the DB check constraint.
+  - `turbo typecheck` passes.
+- **Testing Steps:**
+  - `turbo db:generate` → inspect generated SQL for `CHECK (quantity >= 1)` and the index.
+  - Insert row with `quantity = 0` → DB rejects.
+  - Insert row with `quantity = 5` → row persisted correctly.
+- **Dependencies:** None.
+- **Status:** Pending
+
+---
+
+### Task 4.2: Add `cloth_piece_assignments` table to schema
+
+- **Description:** Add `cloth_piece_assignments` to schema. Columns: `id` (uuid PK), `order_item_id` (FK → `order_items.id`, onDelete restrict), `craftable_piece_id` (FK → `craftable_pieces.id`, onDelete restrict), `assignee_id` (FK → `employees.id`, onDelete restrict), `assigned_quantity` (integer NOT NULL, CHECK ≥ 1), `completed_quantity` (integer NOT NULL DEFAULT 0, CHECK ≥ 0), `approved_quantity` (integer NOT NULL DEFAULT 0, CHECK ≥ 0), `version` (integer NOT NULL DEFAULT 1), `created_at`, `updated_at`. Check constraints: `completed_quantity <= assigned_quantity`, `approved_quantity <= completed_quantity`. Indexes: `idx_cpa_order_item` on `order_item_id`, `idx_cpa_assignee` on `assignee_id`.
+- **Acceptance Criteria:**
+  - Migration applies without errors.
+  - DB-level check constraints reject: `completed > assigned`, `approved > completed`.
+  - `turbo typecheck` passes.
+- **Testing Steps:**
+  - Insert row with `completed_quantity = 5`, `assigned_quantity = 3` → DB rejects.
+  - Insert row with `approved_quantity = 4`, `completed_quantity = 3` → DB rejects.
+  - Insert valid row → persisted correctly.
+- **Dependencies:** Task 4.1.
+- **Status:** Pending
+
+---
+
+### Task 4.3: Add `production_logs` table to schema
+
+- **Description:** Add `production_logs` to schema for daily progress audit trail. Columns: `id` (uuid PK), `assignment_id` (FK → `cloth_piece_assignments.id`, onDelete restrict), `quantity` (integer NOT NULL, CHECK ≥ 1), `logged_date` (date NOT NULL), `logged_by` (FK → `employees.id`), `created_at`. Index: `idx_production_logs_assignment` on `(assignment_id, logged_date)`.
+- **Acceptance Criteria:**
+  - Schema compiles; migration applies cleanly.
+  - `turbo typecheck` passes.
+- **Testing Steps:**
+  - Insert a log row referencing a valid assignment → persisted.
+  - Insert with `quantity = 0` → DB rejects.
+- **Dependencies:** Task 4.2.
+- **Status:** Pending
+
+---
+
+### Task 4.4: Generate and apply DB migration for tasks 4.1–4.3
+
+- **Description:** Run `turbo db:generate` after tasks 4.1–4.3 are complete. Inspect the generated SQL, confirm all constraints and indexes match the schema definitions, then run `turbo db:migrate` against the development Neon branch.
+- **Acceptance Criteria:**
+  - Migration applies without errors on a clean DB and on a DB with existing data.
+  - `\d order_items` and `\d cloth_piece_assignments` and `\d production_logs` show correct columns and constraints.
+  - Rollback (down migration) removes the three tables cleanly.
+- **Testing Steps:**
+  - Apply migration → run the `\d` commands and verify.
+  - Roll back → tables gone.
+- **Dependencies:** Task 4.1, Task 4.2, Task 4.3.
+- **Status:** Pending
+
+---
+
+### Task 4.5: Implement `getUnassignedQuantity` query helper
+
+- **Description:** Add `getUnassignedQuantity(db, orderItemId): Promise<number>` to `packages/db/src/queries/order-items.ts`. Computes `order_item.quantity - COALESCE(SUM(assigned_quantity), 0)` for the given item. Never returns negative — clamp to 0 if data anomaly detected and emit a `console.warn` with the `orderItemId` and discrepancy.
+- **Acceptance Criteria:**
+  - Returns `order_item.quantity` when no assignments exist.
+  - Returns 0 when fully assigned.
+  - Returns correct remainder when partially assigned across multiple employees.
+  - Returns 0 (not negative) and logs a warning when assignments exceed quantity due to a data anomaly.
+  - Unit tests cover all four cases.
+- **Testing Steps:**
+  - Unit: order item qty=10, no assignments → returns 10.
+  - Unit: order item qty=10, one assignment of 10 → returns 0.
+  - Unit: order item qty=10, two assignments of 4 each → returns 2.
+  - Unit: order item qty=5, assignment of 7 (anomaly) → returns 0 and logs warning.
+- **Dependencies:** Task 4.2.
+- **Status:** Pending
+
+---
+
+### Task 4.6: Add Zod schemas for assignment inputs
+
+- **Description:** Add to `packages/types/src/schemas/`: `createAssignmentSchema` (`orderItemId` uuid, `assigneeId` uuid, `assignedQuantity` int ≥ 1), `updateCompletedQuantitySchema` (`assignmentId` uuid, `completedQuantity` int ≥ 0, `expectedVersion` int ≥ 1), `approveAssignmentQuantitySchema` (`assignmentId` uuid, `approvedQuantity` int ≥ 0, `expectedVersion` int ≥ 1). Export all three types.
+- **Acceptance Criteria:**
+  - Schemas reject out-of-range values with a descriptive error message.
+  - All three types exported and usable from `@befine/types`.
+  - `turbo typecheck` passes.
+- **Testing Steps:**
+  - Unit: `createAssignmentSchema.parse({ assignedQuantity: 0 })` → throws.
+  - Unit: `approveAssignmentQuantitySchema.parse({ approvedQuantity: -1, ... })` → throws.
+  - Import from `@befine/types` in a server action → compiles.
+- **Dependencies:** None.
+- **Status:** Pending
+
+---
+
+### Task 4.7: Implement `createAssignment` server action with cap enforcement
+
+- **Description:** Add `createAssignment(input)` to `apps/web/src/app/(protected)/large-orders/assignment-actions.ts`. Roles: `cashier_admin`, `secretary`. Validate input with `createAssignmentSchema`. Within a serializable transaction: (1) `SELECT ... FOR UPDATE` on the `order_items` row, (2) compute `SUM(assigned_quantity)` for existing assignments, (3) validate `sum + assignedQuantity <= item.quantity` — return `CONFLICT` if violated, (4) validate `assignee.is_active = true` — return `NOT_FOUND` if inactive, (5) insert into `cloth_piece_assignments`. Apply rate limit: 30/min per user. Return `ActionResult<{ id: string; unassignedQuantity: number }>`.
+- **Acceptance Criteria:**
+  - Inserts succeed when capacity available.
+  - Returns `CONFLICT` when `sum + requested > item.quantity`.
+  - Returns `NOT_FOUND` when assignee is inactive.
+  - Returns `FORBIDDEN` when called by `stylist` or `clothier`.
+  - Two concurrent calls that together exceed the cap: exactly one succeeds and one gets `CONFLICT`.
+  - Rate limit: 31st call within a minute returns `RATE_LIMITED`.
+  - Sentry breadcrumb logged on `CONFLICT`.
+- **Testing Steps:**
+  - Unit: assign 5 to item qty=10, then assign 6 → second returns `CONFLICT`.
+  - Unit: assign to inactive employee → `NOT_FOUND`.
+  - Unit: call as `stylist` → `FORBIDDEN`.
+  - Integration: two concurrent transactions each requesting 6 on qty=10 → one succeeds, one `CONFLICT`.
+- **Dependencies:** Task 4.5, Task 4.6.
+- **Status:** Pending
+
+---
+
+### Task 4.8: Implement `updateCompletedQuantity` server action
+
+- **Description:** Add `updateCompletedQuantity(input)` to `assignment-actions.ts`. Roles: `cashier_admin`, `secretary`, `clothier` (own assignments only). Validate with `updateCompletedQuantitySchema`. Server-side enforce `completedQuantity <= assigned_quantity` — return `VALIDATION_ERROR` if violated. Use optimistic locking on `version`. Optionally insert a `production_logs` row for the current date (logged_by = current employee). Apply rate limit: 60/min per user. Return `ActionResult<null>`.
+- **Acceptance Criteria:**
+  - Updates `completed_quantity` and increments `version`.
+  - Returns `VALIDATION_ERROR` when `completedQuantity > assigned_quantity`.
+  - Returns `STALE_DATA` on version mismatch.
+  - `clothier` can only update their own assignment — returns `FORBIDDEN` for others'.
+  - `production_logs` row inserted for today's date.
+  - Unit tests cover all branches.
+- **Testing Steps:**
+  - Unit: update completed to value > assigned → `VALIDATION_ERROR`.
+  - Unit: update with wrong version → `STALE_DATA`.
+  - Unit: clothier updates another clothier's assignment → `FORBIDDEN`.
+  - Unit: valid update → version incremented, log row created.
+- **Dependencies:** Task 4.6, Task 4.3.
+- **Status:** Pending
+
+---
+
+### Task 4.9: Implement `approveAssignmentQuantity` server action
+
+- **Description:** Add `approveAssignmentQuantity(input)` to `assignment-actions.ts`. Roles: `cashier_admin`, `secretary`. Validate with `approveAssignmentQuantitySchema`. Server-side enforce `approvedQuantity <= completed_quantity` — return `VALIDATION_ERROR` if violated. Use optimistic locking on `version`. Apply rate limit: 20/min per admin. Return `ActionResult<null>`.
+- **Acceptance Criteria:**
+  - Updates `approved_quantity` and increments `version`.
+  - Returns `VALIDATION_ERROR` when `approvedQuantity > completed_quantity`.
+  - Returns `STALE_DATA` on version mismatch.
+  - Returns `FORBIDDEN` for `clothier` and `stylist`.
+  - Unit tests cover all branches.
+- **Testing Steps:**
+  - Unit: approve > completed → `VALIDATION_ERROR`.
+  - Unit: wrong version → `STALE_DATA`.
+  - Unit: call as `clothier` → `FORBIDDEN`.
+  - Unit: valid approval → version incremented.
+- **Dependencies:** Task 4.6.
+- **Status:** Pending
+
+---
+
+### Task 4.10: Implement `getAssignmentProgress` query
+
+- **Description:** Add `getAssignmentProgress(db, orderItemId): Promise<AssignmentProgressRow[]>` to `packages/db/src/queries/order-items.ts`. Returns one row per assignment (with `assigneeName`) plus a computed "unassigned" row when `unassignedQuantity > 0`. Unassigned row: `assigneeId = null`, `assignedQuantity = unassigned`, `completedQuantity = 0`, `approvedQuantity = 0`, `progressPct = 0`. Real rows: `progressPct = Math.round(approved_quantity / order_item.quantity * 100)`. Emit a `dataAnomaly: true` flag on any row where `SUM(assigned_quantity) > order_item.quantity`.
+- **Acceptance Criteria:**
+  - Returns unassigned row when `unassigned > 0`.
+  - Does NOT return unassigned row when fully assigned.
+  - `progressPct` is 0 when `order_item.quantity = 0` (no division by zero).
+  - `dataAnomaly` flag set and `console.warn` emitted when assignments exceed item quantity.
+  - Unit tests cover: fully unassigned, partially assigned, fully assigned, over-assigned anomaly, zero quantity item.
+- **Testing Steps:**
+  - Unit: item qty=10, no assignments → one unassigned row with `assignedQuantity=10`.
+  - Unit: item qty=10, one assignment of 10 → one real row, no unassigned row.
+  - Unit: item qty=10, assignment of 6 → one real row + unassigned row with `assignedQuantity=4`.
+  - Unit: item qty=0 → `progressPct = 0` (no crash).
+- **Dependencies:** Task 4.5.
+- **Status:** Pending
+
+---
+
+### Task 4.11: Implement `getOrderItemsWithProgress` query and server action
+
+- **Description:** Add `getOrderItemsWithProgress(db, largeOrderId): Promise<OrderItemWithProgress[]>` to `packages/db/src/queries/order-items.ts`. Each item includes its `AssignmentProgressRow[]` from `getAssignmentProgress`. Expose via `getOrderItemsWithProgressData(largeOrderId)` server action in `large-orders/actions.ts`. Role gate: `cashier_admin | secretary`.
+- **Acceptance Criteria:**
+  - Returns all `order_items` for the given large order, each with progress rows.
+  - Empty `order_items` → returns empty array (not error).
+  - Returns `UNAUTHORIZED` / `FORBIDDEN` for unauthenticated or wrong role.
+- **Testing Steps:**
+  - Unit: large order with 2 items, each partially assigned → returns 2 items with progress rows.
+  - Unit: large order with no items → returns `[]`.
+  - Integration: call as `stylist` → `FORBIDDEN`.
+- **Dependencies:** Task 4.10.
+- **Status:** Pending
+
+---
+
+### Task 4.12: Add `order_items` CRUD server actions
+
+- **Description:** Add to `apps/web/src/app/(protected)/large-orders/order-items-actions.ts`: `addOrderItem(largeOrderId, input)` (creates one `order_items` row), `editOrderItem(itemId, input)` (updates quantity/notes; rejects if new quantity < `SUM(assigned_quantity)` with `CONFLICT`), `removeOrderItem(itemId)` (sets `quantity = 0` only if `SUM(assigned_quantity) = 0`; else returns `CONFLICT` with message "Hay unidades ya asignadas para esta pieza"). All actions role-gated to `cashier_admin | secretary`. Validate with Zod.
+- **Acceptance Criteria:**
+  - `addOrderItem` inserts and returns the new `id`.
+  - `editOrderItem` rejects quantity reductions below assigned sum with `CONFLICT`.
+  - `removeOrderItem` rejects when assignments exist with `CONFLICT`.
+  - `removeOrderItem` succeeds (sets `quantity = 0`) when no assignments.
+  - All actions return `FORBIDDEN` for unauthorized roles.
+- **Testing Steps:**
+  - Unit: `editOrderItem` reducing qty below current assigned sum → `CONFLICT`.
+  - Unit: `removeOrderItem` with existing assignment → `CONFLICT`.
+  - Unit: `removeOrderItem` with no assignments → `quantity` set to 0.
+- **Dependencies:** Task 4.7.
+- **Status:** Pending
+
+---
+
+### Task 4.13: Fix `progressPct` calculation in `getCraftablesDashboard`
+
+- **Description:** Replace the current status-count-based `progressPct` in `getCraftablesDashboard` with the quantity-weighted formula: `ROUND(SUM(approved_quantity)::numeric / NULLIF(order_item.quantity, 0) * 100)`. For craftables not linked to a large order (manual source), keep the existing piece-status-count formula. Guard against division by zero.
+- **Acceptance Criteria:**
+  - Large-order-linked craftables: `progressPct` reflects quantity-weighted approval.
+  - Manual craftables: `progressPct` unchanged (piece-status count).
+  - No NaN or infinity in any row.
+  - Existing unit tests for `getCraftablesDashboard` still pass.
+- **Testing Steps:**
+  - Unit: craftable linked to order item qty=10, 5 approved → `progressPct = 50`.
+  - Unit: craftable with `order_item.quantity = 0` → `progressPct = 0` (no crash).
+  - Unit: manual craftable → `progressPct` computed as before.
+- **Dependencies:** Task 4.10.
+- **Status:** Pending
+
+---
+
+### Task 4.14: Validate `editLargeOrder` quantity reduction against assignments
+
+- **Description:** In the `editLargeOrder` server action, after quantity change detection, query `SUM(assigned_quantity)` across all `cloth_piece_assignments` for the order's items. If the new `totalPrice`-derived quantity is less than the assigned sum, return `CONFLICT` with message "No se puede reducir la cantidad por debajo de la ya asignada (`{sum}` unidades)." Apply within the existing transaction.
+- **Acceptance Criteria:**
+  - `editLargeOrder` with quantity reduction below assigned sum → `CONFLICT`.
+  - `editLargeOrder` with quantity increase → succeeds.
+  - Existing `editLargeOrder` tests still pass.
+- **Testing Steps:**
+  - Unit: order has 10 assigned units; reduce to 9 → `CONFLICT`.
+  - Unit: order has 10 assigned units; increase to 12 → success.
+- **Dependencies:** Task 4.7.
+- **Status:** Pending
+
+---
+
+### Task 4.15: Block large order cancellation when approved assignments exist
+
+- **Description:** In the `transitionLargeOrder` server action for the `cancel` action, query `SUM(approved_quantity)` across all assignments for the order's items. If `> 0`, return `CONFLICT` with message "Existen piezas ya aprobadas para esta orden." If only unstarted assignments exist (`completed_quantity = 0` for all), allow cancellation and surface a warning in the UI (returned in the action result alongside `success: true`).
+- **Acceptance Criteria:**
+  - Cancel with `approved_quantity > 0` → `CONFLICT`.
+  - Cancel with assignments where all `completed_quantity = 0` → success + `warning` field in result.
+  - Cancel with no assignments → success, no warning.
+- **Testing Steps:**
+  - Unit: cancel order with 1 approved quantity → `CONFLICT`.
+  - Unit: cancel order with assignment where `completed_quantity = 0` → success + warning.
+  - Unit: cancel order with no assignments → success, no warning.
+- **Dependencies:** Task 4.7.
+- **Status:** Pending
+
+---
+
+### Task 4.16: Build `OrderItemProgressTable` component
+
+- **Description:** Build `apps/web/src/components/order-item-progress-table.tsx`. Grouped table: one section per `piece_name`, rows per assignee, plus computed "Sin asignar" row (grey italic) when `unassignedQuantity > 0`. Columns: Pieza, Empleado, Asignado, Completado, Aprobado, Progreso. Progreso column: `approvedQuantity / orderItem.quantity` as `%` integer + thin progress bar (red <30%, amber 30–79%, green ≥80%). Mobile: collapse Completado/Aprobado columns below 768px; show only Empleado, Asignado, Progreso.
+- **Acceptance Criteria:**
+  - "Sin asignar" row appears only when `unassignedQuantity > 0`.
+  - Progress bar color transitions at correct thresholds.
+  - Columns collapse correctly at 768px.
+  - `role="progressbar"` and `aria-valuenow` present on progress elements.
+  - Empty order items array → `EmptyState` shown.
+- **Testing Steps:**
+  - Render with 1 item, 1 assignment, qty=10 assigned=6 → "Sin asignar" row with 4 units.
+  - Render with fully assigned item → no "Sin asignar" row.
+  - At 360px: Completado/Aprobado hidden; Pieza, Empleado, Asignado, Progreso visible.
+  - axe scan → no violations.
+- **Dependencies:** Task 4.11.
+- **Status:** Pending
+
+---
+
+### Task 4.17: Add "Producción" section to large order detail page
+
+- **Description:** In `apps/web/src/app/(protected)/large-orders/[id]/large-order-detail.tsx`, add a collapsible "Producción" section below the existing payment section. It renders `OrderItemProgressTable` (Task 4.16) loaded via `getOrderItemsWithProgressData`. Show skeleton during fetch. Hide section for `stylist` and `clothier` roles.
+- **Acceptance Criteria:**
+  - Section renders on the large order detail page for `cashier_admin` and `secretary`.
+  - Skeleton shown during data load.
+  - Hidden entirely for `stylist` and `clothier`.
+  - Collapsible: collapsed by default, remembers state in `localStorage`.
+- **Testing Steps:**
+  - Open large order detail as admin → "Producción" section visible with correct data.
+  - Open as `stylist` → section not rendered.
+  - Expand section, reload → section remains expanded.
+- **Dependencies:** Task 4.16.
+- **Status:** Pending
+
+---
+
+### Task 4.18: Add inline assignment creation UI
+
+- **Description:** On each order item row in `OrderItemProgressTable`, add an "Asignar" button (visible to `cashier_admin` and `secretary`). Opens an inline form: assignee dropdown (active clothiers only), quantity input (max = `unassignedQuantity`, shown as helper text). On submit, calls `createAssignment`. On success, refreshes the table via TanStack Query invalidation.
+- **Acceptance Criteria:**
+  - "Asignar" button absent when `unassignedQuantity = 0`.
+  - Quantity input enforces max = `unassignedQuantity` with client-side validation.
+  - Dropdown shows only active clothiers.
+  - Success → table row updates without full page reload.
+  - `CONFLICT` error → toast with message "Capacidad insuficiente".
+- **Testing Steps:**
+  - Item fully assigned → no "Asignar" button.
+  - Enter quantity > `unassignedQuantity` → form invalid before submit.
+  - Submit valid assignment → new row appears in table.
+  - Submit duplicate assignment that causes a race → `CONFLICT` toast shown.
+- **Dependencies:** Task 4.7, Task 4.16.
+- **Status:** Pending
+
+---
+
+### Task 4.19: Add completed/approved quantity reporting UI
+
+- **Description:** Per assignment row in `OrderItemProgressTable`: clothier sees "Reportar avance" button (own assignments only) → numeric input for `completedQuantity` (max = `assignedQuantity`). Admin/secretary see "Aprobar" button → numeric input for `approvedQuantity` (max = `completedQuantity`). Each calls the respective server action. Row updates optimistically on success; reverts on error with toast.
+- **Acceptance Criteria:**
+  - Clothier only sees "Reportar avance" on their own rows.
+  - Admin/secretary see "Aprobar" on all rows.
+  - Inputs enforce max client-side.
+  - `STALE_DATA` error → toast "Dato desactualizado, recarga la página".
+  - Optimistic update reverts correctly on failure.
+- **Testing Steps:**
+  - As clothier: click "Reportar avance" on own assignment, enter valid qty → row updates.
+  - As clothier: "Reportar avance" not shown on another clothier's row.
+  - As admin: click "Aprobar" → enter valid qty → row updates.
+  - Simulate `STALE_DATA` → toast shown, row reverts.
+- **Dependencies:** Task 4.8, Task 4.9, Task 4.16.
+- **Status:** Pending
+
+---
+
+### Task 4.20: Show unassigned quantity warning on craftables dashboard
+
+- **Description:** In `CraftablesDashboardTable`, when `craftable.source = 'large_order'` and `unassignedQuantity > 0` for any linked order item, show a warning badge "X unidades sin asignar" on the craftable row. Badge links to the large order detail production section (Task 4.17). Compute `unassignedQuantity` in the `getCraftablesDashboard` query via a subquery.
+- **Acceptance Criteria:**
+  - Badge appears only when `unassignedQuantity > 0` on a large-order-linked craftable.
+  - Badge is absent on manual craftables.
+  - Badge links correctly to `large-orders/[id]#produccion`.
+  - Fully assigned orders: no badge.
+- **Testing Steps:**
+  - Large order craftable with 5 unassigned units → badge shows "5 unidades sin asignar".
+  - Fully assigned craftable → no badge.
+  - Manual craftable → no badge regardless of quantities.
+- **Dependencies:** Task 4.5, Task 4.17.
+- **Status:** Pending
+
+---
+
+### Task 4.21: Backfill `order_items` from existing large orders
+
+- **Description:** Write a one-time Node script at `packages/db/scripts/backfill-order-items.ts`. For each large order with linked `craftables` (source = 'large_order'), group existing `craftable_pieces` by `cloth_piece_id` + `cloth_piece_variant_id`, sum their `quantity`, and insert one `order_items` row per group with the summed quantity. Run inside a transaction. Log any large order with zero linked craftable pieces as `[UNRESOLVED]` to stdout for manual review.
+- **Acceptance Criteria:**
+  - Script runs without errors on existing data.
+  - One `order_items` row per distinct piece type per large order.
+  - `quantity` equals the sum of matching `craftable_pieces.quantity`.
+  - Only `source = 'large_order'` craftables are processed — manual ones untouched.
+  - Transaction: any insert failure rolls back all rows for that order (partial state not persisted).
+  - `[UNRESOLVED]` orders logged to stdout.
+- **Testing Steps:**
+  - Seed: 1 large order, 2 craftables each with 3 pieces of the same type → `order_items` row with `quantity = 6`.
+  - Seed: 1 large order, no craftables → logged as `[UNRESOLVED]`.
+  - Seed: 1 manual craftable → not processed.
+- **Dependencies:** Task 4.4.
+- **Status:** Pending
+
+---
+
+### Task 4.22: Backfill `cloth_piece_assignments` from existing `craftable_pieces`
+
+- **Description:** Write a one-time Node script at `packages/db/scripts/backfill-assignments.ts`. For each `craftable_piece` linked to a large order (via `craftables.source = 'large_order'`), find the matching `order_items` row (by `cloth_piece_id` + `cloth_piece_variant_id` + `large_order_id`), and insert a `cloth_piece_assignments` row: `assigned_quantity = craftable_piece.quantity`, `completed_quantity = (status != 'pending' ? quantity : 0)`, `approved_quantity = (status = 'approved' ? quantity : 0)`, `craftable_piece_id` FK set. Run inside a transaction per order. Log any unmatched piece to stdout.
+- **Acceptance Criteria:**
+  - One `cloth_piece_assignments` row per existing `craftable_piece` linked to a large order.
+  - `completed_quantity` and `approved_quantity` reflect existing status correctly.
+  - Unmatched pieces (no `order_items` row) logged to stdout — not silently skipped.
+  - Script idempotent: re-running on already-backfilled data inserts nothing (use `ON CONFLICT DO NOTHING` on `craftable_piece_id`).
+- **Testing Steps:**
+  - Seed: `craftable_piece` with `status = 'approved'` → assignment has `approved_quantity = quantity`.
+  - Seed: `craftable_piece` with `status = 'pending'` → `completed_quantity = 0`, `approved_quantity = 0`.
+  - Run script twice → no duplicate rows.
+- **Dependencies:** Task 4.21.
+- **Status:** Pending
+
+---
+
+### Task 4.23: Validate invariants on backfilled data
+
+- **Description:** After running backfill scripts (tasks 4.21–4.22), execute a verification SQL query: `SELECT oi.id, oi.quantity, SUM(cpa.assigned_quantity) AS total FROM order_items oi JOIN cloth_piece_assignments cpa ON cpa.order_item_id = oi.id GROUP BY oi.id, oi.quantity HAVING SUM(cpa.assigned_quantity) > oi.quantity`. Log any returned rows as data anomalies. Block go-live on Phase 4 features until this query returns zero rows.
+- **Acceptance Criteria:**
+  - Verification query returns zero rows after backfill on clean production data.
+  - Any anomalous rows identified are resolved or explicitly acknowledged before go-live.
+  - Verification script added to `packages/db/scripts/verify-assignments.ts` for re-running on demand.
+- **Testing Steps:**
+  - Run backfill on clean seed data → verification returns 0 rows.
+  - Manually corrupt one row (set `assigned_quantity` above `order_item.quantity`) → verification returns that row.
+- **Dependencies:** Task 4.22.
+- **Status:** Pending
+
+---
+
+### Task 4.24: Unit tests — core invariant enforcement
+
+- **Description:** Add `packages/db/src/queries/__tests__/assignments.test.ts`. Tests must cover: (1) `SUM(assigned_quantity) <= order_item.quantity` — at boundary, one over, multiple assignments; (2) `completed_quantity <= assigned_quantity` — server action rejects violation; (3) `approved_quantity <= completed_quantity` — server action rejects violation; (4) duplicate `createAssignment` with same quantities returns `CONFLICT`. All tests run inside a transaction that rolls back.
+- **Acceptance Criteria:**
+  - All four invariant groups have dedicated test cases.
+  - Tests run in isolation with rollback — no shared state between test cases.
+  - `turbo test` passes.
+- **Testing Steps:**
+  - `turbo test packages/db` → all assignment tests green.
+- **Dependencies:** Task 4.7, Task 4.8, Task 4.9.
+- **Status:** Pending
+
+---
+
+### Task 4.25: Unit tests — `unassigned_quantity` computation
+
+- **Description:** Add unit tests for `getUnassignedQuantity` (Task 4.5) covering: order with 0 assignments returns full quantity, fully assigned returns 0, partially assigned returns correct remainder, and result never goes negative (anomaly case returns 0).
+- **Acceptance Criteria:**
+  - Four test cases all pass.
+  - `turbo test` passes.
+- **Testing Steps:**
+  - `turbo test packages/db` → all four cases green.
+- **Dependencies:** Task 4.5.
+- **Status:** Pending
+
+---
+
+### Task 4.26: Integration test — concurrent over-assignment race condition
+
+- **Description:** Add an integration test in `packages/db/src/queries/__tests__/assignments-concurrent.test.ts` simulating two concurrent transactions each attempting to assign units that together exceed `order_item.quantity`. Verify exactly one succeeds and one returns `CONFLICT`. Use Postgres advisory locks or two separate DB connections within the test.
+- **Acceptance Criteria:**
+  - Test confirms the `SELECT ... FOR UPDATE` lock serializes concurrent inserts correctly.
+  - Exactly one of the two concurrent calls succeeds.
+  - `turbo test` passes.
+- **Testing Steps:**
+  - Run the concurrent test in isolation 10 times — always passes (no flakiness).
+- **Dependencies:** Task 4.7.
+- **Status:** Pending
+
+---
+
+### Task 4.27: Rename craftables → products across the entire codebase
+
+- **Description:** Mechanical rename of the "craftable" concept to "product" at every layer: DB table names (`craftables` → `products`, `craftable_pieces` → `product_pieces`), enums, indexes, FKs, Drizzle schema exports, query functions, server actions, Zod schema names, types, route segments (`/admin/craftables` → `/admin/products`), component file names and component names, sidebar nav labels, and all `es.json` / `en.json` i18n keys (`"confeccionable"` → `"producto"`). Follow the same pattern as the Task 3.1 + Task 3.5 + Task 3.9 rename cycle.
+- **Acceptance Criteria:**
+  - `grep -r "craftable\|Craftable\|confeccionable\|Confeccionable" apps/ packages/ --include="*.ts" --include="*.tsx"` returns zero matches outside of migration files and this roadmap.
+  - All renamed routes respond with HTTP 200; old routes return 404 or redirect.
+  - `turbo typecheck` passes with zero errors.
+  - `turbo test` passes — no broken test references.
+  - `turbo lint` passes.
+- **Testing Steps:**
+  - Run the grep command → zero matches in non-migration source files.
+  - Visit `/admin/products`, `/secretary/products`, `/clothier/products` → each renders correctly.
+  - Visit `/admin/craftables` → 404 or redirect to `/admin/products`.
+  - Check sidebar nav for all roles → labels show "Productos".
+- **Dependencies:** Task 4.1–4.26 (all Phase 4 tasks complete before renaming).
+- **Status:** Pending
+
+---
+
+## Phase 5: Final Stabilization Before Release
+
+**Started:** —
+**Status:** Pending — all tasks pending.
+
+> Last-mile polish and documentation required before handing the system to real users. No new features.
+
+---
+
+### Task 5.1: Icon audit and replacement across screens
+
+- **Description:** Several screens use no icons, wrong icons, or inconsistent sizes. Icon-only controls lack `aria-label`. Audit every surface and replace text-only or ad-hoc icons with Lucide icons. Standardise sizes: `size-4` inside buttons, `size-5` or `size-6` standalone. Add `aria-label` to every icon-only interactive element.
+- **Acceptance Criteria:**
+  - Every screen in the audit table uses a Lucide icon matching the target column.
+  - No icon-only button/link is missing `aria-label`.
+  - Imports are individual (`import { IconName } from "lucide-react"`), no barrel imports.
+- **Testing Steps:**
+  - Visual pass on cashier dashboard, ticket detail, secretary calendar, admin catalog, empty employee list → every interactive icon has a label or visible text.
+- **Dependencies:** Task 2.11.
+- **Status:** Pending
+
+---
+
+### Task 5.2: Annotate hardest steps in role training guides
+
+- **Description:** Each of the four training guides (cashier_admin, secretary, stylist, clothier) lacks screenshots on its 2–3 hardest steps. Trainees cannot follow text-only instructions for non-obvious flows. Capture annotated screenshots (red outline + numbered callout) and embed them under the matching step section in each guide's markdown file.
+- **Acceptance Criteria:**
+  - Each role guide has at least 2 annotated screenshots on its hardest steps.
+  - Screenshots use a consistent annotation style (red outline + numbered callout).
+  - Image paths are relative under `docs/training/` so guides remain portable.
+- **Testing Steps:**
+  - Hand a guide to a staff member who has not used the system → they complete the highlighted step without asking for clarification.
+- **Dependencies:** None.
+- **Status:** Pending
+
+---
+
+### Task 5.3: Diagnose and permanently fix recurring `AppShell` hydration mismatch
+
+- **Description:** `AppShell` triggers a React hydration mismatch that recurs each time new code is added, suggesting a structural root cause rather than an isolated bug. The fix has been applied multiple times but regresses. This task is a full root-cause investigation: identify which part of `AppShell` produces different server vs. client HTML (likely browser-only APIs, conditional rendering based on `typeof window`, cookie/localStorage reads before mount, or a third-party component that renders differently on server), then apply a durable fix that does not regress as the component grows.
+- **Acceptance Criteria:**
+  - Zero hydration warnings on any authenticated route in the browser console.
+  - Root cause documented in a code comment at the fix site explaining why this pattern causes the mismatch.
+  - A lint rule or code review note added to prevent the same pattern from being reintroduced (e.g. ESLint `no-restricted-syntax` or a CLAUDE.md note).
+  - Fix survives adding new sidebar items, new providers, and new theme-related state without re-triggering the mismatch.
+- **Testing Steps:**
+  - Open every role's landing page in a fresh browser session → zero hydration warnings in the console.
+  - Toggle theme, collapse sidebar, add a new nav item → reload → still zero warnings.
+  - Run `turbo build` → zero Next.js hydration warnings in build output.
+- **Dependencies:** None.
 - **Status:** Pending
