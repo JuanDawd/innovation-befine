@@ -62,6 +62,7 @@ function formatCOP(amount: number): string {
 const variantSchema = z.object({
   name: z.string().min(1, "El nombre es obligatorio").max(100),
   pieceRate: z.number().int().min(0, "La tarifa no puede ser negativa"),
+  sellingPrice: z.number().int().min(0, "El precio no puede ser negativo").nullable().optional(),
 });
 type VariantInput = z.infer<typeof variantSchema>;
 
@@ -90,7 +91,11 @@ function VariantRow({
   });
 
   function openEdit() {
-    reset({ name: variant.name, pieceRate: variant.pieceRate });
+    reset({
+      name: variant.name,
+      pieceRate: variant.pieceRate,
+      sellingPrice: variant.sellingPrice ?? undefined,
+    });
     setServerError(null);
     setEditOpen(true);
   }
@@ -144,7 +149,17 @@ function VariantRow({
           )}
         </div>
         <div className="flex items-center gap-3 shrink-0">
-          <span className="font-mono tabular-nums text-sm">{formatCOP(variant.pieceRate)}</span>
+          <span
+            className="font-mono tabular-nums text-xs text-muted-foreground"
+            title="Tarifa costurera"
+          >
+            {formatCOP(variant.pieceRate)}
+          </span>
+          {variant.sellingPrice != null && (
+            <span className="font-mono tabular-nums text-xs font-medium" title="Precio de venta">
+              {formatCOP(variant.sellingPrice)}
+            </span>
+          )}
           <button
             onClick={openEdit}
             disabled={isPending}
@@ -224,6 +239,25 @@ function VariantRow({
                 <p className="text-sm text-destructive">{errors.pieceRate.message}</p>
               )}
             </div>
+            <div className="space-y-1.5">
+              <label htmlFor="ve-selling-price" className="text-sm font-medium">
+                {t("sellingPriceLabel")}{" "}
+                <span className="text-muted-foreground text-xs">(opcional)</span>
+              </label>
+              <Input
+                id="ve-selling-price"
+                type="number"
+                min={0}
+                placeholder="0"
+                aria-invalid={!!errors.sellingPrice}
+                {...register("sellingPrice", {
+                  setValueAs: (v) => (v === "" || v === null ? null : Number(v)),
+                })}
+              />
+              {errors.sellingPrice && (
+                <p className="text-sm text-destructive">{errors.sellingPrice.message}</p>
+              )}
+            </div>
           </form>
           <DialogFooter>
             <DialogClose render={<Button variant="outline" />}>
@@ -285,8 +319,8 @@ function AddVariantForm({
           {serverError}
         </p>
       )}
-      <div className="flex gap-2">
-        <div className="flex-1 space-y-1">
+      <div className="flex gap-2 flex-wrap">
+        <div className="flex-1 min-w-32 space-y-1">
           <Input
             placeholder={t("variantNamePlaceholder")}
             aria-invalid={!!errors.name}
@@ -294,7 +328,7 @@ function AddVariantForm({
           />
           {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
         </div>
-        <div className="w-36 space-y-1">
+        <div className="w-32 space-y-1">
           <Input
             type="number"
             min={0}
@@ -304,6 +338,20 @@ function AddVariantForm({
           />
           {errors.pieceRate && (
             <p className="text-xs text-destructive">{errors.pieceRate.message}</p>
+          )}
+        </div>
+        <div className="w-32 space-y-1">
+          <Input
+            type="number"
+            min={0}
+            placeholder={t("sellingPricePlaceholder")}
+            aria-invalid={!!errors.sellingPrice}
+            {...register("sellingPrice", {
+              setValueAs: (v) => (v === "" || v === null ? null : Number(v)),
+            })}
+          />
+          {errors.sellingPrice && (
+            <p className="text-xs text-destructive">{errors.sellingPrice.message}</p>
           )}
         </div>
         <Button type="submit" size="sm" disabled={isPending}>

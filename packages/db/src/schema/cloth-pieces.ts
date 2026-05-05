@@ -31,12 +31,18 @@ export const clothPieceVariants = pgTable(
     name: text("name").notNull(),
     /** Piece rate in whole COP pesos paid to the clothier */
     pieceRate: bigint("piece_rate", { mode: "number" }).notNull(),
+    /** Optional customer selling price in whole COP pesos — null means not for sale */
+    sellingPrice: bigint("selling_price", { mode: "number" }),
     isActive: boolean("is_active").notNull().default(true),
     createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
     check("chk_cloth_piece_variants_piece_rate", sql`${t.pieceRate} >= 0`),
+    check(
+      "chk_cloth_piece_variants_selling_price",
+      sql`${t.sellingPrice} IS NULL OR ${t.sellingPrice} >= 0`,
+    ),
     index("idx_cloth_piece_variants_piece").on(t.clothPieceId),
   ],
 );
