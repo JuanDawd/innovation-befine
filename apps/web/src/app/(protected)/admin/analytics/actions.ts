@@ -41,8 +41,15 @@ async function requireAdmin() {
 
 export type PeriodMetrics = {
   revenue: number;
+  serviceRevenue: number;
+  craftableSalesRevenue: number;
   jobs: number;
   earnings: number;
+  earningsBySource: {
+    service: number;
+    pieceCreated: number;
+    workedDay: number;
+  };
 };
 
 export type AnalyticsSummary = {
@@ -105,6 +112,10 @@ export async function getAnalyticsSummary(
     ]);
 
   const sumEarnings = (rows: EarningsByEmployee[]) => rows.reduce((s, r) => s + r.totalEarnings, 0);
+  const sumSource = (
+    rows: EarningsByEmployee[],
+    key: keyof EarningsByEmployee["earningsBySource"],
+  ) => rows.reduce((s, r) => s + r.earningsBySource[key], 0);
 
   return {
     success: true,
@@ -112,13 +123,27 @@ export async function getAnalyticsSummary(
       period,
       current: {
         revenue: currentRevenue.totalRevenue,
+        serviceRevenue: currentRevenue.serviceRevenue,
+        craftableSalesRevenue: currentRevenue.craftableSalesRevenue,
         jobs: currentRevenue.totalJobs,
         earnings: sumEarnings(currentEarnings),
+        earningsBySource: {
+          service: sumSource(currentEarnings, "service"),
+          pieceCreated: sumSource(currentEarnings, "pieceCreated"),
+          workedDay: sumSource(currentEarnings, "workedDay"),
+        },
       },
       prior: {
         revenue: priorRevenue.totalRevenue,
+        serviceRevenue: priorRevenue.serviceRevenue,
+        craftableSalesRevenue: priorRevenue.craftableSalesRevenue,
         jobs: priorRevenue.totalJobs,
         earnings: sumEarnings(priorEarnings),
+        earningsBySource: {
+          service: sumSource(priorEarnings, "service"),
+          pieceCreated: sumSource(priorEarnings, "pieceCreated"),
+          workedDay: sumSource(priorEarnings, "workedDay"),
+        },
       },
       dailyBreakdown,
       earningsTable: currentEarnings,

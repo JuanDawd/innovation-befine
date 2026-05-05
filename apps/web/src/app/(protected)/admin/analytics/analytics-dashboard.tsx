@@ -482,6 +482,7 @@ export function AnalyticsDashboard({ initialData }: { initialData: AnalyticsSumm
 
       {!isEmpty && (
         <>
+          {/* Top-line metrics */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 print:grid-cols-3">
             <MetricCard
               label={t("revenue")}
@@ -497,6 +498,48 @@ export function AnalyticsDashboard({ initialData }: { initialData: AnalyticsSumm
               mono
             />
           </div>
+
+          {/* Revenue breakdown */}
+          {(data.current.serviceRevenue > 0 || data.current.craftableSalesRevenue > 0) && (
+            <div className="grid grid-cols-2 gap-3 print:grid-cols-2">
+              <MetricCard
+                label={t("serviceRevenue")}
+                value={data.current.serviceRevenue}
+                priorValue={data.prior.serviceRevenue}
+                mono
+              />
+              <MetricCard
+                label={t("craftableSalesRevenue")}
+                value={data.current.craftableSalesRevenue}
+                priorValue={data.prior.craftableSalesRevenue}
+                mono
+              />
+            </div>
+          )}
+
+          {/* Earnings breakdown */}
+          {data.current.earnings > 0 && (
+            <div className="grid grid-cols-3 gap-3 print:grid-cols-3">
+              <MetricCard
+                label={t("earningsService")}
+                value={data.current.earningsBySource.service}
+                priorValue={data.prior.earningsBySource.service}
+                mono
+              />
+              <MetricCard
+                label={t("earningsPieceCreated")}
+                value={data.current.earningsBySource.pieceCreated}
+                priorValue={data.prior.earningsBySource.pieceCreated}
+                mono
+              />
+              <MetricCard
+                label={t("earningsWorkedDay")}
+                value={data.current.earningsBySource.workedDay}
+                priorValue={data.prior.earningsBySource.workedDay}
+                mono
+              />
+            </div>
+          )}
 
           {period !== "day" && (
             <div className="rounded-xl border p-4 space-y-2">

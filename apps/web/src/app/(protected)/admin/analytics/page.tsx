@@ -3,12 +3,20 @@ import { AnalyticsDashboard } from "./analytics-dashboard";
 
 export default async function AnalyticsPage() {
   const result = await getAnalyticsSummary({ period: "day", includeInactive: false });
+  const emptyMetrics = {
+    revenue: 0,
+    serviceRevenue: 0,
+    craftableSalesRevenue: 0,
+    jobs: 0,
+    earnings: 0,
+    earningsBySource: { service: 0, pieceCreated: 0, workedDay: 0 },
+  };
   const initialData = result.success
     ? result.data
     : {
         period: "day" as const,
-        current: { revenue: 0, jobs: 0, earnings: 0 },
-        prior: { revenue: 0, jobs: 0, earnings: 0 },
+        current: emptyMetrics,
+        prior: emptyMetrics,
         dailyBreakdown: [],
         earningsTable: [],
       };
