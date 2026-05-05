@@ -197,6 +197,13 @@
       "when": 1746489600000,
       "tag": "0027_craftables_rename",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1746576000000,
+      "tag": "0028_fix_sold_by_constraint_name",
+      "breakpoints": true
     }
   ]
 }
