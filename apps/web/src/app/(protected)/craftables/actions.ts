@@ -15,14 +15,14 @@ import { getDb, getTxDb } from "@/lib/db";
 import { employees, users, craftables, craftablePieces } from "@befine/db/schema";
 import { createCraftableSchema, type CreateCraftableInput } from "@befine/types";
 import { getCraftablesDashboard, type CraftableDashboardRow } from "@befine/db";
-
-export type { CraftableDashboardRow };
 import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
 import { getCurrentBusinessDay } from "@/lib/business-day";
 import { revalidatePath } from "next/cache";
 import { createNotification } from "@/lib/notifications";
 import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
+
+export type { CraftableDashboardRow };
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
