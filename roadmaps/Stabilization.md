@@ -817,7 +817,7 @@
   - Remove the only piece row → submit → validation error.
   - At 360px: all four fields are visible without horizontal scroll.
 - **Dependencies:** Task 3.3, Task 3.7.
-- **Status:** Pending
+- **Status:** Done
 
 ---
 
@@ -841,7 +841,7 @@
   - Visit as `stylist` → 403 or redirect.
   - At 360px: table usable without horizontal scroll.
 - **Dependencies:** Task 3.8, Task 3.9.
-- **Status:** Pending
+- **Status:** Done
 
 ---
 

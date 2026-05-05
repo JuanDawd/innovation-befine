@@ -8,6 +8,7 @@ import { hasRole } from "@/lib/middleware-helpers";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { cn } from "@/lib/utils";
 import { CraftableApprovalBoard } from "@/components/craftable-approval-board";
+import { CraftablesDashboardTable } from "@/components/craftables-dashboard-table";
 
 export default async function SecretaryCraftablesPage() {
   const t = await getTranslations("craftables");
@@ -23,6 +24,7 @@ export default async function SecretaryCraftablesPage() {
           {t("createCraftable")}
         </Link>
       </div>
+      <CraftablesDashboardTable isAdmin={false} />
       <CraftableApprovalBoard isAdmin={false} />
     </div>
   );

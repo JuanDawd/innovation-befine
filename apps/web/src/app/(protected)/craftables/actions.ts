@@ -1,10 +1,11 @@
 "use server";
 
 /**
- * Craftable server actions — T045
+ * Craftable server actions — T045 / stab3.12
  *
  * listActiveClothiers: secretary/admin — for craftable assignment dropdowns.
  * createCraftable: secretary/admin — creates a craftable + pieces, sends notifications.
+ * getCraftablesDashboardData: secretary/admin — today's and WIP craftables.
  */
 
 import { headers } from "next/headers";
@@ -13,6 +14,9 @@ import { auth } from "@/lib/auth";
 import { getDb, getTxDb } from "@/lib/db";
 import { employees, users, craftables, craftablePieces } from "@befine/db/schema";
 import { createCraftableSchema, type CreateCraftableInput } from "@befine/types";
+import { getCraftablesDashboard, type CraftableDashboardRow } from "@befine/db";
+
+export type { CraftableDashboardRow };
 import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
 import { getCurrentBusinessDay } from "@/lib/business-day";
@@ -169,4 +173,18 @@ export async function createCraftable(rawInput: unknown): Promise<ActionResult<{
   revalidatePath("/admin/craftables");
 
   return { success: true, data: { id: craftableId } };
+}
+
+// ─── Craftables dashboard ─────────────────────────────────────────────────────
+
+export async function getCraftablesDashboardData(): Promise<ActionResult<CraftableDashboardRow[]>> {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session)
+    return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
+  if (!hasRole(session.user, "cashier_admin", "secretary"))
+    return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
+
+  const db = getDb();
+  const rows = await getCraftablesDashboard(db);
+  return { success: true, data: rows };
 }
