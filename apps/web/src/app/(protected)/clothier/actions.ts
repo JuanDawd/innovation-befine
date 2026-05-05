@@ -24,7 +24,7 @@ import { pieceActionSchema } from "@befine/types";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export type BatchPieceRow = {
+export type CraftablePieceRow = {
   id: string;
   craftableId: string;
   clothPieceName: string;
@@ -57,7 +57,7 @@ async function getClothierEmployee(): Promise<{
 
 // ─── List today's batch pieces for this clothier ──────────────────────────────
 
-export async function listTodayBatchPieces(): Promise<ActionResult<BatchPieceRow[]>> {
+export async function listTodayCraftablePieces(): Promise<ActionResult<CraftablePieceRow[]>> {
   const ctx = await getClothierEmployee();
   if (!ctx) return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
 

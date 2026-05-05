@@ -29,7 +29,7 @@ import { pieceActionSchema } from "@befine/types";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export type PendingApprovalRow = {
+export type PendingCraftablePieceApprovalRow = {
   id: string;
   craftableId: string;
   clothPieceName: string;
@@ -60,7 +60,9 @@ async function getStaffEmployee(): Promise<{ employeeId: string; userId: string 
 
 // ─── List pending approvals ───────────────────────────────────────────────────
 
-export async function listPendingApprovals(): Promise<ActionResult<PendingApprovalRow[]>> {
+export async function listPendingCraftablePieceApprovals(): Promise<
+  ActionResult<PendingCraftablePieceApprovalRow[]>
+> {
   const ctx = await getStaffEmployee();
   if (!ctx) return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
 
@@ -101,7 +103,7 @@ export async function listPendingApprovals(): Promise<ActionResult<PendingApprov
 
 // ─── Approve a piece (done_pending_approval → approved) ──────────────────────
 
-export async function approvePiece(
+export async function approveCraftablePiece(
   rawPieceId: unknown,
   rawExpectedVersion: unknown,
 ): Promise<ActionResult<void>> {
@@ -158,7 +160,7 @@ export async function approvePiece(
 
 // ─── Admin: directly approve a pending piece (skip clothier step) ─────────────
 
-export async function adminMarkApproved(
+export async function adminMarkCraftablePieceApproved(
   rawPieceId: unknown,
   rawExpectedVersion: unknown,
 ): Promise<ActionResult<void>> {

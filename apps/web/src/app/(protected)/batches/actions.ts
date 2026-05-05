@@ -12,7 +12,7 @@ import { eq, and } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { getDb, getTxDb } from "@/lib/db";
 import { employees, users, craftables, craftablePieces } from "@befine/db/schema";
-import { createBatchSchema, type CreateBatchInput } from "@befine/types";
+import { createCraftableSchema, type CreateCraftableInput } from "@befine/types";
 import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
 import { getCurrentBusinessDay } from "@/lib/business-day";
@@ -27,7 +27,7 @@ export type ClothierOption = {
   name: string;
 };
 
-export type BatchRow = {
+export type CraftableRow = {
   id: string;
   businessDayId: string;
   notes: string | null;
@@ -57,7 +57,7 @@ export async function listActiveClothiers(): Promise<ActionResult<ClothierOption
 
 // ─── Create batch ─────────────────────────────────────────────────────────────
 
-export async function createBatch(rawInput: unknown): Promise<ActionResult<{ id: string }>> {
+export async function createCraftable(rawInput: unknown): Promise<ActionResult<{ id: string }>> {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session)
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
@@ -74,7 +74,7 @@ export async function createBatch(rawInput: unknown): Promise<ActionResult<{ id:
       },
     };
 
-  const parsed = createBatchSchema.safeParse(rawInput);
+  const parsed = createCraftableSchema.safeParse(rawInput);
   if (!parsed.success) {
     return {
       success: false,
@@ -89,7 +89,7 @@ export async function createBatch(rawInput: unknown): Promise<ActionResult<{ id:
     };
   }
 
-  const input: CreateBatchInput = parsed.data;
+  const input: CreateCraftableInput = parsed.data;
 
   const businessDay = await getCurrentBusinessDay();
   if (!businessDay)

@@ -13,23 +13,23 @@ import { CheckCircle2Icon, CircleIcon, Loader2Icon, PlusCircleIcon } from "lucid
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
-  listTodayBatchPieces,
+  listTodayCraftablePieces,
   claimPiece,
   markPieceDone,
-  type BatchPieceRow,
+  type CraftablePieceRow,
 } from "@/app/(protected)/clothier/actions";
 
 export function ClothierWorkBoard({ employeeId }: { employeeId: string }) {
   const t = useTranslations("clothierWork");
 
-  const [pieces, setPieces] = useState<BatchPieceRow[]>([]);
+  const [pieces, setPieces] = useState<CraftablePieceRow[]>([]);
   const [isLoading, startLoadTransition] = useTransition();
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [errorMap, setErrorMap] = useState<Record<string, string>>({});
 
   const load = useCallback(() => {
     startLoadTransition(async () => {
-      const res = await listTodayBatchPieces();
+      const res = await listTodayCraftablePieces();
       if (res.success) setPieces(res.data);
     });
   }, []);
@@ -46,7 +46,7 @@ export function ClothierWorkBoard({ employeeId }: { employeeId: string }) {
   ).length;
   const totalMine = myPieces.length;
 
-  async function handleClaim(piece: BatchPieceRow) {
+  async function handleClaim(piece: CraftablePieceRow) {
     setPendingId(piece.id);
     const res = await claimPiece(piece.id, piece.version);
     setPendingId(null);
@@ -57,7 +57,7 @@ export function ClothierWorkBoard({ employeeId }: { employeeId: string }) {
     }
   }
 
-  async function handleMarkDone(piece: BatchPieceRow) {
+  async function handleMarkDone(piece: CraftablePieceRow) {
     setPendingId(piece.id);
     const res = await markPieceDone(piece.id, piece.version);
     setPendingId(null);

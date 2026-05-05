@@ -198,7 +198,7 @@ function canMarkDone(
 }
 
 describe("Batch piece state guards", () => {
-  describe("approvePiece", () => {
+  describe("approveCraftablePiece", () => {
     it("allows approval from done_pending_approval", () => {
       expect(canApprovePiece("done_pending_approval")).toBe(true);
     });
@@ -212,7 +212,7 @@ describe("Batch piece state guards", () => {
     });
   });
 
-  describe("adminMarkApproved (skip clothier step)", () => {
+  describe("adminMarkCraftablePieceApproved (skip clothier step)", () => {
     it("allows direct approval from pending", () => {
       expect(canAdminMarkApproved("pending")).toBe(true);
     });

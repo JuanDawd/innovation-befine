@@ -32,6 +32,10 @@ export {
   type PaidOfflineCheckoutInput,
 } from "./schemas/checkout";
 export {
+  createCraftableSchema,
+  craftablePieceLineSchema,
+  type CreateCraftableInput,
+  type CraftablePieceLine,
   createBatchSchema,
   batchPieceLineSchema,
   type CreateBatchInput,

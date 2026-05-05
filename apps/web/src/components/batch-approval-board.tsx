@@ -14,23 +14,23 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import {
-  listPendingApprovals,
-  approvePiece,
-  adminMarkApproved,
-  type PendingApprovalRow,
+  listPendingCraftablePieceApprovals,
+  approveCraftablePiece,
+  adminMarkCraftablePieceApproved,
+  type PendingCraftablePieceApprovalRow,
 } from "@/app/(protected)/batches/approval-actions";
 
 export function BatchApprovalBoard({ isAdmin }: { isAdmin: boolean }) {
   const t = useTranslations("batches");
 
-  const [pieces, setPieces] = useState<PendingApprovalRow[]>([]);
+  const [pieces, setPieces] = useState<PendingCraftablePieceApprovalRow[]>([]);
   const [isLoading, startLoadTransition] = useTransition();
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [errorMap, setErrorMap] = useState<Record<string, string>>({});
 
   const load = useCallback(() => {
     startLoadTransition(async () => {
-      const res = await listPendingApprovals();
+      const res = await listPendingCraftablePieceApprovals();
       if (res.success) setPieces(res.data);
     });
   }, []);
@@ -39,9 +39,9 @@ export function BatchApprovalBoard({ isAdmin }: { isAdmin: boolean }) {
     load();
   }, [load]);
 
-  async function handleApprove(piece: PendingApprovalRow) {
+  async function handleApprove(piece: PendingCraftablePieceApprovalRow) {
     setPendingId(piece.id);
-    const res = await approvePiece(piece.id, piece.version);
+    const res = await approveCraftablePiece(piece.id, piece.version);
     setPendingId(null);
     if (!res.success) {
       setErrorMap((m) => ({
@@ -53,9 +53,9 @@ export function BatchApprovalBoard({ isAdmin }: { isAdmin: boolean }) {
     }
   }
 
-  async function handleAdminApprove(piece: PendingApprovalRow) {
+  async function handleAdminApprove(piece: PendingCraftablePieceApprovalRow) {
     setPendingId(piece.id);
-    const res = await adminMarkApproved(piece.id, piece.version);
+    const res = await adminMarkCraftablePieceApproved(piece.id, piece.version);
     setPendingId(null);
     if (!res.success) {
       setErrorMap((m) => ({

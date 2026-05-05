@@ -393,7 +393,7 @@ export async function restoreClothPieceVariant(variantId: string): Promise<Actio
 
 // ─── Sell batch piece ─────────────────────────────────────────────────────────
 
-const sellBatchPieceSchema = z.object({
+const sellCraftablePieceSchema = z.object({
   batchPieceId: z.string().uuid("ID de pieza inválido"),
   priceOverride: z.number().int().min(0).nullable().optional(),
 });
@@ -403,7 +403,7 @@ const sellBatchPieceSchema = z.object({
  * Snapshots the selling price from the variant (or a cashier override).
  * Gated to cashier_admin.
  */
-export async function sellBatchPiece(
+export async function sellCraftablePiece(
   rawInput: unknown,
 ): Promise<ActionResult<{ soldPrice: number }>> {
   const session = await getAdminSession();
@@ -413,7 +413,7 @@ export async function sellBatchPiece(
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
   }
 
-  const parsed = sellBatchPieceSchema.safeParse(rawInput);
+  const parsed = sellCraftablePieceSchema.safeParse(rawInput);
   if (!parsed.success)
     return {
       success: false,

@@ -706,7 +706,7 @@
   - `turbo typecheck` → zero errors.
   - `turbo test` → all existing tests pass.
 - **Dependencies:** Task 3.1.
-- **Status:** Pending
+- **Status:** Done
 
 ---
 

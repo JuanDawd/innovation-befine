@@ -72,7 +72,7 @@ const recordPayoutSchema = z.object({
   notes: z.string().max(500).nullish(),
 });
 
-const createBatchSchema = z.object({
+const createCraftableSchema = z.object({
   notes: z.string().max(500).optional(),
   largeOrderId: z.uuid().optional(),
   pieces: z
@@ -219,7 +219,7 @@ describe("Role gate: admin/payroll/actions", () => {
 });
 
 describe("Role gate: batches/actions", () => {
-  it("createBatch — allowed: cashier_admin, secretary", () => {
+  it("createCraftable — allowed: cashier_admin, secretary", () => {
     expectOnlyRoles(["cashier_admin", "secretary"], "cashier_admin", "secretary");
   });
 
@@ -229,21 +229,21 @@ describe("Role gate: batches/actions", () => {
 });
 
 describe("Role gate: batches/approval-actions", () => {
-  it("approvePiece — allowed: cashier_admin, secretary", () => {
+  it("approveCraftablePiece — allowed: cashier_admin, secretary", () => {
     expectOnlyRoles(["cashier_admin", "secretary"], "cashier_admin", "secretary");
   });
 
-  it("adminMarkApproved — cashier_admin only", () => {
+  it("adminMarkCraftablePieceApproved — cashier_admin only", () => {
     expectOnlyRoles(["cashier_admin"], "cashier_admin");
   });
 
-  it("listPendingApprovals — allowed: cashier_admin, secretary", () => {
+  it("listPendingCraftablePieceApprovals — allowed: cashier_admin, secretary", () => {
     expectOnlyRoles(["cashier_admin", "secretary"], "cashier_admin", "secretary");
   });
 });
 
 describe("Role gate: clothier/actions", () => {
-  it("listTodayBatchPieces — clothier only", () => {
+  it("listTodayCraftablePieces — clothier only", () => {
     expectOnlyRoles(["clothier"], "clothier");
   });
 
@@ -456,7 +456,7 @@ describe("UNAUTHORIZED: null session denied on all mutation gates", () => {
     { name: "processCheckout", roles: ["cashier_admin"] },
     { name: "processPaidOfflineCheckout", roles: ["cashier_admin"] },
     { name: "recordPayout", roles: ["cashier_admin"] },
-    { name: "createBatch", roles: ["cashier_admin", "secretary"] },
+    { name: "createCraftable", roles: ["cashier_admin", "secretary"] },
     { name: "markPieceDone", roles: ["clothier"] },
     { name: "createAppointment", roles: ["cashier_admin", "secretary"] },
     { name: "createClient", roles: ["cashier_admin", "secretary"] },
@@ -653,7 +653,7 @@ describe("VALIDATION_ERROR: recordPayoutSchema", () => {
   });
 });
 
-describe("VALIDATION_ERROR: createBatchSchema", () => {
+describe("VALIDATION_ERROR: createCraftableSchema", () => {
   const validBatch = {
     pieces: [
       {
@@ -665,16 +665,16 @@ describe("VALIDATION_ERROR: createBatchSchema", () => {
   };
 
   it("accepts valid batch input", () => {
-    expect(createBatchSchema.safeParse(validBatch).success).toBe(true);
+    expect(createCraftableSchema.safeParse(validBatch).success).toBe(true);
   });
 
   it("rejects empty pieces array", () => {
-    expect(createBatchSchema.safeParse({ pieces: [] }).success).toBe(false);
+    expect(createCraftableSchema.safeParse({ pieces: [] }).success).toBe(false);
   });
 
   it("rejects non-uuid clothPieceId", () => {
     expect(
-      createBatchSchema.safeParse({
+      createCraftableSchema.safeParse({
         pieces: [
           {
             clothPieceId: "bad",

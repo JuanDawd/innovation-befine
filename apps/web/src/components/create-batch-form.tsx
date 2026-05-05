@@ -8,7 +8,7 @@ import { PlusIcon, Trash2Icon, Loader2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   listActiveClothiers,
-  createBatch,
+  createCraftable,
   type ClothierOption,
 } from "@/app/(protected)/batches/actions";
 import { listActiveClothPieces } from "@/app/(protected)/admin/catalog/actions/cloth-pieces";
@@ -103,7 +103,7 @@ export function CreateBatchForm({
     }
 
     startSubmitTransition(async () => {
-      const result = await createBatch({
+      const result = await createCraftable({
         notes: notes.trim() || undefined,
         largeOrderId: largeOrderId || undefined,
         pieces: lines.map((l) => ({
