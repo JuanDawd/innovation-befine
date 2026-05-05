@@ -23,11 +23,11 @@ import {
   payouts,
   payoutPeriodDays,
   payoutTicketItems,
-  payoutBatchPieces,
+  payoutCraftablePieces,
   ticketItems,
-  batchPieces,
+  craftablePieces,
   tickets,
-  clothBatches,
+  craftables,
 } from "@befine/db/schema";
 import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
@@ -346,20 +346,20 @@ export async function recordPayout(rawInput: unknown): Promise<ActionResult<{ id
       // Link covered batch pieces (clothiers)
       if (emp.role === "clothier") {
         const pieces = await tx
-          .select({ id: batchPieces.id })
-          .from(batchPieces)
-          .innerJoin(clothBatches, eq(batchPieces.batchId, clothBatches.id))
+          .select({ id: craftablePieces.id })
+          .from(craftablePieces)
+          .innerJoin(craftables, eq(craftablePieces.craftableId, craftables.id))
           .where(
             and(
-              eq(batchPieces.assignedToEmployeeId, input.employeeId),
-              eq(batchPieces.status, "approved"),
-              inArray(clothBatches.businessDayId, input.businessDayIds),
+              eq(craftablePieces.assignedToEmployeeId, input.employeeId),
+              eq(craftablePieces.status, "approved"),
+              inArray(craftables.businessDayId, input.businessDayIds),
             ),
           );
         if (pieces.length > 0)
           await tx
-            .insert(payoutBatchPieces)
-            .values(pieces.map((p) => ({ payoutId: payout.id, batchPieceId: p.id })));
+            .insert(payoutCraftablePieces)
+            .values(pieces.map((p) => ({ payoutId: payout.id, craftablePieceId: p.id })));
       }
 
       return payout.id;
@@ -509,14 +509,14 @@ export async function getUnsettledEmployees(): Promise<ActionResult<UnsettledEmp
       );
     } else if (emp.role === "clothier") {
       const workDays = await db
-        .selectDistinct({ businessDayId: clothBatches.businessDayId })
-        .from(batchPieces)
-        .innerJoin(clothBatches, eq(batchPieces.batchId, clothBatches.id))
+        .selectDistinct({ businessDayId: craftables.businessDayId })
+        .from(craftablePieces)
+        .innerJoin(craftables, eq(craftablePieces.craftableId, craftables.id))
         .where(
           and(
-            eq(batchPieces.assignedToEmployeeId, emp.id),
-            eq(batchPieces.status, "approved"),
-            inArray(clothBatches.businessDayId, closedDayIds),
+            eq(craftablePieces.assignedToEmployeeId, emp.id),
+            eq(craftablePieces.status, "approved"),
+            inArray(craftables.businessDayId, closedDayIds),
           ),
         );
       unsettledDays = closedDays.filter(

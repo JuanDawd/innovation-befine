@@ -183,6 +183,20 @@
       "when": 1776750000000,
       "tag": "0025_idempotency_keys",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1746403200000,
+      "tag": "0026_craftable_selling_price",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1746489600000,
+      "tag": "0027_craftables_rename",
+      "breakpoints": true
     }
   ]
 }

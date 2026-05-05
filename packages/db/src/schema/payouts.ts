@@ -5,7 +5,7 @@
  * payout_period_days: junction table replacing period_business_day_ids array.
  *   UNIQUE(employee_id, business_day_id) physically prevents double-pay under concurrency.
  * payout_ticket_items: links a stylist payout to the ticket items it covers.
- * payout_batch_pieces: links a clothier payout to the batch pieces it covers.
+ * payout_craftable_pieces: links a clothier payout to the craftable pieces it covers.
  *
  * idempotency_key: client-generated UUID; UNIQUE prevents duplicate inserts on retry.
  * original_computed_amount: what the system computed before any admin adjustment.
@@ -16,7 +16,7 @@ import { bigint, index, pgTable, text, timestamp, unique, uuid } from "drizzle-o
 import { employees } from "./employees";
 import { businessDays } from "./business-days";
 import { ticketItems } from "./ticket-items";
-import { batchPieces } from "./cloth-batches";
+import { craftablePieces } from "./craftables";
 import { paymentMethodEnum } from "./enums";
 
 export const payouts = pgTable(
@@ -77,16 +77,16 @@ export const payoutTicketItems = pgTable(
   (table) => [index("idx_payout_ticket_items_payout").on(table.payoutId)],
 );
 
-/** Links a clothier payout to the specific batch pieces it covers (T066) */
-export const payoutBatchPieces = pgTable(
-  "payout_batch_pieces",
+/** Links a clothier payout to the specific craftable pieces it covers (T066) */
+export const payoutCraftablePieces = pgTable(
+  "payout_craftable_pieces",
   {
     payoutId: uuid("payout_id")
       .notNull()
       .references(() => payouts.id, { onDelete: "restrict" }),
-    batchPieceId: uuid("batch_piece_id")
+    craftablePieceId: uuid("craftable_piece_id")
       .notNull()
-      .references(() => batchPieces.id, { onDelete: "restrict" }),
+      .references(() => craftablePieces.id, { onDelete: "restrict" }),
   },
-  (table) => [index("idx_payout_batch_pieces_payout").on(table.payoutId)],
+  (table) => [index("idx_payout_craftable_pieces_payout").on(table.payoutId)],
 );

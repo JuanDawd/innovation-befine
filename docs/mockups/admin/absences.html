@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Befine · Ausencias — Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..900,0..100,0..1;1,9..144,300..900,0..100,0..1&family=Inter+Tight:ital,wght@0,300..700;1,300..700&family=JetBrains+Mono:wght@300..600&display=swap" rel="stylesheet" />
+  <style>
+    :root,[data-theme="dark"]{
+      --canvas:#010101;--surface-1:#0a0a0a;--surface-2:#141414;--surface-3:#1c1c1c;
+      --text-1:#f2ece1;--text-2:#b8b0a3;--text-3:#807870;--text-4:#4a4640;
+      --rule:#2a2724;--rule-strong:#4a4640;--rule-soft:#1b1917;
+      --pink:#e9408e;--pink-soft:#f06aa5;--pink-deep:#b82a6c;
+      --pink-halo:rgba(233,64,142,.18);--pink-wash:rgba(233,64,142,.08);
+      --mint:#7cd1b3;--mint-dim:rgba(124,209,179,.12);
+      --amber:#e8b765;--amber-dim:rgba(232,183,101,.12);
+      --font-display:"Fraunces","Times New Roman",serif;
+      --font-body:"Inter Tight",ui-sans-serif,system-ui,sans-serif;
+      --font-mono:"JetBrains Mono",ui-monospace,monospace;
+    }
+    [data-theme="light"]{
+      --canvas:#f7f2ea;--surface-1:#fdfaf3;--surface-2:#efe8db;--surface-3:#e8e0ce;
+      --text-1:#0f0d0a;--text-2:#534b40;--text-3:#8a8073;--text-4:#b8ad9c;
+      --rule:#d9cfbb;--rule-strong:#8a8073;--rule-soft:#e8dfca;
+      --pink:#d93079;--pink-soft:#e9408e;--pink-deep:#a8225a;
+      --pink-halo:rgba(217,48,121,.14);--pink-wash:rgba(217,48,121,.06);
+      --mint:#3f9a78;--mint-dim:rgba(63,154,120,.10);
+      --amber:#b8843a;--amber-dim:rgba(184,132,58,.10);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    html,body{height:100%;overflow:hidden;background:var(--canvas);color:var(--text-1);font-family:var(--font-body);-webkit-font-smoothing:antialiased;}
+    body::before{content:"";position:fixed;inset:0;z-index:9999;pointer-events:none;opacity:.028;mix-blend-mode:screen;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)'/%3E%3C/svg%3E");}
+
+    .shell{display:flex;height:100vh;overflow:hidden;}
+
+    /* sidebar stub */
+    .sidebar{width:56px;min-width:56px;background:#000;display:flex;flex-direction:column;align-items:center;
+      border-right:1px solid rgba(242,236,225,.06);padding:12px 0;gap:6px;}
+    .s-logo{width:32px;height:32px;display:flex;align-items:center;justify-content:center;margin-bottom:8px;}
+    .s-logo::before{content:"";width:14px;height:14px;background:var(--pink);transform:rotate(45deg);border-radius:2px;}
+    .s-nav-item{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+      color:rgba(242,236,225,.3);cursor:pointer;transition:all .15s;text-decoration:none;}
+    .s-nav-item:hover{background:rgba(242,236,225,.06);color:rgba(242,236,225,.7);}
+    .s-nav-item.active{background:var(--pink-wash);color:var(--pink);}
+    .s-nav-item svg{width:16px;height:16px;}
+    .s-spacer{flex:1;}
+    .s-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--pink),var(--pink-deep));
+      display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:.7rem;font-weight:700;color:#fff;}
+
+    .main{flex:1;overflow:hidden;display:flex;flex-direction:column;}
+    .topbar{height:56px;min-height:56px;display:flex;align-items:center;padding:0 24px;gap:16px;
+      border-bottom:1px solid var(--rule);background:var(--surface-1);}
+    .topbar-title{font-family:var(--font-display);font-size:1.05rem;font-weight:700;flex:1;color:var(--text-1);font-style:italic;}
+    .month-nav{display:flex;align-items:center;gap:8px;}
+    .nav-arrow{width:30px;height:30px;border-radius:7px;border:1px solid var(--rule);background:transparent;
+      display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-3);transition:all .12s;}
+    .nav-arrow:hover{border-color:var(--rule-strong);color:var(--text-1);}
+    .nav-arrow svg{width:14px;height:14px;}
+    .month-label{font-family:var(--font-display);font-size:.95rem;font-weight:600;color:var(--text-1);
+      font-style:italic;min-width:140px;text-align:center;}
+
+    .content{flex:1;overflow:hidden;display:grid;grid-template-columns:1fr 300px;}
+
+    /* calendar */
+    .cal-pane{overflow-y:auto;padding:20px;}
+    .cal-month{margin-bottom:28px;}
+    .cal-month-title{font-family:var(--font-display);font-size:.85rem;font-weight:700;color:var(--text-2);
+      font-style:italic;margin-bottom:10px;text-transform:capitalize;}
+    .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+    .cal-weekday{text-align:center;font-size:.62rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+      color:var(--text-4);padding:4px 0;margin-bottom:2px;}
+    .cal-day{min-height:64px;border-radius:8px;border:1px solid var(--rule-soft);background:var(--surface-1);
+      padding:6px 6px 4px;cursor:pointer;transition:all .15s;position:relative;}
+    .cal-day:hover{border-color:var(--rule-strong);background:var(--surface-2);}
+    .cal-day.selected{border-color:var(--pink);background:var(--pink-wash);}
+    .cal-day.today{border-color:rgba(233,64,142,.4);}
+    .cal-day.today .day-num::after{content:"";display:block;width:4px;height:4px;border-radius:50%;
+      background:var(--pink);margin:2px auto 0;}
+    .cal-day.other-month{opacity:.3;pointer-events:none;}
+    .cal-day.closed{background:rgba(242,236,225,.02);cursor:not-allowed;}
+    .day-num{font-family:var(--font-mono);font-size:.72rem;color:var(--text-3);text-align:center;margin-bottom:4px;}
+    .cal-day.today .day-num{color:var(--pink);}
+    .day-avatars{display:flex;flex-wrap:wrap;gap:2px;justify-content:center;}
+    .mini-avatar{width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+      font-size:.5rem;font-weight:700;color:#fff;flex-shrink:0;}
+    .absent-tag{position:absolute;bottom:3px;right:4px;font-size:.52rem;font-family:var(--font-mono);color:var(--text-4);}
+
+    /* detail panel */
+    .detail-pane{border-left:1px solid var(--rule);overflow-y:auto;padding:20px;}
+    .dp-header{margin-bottom:20px;}
+    .dp-date{font-family:var(--font-display);font-size:1.2rem;font-weight:700;color:var(--text-1);font-style:italic;margin-bottom:4px;}
+    .dp-sub{font-size:.75rem;color:var(--text-3);}
+
+    .section-label{font-size:.62rem;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--text-3);margin-bottom:10px;}
+
+    .emp-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--rule-soft);}
+    .emp-row:last-child{border-bottom:none;}
+    .emp-av{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+      font-family:var(--font-display);font-size:.72rem;font-weight:700;color:#fff;flex-shrink:0;}
+    .emp-info{flex:1;min-width:0;}
+    .emp-name{font-size:.82rem;font-weight:500;color:var(--text-1);}
+    .emp-role{font-size:.68rem;color:var(--text-4);}
+    .emp-status-badge{font-size:.68rem;font-weight:600;padding:2px 8px;border-radius:99px;}
+    .status-present{background:var(--mint-dim);color:var(--mint);}
+    .status-absent{background:rgba(220,60,60,.1);color:#e07070;}
+
+    .abs-toggle{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:7px;
+      border:1px solid var(--rule);background:transparent;cursor:pointer;color:var(--text-3);transition:all .12s;}
+    .abs-toggle:hover{border-color:rgba(220,60,60,.3);color:#e07070;}
+    .abs-toggle.absent{background:rgba(220,60,60,.1);border-color:rgba(220,60,60,.3);color:#e07070;}
+    .abs-toggle svg{width:13px;height:13px;}
+
+    .day-summary{background:var(--surface-2);border:1px solid var(--rule);border-radius:9px;padding:12px;
+      display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;}
+    .ds-item{text-align:center;}
+    .ds-val{font-family:var(--font-mono);font-size:1.1rem;font-weight:600;color:var(--text-1);}
+    .ds-val.absent-val{color:#e07070;}
+    .ds-label{font-size:.65rem;color:var(--text-4);letter-spacing:.06em;text-transform:uppercase;margin-top:2px;}
+
+    .btn-add-absent{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:9px;
+      border-radius:8px;border:1px dashed rgba(220,60,60,.3);background:transparent;color:#e07070;
+      font-family:var(--font-body);font-size:.78rem;cursor:pointer;transition:all .15s;margin-top:12px;}
+    .btn-add-absent:hover{background:rgba(220,60,60,.06);}
+    .btn-add-absent svg{width:13px;height:13px;}
+
+    .theme-btn{position:fixed;bottom:16px;right:16px;z-index:100;background:var(--surface-2);border:1px solid var(--rule);
+      border-radius:8px;padding:8px 10px;cursor:pointer;color:var(--text-3);font-size:.72rem;font-family:var(--font-body);
+      display:flex;align-items:center;gap:6px;}
+    .theme-btn:hover{color:var(--text-1);}
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="s-logo"></div>
+      <a class="s-nav-item" href="../befine-admin-secretary-portal.html" title="Portal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      </a>
+      <div class="s-nav-item active" title="Ausencias">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      </div>
+      <div class="s-spacer"></div>
+      <div class="s-avatar">LP</div>
+    </aside>
+
+    <div class="main">
+      <div class="topbar">
+        <span class="topbar-title">Ausencias</span>
+        <div class="month-nav">
+          <button class="nav-arrow" onclick="prevMonth()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></button>
+          <span class="month-label" id="monthLabel"></span>
+          <button class="nav-arrow" onclick="nextMonth()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></button>
+        </div>
+        <button style="display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;background:var(--surface-2);
+          border:1px solid var(--rule);color:var(--text-2);font-size:.78rem;font-family:var(--font-body);cursor:pointer;"
+          onclick="document.documentElement.dataset.theme=document.documentElement.dataset.theme==='dark'?'light':'dark'">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2"/></svg>
+          Tema
+        </button>
+      </div>
+
+      <div class="content">
+        <div class="cal-pane" id="calPane"></div>
+
+        <div class="detail-pane" id="detailPane">
+          <div class="dp-header">
+            <div class="dp-date" id="dpDate">Viernes, 2 de mayo</div>
+            <div class="dp-sub">Selecciona un día para ver detalles</div>
+          </div>
+
+          <div class="day-summary">
+            <div class="ds-item"><div class="ds-val" id="presentCount">4</div><div class="ds-label">Presentes</div></div>
+            <div class="ds-item"><div class="ds-val absent-val" id="absentCount">1</div><div class="ds-label">Ausentes</div></div>
+          </div>
+
+          <div class="section-label">Personal</div>
+
+          <div id="empList"></div>
+
+          <button class="btn-add-absent">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Registrar ausencia manual
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const EMPLOYEES = [
+      {name:"Daniela P.",role:"Estilista",initials:"DP",color:"#e9408e",absent:false},
+      {name:"María R.",role:"Estilista",initials:"MR",color:"#7cd1b3",absent:false},
+      {name:"Juliana M.",role:"Estilista",initials:"JM",color:"#e8b765",absent:true},
+      {name:"Sara C.",role:"Estilista",initials:"SC",color:"#6495ed",absent:false},
+      {name:"Luis V.",role:"Confeccionista",initials:"LV",color:"#a78bfa",absent:false},
+    ];
+
+    const ABSENT_DAYS = {3:['JM'],8:['DP'],15:['MR','JM'],22:['SC'],28:['JM']};
+    let viewYear=2026, viewMonth=4; // May 2026 (0-indexed)
+
+    const MONTHS_ES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    const DAYS_ES=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+
+    function prevMonth(){viewMonth--;if(viewMonth<0){viewMonth=11;viewYear--;}renderCal();}
+    function nextMonth(){viewMonth++;if(viewMonth>11){viewMonth=0;viewYear++;}renderCal();}
+
+    function renderCal(){
+      document.getElementById('monthLabel').textContent=`${MONTHS_ES[viewMonth]} ${viewYear}`;
+      const pane=document.getElementById('calPane');
+      pane.innerHTML='';
+      const monthDiv=document.createElement('div');
+      monthDiv.className='cal-month';
+
+      // weekday headers
+      const grid=document.createElement('div');
+      grid.className='cal-grid';
+      DAYS_ES.forEach(d=>{const h=document.createElement('div');h.className='cal-weekday';h.textContent=d;grid.appendChild(h);});
+
+      const firstDay=new Date(viewYear,viewMonth,1).getDay();
+      const daysInMonth=new Date(viewYear,viewMonth+1,0).getDate();
+      const today=new Date();
+
+      for(let i=0;i<firstDay;i++){
+        const d=document.createElement('div');d.className='cal-day other-month';grid.appendChild(d);
+      }
+      for(let day=1;day<=daysInMonth;day++){
+        const d=document.createElement('div');d.className='cal-day';
+        const isToday=today.getFullYear()===viewYear&&today.getMonth()===viewMonth&&today.getDate()===day;
+        if(isToday)d.classList.add('today');
+
+        const num=document.createElement('div');num.className='day-num';num.textContent=day;d.appendChild(num);
+
+        const avRow=document.createElement('div');avRow.className='day-avatars';
+        const absentInitials=ABSENT_DAYS[day]||[];
+        const presentEmps=EMPLOYEES.filter(e=>!absentInitials.includes(e.initials));
+        presentEmps.slice(0,4).forEach(e=>{
+          const av=document.createElement('div');av.className='mini-avatar';
+          av.style.background=e.color;av.textContent=e.initials[0];avRow.appendChild(av);
+        });
+        d.appendChild(avRow);
+
+        if(absentInitials.length){
+          const tag=document.createElement('div');tag.className='absent-tag';tag.textContent=`-${absentInitials.length}`;
+          d.appendChild(tag);
+        }
+
+        d.onclick=()=>selectDay(day,absentInitials);
+        grid.appendChild(d);
+      }
+
+      monthDiv.appendChild(grid);
+      pane.appendChild(monthDiv);
+    }
+
+    function selectDay(day, absentInitials){
+      document.querySelectorAll('.cal-day').forEach(d=>d.classList.remove('selected'));
+      const cells=document.querySelectorAll('.cal-day:not(.other-month)');
+      if(cells[day-1])cells[day-1].classList.add('selected');
+
+      const dateStr=`${DAYS_ES[new Date(viewYear,viewMonth,day).getDay()]}, ${day} de ${MONTHS_ES[viewMonth].toLowerCase()}`;
+      document.getElementById('dpDate').textContent=dateStr;
+      document.getElementById('presentCount').textContent=EMPLOYEES.length-absentInitials.length;
+      document.getElementById('absentCount').textContent=absentInitials.length;
+
+      const list=document.getElementById('empList');
+      list.innerHTML=EMPLOYEES.map(e=>{
+        const isAbsent=absentInitials.includes(e.initials);
+        return `<div class="emp-row">
+          <div class="emp-av" style="background:${e.color}">${e.initials}</div>
+          <div class="emp-info">
+            <div class="emp-name">${e.name}</div>
+            <div class="emp-role">${e.role}</div>
+          </div>
+          <span class="emp-status-badge ${isAbsent?'status-absent':'status-present'}">${isAbsent?'Ausente':'Presente'}</span>
+          <button class="abs-toggle ${isAbsent?'absent':''}" title="${isAbsent?'Marcar presente':'Marcar ausente'}" onclick="this.classList.toggle('absent')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${isAbsent?'<path d="M20 6 9 17l-5-5"/>':'<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>'}</svg>
+          </button>
+        </div>`;
+      }).join('');
+    }
+
+    renderCal();
+    selectDay(2,[]);
+  </script>
+</body>
+</html>

@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Befine · Roadmap — Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..900,0..100,0..1;1,9..144,300..900,0..100,0..1&family=Inter+Tight:ital,wght@0,300..700;1,300..700&family=JetBrains+Mono:wght@300..600&display=swap" rel="stylesheet" />
+  <style>
+    :root,[data-theme="dark"]{
+      --canvas:#010101;--surface-1:#0a0a0a;--surface-2:#141414;--surface-3:#1c1c1c;
+      --text-1:#f2ece1;--text-2:#b8b0a3;--text-3:#807870;--text-4:#4a4640;
+      --rule:#2a2724;--rule-strong:#4a4640;--rule-soft:#1b1917;
+      --pink:#e9408e;--pink-soft:#f06aa5;--pink-deep:#b82a6c;
+      --pink-halo:rgba(233,64,142,.18);--pink-wash:rgba(233,64,142,.08);
+      --mint:#7cd1b3;--mint-dim:rgba(124,209,179,.12);
+      --amber:#e8b765;--amber-dim:rgba(232,183,101,.12);
+      --font-display:"Fraunces","Times New Roman",serif;
+      --font-body:"Inter Tight",ui-sans-serif,system-ui,sans-serif;
+      --font-mono:"JetBrains Mono",ui-monospace,monospace;
+    }
+    [data-theme="light"]{
+      --canvas:#f7f2ea;--surface-1:#fdfaf3;--surface-2:#efe8db;--surface-3:#e8e0ce;
+      --text-1:#0f0d0a;--text-2:#534b40;--text-3:#8a8073;--text-4:#b8ad9c;
+      --rule:#d9cfbb;--rule-strong:#8a8073;--rule-soft:#e8dfca;
+      --pink:#d93079;--pink-soft:#e9408e;--pink-deep:#a8225a;
+      --pink-halo:rgba(217,48,121,.14);--pink-wash:rgba(217,48,121,.06);
+      --mint:#3f9a78;--mint-dim:rgba(63,154,120,.10);
+      --amber:#b8843a;--amber-dim:rgba(184,132,58,.10);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    html,body{height:100%;overflow:hidden;background:var(--canvas);color:var(--text-1);font-family:var(--font-body);-webkit-font-smoothing:antialiased;}
+    body::before{content:"";position:fixed;inset:0;z-index:9999;pointer-events:none;opacity:.028;mix-blend-mode:screen;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)'/%3E%3C/svg%3E");}
+
+    .shell{display:flex;height:100vh;overflow:hidden;}
+
+    .sidebar{width:56px;min-width:56px;background:#000;display:flex;flex-direction:column;align-items:center;
+      border-right:1px solid rgba(242,236,225,.06);padding:12px 0;gap:6px;}
+    .s-logo::before{content:"";width:14px;height:14px;background:var(--pink);transform:rotate(45deg);border-radius:2px;display:block;}
+    .s-logo{width:32px;height:32px;display:flex;align-items:center;justify-content:center;margin-bottom:8px;}
+    .s-nav-item{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+      color:rgba(242,236,225,.3);cursor:pointer;transition:all .15s;text-decoration:none;}
+    .s-nav-item.active{background:var(--pink-wash);color:var(--pink);}
+    .s-nav-item svg{width:16px;height:16px;}
+    .s-spacer{flex:1;}
+    .s-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--pink),var(--pink-deep));
+      display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:.7rem;font-weight:700;color:#fff;}
+
+    .main{flex:1;overflow:hidden;display:flex;flex-direction:column;}
+    .topbar{height:56px;min-height:56px;display:flex;align-items:center;padding:0 24px;gap:16px;
+      border-bottom:1px solid var(--rule);background:var(--surface-1);}
+    .topbar-title{font-family:var(--font-display);font-size:1.05rem;font-weight:700;flex:1;color:var(--text-1);font-style:italic;}
+    .topbar-badge{font-size:.7rem;font-weight:600;padding:3px 10px;border-radius:99px;background:rgba(233,64,142,.1);color:var(--pink);border:1px solid rgba(233,64,142,.2);}
+
+    .content{flex:1;overflow:hidden;display:grid;grid-template-columns:220px 1fr;}
+
+    /* phase list */
+    .phase-nav{border-right:1px solid var(--rule);overflow-y:auto;padding:16px 0;}
+    .phase-nav-item{display:flex;align-items:center;gap:10px;padding:9px 16px;cursor:pointer;transition:background .12s;}
+    .phase-nav-item:hover{background:rgba(242,236,225,.03);}
+    .phase-nav-item.active{background:var(--pink-wash);}
+    .pni-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+    .dot-done{background:var(--mint);}
+    .dot-active{background:var(--pink);box-shadow:0 0 8px var(--pink);}
+    .dot-pending{background:var(--rule-strong);}
+    .pni-label{font-size:.8rem;color:var(--text-2);flex:1;}
+    .phase-nav-item.active .pni-label{color:var(--text-1);font-weight:500;}
+    .pni-pct{font-family:var(--font-mono);font-size:.68rem;color:var(--text-4);}
+    .phase-nav-item.active .pni-pct{color:var(--pink);}
+
+    /* task list */
+    .task-pane{overflow-y:auto;padding:24px;}
+    .phase-title{font-family:var(--font-display);font-size:1.4rem;font-weight:700;color:var(--text-1);
+      font-style:italic;margin-bottom:4px;}
+    .phase-desc{font-size:.78rem;color:var(--text-3);margin-bottom:20px;line-height:1.6;}
+
+    .progress-bar-wrap{background:var(--surface-2);border:1px solid var(--rule);border-radius:10px;padding:14px 16px;margin-bottom:20px;}
+    .pb-meta{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;}
+    .pb-label{font-size:.75rem;color:var(--text-2);}
+    .pb-count{font-family:var(--font-mono);font-size:.75rem;color:var(--text-3);}
+    .pb-track{height:6px;background:var(--rule);border-radius:99px;overflow:hidden;}
+    .pb-fill{height:100%;border-radius:99px;background:linear-gradient(to right,var(--mint),var(--mint));transition:width .5s ease;}
+
+    .task-group{margin-bottom:8px;}
+    .task-item{display:flex;align-items:flex-start;gap:12px;padding:10px 14px;border-radius:9px;
+      border:1px solid var(--rule-soft);background:var(--surface-1);margin-bottom:4px;transition:border-color .15s;}
+    .task-item:hover{border-color:var(--rule);}
+    .task-check{width:20px;height:20px;border-radius:5px;flex-shrink:0;margin-top:1px;
+      display:flex;align-items:center;justify-content:center;}
+    .check-done{background:var(--mint);border:1px solid var(--mint);}
+    .check-done svg{width:11px;height:11px;color:#0a1a14;}
+    .check-pending{background:transparent;border:1.5px solid var(--rule-strong);}
+    .check-active{background:transparent;border:1.5px solid var(--pink);box-shadow:0 0 6px rgba(233,64,142,.3);}
+    .task-id{font-family:var(--font-mono);font-size:.68rem;color:var(--text-4);flex-shrink:0;padding-top:2px;min-width:44px;}
+    .task-name{font-size:.82rem;color:var(--text-2);line-height:1.4;}
+    .task-item.done .task-name{color:var(--text-3);text-decoration:line-through;text-decoration-color:var(--rule-strong);}
+    .task-item.active .task-name{color:var(--text-1);}
+    .task-badge{margin-left:auto;flex-shrink:0;}
+    .badge-done{font-size:.65rem;font-weight:600;padding:2px 7px;border-radius:99px;background:var(--mint-dim);color:var(--mint);}
+    .badge-active{font-size:.65rem;font-weight:600;padding:2px 7px;border-radius:99px;background:var(--pink-wash);color:var(--pink);}
+    .badge-blocked{font-size:.65rem;font-weight:600;padding:2px 7px;border-radius:99px;background:rgba(220,60,60,.1);color:#e07070;}
+
+    .theme-btn{position:fixed;bottom:16px;right:16px;z-index:100;background:var(--surface-2);border:1px solid var(--rule);
+      border-radius:8px;padding:8px 10px;cursor:pointer;color:var(--text-3);font-size:.72rem;font-family:var(--font-body);
+      display:flex;align-items:center;gap:6px;}
+    .theme-btn:hover{color:var(--text-1);}
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="s-logo"></div>
+      <a class="s-nav-item" href="../befine-admin-secretary-portal.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      </a>
+      <div class="s-nav-item active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      </div>
+      <div class="s-spacer"></div>
+      <div class="s-avatar">LP</div>
+    </aside>
+
+    <div class="main">
+      <div class="topbar">
+        <span class="topbar-title">Roadmap del proyecto</span>
+        <span class="topbar-badge">Solo administradores</span>
+        <button style="background:var(--surface-2);border:1px solid var(--rule);border-radius:8px;padding:7px 12px;
+          cursor:pointer;color:var(--text-3);font-size:.72rem;font-family:var(--font-body);display:flex;align-items:center;gap:5px;"
+          onclick="document.documentElement.dataset.theme=document.documentElement.dataset.theme==='dark'?'light':'dark'">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2"/></svg>
+          Tema
+        </button>
+      </div>
+
+      <div class="content">
+        <div class="phase-nav" id="phaseNav"></div>
+        <div class="task-pane" id="taskPane"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const PHASES = [
+      {id:'0A',label:'Fase 0A — Infraestructura',done:true,pct:100,desc:'Monorepo, base de datos, CI/CD, autenticación y estructura inicial del proyecto.',
+       tasks:[
+        {id:'T001',name:'Inicializar monorepo Turborepo',status:'done'},
+        {id:'T002',name:'Configurar Next.js App Router',status:'done'},
+        {id:'T003',name:'Esquema inicial Drizzle ORM',status:'done'},
+        {id:'T004',name:'Integrar Better Auth con plugin RBAC',status:'done'},
+        {id:'T094',name:'Configurar Neon (PostgreSQL serverless)',status:'done'},
+        {id:'T095',name:'Pipeline CI/CD (GitHub Actions)',status:'done'},
+        {id:'T085',name:'Configurar Sentry',status:'done'},
+      ]},
+      {id:'0B',label:'Fase 0B — Diseño base',done:true,pct:100,desc:'Sistema de diseño, design tokens, componentes base y estándares visuales.',
+       tasks:[
+        {id:'T008',name:'Spike librería UI (shadcn/ui)',status:'done'},
+        {id:'T103',name:'Sistema de diseño y tokens',status:'done'},
+        {id:'T104',name:'Wireframes y mockups',status:'done'},
+        {id:'T105',name:'Identidad de marca',status:'done'},
+      ]},
+      {id:'1',label:'Fase 1 — Día laboral',done:true,pct:100,desc:'Apertura y cierre del día laboral, configuración del salón.',
+       tasks:[
+        {id:'T010',name:'Migración tabla business_days',status:'done'},
+        {id:'T019',name:'UI apertura/cierre del día (admin)',status:'done'},
+        {id:'T090',name:'Shell de navegación / layout',status:'done'},
+      ]},
+      {id:'2',label:'Fase 2 — Catálogo',done:true,pct:100,desc:'Gestión de servicios, variantes de precio y piezas de confección.',
+       tasks:[
+        {id:'T021',name:'Migración catálogo de servicios',status:'done'},
+        {id:'T022',name:'CRUD servicios y variantes (admin)',status:'done'},
+        {id:'T023',name:'Catálogo de piezas confección',status:'done'},
+      ]},
+      {id:'3',label:'Fase 3 — Clientes y empleados',done:true,pct:100,desc:'Registro de clientes guardados y gestión del personal.',
+       tasks:[
+        {id:'T028',name:'Migración de clientes',status:'done'},
+        {id:'T029',name:'Búsqueda de clientes (server)',status:'done'},
+        {id:'T030',name:'CRUD clientes guardados (cajero/sec)',status:'done'},
+        {id:'T031',name:'Gestión de empleados (admin)',status:'done'},
+        {id:'T032',name:'Perfil de empleado y PIN',status:'done'},
+      ]},
+      {id:'4A',label:'Fase 4A — Tickets',done:true,pct:100,desc:'Creación de tickets, checkout, historial y flujo de ediciones.',
+       tasks:[
+        {id:'T033',name:'Migración tabla tickets',status:'done'},
+        {id:'T034',name:'Migración items del ticket',status:'done'},
+        {id:'T035',name:'Creación de ticket (UI multirol)',status:'done'},
+        {id:'T036',name:'Tablero en vivo (cajero/admin)',status:'done'},
+        {id:'T037',name:'Proceso de checkout',status:'done'},
+        {id:'T038',name:'Batch checkout (múltiples tickets)',status:'done'},
+        {id:'T039',name:'Override de precio (cajero/admin)',status:'done'},
+        {id:'T041',name:'Flujo de aprobación de ediciones',status:'done'},
+        {id:'T092',name:'Historial de tickets cerrados',status:'done'},
+        {id:'T093',name:'Home admin / día de un vistazo',status:'done'},
+      ]},
+      {id:'4B',label:'Fase 4B — Lotes confección',done:true,pct:100,desc:'Lotes de confección, reclamación y aprobación de piezas.',
+       tasks:[
+        {id:'T044',name:'Migración tabla batches',status:'done'},
+        {id:'T045',name:'Creación de lote (secretaria/admin)',status:'done'},
+        {id:'T046',name:'Reclamación de piezas (confeccionista)',status:'done'},
+        {id:'T047',name:'Aprobación de piezas (secretaria/admin)',status:'done'},
+      ]},
+      {id:'5',label:'Fase 5 — Citas',done:true,pct:100,desc:'Agenda de citas, reservas, cancelaciones y recordatorios.',
+       tasks:[
+        {id:'T049',name:'Migración tabla appointments',status:'done'},
+        {id:'T050',name:'UI de reserva de citas',status:'done'},
+        {id:'T051',name:'Vista de agenda del día',status:'done'},
+        {id:'T052',name:'Confirmación y no-show',status:'done'},
+        {id:'T053',name:'Reagendamiento con validación solapamiento',status:'done'},
+        {id:'T109',name:'Notificación cambio de precio',status:'done'},
+      ]},
+      {id:'6',label:'Fase 6 — Pedidos grandes',done:false,pct:72,desc:'Gestión de pedidos grandes, ítems detallados y flujo de aprobación.',
+       tasks:[
+        {id:'T056',name:'Migración large_orders',status:'done'},
+        {id:'T057',name:'Creación de pedido grande',status:'done'},
+        {id:'T058',name:'Vista de ítems del pedido',status:'done'},
+        {id:'T059',name:'Edición de ítems en línea',status:'active'},
+        {id:'T060',name:'Transición de estado del pedido',status:'pending'},
+        {id:'T061',name:'Vista de pedidos (secretaria/admin)',status:'pending'},
+      ]},
+      {id:'7',label:'Fase 7 — Nómina',done:false,pct:0,desc:'Liquidación de nómina, cálculo de ganancias y pagos a empleados.',
+       tasks:[
+        {id:'T064',name:'Migración tabla payouts',status:'pending'},
+        {id:'T065',name:'Cálculo ganancias estilistas',status:'pending'},
+        {id:'T066',name:'Cálculo ganancias confeccionistas',status:'pending'},
+        {id:'T067',name:'Liquidación secretaria / diaria',status:'pending'},
+        {id:'T068',name:'UI de nómina (admin)',status:'pending'},
+        {id:'T069',name:'Vista ganancias propias (empleados)',status:'pending'},
+      ]},
+    ];
+
+    let selected = 5; // Phase index
+
+    function renderNav(){
+      const nav=document.getElementById('phaseNav');
+      nav.innerHTML=PHASES.map((p,i)=>`
+        <div class="phase-nav-item ${i===selected?'active':''}" onclick="selectPhase(${i})">
+          <div class="pni-dot ${p.done?'dot-done':p.pct>0?'dot-active':'dot-pending'}"></div>
+          <span class="pni-label">${p.label}</span>
+          <span class="pni-pct">${p.pct}%</span>
+        </div>`).join('');
+    }
+
+    function selectPhase(i){
+      selected=i;renderNav();renderTasks();
+    }
+
+    function renderTasks(){
+      const phase=PHASES[selected];
+      const done=phase.tasks.filter(t=>t.status==='done').length;
+      const total=phase.tasks.length;
+      const pane=document.getElementById('taskPane');
+      pane.innerHTML=`
+        <div class="phase-title">${phase.label}</div>
+        <div class="phase-desc">${phase.desc}</div>
+        <div class="progress-bar-wrap">
+          <div class="pb-meta">
+            <span class="pb-label">Progreso</span>
+            <span class="pb-count">${done} / ${total} tareas completadas</span>
+          </div>
+          <div class="pb-track"><div class="pb-fill" style="width:${Math.round(done/total*100)}%"></div></div>
+        </div>
+        ${phase.tasks.map(t=>`
+          <div class="task-item ${t.status}">
+            <div class="task-check ${t.status==='done'?'check-done':t.status==='active'?'check-active':'check-pending'}">
+              ${t.status==='done'?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>':''}
+            </div>
+            <div class="task-id">${t.id}</div>
+            <div class="task-name">${t.name}</div>
+            <div class="task-badge">
+              ${t.status==='done'?'<span class="badge-done">Listo</span>':t.status==='active'?'<span class="badge-active">En progreso</span>':''}
+            </div>
+          </div>`).join('')}
+      `;
+    }
+
+    renderNav();renderTasks();
+  </script>
+</body>
+</html>

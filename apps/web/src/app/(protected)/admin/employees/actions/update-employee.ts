@@ -19,8 +19,8 @@ import {
   payoutPeriodDays,
   businessDays,
   tickets,
-  batchPieces,
-  clothBatches,
+  craftablePieces,
+  craftables,
   employeeAbsences,
 } from "@befine/db/schema";
 import { terminateEmployeeSchema } from "@befine/types";
@@ -313,14 +313,14 @@ export async function getUnsettledPeriodsForEmployee(
     );
   } else if (emp.role === "clothier") {
     const workDays = await db
-      .selectDistinct({ businessDayId: clothBatches.businessDayId })
-      .from(batchPieces)
-      .innerJoin(clothBatches, eq(batchPieces.batchId, clothBatches.id))
+      .selectDistinct({ businessDayId: craftables.businessDayId })
+      .from(craftablePieces)
+      .innerJoin(craftables, eq(craftablePieces.craftableId, craftables.id))
       .where(
         and(
-          eq(batchPieces.assignedToEmployeeId, employeeId),
-          eq(batchPieces.status, "approved"),
-          inArray(clothBatches.businessDayId, closedDayIds),
+          eq(craftablePieces.assignedToEmployeeId, employeeId),
+          eq(craftablePieces.status, "approved"),
+          inArray(craftables.businessDayId, closedDayIds),
         ),
       );
     unsettledDays = closedDays.filter(

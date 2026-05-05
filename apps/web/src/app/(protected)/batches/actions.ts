@@ -11,7 +11,7 @@ import { headers } from "next/headers";
 import { eq, and } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { getDb, getTxDb } from "@/lib/db";
-import { employees, users, clothBatches, batchPieces } from "@befine/db/schema";
+import { employees, users, craftables, craftablePieces } from "@befine/db/schema";
 import { createBatchSchema, type CreateBatchInput } from "@befine/types";
 import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
@@ -113,19 +113,19 @@ export async function createBatch(rawInput: unknown): Promise<ActionResult<{ id:
   const txDb = getTxDb();
   const batchId = await txDb.transaction(async (tx) => {
     const [batch] = await tx
-      .insert(clothBatches)
+      .insert(craftables)
       .values({
         businessDayId: businessDay.id,
         createdBy: creatorEmployee.id,
         notes: input.notes ?? null,
         largeOrderId: input.largeOrderId ?? null,
       })
-      .returning({ id: clothBatches.id });
+      .returning({ id: craftables.id });
 
     if (input.pieces.length > 0) {
-      await tx.insert(batchPieces).values(
+      await tx.insert(craftablePieces).values(
         input.pieces.map((p) => ({
-          batchId: batch.id,
+          craftableId: batch.id,
           clothPieceId: p.clothPieceId,
           clothPieceVariantId: p.clothPieceVariantId,
           assignedToEmployeeId: p.assignedToEmployeeId ?? null,

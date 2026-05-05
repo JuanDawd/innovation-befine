@@ -15,8 +15,8 @@ import { getDb } from "@/lib/db";
 import {
   employees,
   users,
-  clothBatches,
-  batchPieces,
+  craftables,
+  craftablePieces,
   clothPieces,
   clothPieceVariants,
 } from "@befine/db/schema";
@@ -31,7 +31,7 @@ import { pieceActionSchema } from "@befine/types";
 
 export type PendingApprovalRow = {
   id: string;
-  batchId: string;
+  craftableId: string;
   clothPieceName: string;
   clothPieceVariantName: string;
   assignedToEmployeeId: string | null;
@@ -71,30 +71,30 @@ export async function listPendingApprovals(): Promise<ActionResult<PendingApprov
 
   const rows = await db
     .select({
-      id: batchPieces.id,
-      batchId: batchPieces.batchId,
+      id: craftablePieces.id,
+      craftableId: craftablePieces.craftableId,
       clothPieceName: clothPieces.name,
       clothPieceVariantName: clothPieceVariants.name,
-      assignedToEmployeeId: batchPieces.assignedToEmployeeId,
+      assignedToEmployeeId: craftablePieces.assignedToEmployeeId,
       assignedEmployeeName: users.name,
-      claimSource: batchPieces.claimSource,
-      status: batchPieces.status,
-      completedAt: batchPieces.completedAt,
-      version: batchPieces.version,
+      claimSource: craftablePieces.claimSource,
+      status: craftablePieces.status,
+      completedAt: craftablePieces.completedAt,
+      version: craftablePieces.version,
     })
-    .from(batchPieces)
-    .innerJoin(clothBatches, eq(batchPieces.batchId, clothBatches.id))
-    .innerJoin(clothPieces, eq(batchPieces.clothPieceId, clothPieces.id))
-    .innerJoin(clothPieceVariants, eq(batchPieces.clothPieceVariantId, clothPieceVariants.id))
-    .leftJoin(employees, eq(batchPieces.assignedToEmployeeId, employees.id))
+    .from(craftablePieces)
+    .innerJoin(craftables, eq(craftablePieces.craftableId, craftables.id))
+    .innerJoin(clothPieces, eq(craftablePieces.clothPieceId, clothPieces.id))
+    .innerJoin(clothPieceVariants, eq(craftablePieces.clothPieceVariantId, clothPieceVariants.id))
+    .leftJoin(employees, eq(craftablePieces.assignedToEmployeeId, employees.id))
     .leftJoin(users, eq(employees.userId, users.id))
     .where(
       and(
-        eq(clothBatches.businessDayId, businessDay.id),
-        inArray(batchPieces.status, ["done_pending_approval", "pending"]),
+        eq(craftables.businessDayId, businessDay.id),
+        inArray(craftablePieces.status, ["done_pending_approval", "pending"]),
       ),
     )
-    .orderBy(batchPieces.status, batchPieces.completedAt);
+    .orderBy(craftablePieces.status, craftablePieces.completedAt);
 
   return { success: true, data: rows };
 }
@@ -129,7 +129,7 @@ export async function approvePiece(
   const db = getDb();
 
   const result = await db
-    .update(batchPieces)
+    .update(craftablePieces)
     .set({
       status: "approved",
       approvedAt: new Date(),
@@ -138,12 +138,12 @@ export async function approvePiece(
     })
     .where(
       and(
-        eq(batchPieces.id, pieceId),
-        eq(batchPieces.status, "done_pending_approval"),
-        eq(batchPieces.version, expectedVersion),
+        eq(craftablePieces.id, pieceId),
+        eq(craftablePieces.status, "done_pending_approval"),
+        eq(craftablePieces.version, expectedVersion),
       ),
     )
-    .returning({ id: batchPieces.id });
+    .returning({ id: craftablePieces.id });
 
   if (result.length === 0)
     return {
@@ -197,7 +197,7 @@ export async function adminMarkApproved(
     return { success: false, error: { code: "NOT_FOUND", message: "Empleado no encontrado" } };
 
   const result = await db
-    .update(batchPieces)
+    .update(craftablePieces)
     .set({
       status: "approved",
       completedAt: new Date(),
@@ -207,12 +207,12 @@ export async function adminMarkApproved(
     })
     .where(
       and(
-        eq(batchPieces.id, pieceId),
-        eq(batchPieces.status, "pending"),
-        eq(batchPieces.version, expectedVersion),
+        eq(craftablePieces.id, pieceId),
+        eq(craftablePieces.status, "pending"),
+        eq(craftablePieces.version, expectedVersion),
       ),
     )
-    .returning({ id: batchPieces.id });
+    .returning({ id: craftablePieces.id });
 
   if (result.length === 0)
     return {

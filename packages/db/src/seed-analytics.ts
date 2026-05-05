@@ -2,8 +2,8 @@
  * T101 — Analytics seed script
  *
  * ⚠️  DESTRUCTIVE — clears ALL rows from: business_days, tickets, ticket_items,
- * ticket_payments, checkout_sessions, cloth_batches, batch_pieces, payouts,
- * payout_period_days, payout_ticket_items, payout_batch_pieces,
+ * ticket_payments, checkout_sessions, craftables, craftable_pieces, payouts,
+ * payout_period_days, payout_ticket_items, payout_craftable_pieces,
  * employee_absences, large_orders, large_order_payments, clients.
  *
  * This script is intended for development / staging databases only.
@@ -31,12 +31,12 @@ import {
   ticketItems,
   ticketPayments,
   checkoutSessions,
-  clothBatches,
-  batchPieces,
+  craftables,
+  craftablePieces,
   payouts,
   payoutPeriodDays,
   payoutTicketItems,
-  payoutBatchPieces,
+  payoutCraftablePieces,
   employeeAbsences,
   largeOrders,
   largeOrderPayments,
@@ -91,12 +91,12 @@ async function clearAnalyticsData() {
   console.log("🗑️  Clearing analytics seed data...");
 
   // Delete in reverse FK order — all tables that reference business_days or tickets
-  await db.delete(payoutBatchPieces);
+  await db.delete(payoutCraftablePieces);
   await db.delete(payoutTicketItems);
   await db.delete(payoutPeriodDays);
   await db.delete(payouts);
-  await db.delete(batchPieces);
-  await db.delete(clothBatches);
+  await db.delete(craftablePieces);
+  await db.delete(craftables);
   await db.delete(ticketPayments);
   await db.delete(ticketItems);
   await db.delete(tickets);
@@ -274,16 +274,16 @@ async function run() {
     // Seed cloth batches + pieces for clothiers
     if (clothierEmps.length > 0 && pieceRows.length > 0) {
       const [batch] = await db
-        .insert(clothBatches)
+        .insert(craftables)
         .values({ businessDayId: day.id, createdBy: adminEmp.id })
-        .returning({ id: clothBatches.id });
+        .returning({ id: craftables.id });
 
       for (const clothier of clothierEmps) {
         const numPieces = dow === 6 ? randomInt(1, 3) : randomInt(2, 6);
         for (let p = 0; p < numPieces; p++) {
           const piece = pieceRows[randomInt(0, pieceRows.length - 1)];
-          await db.insert(batchPieces).values({
-            batchId: batch.id,
+          await db.insert(craftablePieces).values({
+            craftableId: batch.id,
             clothPieceId: piece.clothPieceId,
             clothPieceVariantId: piece.variantId,
             assignedToEmployeeId: clothier.id,

@@ -12,7 +12,7 @@ import { headers } from "next/headers";
 import { eq, and, or, isNull, inArray } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { getDb, getTxDb } from "@/lib/db";
-import { employees, users, clothBatches, batchPieces, clothPieces } from "@befine/db/schema";
+import { employees, users, craftables, craftablePieces, clothPieces } from "@befine/db/schema";
 import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
 import { getCurrentBusinessDay } from "@/lib/business-day";
@@ -26,7 +26,7 @@ import { pieceActionSchema } from "@befine/types";
 
 export type BatchPieceRow = {
   id: string;
-  batchId: string;
+  craftableId: string;
   clothPieceName: string;
   assignedToEmployeeId: string | null;
   claimSource: "assigned" | "self_claimed" | null;
@@ -69,27 +69,27 @@ export async function listTodayBatchPieces(): Promise<ActionResult<BatchPieceRow
   // Pieces assigned to this clothier OR unassigned — from today's batches
   const rows = await db
     .select({
-      id: batchPieces.id,
-      batchId: batchPieces.batchId,
+      id: craftablePieces.id,
+      craftableId: craftablePieces.craftableId,
       clothPieceName: clothPieces.name,
-      assignedToEmployeeId: batchPieces.assignedToEmployeeId,
-      claimSource: batchPieces.claimSource,
-      status: batchPieces.status,
-      version: batchPieces.version,
+      assignedToEmployeeId: craftablePieces.assignedToEmployeeId,
+      claimSource: craftablePieces.claimSource,
+      status: craftablePieces.status,
+      version: craftablePieces.version,
     })
-    .from(batchPieces)
-    .innerJoin(clothBatches, eq(batchPieces.batchId, clothBatches.id))
-    .innerJoin(clothPieces, eq(batchPieces.clothPieceId, clothPieces.id))
+    .from(craftablePieces)
+    .innerJoin(craftables, eq(craftablePieces.craftableId, craftables.id))
+    .innerJoin(clothPieces, eq(craftablePieces.clothPieceId, clothPieces.id))
     .where(
       and(
-        eq(clothBatches.businessDayId, businessDay.id),
+        eq(craftables.businessDayId, businessDay.id),
         or(
-          eq(batchPieces.assignedToEmployeeId, ctx.employeeId),
-          isNull(batchPieces.assignedToEmployeeId),
+          eq(craftablePieces.assignedToEmployeeId, ctx.employeeId),
+          isNull(craftablePieces.assignedToEmployeeId),
         ),
       ),
     )
-    .orderBy(batchPieces.status);
+    .orderBy(craftablePieces.status);
 
   return { success: true, data: rows };
 }
@@ -124,7 +124,7 @@ export async function claimPiece(
   const db = getDb();
 
   const result = await db
-    .update(batchPieces)
+    .update(craftablePieces)
     .set({
       assignedToEmployeeId: ctx.employeeId,
       claimSource: "self_claimed",
@@ -133,12 +133,12 @@ export async function claimPiece(
     })
     .where(
       and(
-        eq(batchPieces.id, pieceId),
-        isNull(batchPieces.assignedToEmployeeId),
-        eq(batchPieces.version, expectedVersion),
+        eq(craftablePieces.id, pieceId),
+        isNull(craftablePieces.assignedToEmployeeId),
+        eq(craftablePieces.version, expectedVersion),
       ),
     )
-    .returning({ id: batchPieces.id });
+    .returning({ id: craftablePieces.id });
 
   if (result.length === 0)
     return {
@@ -192,7 +192,7 @@ export async function markPieceDone(
   const successResult: ActionResult<void> = { success: true, data: undefined };
   const txResult = await txDb.transaction(async (tx) => {
     const result = await tx
-      .update(batchPieces)
+      .update(craftablePieces)
       .set({
         status: "done_pending_approval",
         completedAt: new Date(),
@@ -200,13 +200,13 @@ export async function markPieceDone(
       })
       .where(
         and(
-          eq(batchPieces.id, pieceId),
-          eq(batchPieces.assignedToEmployeeId, ctx.employeeId),
-          eq(batchPieces.status, "pending"),
-          eq(batchPieces.version, expectedVersion),
+          eq(craftablePieces.id, pieceId),
+          eq(craftablePieces.assignedToEmployeeId, ctx.employeeId),
+          eq(craftablePieces.status, "pending"),
+          eq(craftablePieces.version, expectedVersion),
         ),
       )
-      .returning({ id: batchPieces.id });
+      .returning({ id: craftablePieces.id });
 
     if (result.length === 0) return null;
 

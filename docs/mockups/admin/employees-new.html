@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Befine · Nuevo empleado — Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..900,0..100,0..1;1,9..144,300..900,0..100,0..1&family=Inter+Tight:ital,wght@0,300..700;1,300..700&family=JetBrains+Mono:wght@300..600&display=swap" rel="stylesheet" />
+  <style>
+    :root,[data-theme="dark"]{
+      --canvas:#010101;--surface-1:#0a0a0a;--surface-2:#141414;--surface-3:#1c1c1c;
+      --text-1:#f2ece1;--text-2:#b8b0a3;--text-3:#807870;--text-4:#4a4640;
+      --rule:#2a2724;--rule-strong:#4a4640;--rule-soft:#1b1917;
+      --pink:#e9408e;--pink-soft:#f06aa5;
+      --pink-halo:rgba(233,64,142,.18);--pink-wash:rgba(233,64,142,.08);
+      --mint:#7cd1b3;--mint-dim:rgba(124,209,179,.12);
+      --amber:#e8b765;--amber-dim:rgba(232,183,101,.12);
+      --font-display:"Fraunces","Times New Roman",serif;
+      --font-body:"Inter Tight",ui-sans-serif,system-ui,sans-serif;
+      --font-mono:"JetBrains Mono",ui-monospace,monospace;
+    }
+    [data-theme="light"]{
+      --canvas:#f7f2ea;--surface-1:#fdfaf3;--surface-2:#efe8db;--surface-3:#e8e0ce;
+      --text-1:#0f0d0a;--text-2:#534b40;--text-3:#8a8073;--text-4:#b8ad9c;
+      --rule:#d9cfbb;--rule-strong:#8a8073;--rule-soft:#e8dfca;
+      --pink:#d93079;--pink-soft:#e9408e;
+      --pink-halo:rgba(217,48,121,.14);--pink-wash:rgba(217,48,121,.06);
+      --mint:#3f9a78;--mint-dim:rgba(63,154,120,.10);
+      --amber:#b8843a;--amber-dim:rgba(184,132,58,.10);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    html,body{min-height:100%;background:var(--canvas);color:var(--text-1);font-family:var(--font-body);-webkit-font-smoothing:antialiased;}
+    body::before{content:"";position:fixed;inset:0;z-index:9999;pointer-events:none;opacity:.028;mix-blend-mode:screen;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)'/%3E%3C/svg%3E");}
+
+    .page{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:32px 20px;position:relative;z-index:1;}
+
+    .modal{width:100%;max-width:520px;background:var(--surface-1);border:1px solid var(--rule);border-radius:16px;
+      box-shadow:0 2px 0 rgba(0,0,0,.4),0 32px 64px -24px rgba(0,0,0,.8);
+      animation:pop .35s cubic-bezier(.22,1,.36,1);}
+    @keyframes pop{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:none;}}
+
+    .modal-header{display:flex;align-items:center;padding:20px 24px 16px;border-bottom:1px solid var(--rule);gap:12px;}
+    .modal-title{font-family:var(--font-display);font-size:1.15rem;font-weight:700;color:var(--text-1);font-style:italic;flex:1;}
+    .modal-sub{font-size:.75rem;color:var(--text-3);margin-top:2px;}
+    .close-btn{width:30px;height:30px;border-radius:7px;border:1px solid var(--rule);background:transparent;
+      display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-3);transition:all .12s;}
+    .close-btn:hover{border-color:var(--rule-strong);color:var(--text-1);}
+    .close-btn svg{width:14px;height:14px;}
+
+    .modal-body{padding:22px 24px;}
+
+    .field{margin-bottom:16px;}
+    .field label{display:block;font-size:.73rem;font-weight:600;color:var(--text-2);letter-spacing:.04em;margin-bottom:6px;}
+    .field input,.field select{display:block;width:100%;padding:9px 12px;background:var(--surface-2);
+      border:1px solid var(--rule);border-radius:8px;color:var(--text-1);font-family:var(--font-body);
+      font-size:.83rem;outline:none;transition:border-color .15s;}
+    .field input::placeholder{color:var(--text-4);}
+    .field input:focus,.field select:focus{border-color:var(--pink);}
+    .field select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23807870' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat:no-repeat;background-position:right 10px center;padding-right:30px;}
+    .field-row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+    .field-hint{font-size:.7rem;color:var(--text-4);margin-top:5px;}
+
+    /* role cards */
+    .role-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;}
+    .role-card{padding:12px 14px;border-radius:9px;border:1.5px solid var(--rule);background:var(--surface-2);
+      cursor:pointer;transition:all .15s;}
+    .role-card:hover,.role-card.selected{border-color:var(--pink);background:var(--pink-wash);}
+    .rc-name{font-size:.83rem;font-weight:600;color:var(--text-1);}
+    .rc-model{font-size:.7rem;color:var(--text-3);margin-top:3px;}
+    .role-card.selected .rc-model{color:var(--pink);}
+
+    /* earnings model section */
+    .earnings-section{background:var(--surface-2);border:1px solid var(--rule);border-radius:10px;padding:16px;margin-bottom:16px;}
+    .es-title{font-size:.72rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text-3);margin-bottom:12px;}
+    .model-type{font-family:var(--font-display);font-size:.95rem;font-weight:700;color:var(--pink);font-style:italic;margin-bottom:12px;}
+
+    .field-inline{display:flex;align-items:center;gap:10px;}
+    .field-inline input{flex:1;}
+    .field-inline .unit{font-size:.8rem;color:var(--text-3);white-space:nowrap;font-family:var(--font-mono);}
+
+    /* security section */
+    .divider-line{display:flex;align-items:center;gap:12px;margin:18px 0 14px;}
+    .divider-line hr{flex:1;border:none;border-top:1px solid var(--rule);}
+    .divider-line span{font-size:.65rem;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--text-4);}
+
+    .pin-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+    .pin-digit{padding:11px 8px;background:var(--surface-2);border:1px solid var(--rule);border-radius:8px;
+      color:var(--text-1);font-family:var(--font-mono);font-size:1.1rem;text-align:center;
+      outline:none;transition:border-color .15s;}
+    .pin-digit:focus{border-color:var(--pink);}
+
+    .modal-footer{padding:14px 24px;border-top:1px solid var(--rule);display:flex;gap:10px;}
+    .btn-ghost{flex:1;padding:10px;border-radius:8px;border:1px solid var(--rule);background:transparent;
+      color:var(--text-2);font-family:var(--font-body);font-size:.82rem;font-weight:600;cursor:pointer;transition:all .15s;}
+    .btn-ghost:hover{border-color:var(--rule-strong);color:var(--text-1);}
+    .btn-save{flex:2;padding:10px;border-radius:8px;border:none;background:var(--pink);color:#fff;
+      font-family:var(--font-body);font-size:.82rem;font-weight:600;cursor:pointer;transition:background .15s;}
+    .btn-save:hover{background:var(--pink-soft);}
+
+    .badge-role{display:inline-flex;padding:2px 8px;border-radius:99px;font-size:.68rem;font-weight:600;}
+    .badge-role.estilista{background:var(--pink-wash);color:var(--pink);}
+    .badge-role.confeccionista{background:var(--amber-dim);color:var(--amber);}
+    .badge-role.secretaria{background:rgba(100,149,237,.12);color:#6495ed;}
+    .badge-role.cajero{background:var(--mint-dim);color:var(--mint);}
+
+    .theme-btn{position:fixed;bottom:16px;right:16px;z-index:100;background:var(--surface-2);border:1px solid var(--rule);
+      border-radius:8px;padding:8px 10px;cursor:pointer;color:var(--text-3);font-size:.72rem;font-family:var(--font-body);
+      display:flex;align-items:center;gap:6px;}
+    .theme-btn:hover{color:var(--text-1);}
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="modal">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title">Nuevo empleado</div>
+          <div class="modal-sub">Solo administradores pueden crear accesos al sistema</div>
+        </div>
+        <button class="close-btn" onclick="history.back()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Name -->
+        <div class="field-row-2">
+          <div class="field"><label>Nombre *</label><input placeholder="Daniela" /></div>
+          <div class="field"><label>Apellido *</label><input placeholder="Pérez" /></div>
+        </div>
+
+        <div class="field">
+          <label>Correo electrónico *</label>
+          <input type="email" placeholder="daniela@befine.co" />
+        </div>
+
+        <!-- Role -->
+        <div class="field">
+          <label>Rol *</label>
+          <div class="role-grid">
+            <div class="role-card selected" onclick="selectRole(this,'Estilista','Comisión por servicio')">
+              <div class="rc-name">Estilista <span class="badge-role estilista">Estilista</span></div>
+              <div class="rc-model">Comisión % por servicio</div>
+            </div>
+            <div class="role-card" onclick="selectRole(this,'Confeccionista','Tarifa por pieza')">
+              <div class="rc-name">Confeccionista <span class="badge-role confeccionista">Conf.</span></div>
+              <div class="rc-model">Tarifa fija por pieza</div>
+            </div>
+            <div class="role-card" onclick="selectRole(this,'Secretaria','Tarifa diaria')">
+              <div class="rc-name">Secretaria <span class="badge-role secretaria">Sec.</span></div>
+              <div class="rc-model">Tarifa fija por día</div>
+            </div>
+            <div class="role-card" onclick="selectRole(this,'Cajero / Admin','Tarifa diaria')">
+              <div class="rc-name">Cajero / Admin <span class="badge-role cajero">Admin</span></div>
+              <div class="rc-model">Tarifa fija por día</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Earnings model (dynamic) -->
+        <div class="earnings-section" id="earningsSection">
+          <div class="es-title">Modelo de ganancias</div>
+          <div class="model-type" id="modelType">Comisión por servicio</div>
+          <div class="field" id="commissionField">
+            <label>Porcentaje de comisión *</label>
+            <div class="field-inline">
+              <input type="number" placeholder="35" min="0" max="100" value="35" id="commissionInput"/>
+              <span class="unit">% del valor del servicio</span>
+            </div>
+            <div class="field-hint">Por ejemplo: 35% significa que por un servicio de $100.000, el estilista gana $35.000.</div>
+          </div>
+          <div class="field" id="pieceRateField" style="display:none;">
+            <label>Tarifa por pieza *</label>
+            <div class="field-inline">
+              <input type="number" placeholder="8500" value="8500" />
+              <span class="unit">COP por pieza aprobada</span>
+            </div>
+          </div>
+          <div class="field" id="dailyRateField" style="display:none;">
+            <label>Tarifa diaria *</label>
+            <div class="field-inline">
+              <input type="number" placeholder="80000" value="80000" />
+              <span class="unit">COP por día laborado</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Security -->
+        <div class="divider-line"><hr/><span>Credenciales de acceso</span><hr/></div>
+
+        <div class="field">
+          <label>Contraseña temporal *</label>
+          <input type="password" placeholder="Mínimo 8 caracteres" />
+          <div class="field-hint">El empleado deberá cambiarla en su primer acceso.</div>
+        </div>
+
+        <div class="field">
+          <label>PIN de acceso rápido (4 dígitos) *</label>
+          <div class="pin-row">
+            <input class="pin-digit" type="password" maxlength="1" inputmode="numeric" oninput="pinNav(this,0)" />
+            <input class="pin-digit" type="password" maxlength="1" inputmode="numeric" oninput="pinNav(this,1)" />
+            <input class="pin-digit" type="password" maxlength="1" inputmode="numeric" oninput="pinNav(this,2)" />
+            <input class="pin-digit" type="password" maxlength="1" inputmode="numeric" oninput="pinNav(this,3)" />
+          </div>
+          <div class="field-hint">El PIN permite iniciar sesión rápidamente desde la tablet del salón.</div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-ghost">Cancelar</button>
+        <button class="btn-save">Crear empleado</button>
+      </div>
+    </div>
+  </div>
+
+  <button class="theme-btn" onclick="document.documentElement.dataset.theme=document.documentElement.dataset.theme==='dark'?'light':'dark'">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2"/></svg>
+    Tema
+  </button>
+
+  <script>
+    const ROLE_MODELS = {
+      'Estilista': {type:'commission', label:'Comisión por servicio'},
+      'Confeccionista': {type:'piecerate', label:'Tarifa por pieza'},
+      'Secretaria': {type:'daily', label:'Tarifa diaria'},
+      'Cajero / Admin': {type:'daily', label:'Tarifa diaria'},
+    };
+
+    function selectRole(card, roleName, model){
+      document.querySelectorAll('.role-card').forEach(c=>c.classList.remove('selected'));
+      card.classList.add('selected');
+      const m = ROLE_MODELS[roleName];
+      document.getElementById('modelType').textContent = m.label;
+      document.getElementById('commissionField').style.display = m.type==='commission'?'block':'none';
+      document.getElementById('pieceRateField').style.display = m.type==='piecerate'?'block':'none';
+      document.getElementById('dailyRateField').style.display = m.type==='daily'?'block':'none';
+    }
+
+    function pinNav(input, idx){
+      if(input.value.length===1){
+        const pins = document.querySelectorAll('.pin-digit');
+        if(idx<3) pins[idx+1].focus();
+      }
+    }
+  </script>
+</body>
+</html>

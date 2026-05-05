@@ -3,96 +3,34 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { hasRole } from "@/lib/middleware-helpers";
 import {
-  getStabilizationSnapshots,
-  type StabilizationSnapshot,
-  type StabilizationStatus,
-  type StabilizationType,
-} from "@/lib/stabilization";
-import {
-  getProgressSnapshot,
-  type ProgressPhase,
-  type ProgressStatus,
-} from "@/lib/progress-tracker";
-import { getPostMvpSnapshot, type PostMvpCategory } from "@/lib/post-mvp";
+  getRoadmaps,
+  type Roadmap,
+  type RoadmapPhase,
+  type RoadmapTask,
+  type TaskStatus,
+} from "@/lib/roadmap";
 import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
-const STAB_STATUS_COPY: Record<StabilizationStatus, { label: string; className: string }> = {
-  pending: { label: "Pendiente", className: "bg-status-initial text-status-initial-foreground" },
+const STATUS_META: Record<TaskStatus, { label: string; className: string }> = {
+  done: { label: "Hecho", className: "bg-status-success text-status-success-foreground" },
   "in-progress": {
     label: "En curso",
     className: "bg-status-progress text-status-progress-foreground",
   },
-  done: { label: "Hecho", className: "bg-status-success text-status-success-foreground" },
-};
-
-const PROGRESS_STATUS_COPY: Record<ProgressStatus, { label: string; className: string }> = {
   pending: { label: "Pendiente", className: "bg-status-initial text-status-initial-foreground" },
-  "in-progress": {
-    label: "En curso",
-    className: "bg-status-progress text-status-progress-foreground",
-  },
-  done: { label: "Hecho", className: "bg-status-success text-status-success-foreground" },
-  blocked: { label: "Bloqueado", className: "bg-status-negative text-status-negative-foreground" },
-  unknown: { label: "—", className: "bg-muted text-muted-foreground" },
+  plan: { label: "Plan", className: "bg-muted text-muted-foreground" },
 };
-
-const TYPE_COPY: Record<StabilizationType, string> = {
-  bug: "Bug",
-  ux: "UX",
-  logic: "Lógica",
-  infra: "Infra",
-};
-
-function StabStatusBadge({ status }: { status: StabilizationStatus }) {
-  const copy = STAB_STATUS_COPY[status];
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
-        copy.className,
-      )}
-    >
-      {copy.label}
-    </span>
-  );
-}
-
-function ProgressStatusBadge({ status }: { status: ProgressStatus }) {
-  const copy = PROGRESS_STATUS_COPY[status];
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium",
-        copy.className,
-      )}
-    >
-      {copy.label}
-    </span>
-  );
-}
-
-function TypeChip({ type }: { type: StabilizationType }) {
-  return (
-    <span className="inline-flex items-center rounded-md border border-border px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-      {TYPE_COPY[type]}
-    </span>
-  );
-}
 
 export default async function AdminRoadmapPage() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session || !hasRole(session.user, "cashier_admin")) redirect("/403");
 
-  const [stabs, progress, postMvp] = await Promise.all([
-    getStabilizationSnapshots(),
-    getProgressSnapshot(),
-    getPostMvpSnapshot(),
-  ]);
+  const roadmaps = await getRoadmaps();
 
   return (
-    <div className="px-6 py-8 max-w-5xl mx-auto space-y-12">
+    <div className="px-6 py-8 max-w-5xl mx-auto space-y-4">
       <header className="space-y-2">
         <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Roadmap interno</p>
         <h1
@@ -102,286 +40,197 @@ export default async function AdminRoadmapPage() {
           Estado del producto
         </h1>
         <p className="text-sm text-muted-foreground">
-          Origen único de verdad: estabilización + MVP + post-MVP. Una tarea = una responsabilidad.
+          Una tarea = una responsabilidad. Origen: <code className="font-mono">roadmaps/</code>
         </p>
       </header>
 
-      {/* ── Stabilization sections ──────────────────────────────────────────── */}
-      {stabs.map((stab) => (
-        <StabilizationSection key={stab.phase} stab={stab} />
+      {roadmaps.map((roadmap) => (
+        <RoadmapSection key={roadmap.slug} roadmap={roadmap} />
       ))}
-
-      {/* ── MVP section ─────────────────────────────────────────────────────── */}
-      <section className="space-y-6">
-        <div className="flex items-baseline justify-between">
-          <h2
-            className="text-2xl font-semibold tracking-tight"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
-            MVP
-          </h2>
-          <span className="text-sm text-muted-foreground">
-            {progress.done}/{progress.total} hechas · {progress.progressPct}%
-          </span>
-        </div>
-
-        <div className="grid grid-cols-3 gap-3">
-          <Stat label="Total" value={progress.total} />
-          <Stat label="Hechas" value={progress.done} accent="success" />
-          <Stat label="Pendientes" value={progress.pending} />
-        </div>
-
-        <ProgressBar pct={progress.progressPct} />
-
-        <div className="space-y-4">
-          {progress.phases.map((phase) => (
-            <PhaseCard key={phase.slug} phase={phase} />
-          ))}
-        </div>
-      </section>
-
-      {/* ── Post-MVP roadmap (browsable) ───────────────────────────────────── */}
-      <section className="space-y-6">
-        <div className="flex items-baseline justify-between">
-          <h2
-            className="text-2xl font-semibold tracking-tight"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
-            Post-MVP
-          </h2>
-          <span className="text-sm text-muted-foreground">{postMvp.totalItems} ideas</span>
-        </div>
-        <p className="text-xs text-muted-foreground">
-          Categorías cerradas. Click una para explorar. Origen:{" "}
-          <code className="font-mono">docs/roadmap-post-mvp.md</code>.
-        </p>
-        <div className="space-y-3">
-          {postMvp.categories.map((cat) => (
-            <PostMvpCategoryCard key={cat.slug} category={cat} />
-          ))}
-        </div>
-      </section>
     </div>
   );
 }
 
-function PostMvpCategoryCard({ category }: { category: PostMvpCategory }) {
+function RoadmapSection({ roadmap }: { roadmap: Roadmap }) {
+  const complete = roadmap.total > 0 && roadmap.done === roadmap.total;
   return (
-    <details className="group rounded-lg border border-border bg-card shadow-sm">
-      <summary className="flex cursor-pointer items-center justify-between gap-3 px-4 py-3 marker:hidden [&::-webkit-details-marker]:hidden">
-        <div className="flex min-w-0 flex-1 items-center gap-3">
-          <span className="font-mono text-xs font-semibold text-muted-foreground tabular-nums">
-            {category.number}.
-          </span>
-          <h3 className="text-sm font-semibold">{category.title}</h3>
+    <details
+      open={!complete}
+      className="group/roadmap rounded-2xl border border-border bg-card shadow-sm"
+    >
+      <summary className="flex cursor-pointer items-center justify-between gap-4 px-6 py-5 marker:hidden [&::-webkit-details-marker]:hidden">
+        <div className="min-w-0 flex-1">
+          <h2
+            className="text-2xl font-semibold tracking-tight"
+            style={{ fontFamily: "var(--font-display)" }}
+          >
+            {roadmap.title}
+          </h2>
+          {roadmap.description && (
+            <p className="mt-1 text-sm text-muted-foreground max-w-2xl">{roadmap.description}</p>
+          )}
         </div>
-        <span className="shrink-0 text-xs text-muted-foreground">
-          {category.items.length} {category.items.length === 1 ? "elemento" : "elementos"}
-          <span className="ml-2 inline-block transition-transform group-open:rotate-90">›</span>
-        </span>
+        <div className="flex shrink-0 items-center gap-3">
+          {roadmap.total > 0 && (
+            <span className="text-sm text-muted-foreground tabular-nums">
+              {roadmap.done}/{roadmap.total} · {roadmap.progressPct}%
+            </span>
+          )}
+          <span className="text-muted-foreground transition-transform group-open/roadmap:rotate-90">
+            ›
+          </span>
+        </div>
       </summary>
-      <div className="space-y-3 border-t border-border px-4 py-3">
-        {category.intro && <p className="text-xs italic text-muted-foreground">{category.intro}</p>}
-        <ul className="space-y-2">
-          {category.items.map((item) => (
-            <li key={item.id}>
-              <details className="rounded-md border border-border bg-background">
-                <summary className="flex cursor-pointer items-center gap-2 px-3 py-2">
-                  <span className="font-mono text-[11px] text-muted-foreground tabular-nums">
-                    {item.id}
-                  </span>
-                  <span className="text-sm">{item.title}</span>
-                </summary>
-                <pre className="whitespace-pre-wrap break-words border-t border-border px-3 py-2 text-xs text-muted-foreground font-sans">
-                  {item.body}
-                </pre>
-              </details>
-            </li>
+
+      <div className="border-t border-border px-6 pb-6 pt-5 space-y-6">
+        {roadmap.total > 0 && <ProgressBar pct={roadmap.progressPct} />}
+        <div className="space-y-3">
+          {roadmap.phases.map((phase) => (
+            <PhaseAccordion key={phase.id} phase={phase} />
           ))}
-        </ul>
+        </div>
       </div>
     </details>
   );
 }
 
-function StabilizationSection({ stab }: { stab: StabilizationSnapshot }) {
-  return (
-    <section className="space-y-6">
-      <div className="flex items-baseline justify-between">
-        <h2
-          className="text-2xl font-semibold tracking-tight"
-          style={{ fontFamily: "var(--font-display)" }}
-        >
-          {stab.phase}
-        </h2>
-        <span className="text-sm text-muted-foreground">
-          {stab.done}/{stab.total} hechas · {stab.progressPct}%
-        </span>
-      </div>
+function PhaseAccordion({ phase }: { phase: RoadmapPhase }) {
+  const hasWork = phase.tasks.some((t) => t.status !== "plan");
+  const open = hasWork && phase.done < phase.total;
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Stat label="Total" value={stab.total} />
-        <Stat label="Hechas" value={stab.done} accent="success" />
-        <Stat label="En curso" value={stab.inProgress} accent="progress" />
-        <Stat label="Pendientes" value={stab.pending} />
-      </div>
-
-      <ProgressBar pct={stab.progressPct} />
-
-      <ul className="space-y-3">
-        {stab.tasks.map((task, idx) => (
-          <li
-            key={`${idx}-${task.title}`}
-            className="rounded-lg border border-border bg-card p-4 shadow-sm"
-          >
-            <div className="flex flex-wrap items-start justify-between gap-2">
-              <div className="min-w-0 flex-1 space-y-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <TypeChip type={task.type} />
-                  <h3 className="text-sm font-semibold leading-snug">{task.title}</h3>
-                </div>
-                {task.scope[0] && <p className="text-xs text-muted-foreground">{task.scope[0]}</p>}
-              </div>
-              <StabStatusBadge status={task.status} />
-            </div>
-
-            {(task.steps.length > 0 || task.acceptance.length > 0) && (
-              <div className="mt-3 grid gap-3 md:grid-cols-2">
-                {task.steps.length > 0 && (
-                  <Block title="Pasos">
-                    <ol className="ml-4 list-decimal space-y-0.5 text-xs text-muted-foreground">
-                      {task.steps.map((s, i) => (
-                        <li key={i}>{s}</li>
-                      ))}
-                    </ol>
-                  </Block>
-                )}
-                {task.acceptance.length > 0 && (
-                  <Block title="Aceptación">
-                    <ul className="ml-4 list-disc space-y-0.5 text-xs text-muted-foreground">
-                      {task.acceptance.map((s, i) => (
-                        <li key={i}>{s}</li>
-                      ))}
-                    </ul>
-                  </Block>
-                )}
-              </div>
-            )}
-
-            {task.test.length > 0 && (
-              <div className="mt-3">
-                <Block title="Validación">
-                  <ul className="ml-4 list-disc space-y-0.5 text-xs text-muted-foreground">
-                    {task.test.map((s, i) => (
-                      <li key={i}>{s}</li>
-                    ))}
-                  </ul>
-                </Block>
-              </div>
-            )}
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
-}
-
-function PhaseCard({ phase }: { phase: ProgressPhase }) {
-  const open = phase.pending > 0 || phase.inProgress > 0;
   return (
     <details open={open} className="rounded-lg border border-border bg-card shadow-sm">
-      <summary className="flex cursor-pointer items-center justify-between gap-3 px-4 py-3">
+      <summary className="flex cursor-pointer items-center justify-between gap-3 px-4 py-3 marker:hidden [&::-webkit-details-marker]:hidden">
         <div className="min-w-0 flex-1">
-          <h3 className="text-sm font-semibold">{phase.name}</h3>
-          <p className="text-xs text-muted-foreground">
-            {phase.done}/{phase.total} hechas · {phase.progressPct}%
-          </p>
+          <h3 className="text-sm font-semibold">{phase.title}</h3>
+          {hasWork && (
+            <p className="text-xs text-muted-foreground">
+              {phase.done}/{phase.total} hechas · {phase.progressPct}%
+            </p>
+          )}
         </div>
-        <div className="hidden h-1.5 w-32 overflow-hidden rounded-full bg-muted md:block">
-          <div
-            className="h-full bg-primary"
-            style={{ width: `${phase.progressPct}%` }}
-            aria-hidden="true"
-          />
+        <div className="flex items-center gap-3">
+          {hasWork && (
+            <div className="hidden h-1.5 w-24 overflow-hidden rounded-full bg-muted md:block">
+              <div
+                className="h-full bg-primary"
+                style={{ width: `${phase.progressPct}%` }}
+                aria-hidden="true"
+              />
+            </div>
+          )}
+          <span className="text-muted-foreground text-xs">›</span>
         </div>
       </summary>
       <ul className="border-t border-border divide-y divide-border">
         {phase.tasks.map((task) => (
-          <li key={task.id} className="flex items-center justify-between gap-3 px-4 py-2 text-sm">
-            <div className="flex min-w-0 flex-1 items-center gap-2">
-              <span className="font-mono text-[11px] text-muted-foreground tabular-nums">
-                {task.id}
-              </span>
-              <span className="truncate">{task.title}</span>
-            </div>
-            <div className="flex shrink-0 items-center gap-2">
-              {task.severity && (
-                <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-                  {task.severity}
-                </span>
-              )}
-              <ProgressStatusBadge status={task.status} />
-            </div>
-          </li>
+          <TaskRow key={task.id} task={task} />
         ))}
       </ul>
     </details>
   );
 }
 
-function Stat({
-  label,
-  value,
-  accent,
-}: {
-  label: string;
-  value: number;
-  accent?: "success" | "progress";
-}) {
-  const ring =
-    accent === "success"
-      ? "ring-success/30"
-      : accent === "progress"
-        ? "ring-primary/30"
-        : "ring-border";
+function TaskRow({ task }: { task: RoadmapTask }) {
+  const meta = STATUS_META[task.status];
+  const hasDetail = task.acceptance.length > 0 || task.testingSteps.length > 0;
+
+  if (!hasDetail) {
+    return (
+      <li className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm">
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+          <span className="shrink-0 font-mono text-[11px] text-muted-foreground tabular-nums">
+            {task.id}
+          </span>
+          <span className="truncate">{task.title}</span>
+        </div>
+        <StatusBadge meta={meta} />
+      </li>
+    );
+  }
+
   return (
-    <div className={cn("rounded-lg border border-border bg-card p-4 ring-1", ring)}>
-      <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
-      <p
-        className="mt-1 text-2xl font-semibold tabular-nums"
-        style={{ fontFamily: "var(--font-display)" }}
-      >
-        {value}
+    <li>
+      <details className="group">
+        <summary className="flex cursor-pointer items-center justify-between gap-3 px-4 py-2.5 text-sm marker:hidden [&::-webkit-details-marker]:hidden">
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            <span className="shrink-0 font-mono text-[11px] text-muted-foreground tabular-nums">
+              {task.id}
+            </span>
+            <span className="truncate">{task.title}</span>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <StatusBadge meta={meta} />
+            <span className="text-muted-foreground text-xs transition-transform group-open:rotate-90">
+              ›
+            </span>
+          </div>
+        </summary>
+        <div className="border-t border-border bg-muted/30 px-4 py-3 space-y-3">
+          {task.description && <p className="text-xs text-muted-foreground">{task.description}</p>}
+          <div className="grid gap-3 md:grid-cols-2">
+            {task.acceptance.length > 0 && (
+              <DetailBlock title="Criterios de aceptación">
+                <ul className="ml-4 list-disc space-y-0.5 text-xs text-muted-foreground">
+                  {task.acceptance.map((s, i) => (
+                    <li key={i}>{s}</li>
+                  ))}
+                </ul>
+              </DetailBlock>
+            )}
+            {task.testingSteps.length > 0 && (
+              <DetailBlock title="Validación">
+                <ul className="ml-4 list-disc space-y-0.5 text-xs text-muted-foreground">
+                  {task.testingSteps.map((s, i) => (
+                    <li key={i}>{s}</li>
+                  ))}
+                </ul>
+              </DetailBlock>
+            )}
+          </div>
+          {task.dependencies && (
+            <p className="text-[11px] text-muted-foreground">
+              <span className="font-medium">Deps:</span> {task.dependencies}
+            </p>
+          )}
+        </div>
+      </details>
+    </li>
+  );
+}
+
+function StatusBadge({ meta }: { meta: { label: string; className: string } }) {
+  return (
+    <span
+      className={cn(
+        "shrink-0 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
+        meta.className,
+      )}
+    >
+      {meta.label}
+    </span>
+  );
+}
+
+function DetailBlock({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-1">
+        {title}
       </p>
+      {children}
     </div>
   );
 }
 
 function ProgressBar({ pct }: { pct: number }) {
   return (
-    <div className="space-y-1">
-      <div className="flex items-center justify-between text-sm">
-        <span className="text-muted-foreground">Progreso</span>
-        <span className="font-mono tabular-nums">{pct}%</span>
-      </div>
-      <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-        <div
-          className="h-full bg-primary transition-all"
-          style={{ width: `${pct}%` }}
-          aria-hidden="true"
-        />
-      </div>
-    </div>
-  );
-}
-
-function Block({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-        {title}
-      </p>
-      <div className="mt-1">{children}</div>
+    <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+      <div
+        className="h-full bg-primary transition-all"
+        style={{ width: `${pct}%` }}
+        aria-hidden="true"
+      />
     </div>
   );
 }

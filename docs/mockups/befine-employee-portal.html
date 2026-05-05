@@ -1,0 +1,1414 @@
+<!doctype html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Befine · Portal del empleado</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..900,0..100,0..1;1,9..144,300..900,0..100,0..1&family=Inter+Tight:ital,wght@0,300..700;1,300..700&family=JetBrains+Mono:wght@300..600&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    /* =====================================================================
+       BEFINE · Employee Portal — editorial-atelier mobile-first
+       5 screens: Inicio · Tickets · Ediciones · Perfil (+ tab Confeccionista)
+       Dark: #E9408E on #010101 | Light: #D93079 on warm ivory #F7F2EA
+    ===================================================================== */
+
+    /* ── TOKENS ────────────────────────────────────────────────────────── */
+    :root, [data-theme="dark"] {
+      --canvas:     #010101;
+      --surface-1:  #0a0a0a;
+      --surface-2:  #141414;
+      --surface-3:  #1c1c1c;
+      --sidebar:    #000;
+      --text-1: #f2ece1;
+      --text-2: #b8b0a3;
+      --text-3: #807870;
+      --text-4: #4a4640;
+      --rule:        #2a2724;
+      --rule-strong: #4a4640;
+      --rule-soft:   #1b1917;
+      --pink:       #e9408e;
+      --pink-soft:  #f06aa5;
+      --pink-deep:  #b82a6c;
+      --pink-on:    #ffffff;
+      --pink-halo:  rgba(233,64,142,0.18);
+      --pink-glow:  rgba(233,64,142,0.45);
+      --pink-wash:  rgba(233,64,142,0.08);
+      --mint:    #7cd1b3;
+      --mint-on: #0a1a14;
+      --mint-dim: rgba(124,209,179,0.12);
+      --amber:    #e8b765;
+      --amber-on: #1a1306;
+      --amber-dim: rgba(232,183,101,0.12);
+      --check-done:  #3f9a78;
+      --check-open:  rgba(242,236,225,0.08);
+      --shadow: 0 1px 0 rgba(0,0,0,.5), 0 8px 24px -12px rgba(0,0,0,.7);
+      --shadow-card: 0 2px 0 rgba(0,0,0,.4), 0 16px 40px -16px rgba(0,0,0,.8);
+      --font-display: "Fraunces", "Times New Roman", serif;
+      --font-body:    "Inter Tight", ui-sans-serif, system-ui, sans-serif;
+      --font-mono:    "JetBrains Mono", ui-monospace, monospace;
+    }
+
+    [data-theme="light"] {
+      --canvas:     #f7f2ea;
+      --surface-1:  #fdfaf3;
+      --surface-2:  #efe8db;
+      --surface-3:  #e8e0ce;
+      --sidebar:    #0a0806;
+      --text-1: #0f0d0a;
+      --text-2: #534b40;
+      --text-3: #8a8073;
+      --text-4: #b8ad9c;
+      --rule:        #d9cfbb;
+      --rule-strong: #8a8073;
+      --rule-soft:   #e8dfca;
+      --pink:      #d93079;
+      --pink-soft: #e9408e;
+      --pink-deep: #a8225a;
+      --pink-on:   #ffffff;
+      --pink-halo: rgba(217,48,121,0.14);
+      --pink-glow: rgba(217,48,121,0.28);
+      --pink-wash: rgba(217,48,121,0.06);
+      --mint:    #3f9a78;
+      --mint-on: #ffffff;
+      --mint-dim: rgba(63,154,120,0.1);
+      --amber:    #b8843a;
+      --amber-on: #ffffff;
+      --amber-dim: rgba(184,132,58,0.1);
+      --check-done: #3f9a78;
+      --check-open: rgba(15,13,10,0.06);
+      --shadow: 0 1px 0 rgba(26,20,14,.06), 0 8px 24px -12px rgba(26,20,14,.2);
+      --shadow-card: 0 2px 0 rgba(26,20,14,.04), 0 16px 40px -16px rgba(26,20,14,.14);
+    }
+
+    /* ── RESET ─────────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      height: 100%; width: 100%;
+      background: var(--canvas);
+      color: var(--text-1);
+      font-family: var(--font-body);
+      font-size: 14px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+    button { cursor: pointer; }
+
+    /* ── GRAIN ─────────────────────────────────────────────────────────── */
+    body::before {
+      content: ""; position: fixed; inset: 0;
+      pointer-events: none; z-index: 100; opacity: 0.028; mix-blend-mode: screen;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.04 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    }
+    [data-theme="light"] body::before {
+      mix-blend-mode: multiply; opacity: 0.055;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.08  0 0 0 0 0.06  0 0 0 0 0.04  0 0 0 0.07 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    }
+    body::after {
+      content: ""; position: fixed; top: -240px; left: -200px;
+      width: 700px; height: 700px; border-radius: 50%;
+      background: radial-gradient(circle, var(--pink-halo) 0%, transparent 65%);
+      pointer-events: none; z-index: 0;
+      animation: bloom-drift 18s ease-in-out infinite alternate;
+    }
+    @keyframes bloom-drift {
+      from { transform: translate(0,0) scale(1); }
+      to   { transform: translate(60px,40px) scale(1.08); }
+    }
+
+    /* ── OUTER LAYOUT ──────────────────────────────────────────────────── */
+    .demo-frame {
+      display: flex; align-items: flex-start; justify-content: center;
+      gap: 60px; min-height: 100vh; padding: 40px 24px;
+      position: relative; z-index: 1;
+    }
+
+    /* ── PHONE SHELL ───────────────────────────────────────────────────── */
+    .phone {
+      width: 390px; min-height: 844px;
+      background: var(--canvas);
+      border: 1.5px solid var(--rule); border-radius: 48px;
+      overflow: hidden; position: relative; flex-shrink: 0;
+      box-shadow:
+        0 0 0 6px rgba(0,0,0,0.8), 0 0 0 8px var(--rule),
+        0 40px 100px -20px rgba(0,0,0,0.9), 0 0 60px -10px var(--pink-halo);
+    }
+    .island {
+      position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
+      width: 120px; height: 34px; background: #000; border-radius: 20px; z-index: 20;
+    }
+    .status-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 56px 28px 8px; font-size: 12px; font-weight: 600;
+      color: var(--text-3); font-family: var(--font-body); letter-spacing: 0.01em;
+    }
+    .status-bar .time { font-size: 15px; font-weight: 700; color: var(--text-1); letter-spacing: -0.02em; }
+    .status-icons { display: flex; align-items: center; gap: 6px; }
+
+    /* Scrollable content area — leaves room for bottom nav */
+    .scroll-area {
+      overflow-y: auto; height: calc(844px - 34px - 78px);
+      padding-bottom: 16px; scrollbar-width: none;
+    }
+    .scroll-area::-webkit-scrollbar { display: none; }
+
+    /* ── SHARED HEADER ─────────────────────────────────────────────────── */
+    .screen-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px 0;
+    }
+    .logo-mark { display: flex; align-items: center; gap: 8px; }
+    .logo-diamond { width: 20px; height: 20px; position: relative; flex-shrink: 0; }
+    .logo-diamond::before {
+      content: ""; position: absolute; inset: 3px; background: var(--pink);
+      transform: rotate(45deg); border-radius: 2px;
+    }
+    .logo-text {
+      font-family: var(--font-display); font-size: 13px; font-weight: 600;
+      letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-2); font-style: italic;
+    }
+    .avatar-btn {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--pink) 0%, var(--pink-deep) 100%);
+      border: none; display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-display); font-size: 13px; font-weight: 700;
+      color: var(--pink-on); font-style: italic; letter-spacing: -0.02em;
+    }
+
+    /* Back header for sub-screens */
+    .back-header {
+      display: flex; align-items: center; gap: 12px; padding: 16px 20px 0;
+    }
+    .back-btn {
+      width: 32px; height: 32px; border-radius: 10px; border: 1px solid var(--rule);
+      background: var(--surface-1); display: flex; align-items: center; justify-content: center;
+      color: var(--text-2); flex-shrink: 0; transition: all 0.15s;
+    }
+    .back-btn:hover { border-color: var(--rule-strong); color: var(--text-1); }
+    .back-title {
+      font-family: var(--font-display); font-size: 20px; font-weight: 700;
+      letter-spacing: -0.02em; color: var(--text-1); font-style: italic;
+    }
+
+    /* ── GREETING ──────────────────────────────────────────────────────── */
+    .greeting { padding: 16px 20px 20px; }
+    .greeting-eyebrow {
+      font-size: 10px; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase;
+      color: var(--pink); margin-bottom: 6px; font-family: var(--font-body);
+    }
+    .greeting-name {
+      font-family: var(--font-display); font-size: 32px; font-weight: 700;
+      line-height: 1.0; letter-spacing: -0.02em; color: var(--text-1); font-style: italic;
+    }
+    .greeting-name em { font-style: normal; color: var(--pink); }
+    .greeting-sub { font-size: 12px; color: var(--text-3); margin-top: 6px; }
+
+    /* ── SECTION LABEL ─────────────────────────────────────────────────── */
+    .section-label {
+      display: flex; align-items: center; gap: 10px; padding: 0 20px; margin-bottom: 10px;
+    }
+    .section-label::before {
+      content: ""; display: block; width: 16px; height: 1px;
+      background: var(--pink); flex-shrink: 0;
+    }
+    .section-label span { font-size: 9px; font-weight: 600; letter-spacing: 0.24em; text-transform: uppercase; color: var(--pink); }
+    .section-label .count { margin-left: auto; font-family: var(--font-mono); font-size: 10px; color: var(--text-4); letter-spacing: 0.08em; }
+
+    /* ── SUMMARY STRIP ─────────────────────────────────────────────────── */
+    .summary-strip {
+      display: grid; grid-template-columns: 1fr 1px 1fr 1px 1fr;
+      margin: 0 20px 24px; border: 1px solid var(--rule); border-radius: 14px;
+      overflow: hidden; background: var(--surface-1);
+    }
+    .summary-divider { background: var(--rule); }
+    .summary-cell { padding: 14px 0; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .summary-val { font-family: var(--font-mono); font-size: 22px; font-weight: 600; color: var(--text-1); letter-spacing: -0.04em; line-height: 1; }
+    .summary-val.mint { color: var(--mint); }
+    .summary-val.amber { color: var(--amber); }
+    .summary-val.pink { color: var(--pink); }
+    .summary-key { font-size: 9px; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-4); }
+
+    /* ── PILLS ─────────────────────────────────────────────────────────── */
+    .pill {
+      display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px;
+      border-radius: 999px; font-size: 10px; font-weight: 500; letter-spacing: 0.04em;
+    }
+    .pill-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+    .pill-progress  { background: rgba(100,160,255,0.12); color: #82b4ff; border: 1px solid rgba(100,160,255,0.2); }
+    .pill-awaiting  { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(232,183,101,0.22); }
+    .pill-open      { background: var(--pink-wash); color: var(--pink-soft); border: 1px solid rgba(233,64,142,0.2); }
+    .pill-closed    { background: var(--mint-dim); color: var(--mint); border: 1px solid rgba(124,209,179,0.2); }
+    .pill-rejected  { background: rgba(220,60,60,0.1); color: #e87070; border: 1px solid rgba(220,60,60,0.2); }
+    .pill-pending   { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(232,183,101,0.22); }
+    .pill-approved  { background: var(--mint-dim); color: var(--mint); border: 1px solid rgba(124,209,179,0.2); }
+
+    /* ── TICKET CARDS ──────────────────────────────────────────────────── */
+    .ticket-card {
+      background: var(--surface-1); border: 1px solid var(--rule); border-radius: 16px;
+      margin-bottom: 10px; overflow: hidden; transition: border-color 0.2s;
+      animation: slide-up 0.4s ease both;
+    }
+    .ticket-card:hover { border-color: var(--rule-strong); }
+    .ticket-card:nth-child(1) { animation-delay: 0.04s; }
+    .ticket-card:nth-child(2) { animation-delay: 0.10s; }
+    .ticket-card:nth-child(3) { animation-delay: 0.16s; }
+    .ticket-card:nth-child(4) { animation-delay: 0.22s; }
+    .ticket-card:nth-child(5) { animation-delay: 0.28s; }
+
+    @keyframes slide-up {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .ticket-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px 10px; border-bottom: 1px solid var(--rule-soft);
+    }
+    .ticket-client { font-family: var(--font-display); font-size: 16px; font-weight: 600; color: var(--text-1); font-style: italic; letter-spacing: -0.01em; }
+    .ticket-id { font-family: var(--font-mono); font-size: 10px; color: var(--text-4); letter-spacing: 0.08em; }
+    .ticket-body { padding: 10px 16px 14px; }
+    .ticket-service { font-size: 13px; color: var(--text-2); margin-bottom: 8px; }
+    .ticket-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .ticket-price { margin-left: auto; font-family: var(--font-mono); font-size: 13px; font-weight: 500; color: var(--mint); letter-spacing: -0.02em; }
+
+    /* expanded ticket detail */
+    .ticket-detail {
+      padding: 0 16px 14px; border-top: 1px solid var(--rule-soft);
+      display: none; animation: fade-down 0.25s ease both;
+    }
+    @keyframes fade-down {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .ticket-detail.open { display: block; }
+    .detail-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--rule-soft); font-size: 12px; }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-label { color: var(--text-4); }
+    .detail-val { color: var(--text-2); font-weight: 500; }
+    .detail-val.mint { color: var(--mint); font-family: var(--font-mono); }
+    .detail-val.pink { color: var(--pink); }
+
+    .ticket-actions { display: flex; gap: 8px; margin-top: 10px; }
+    .btn-action {
+      flex: 1; padding: 8px 12px; border-radius: 10px; font-size: 11px; font-weight: 600;
+      letter-spacing: 0.04em; border: none; transition: all 0.15s;
+    }
+    .btn-mark-ready {
+      background: var(--amber-dim); color: var(--amber);
+      border: 1px solid rgba(232,183,101,0.3);
+    }
+    .btn-mark-ready:hover { background: rgba(232,183,101,0.2); }
+    .btn-edit-req {
+      background: var(--surface-2); color: var(--text-3);
+      border: 1px solid var(--rule);
+    }
+    .btn-edit-req:hover { background: var(--surface-3); color: var(--text-2); }
+
+    /* ── ACTION ROW ────────────────────────────────────────────────────── */
+    .action-row { display: flex; gap: 10px; padding: 0 20px; margin-bottom: 28px; animation: slide-up 0.4s 0.12s ease both; }
+    .action-btn {
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 6px; padding: 16px 10px;
+      border-radius: 16px; border: none; transition: all 0.2s;
+    }
+    .action-btn-primary { background: var(--pink); color: var(--pink-on); }
+    .action-btn-primary:hover { background: var(--pink-soft); box-shadow: 0 0 28px var(--pink-glow); }
+    .action-btn-secondary { background: var(--surface-1); color: var(--text-2); border: 1px solid var(--rule); }
+    .action-btn-secondary:hover { background: var(--surface-2); border-color: var(--rule-strong); }
+    .action-icon { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; }
+    .action-label { font-size: 11px; font-weight: 600; letter-spacing: 0.04em; }
+
+    /* ── EDIT REQUEST CARD ─────────────────────────────────────────────── */
+    .edit-card {
+      background: var(--surface-1); border: 1px solid rgba(232,183,101,0.25);
+      border-left: 3px solid var(--amber); border-radius: 14px;
+      padding: 14px 16px; margin-bottom: 10px; animation: slide-up 0.4s ease both;
+      transition: opacity 0.3s, transform 0.3s;
+    }
+    .edit-card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+    .edit-card-label { font-size: 10px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: var(--amber); }
+    .edit-card-time { font-family: var(--font-mono); font-size: 10px; color: var(--text-4); }
+    .edit-card-desc { font-size: 13px; color: var(--text-2); margin-bottom: 10px; line-height: 1.4; }
+    .edit-card-actions { display: flex; gap: 8px; }
+    .btn-sm {
+      flex: 1; padding: 7px 12px; border-radius: 8px;
+      font-size: 11px; font-weight: 600; letter-spacing: 0.04em;
+      border: none; text-align: center; transition: all 0.15s;
+    }
+    .btn-approve { background: var(--mint-dim); color: var(--mint); border: 1px solid rgba(124,209,179,0.25); }
+    .btn-approve:hover { background: rgba(124,209,179,0.22); }
+    .btn-reject { background: var(--surface-2); color: var(--text-3); border: 1px solid var(--rule); }
+    .btn-reject:hover { background: var(--surface-3); }
+
+    /* Edit request — stylist's own request history card */
+    .req-card {
+      background: var(--surface-1); border: 1px solid var(--rule); border-radius: 14px;
+      padding: 14px 16px; margin-bottom: 10px; animation: slide-up 0.4s ease both;
+    }
+    .req-card:nth-child(1) { animation-delay: 0.05s; }
+    .req-card:nth-child(2) { animation-delay: 0.12s; }
+    .req-card:nth-child(3) { animation-delay: 0.19s; }
+    .req-card-head { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 8px; gap: 8px; }
+    .req-card-client { font-family: var(--font-display); font-size: 15px; font-weight: 600; color: var(--text-1); font-style: italic; }
+    .req-card-body { font-size: 12px; color: var(--text-3); line-height: 1.5; margin-bottom: 8px; }
+    .req-card-change { display: flex; align-items: center; gap: 8px; font-size: 12px; margin-bottom: 8px; }
+    .req-change-old { color: var(--text-4); text-decoration: line-through; }
+    .req-arrow { color: var(--text-4); font-size: 10px; }
+    .req-change-new { color: var(--text-2); font-weight: 500; }
+    .req-card-footer { display: flex; align-items: center; justify-content: space-between; }
+    .req-card-time { font-family: var(--font-mono); font-size: 10px; color: var(--text-4); }
+
+    /* ── VIEW TABS ─────────────────────────────────────────────────────── */
+    .view-tabs {
+      display: flex; margin: 0 20px 20px;
+      background: var(--surface-2); border-radius: 12px; padding: 3px;
+    }
+    .view-tab {
+      flex: 1; padding: 7px 12px; border-radius: 9px; border: none;
+      font-size: 12px; font-weight: 600; transition: all 0.2s;
+      color: var(--text-3); background: transparent;
+    }
+    .view-tab.active { background: var(--canvas); color: var(--text-1); box-shadow: var(--shadow); }
+
+    /* ── FILTER ROW ────────────────────────────────────────────────────── */
+    .filter-row {
+      display: flex; gap: 6px; padding: 0 20px; margin-bottom: 16px;
+      overflow-x: auto; scrollbar-width: none;
+    }
+    .filter-row::-webkit-scrollbar { display: none; }
+    .filter-chip {
+      flex-shrink: 0; padding: 5px 12px; border-radius: 999px;
+      font-size: 11px; font-weight: 600; letter-spacing: 0.04em;
+      border: 1px solid var(--rule); background: var(--surface-1);
+      color: var(--text-3); transition: all 0.15s; white-space: nowrap;
+    }
+    .filter-chip.active { background: var(--pink-wash); color: var(--pink); border-color: rgba(233,64,142,0.3); }
+
+    /* ── BOTTOM NAV ────────────────────────────────────────────────────── */
+    .bottom-nav {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      display: flex; align-items: center; justify-content: space-around;
+      padding: 10px 8px 22px;
+      background: var(--surface-1); border-top: 1px solid var(--rule);
+    }
+    .nav-item {
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      padding: 5px 14px; border-radius: 12px;
+      transition: all 0.2s; background: none; border: none; position: relative;
+    }
+    .nav-item.active { background: var(--pink-wash); }
+    .nav-icon { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; }
+    .nav-label { font-size: 10px; font-weight: 500; letter-spacing: 0.04em; color: var(--text-4); }
+    .nav-item.active .nav-label { color: var(--pink); }
+    .nav-badge {
+      position: absolute; top: 2px; right: 8px;
+      width: 14px; height: 14px; background: var(--pink); border-radius: 50%;
+      font-size: 8px; font-weight: 700; color: var(--pink-on);
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-mono); border: 2px solid var(--surface-1);
+    }
+    .nav-badge.amber-badge { background: var(--amber); }
+
+    /* ── BATCH / CLOTHIER ──────────────────────────────────────────────── */
+    .batch-card { background: var(--surface-1); border: 1px solid var(--rule); border-radius: 16px; margin-bottom: 10px; overflow: hidden; animation: slide-up 0.4s ease both; }
+    .batch-card:nth-child(1) { animation-delay: 0.05s; }
+    .batch-card:nth-child(2) { animation-delay: 0.12s; }
+    .batch-head { display: flex; align-items: center; padding: 14px 16px; gap: 12px; border-bottom: 1px solid var(--rule-soft); }
+    .batch-num { width: 36px; height: 36px; border-radius: 10px; background: var(--pink-wash); border: 1px solid rgba(233,64,142,0.2); display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 13px; font-weight: 600; color: var(--pink); flex-shrink: 0; }
+    .batch-info { flex: 1; min-width: 0; }
+    .batch-title { font-family: var(--font-display); font-size: 15px; font-weight: 600; color: var(--text-1); font-style: italic; }
+    .batch-subtitle { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+    .batch-earnings { font-family: var(--font-mono); font-size: 14px; font-weight: 500; color: var(--mint); letter-spacing: -0.02em; }
+    .piece-list { padding: 10px 16px 14px; display: flex; flex-direction: column; gap: 8px; }
+    .piece-row { display: flex; align-items: center; gap: 10px; }
+    .piece-check { width: 20px; height: 20px; border-radius: 6px; background: var(--check-open); border: 1.5px solid var(--rule); flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+    .piece-check.done { background: rgba(63,154,120,0.15); border-color: rgba(63,154,120,0.4); }
+    .piece-check svg { opacity: 0; transition: opacity 0.2s; }
+    .piece-check.done svg { opacity: 1; }
+    .piece-name { font-size: 13px; color: var(--text-2); }
+    .piece-name.done { color: var(--text-4); text-decoration: line-through; }
+    .piece-rate { margin-left: auto; font-family: var(--font-mono); font-size: 11px; color: var(--text-4); }
+    .piece-rate.done { color: var(--mint); }
+    .progress-bar-wrap { padding: 8px 16px 14px; display: flex; flex-direction: column; gap: 5px; }
+    .progress-bar-meta { display: flex; justify-content: space-between; font-size: 10px; font-family: var(--font-mono); color: var(--text-4); }
+    .progress-bar-track { height: 4px; border-radius: 999px; background: var(--surface-3); overflow: hidden; }
+    .progress-bar-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--mint) 0%, rgba(124,209,179,0.6) 100%); transition: width 1s cubic-bezier(0.4,0,0.2,1); }
+    .claim-card { background: var(--surface-1); border: 1px dashed rgba(233,64,142,0.3); border-radius: 14px; padding: 14px 16px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: all 0.2s; animation: slide-up 0.4s 0.28s ease both; }
+    .claim-card:hover { border-color: rgba(233,64,142,0.6); background: var(--pink-wash); }
+    .claim-icon { width: 36px; height: 36px; border-radius: 10px; border: 1.5px dashed rgba(233,64,142,0.4); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .claim-info { flex: 1; }
+    .claim-title { font-size: 13px; font-weight: 600; color: var(--text-2); }
+    .claim-sub { font-size: 11px; color: var(--text-4); margin-top: 2px; }
+    .claim-action { font-size: 11px; font-weight: 600; color: var(--pink); letter-spacing: 0.04em; }
+
+    /* ── PROFILE SCREEN ────────────────────────────────────────────────── */
+    .profile-hero {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 24px 20px 20px; gap: 12px;
+    }
+    .profile-avatar {
+      width: 72px; height: 72px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--pink) 0%, var(--pink-deep) 100%);
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-display); font-size: 28px; font-weight: 700;
+      color: var(--pink-on); font-style: italic; letter-spacing: -0.02em;
+      box-shadow: 0 0 0 4px var(--canvas), 0 0 0 5px var(--rule), 0 0 24px var(--pink-halo);
+      animation: slide-up 0.4s ease both;
+    }
+    .profile-name {
+      font-family: var(--font-display); font-size: 24px; font-weight: 700;
+      letter-spacing: -0.02em; color: var(--text-1); font-style: italic;
+      text-align: center; animation: slide-up 0.4s 0.06s ease both;
+    }
+    .profile-meta {
+      display: flex; align-items: center; gap: 8px; animation: slide-up 0.4s 0.1s ease both;
+    }
+    .profile-role {
+      font-size: 11px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase;
+      color: var(--pink); background: var(--pink-wash); padding: 4px 10px;
+      border-radius: 999px; border: 1px solid rgba(233,64,142,0.25);
+    }
+    .profile-since { font-size: 11px; color: var(--text-4); font-family: var(--font-mono); }
+
+    .profile-stats {
+      display: grid; grid-template-columns: 1fr 1px 1fr 1px 1fr;
+      margin: 4px 20px 24px; border: 1px solid var(--rule); border-radius: 14px;
+      overflow: hidden; background: var(--surface-1);
+      animation: slide-up 0.4s 0.14s ease both;
+    }
+    .profile-stat { padding: 12px 0; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+    .profile-stat-val { font-family: var(--font-mono); font-size: 18px; font-weight: 600; color: var(--text-1); letter-spacing: -0.04em; }
+    .profile-stat-val.mint { color: var(--mint); }
+    .profile-stat-key { font-size: 9px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-4); }
+
+    .profile-section { margin-bottom: 20px; }
+    .profile-section-title {
+      padding: 0 20px 8px;
+      font-size: 9px; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase;
+      color: var(--pink); display: flex; align-items: center; gap: 8px;
+      animation: slide-up 0.4s 0.18s ease both;
+    }
+    .profile-section-title::before { content: ""; display: block; width: 14px; height: 1px; background: var(--pink); flex-shrink: 0; }
+
+    .profile-list { margin: 0 20px; border: 1px solid var(--rule); border-radius: 14px; overflow: hidden; background: var(--surface-1); animation: slide-up 0.4s 0.22s ease both; }
+    .profile-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px; border-bottom: 1px solid var(--rule-soft);
+      cursor: pointer; transition: background 0.15s;
+    }
+    .profile-row:last-child { border-bottom: none; }
+    .profile-row:hover { background: var(--surface-2); }
+    .profile-row-left { display: flex; align-items: center; gap: 12px; }
+    .profile-row-icon { width: 32px; height: 32px; border-radius: 9px; background: var(--surface-2); border: 1px solid var(--rule); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--text-3); }
+    .profile-row-text { font-size: 13px; color: var(--text-2); font-weight: 500; }
+    .profile-row-sub { font-size: 11px; color: var(--text-4); margin-top: 1px; }
+    .profile-row-right { display: flex; align-items: center; gap: 6px; }
+    .profile-row-val { font-family: var(--font-mono); font-size: 12px; color: var(--text-4); }
+    .profile-row-arrow { color: var(--text-4); font-size: 12px; }
+
+    .profile-row-icon.pink-bg { background: var(--pink-wash); border-color: rgba(233,64,142,0.2); color: var(--pink); }
+    .profile-row-icon.mint-bg { background: var(--mint-dim); border-color: rgba(124,209,179,0.2); color: var(--mint); }
+    .profile-row-icon.amber-bg { background: var(--amber-dim); border-color: rgba(232,183,101,0.2); color: var(--amber); }
+
+    /* password form */
+    .pw-form { margin: 0 20px; padding: 16px; background: var(--surface-1); border: 1px solid var(--rule); border-radius: 14px; animation: slide-up 0.4s 0.26s ease both; }
+    .pw-field { margin-bottom: 14px; }
+    .pw-label { display: block; font-size: 10px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-4); margin-bottom: 6px; }
+    .pw-input {
+      width: 100%; padding: 10px 12px; border-radius: 9px;
+      background: var(--surface-2); border: 1px solid var(--rule);
+      color: var(--text-1); font-size: 13px; font-family: var(--font-body);
+      outline: none; transition: border-color 0.2s;
+    }
+    .pw-input:focus { border-color: rgba(233,64,142,0.5); box-shadow: 0 0 0 3px rgba(233,64,142,0.08); }
+    .pw-input::placeholder { color: var(--text-4); }
+    .pw-submit {
+      width: 100%; padding: 11px; border-radius: 10px; border: none;
+      background: var(--pink); color: var(--pink-on);
+      font-size: 13px; font-weight: 600; letter-spacing: 0.04em;
+      transition: all 0.2s;
+    }
+    .pw-submit:hover { background: var(--pink-soft); box-shadow: 0 0 20px var(--pink-glow); }
+
+    /* logout */
+    .logout-row {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      margin: 20px 20px 0; padding: 14px; border-radius: 14px;
+      border: 1px solid rgba(220,60,60,0.2); background: rgba(220,60,60,0.05);
+      color: #e87070; font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: all 0.2s; animation: slide-up 0.4s 0.32s ease both;
+    }
+    .logout-row:hover { background: rgba(220,60,60,0.1); border-color: rgba(220,60,60,0.35); }
+
+    /* ── THEME TOGGLE ──────────────────────────────────────────────────── */
+    .theme-toggle {
+      position: fixed; top: 20px; right: 20px; z-index: 200;
+      display: flex; gap: 4px; background: var(--surface-1); border: 1px solid var(--rule); border-radius: 12px; padding: 4px;
+    }
+    .theme-btn {
+      padding: 5px 10px; border-radius: 8px; border: none;
+      font-size: 11px; font-weight: 600; letter-spacing: 0.05em;
+      background: transparent; color: var(--text-3); transition: all 0.2s;
+    }
+    .theme-btn.active { background: var(--pink); color: var(--pink-on); }
+
+    /* ── LEFT ANNOTATION PANEL ─────────────────────────────────────────── */
+    .sidebar-panel {
+      width: 260px; flex-shrink: 0; display: none; flex-direction: column; gap: 28px;
+      padding-top: 48px;
+    }
+    @media (min-width: 820px) { .sidebar-panel { display: flex; } }
+    .annot-block { animation: fade-in-left 0.6s ease both; }
+    .annot-block:nth-child(1) { animation-delay: 0.1s; }
+    .annot-block:nth-child(2) { animation-delay: 0.2s; }
+    .annot-block:nth-child(3) { animation-delay: 0.3s; }
+    @keyframes fade-in-left {
+      from { opacity: 0; transform: translateX(-12px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    .annot-eyebrow {
+      font-size: 9px; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase;
+      color: var(--pink); display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+    }
+    .annot-eyebrow::before { content: ""; display: block; width: 16px; height: 1px; background: var(--pink); flex-shrink: 0; }
+    .annot-title {
+      font-family: var(--font-display); font-size: 26px; font-weight: 700; line-height: 1.0;
+      letter-spacing: -0.02em; color: var(--text-1); margin-bottom: 10px; font-style: italic;
+    }
+    .annot-title em { font-style: normal; color: var(--pink); }
+    .annot-body { font-size: 12px; color: var(--text-3); line-height: 1.6; }
+    .spec-list { list-style: none; display: flex; flex-direction: column; gap: 9px; }
+    .spec-item { display: flex; align-items: flex-start; gap: 9px; font-size: 12px; color: var(--text-3); line-height: 1.5; }
+    .spec-dot { width: 5px; height: 5px; background: var(--pink); border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+    .spec-key { font-weight: 600; color: var(--text-2); display: block; }
+
+    /* screen nav dots */
+    .screen-nav {
+      display: flex; flex-direction: column; gap: 6px; padding-top: 8px;
+    }
+    .screen-nav-item {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 12px; color: var(--text-4); cursor: pointer; padding: 5px 0;
+      border: none; background: none; text-align: left; transition: color 0.15s;
+    }
+    .screen-nav-item:hover { color: var(--text-2); }
+    .screen-nav-item.active { color: var(--text-1); }
+    .screen-nav-dot {
+      width: 6px; height: 6px; border-radius: 50%; background: var(--rule-strong);
+      flex-shrink: 0; transition: all 0.2s;
+    }
+    .screen-nav-item.active .screen-nav-dot { background: var(--pink); box-shadow: 0 0 6px var(--pink); }
+
+    /* ── DEMO LABEL ────────────────────────────────────────────────────── */
+    .demo-label {
+      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+      display: flex; align-items: center; gap: 8px; padding: 7px 16px;
+      background: var(--surface-1); border: 1px solid var(--rule); border-radius: 999px;
+      font-size: 11px; font-weight: 500; color: var(--text-3); z-index: 201;
+      white-space: nowrap;
+    }
+    .demo-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--pink); animation: pulse 2s ease-in-out infinite; }
+    @keyframes pulse {
+      0%,100% { opacity:1; transform:scale(1); }
+      50% { opacity:0.5; transform:scale(0.8); }
+    }
+
+    @media (max-width: 440px) {
+      .phone { width: 100%; min-height: auto; border-radius: 0; border: none; box-shadow: none; }
+      .demo-frame { padding: 0; }
+      .island { display: none; }
+      .status-bar { padding-top: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="theme-toggle" role="group" aria-label="Cambiar tema">
+  <button class="theme-btn active" id="btn-dark" onclick="setTheme('dark')">Oscuro</button>
+  <button class="theme-btn" id="btn-light" onclick="setTheme('light')">Claro</button>
+</div>
+
+<div class="demo-frame">
+
+  <!-- ── LEFT ANNOTATION ────────────────────────────────────────────── -->
+  <div class="sidebar-panel">
+
+    <div class="annot-block">
+      <div class="annot-eyebrow">Befine · Portal empleado</div>
+      <div class="annot-title">Tu jornada,<br />al <em>tacto.</em></div>
+      <div class="annot-body">5 pantallas. 2 roles. Una navegación que funciona con el dedo pulgar en plena atención al cliente.</div>
+    </div>
+
+    <div class="annot-block">
+      <div class="annot-eyebrow">Pantallas</div>
+      <div class="screen-nav" id="screen-nav">
+        <button class="screen-nav-item active" onclick="goScreen('inicio')" id="snav-inicio">
+          <span class="screen-nav-dot"></span>Inicio
+        </button>
+        <button class="screen-nav-item" onclick="goScreen('tickets')" id="snav-tickets">
+          <span class="screen-nav-dot"></span>Tickets
+        </button>
+        <button class="screen-nav-item" onclick="goScreen('ediciones')" id="snav-ediciones">
+          <span class="screen-nav-dot"></span>Ediciones
+        </button>
+        <button class="screen-nav-item" onclick="goScreen('perfil')" id="snav-perfil">
+          <span class="screen-nav-dot"></span>Perfil
+        </button>
+        <button class="screen-nav-item" onclick="goScreen('clothier')" id="snav-clothier">
+          <span class="screen-nav-dot"></span>Confeccionista
+        </button>
+      </div>
+    </div>
+
+    <div class="annot-block">
+      <div class="annot-eyebrow">Decisiones clave</div>
+      <ul class="spec-list">
+        <li class="spec-item"><span class="spec-dot"></span><div><span class="spec-key">Tickets expandibles</span>Toca para ver líneas, precio, y acciones — sin cambiar de pantalla.</div></li>
+        <li class="spec-item"><span class="spec-dot"></span><div><span class="spec-key">Ediciones por estado</span>Solicitudes propias con chip aprobada/rechazada/pendiente.</div></li>
+        <li class="spec-item"><span class="spec-dot"></span><div><span class="spec-key">Perfil funcional</span>Stats del mes, cambio de contraseña, y cierre de sesión en un solo scroll.</div></li>
+      </ul>
+    </div>
+
+  </div>
+
+  <!-- ── PHONE ──────────────────────────────────────────────────────── -->
+  <div class="phone" id="phone-frame">
+
+    <div class="island" aria-hidden="true"></div>
+
+    <!-- ════════════════ SCREEN: INICIO ════════════════ -->
+    <div id="screen-inicio" class="screen-wrap">
+      <div class="scroll-area">
+        <div class="status-bar" aria-hidden="true">
+          <span class="time">9:41</span>
+          <div class="status-icons">
+            <svg width="16" height="10" viewBox="0 0 16 10" fill="var(--text-1)"><rect x="0" y="4" width="3" height="6" rx=".8" opacity=".4"/><rect x="4.5" y="2.5" width="3" height="7.5" rx=".8" opacity=".6"/><rect x="9" y=".5" width="3" height="9.5" rx=".8" opacity=".85"/><rect x="13.5" y="0" width="2.5" height="10" rx=".8"/></svg>
+            <svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x=".5" y=".5" width="22" height="11" rx="3.5" stroke="var(--text-1)" stroke-opacity=".35"/><rect x="2" y="2" width="17" height="8" rx="2" fill="var(--text-1)"/><path d="M24 4v4a2 2 0 000-4z" fill="var(--text-1)" opacity=".4"/></svg>
+          </div>
+        </div>
+        <div class="screen-header">
+          <div class="logo-mark">
+            <div class="logo-diamond" aria-hidden="true"></div>
+            <span class="logo-text">Befine</span>
+          </div>
+          <button class="avatar-btn" aria-label="Perfil" onclick="goScreen('perfil')">M</button>
+        </div>
+        <div class="greeting">
+          <div class="greeting-eyebrow">Miércoles · 30 Abr 2025</div>
+          <div class="greeting-name">Hola,<br /><em>Manuela.</em></div>
+          <div class="greeting-sub">3 tickets activos · 1 solicitud pendiente.</div>
+        </div>
+        <div class="summary-strip" role="region" aria-label="Resumen del día">
+          <div class="summary-cell"><span class="summary-val mint">$87.500</span><span class="summary-key">Comisión</span></div>
+          <div class="summary-divider"></div>
+          <div class="summary-cell"><span class="summary-val">5</span><span class="summary-key">Cerrados</span></div>
+          <div class="summary-divider"></div>
+          <div class="summary-cell"><span class="summary-val amber">3</span><span class="summary-key">Activos</span></div>
+        </div>
+        <div class="action-row">
+          <button class="action-btn action-btn-primary" onclick="goScreen('tickets')" aria-label="Nuevo servicio">
+            <div class="action-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></div>
+            <span class="action-label">Nuevo servicio</span>
+          </button>
+          <button class="action-btn action-btn-secondary" onclick="goScreen('tickets')" aria-label="Mis tickets">
+            <div class="action-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M9 7h6M9 11h6M9 15h4"/></svg></div>
+            <span class="action-label">Tickets</span>
+          </button>
+          <button class="action-btn action-btn-secondary" onclick="goScreen('ediciones')" aria-label="Solicitudes de edición">
+            <div class="action-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
+            <span class="action-label">Ediciones</span>
+          </button>
+        </div>
+        <div class="section-label"><span>Solicitudes pendientes</span><span class="count">01</span></div>
+        <div style="padding:0 20px;margin-bottom:20px;">
+          <div class="edit-card">
+            <div class="edit-card-head">
+              <span class="edit-card-label">Edición · T-2847</span>
+              <span class="edit-card-time">hace 12 min</span>
+            </div>
+            <div class="edit-card-desc"><em style="font-family:var(--font-display);font-style:italic;">Valentina Ríos</em> — "Tinte raíz" → "Tinte completo". Diferencia: +$25.000</div>
+            <div class="edit-card-actions">
+              <button class="btn-sm btn-approve" onclick="approveEditHome(this)">Aprobar</button>
+              <button class="btn-sm btn-reject" onclick="rejectEditHome(this)">Rechazar</button>
+            </div>
+          </div>
+        </div>
+        <div class="section-label"><span>Mis tickets activos</span><span class="count">03</span></div>
+        <div class="tickets-section" style="padding:0 20px;">
+          <article class="ticket-card" onclick="toggleTicket(this)">
+            <div class="ticket-head"><span class="ticket-client">Valentina Ríos</span><span class="ticket-id">#T-2847</span></div>
+            <div class="ticket-body">
+              <div class="ticket-service">Tinte raíz · Balayage touch-up</div>
+              <div class="ticket-meta"><span class="pill pill-progress"><span class="pill-dot"></span>En proceso</span><span class="ticket-price">$120.000</span></div>
+            </div>
+            <div class="ticket-detail">
+              <div class="detail-row"><span class="detail-label">Servicio</span><span class="detail-val">Tinte raíz + Balayage</span></div>
+              <div class="detail-row"><span class="detail-label">Variante</span><span class="detail-val">Larga</span></div>
+              <div class="detail-row"><span class="detail-label">Precio</span><span class="detail-val mint">$120.000</span></div>
+              <div class="detail-row"><span class="detail-label">Iniciado</span><span class="detail-val">9:15 am</span></div>
+              <div class="ticket-actions">
+                <button class="btn-action btn-mark-ready" onclick="event.stopPropagation()">Listo para pago</button>
+                <button class="btn-action btn-edit-req" onclick="event.stopPropagation();goScreen('ediciones')">Solicitar edición</button>
+              </div>
+            </div>
+          </article>
+          <article class="ticket-card" onclick="toggleTicket(this)">
+            <div class="ticket-head"><span class="ticket-client">Daniela Ospina</span><span class="ticket-id">#T-2851</span></div>
+            <div class="ticket-body">
+              <div class="ticket-service">Corte + blow dry</div>
+              <div class="ticket-meta"><span class="pill pill-awaiting"><span class="pill-dot"></span>Esp. pago</span><span class="ticket-price">$65.000</span></div>
+            </div>
+            <div class="ticket-detail">
+              <div class="detail-row"><span class="detail-label">Servicio</span><span class="detail-val">Corte + blow dry</span></div>
+              <div class="detail-row"><span class="detail-label">Variante</span><span class="detail-val">Largo</span></div>
+              <div class="detail-row"><span class="detail-label">Precio</span><span class="detail-val mint">$65.000</span></div>
+              <div class="detail-row"><span class="detail-label">Iniciado</span><span class="detail-val">9:40 am</span></div>
+              <div class="ticket-actions">
+                <button class="btn-action btn-edit-req" onclick="event.stopPropagation();goScreen('ediciones')" style="flex:1">Solicitar edición</button>
+              </div>
+            </div>
+          </article>
+          <article class="ticket-card" onclick="toggleTicket(this)">
+            <div class="ticket-head"><span class="ticket-client">Alejandra Mora</span><span class="ticket-id">#T-2853</span></div>
+            <div class="ticket-body">
+              <div class="ticket-service">Manicure semipermanente</div>
+              <div class="ticket-meta"><span class="pill pill-open"><span class="pill-dot"></span>Registrado</span><span class="ticket-price">$45.000</span></div>
+            </div>
+            <div class="ticket-detail">
+              <div class="detail-row"><span class="detail-label">Servicio</span><span class="detail-val">Manicure semipermanente</span></div>
+              <div class="detail-row"><span class="detail-label">Variante</span><span class="detail-val">Estándar</span></div>
+              <div class="detail-row"><span class="detail-label">Precio</span><span class="detail-val mint">$45.000</span></div>
+              <div class="ticket-actions">
+                <button class="btn-action btn-mark-ready" onclick="event.stopPropagation()">Listo para pago</button>
+                <button class="btn-action btn-edit-req" onclick="event.stopPropagation();goScreen('ediciones')">Solicitar edición</button>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </div><!-- /screen-inicio -->
+
+    <!-- ════════════════ SCREEN: TICKETS ════════════════ -->
+    <div id="screen-tickets" class="screen-wrap" style="display:none">
+      <div class="scroll-area">
+        <div class="status-bar" aria-hidden="true">
+          <span class="time">9:41</span>
+          <div class="status-icons">
+            <svg width="16" height="10" viewBox="0 0 16 10" fill="var(--text-1)"><rect x="0" y="4" width="3" height="6" rx=".8" opacity=".4"/><rect x="4.5" y="2.5" width="3" height="7.5" rx=".8" opacity=".6"/><rect x="9" y=".5" width="3" height="9.5" rx=".8" opacity=".85"/><rect x="13.5" y="0" width="2.5" height="10" rx=".8"/></svg>
+            <svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x=".5" y=".5" width="22" height="11" rx="3.5" stroke="var(--text-1)" stroke-opacity=".35"/><rect x="2" y="2" width="17" height="8" rx="2" fill="var(--text-1)"/><path d="M24 4v4a2 2 0 000-4z" fill="var(--text-1)" opacity=".4"/></svg>
+          </div>
+        </div>
+        <div class="back-header">
+          <button class="back-btn" onclick="goScreen('inicio')" aria-label="Volver">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <span class="back-title">Tickets</span>
+        </div>
+        <div style="padding:12px 20px 0;">
+          <div class="summary-strip" style="margin:0 0 16px;">
+            <div class="summary-cell"><span class="summary-val">8</span><span class="summary-key">Hoy</span></div>
+            <div class="summary-divider"></div>
+            <div class="summary-cell"><span class="summary-val amber">3</span><span class="summary-key">Activos</span></div>
+            <div class="summary-divider"></div>
+            <div class="summary-cell"><span class="summary-val mint">$230.000</span><span class="summary-key">Total</span></div>
+          </div>
+        </div>
+        <!-- Filter chips -->
+        <div class="filter-row">
+          <button class="filter-chip active" onclick="filterTickets(this,'todos')">Todos</button>
+          <button class="filter-chip" onclick="filterTickets(this,'activos')">Activos (3)</button>
+          <button class="filter-chip" onclick="filterTickets(this,'cerrados')">Cerrados (5)</button>
+          <button class="filter-chip" onclick="filterTickets(this,'hoy')">Hoy</button>
+        </div>
+        <!-- All tickets -->
+        <div style="padding:0 20px;" id="tickets-list">
+          <article class="ticket-card" onclick="toggleTicket(this)" data-status="activo">
+            <div class="ticket-head"><span class="ticket-client">Valentina Ríos</span><span class="ticket-id">#T-2847</span></div>
+            <div class="ticket-body">
+              <div class="ticket-service">Tinte raíz · Balayage touch-up</div>
+              <div class="ticket-meta"><span class="pill pill-progress"><span class="pill-dot"></span>En proceso</span><span class="ticket-price">$120.000</span></div>
+            </div>
+            <div class="ticket-detail">
+              <div class="detail-row"><span class="detail-label">Servicio</span><span class="detail-val">Tinte raíz + Balayage</span></div>
+              <div class="detail-row"><span class="detail-label">Variante</span><span class="detail-val">Larga</span></div>
+              <div class="detail-row"><span class="detail-label">Precio</span><span class="detail-val mint">$120.000</span></div>
+              <div class="detail-row"><span class="detail-label">Iniciado</span><span class="detail-val">9:15 am</span></div>
+              <div class="ticket-actions">
+                <button class="btn-action btn-mark-ready" onclick="event.stopPropagation()">Listo para pago</button>
+                <button class="btn-action btn-edit-req" onclick="event.stopPropagation();goScreen('ediciones')">Solicitar edición</button>
+              </div>
+            </div>
+          </article>
+          <article class="ticket-card" onclick="toggleTicket(this)" data-status="activo">
+            <div class="ticket-head"><span class="ticket-client">Daniela Ospina</span><span class="ticket-id">#T-2851</span></div>
+            <div class="ticket-body">
+              <div class="ticket-service">Corte + blow dry</div>
+              <div class="ticket-meta"><span class="pill pill-awaiting"><span class="pill-dot"></span>Esp. pago</span><span class="ticket-price">$65.000</span></div>
+            </div>
+            <div class="ticket-detail">
+              <div class="detail-row"><span class="detail-label">Servicio</span><span class="detail-val">Corte + blow dry</span></div>
+              <div class="detail-row"><span class="detail-label">Precio</span><span class="detail-val mint">$65.000</span></div>
+              <div class="ticket-actions">
+                <button class="btn-action btn-edit-req" onclick="event.stopPropagation();goScreen('ediciones')" style="flex:1">Solicitar edición</button>
+              </div>
+            </div>
+          </article>
+          <article class="ticket-card" onclick="toggleTicket(this)" data-status="activo">
+            <div class="ticket-head"><span class="ticket-client">Alejandra Mora</span><span class="ticket-id">#T-2853</span></div>
+            <div class="ticket-body">
+              <div class="ticket-service">Manicure semipermanente</div>
+              <div class="ticket-meta"><span class="pill pill-open"><span class="pill-dot"></span>Registrado</span><span class="ticket-price">$45.000</span></div>
+            </div>
+            <div class="ticket-detail">
+              <div class="detail-row"><span class="detail-label">Servicio</span><span class="detail-val">Manicure semipermanente</span></div>
+              <div class="detail-row"><span class="detail-label">Precio</span><span class="detail-val mint">$45.000</span></div>
+              <div class="ticket-actions">
+                <button class="btn-action btn-mark-ready" onclick="event.stopPropagation()">Listo para pago</button>
+                <button class="btn-action btn-edit-req" onclick="event.stopPropagation();goScreen('ediciones')">Solicitar edición</button>
+              </div>
+            </div>
+          </article>
+          <!-- Closed tickets -->
+          <article class="ticket-card" onclick="toggleTicket(this)" data-status="cerrado">
+            <div class="ticket-head"><span class="ticket-client">Carolina Suárez</span><span class="ticket-id">#T-2844</span></div>
+            <div class="ticket-body">
+              <div class="ticket-service">Tintura color completo</div>
+              <div class="ticket-meta"><span class="pill pill-closed"><span class="pill-dot"></span>Cerrado</span><span class="ticket-price">$95.000</span></div>
+            </div>
+            <div class="ticket-detail">
+              <div class="detail-row"><span class="detail-label">Servicio</span><span class="detail-val">Tintura color</span></div>
+              <div class="detail-row"><span class="detail-label">Precio</span><span class="detail-val mint">$95.000</span></div>
+              <div class="detail-row"><span class="detail-label">Cerrado</span><span class="detail-val">8:50 am</span></div>
+            </div>
+          </article>
+          <article class="ticket-card" onclick="toggleTicket(this)" data-status="cerrado">
+            <div class="ticket-head"><span class="ticket-client">Patricia Gómez</span><span class="ticket-id">#T-2840</span></div>
+            <div class="ticket-body">
+              <div class="ticket-service">Corte clásico</div>
+              <div class="ticket-meta"><span class="pill pill-closed"><span class="pill-dot"></span>Cerrado</span><span class="ticket-price">$45.000</span></div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </div><!-- /screen-tickets -->
+
+    <!-- ════════════════ SCREEN: EDICIONES ════════════════ -->
+    <div id="screen-ediciones" class="screen-wrap" style="display:none">
+      <div class="scroll-area">
+        <div class="status-bar" aria-hidden="true">
+          <span class="time">9:41</span>
+          <div class="status-icons">
+            <svg width="16" height="10" viewBox="0 0 16 10" fill="var(--text-1)"><rect x="0" y="4" width="3" height="6" rx=".8" opacity=".4"/><rect x="4.5" y="2.5" width="3" height="7.5" rx=".8" opacity=".6"/><rect x="9" y=".5" width="3" height="9.5" rx=".8" opacity=".85"/><rect x="13.5" y="0" width="2.5" height="10" rx=".8"/></svg>
+            <svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x=".5" y=".5" width="22" height="11" rx="3.5" stroke="var(--text-1)" stroke-opacity=".35"/><rect x="2" y="2" width="17" height="8" rx="2" fill="var(--text-1)"/><path d="M24 4v4a2 2 0 000-4z" fill="var(--text-1)" opacity=".4"/></svg>
+          </div>
+        </div>
+        <div class="back-header">
+          <button class="back-btn" onclick="goScreen('inicio')" aria-label="Volver">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <span class="back-title">Ediciones</span>
+        </div>
+        <div style="height:12px;"></div>
+        <!-- Summary strip -->
+        <div class="summary-strip" style="margin:0 20px 20px;">
+          <div class="summary-cell"><span class="summary-val amber">1</span><span class="summary-key">Pendiente</span></div>
+          <div class="summary-divider"></div>
+          <div class="summary-cell"><span class="summary-val mint">2</span><span class="summary-key">Aprobadas</span></div>
+          <div class="summary-divider"></div>
+          <div class="summary-cell"><span class="summary-val" style="color:var(--text-3);">1</span><span class="summary-key">Rechazadas</span></div>
+        </div>
+        <!-- Pending -->
+        <div class="section-label"><span>Pendientes</span><span class="count">01</span></div>
+        <div style="padding:0 20px;margin-bottom:20px;" id="ediciones-pending">
+          <div class="req-card" style="border-color:rgba(232,183,101,0.3);border-left:3px solid var(--amber);">
+            <div class="req-card-head">
+              <span class="req-card-client">Valentina Ríos</span>
+              <span class="pill pill-pending"><span class="pill-dot"></span>Pendiente</span>
+            </div>
+            <div class="req-card-body">Ticket #T-2847 · línea 1</div>
+            <div class="req-card-change">
+              <span class="req-change-old">Tinte raíz</span>
+              <span class="req-arrow">→</span>
+              <span class="req-change-new">Tinte completo</span>
+            </div>
+            <div class="req-card-footer">
+              <span class="req-card-time">hace 12 min</span>
+              <span style="font-size:11px;color:var(--text-4);">Aguardando cashier</span>
+            </div>
+          </div>
+        </div>
+        <!-- History -->
+        <div class="section-label"><span>Historial de hoy</span><span class="count">03</span></div>
+        <div style="padding:0 20px;margin-bottom:24px;">
+          <div class="req-card">
+            <div class="req-card-head">
+              <span class="req-card-client">Carolina Suárez</span>
+              <span class="pill pill-approved"><span class="pill-dot"></span>Aprobada</span>
+            </div>
+            <div class="req-card-body">Ticket #T-2844 · línea 1</div>
+            <div class="req-card-change">
+              <span class="req-change-old">Balayage estándar</span>
+              <span class="req-arrow">→</span>
+              <span class="req-change-new">Balayage full</span>
+            </div>
+            <div class="req-card-footer">
+              <span class="req-card-time">8:30 am</span>
+              <span style="font-size:11px;color:var(--mint);">+$35.000</span>
+            </div>
+          </div>
+          <div class="req-card">
+            <div class="req-card-head">
+              <span class="req-card-client">Patricia Gómez</span>
+              <span class="pill pill-approved"><span class="pill-dot"></span>Aprobada</span>
+            </div>
+            <div class="req-card-body">Ticket #T-2840 · línea 1</div>
+            <div class="req-card-change">
+              <span class="req-change-old">Corte clásico corto</span>
+              <span class="req-arrow">→</span>
+              <span class="req-change-new">Corte clásico largo</span>
+            </div>
+            <div class="req-card-footer">
+              <span class="req-card-time">8:05 am</span>
+              <span style="font-size:11px;color:var(--mint);">+$15.000</span>
+            </div>
+          </div>
+          <div class="req-card">
+            <div class="req-card-head">
+              <span class="req-card-client">Lucía Herrera</span>
+              <span class="pill pill-rejected"><span class="pill-dot"></span>Rechazada</span>
+            </div>
+            <div class="req-card-body">Ticket #T-2836 · línea 2</div>
+            <div class="req-card-change">
+              <span class="req-change-old">Tratamiento hidrat.</span>
+              <span class="req-arrow">→</span>
+              <span class="req-change-new">Tratamiento keratina</span>
+            </div>
+            <div class="req-card-footer">
+              <span class="req-card-time">ayer · 6:20 pm</span>
+              <span style="font-size:11px;color:#e87070;">Sin stock</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!-- /screen-ediciones -->
+
+    <!-- ════════════════ SCREEN: PERFIL ════════════════ -->
+    <div id="screen-perfil" class="screen-wrap" style="display:none">
+      <div class="scroll-area">
+        <div class="status-bar" aria-hidden="true">
+          <span class="time">9:41</span>
+          <div class="status-icons">
+            <svg width="16" height="10" viewBox="0 0 16 10" fill="var(--text-1)"><rect x="0" y="4" width="3" height="6" rx=".8" opacity=".4"/><rect x="4.5" y="2.5" width="3" height="7.5" rx=".8" opacity=".6"/><rect x="9" y=".5" width="3" height="9.5" rx=".8" opacity=".85"/><rect x="13.5" y="0" width="2.5" height="10" rx=".8"/></svg>
+            <svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x=".5" y=".5" width="22" height="11" rx="3.5" stroke="var(--text-1)" stroke-opacity=".35"/><rect x="2" y="2" width="17" height="8" rx="2" fill="var(--text-1)"/><path d="M24 4v4a2 2 0 000-4z" fill="var(--text-1)" opacity=".4"/></svg>
+          </div>
+        </div>
+        <div class="back-header">
+          <button class="back-btn" onclick="goScreen('inicio')" aria-label="Volver">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <span class="back-title">Mi perfil</span>
+        </div>
+        <!-- Avatar hero -->
+        <div class="profile-hero">
+          <div class="profile-avatar">M</div>
+          <div class="profile-name">Manuela Restrepo</div>
+          <div class="profile-meta">
+            <span class="profile-role">Estilista</span>
+            <span class="profile-since">Desde Feb 2023</span>
+          </div>
+        </div>
+        <!-- Month stats -->
+        <div class="profile-stats">
+          <div class="profile-stat"><span class="profile-stat-val">42</span><span class="profile-stat-key">Tickets</span></div>
+          <div class="summary-divider"></div>
+          <div class="profile-stat"><span class="profile-stat-val mint">$1.284.500</span><span class="profile-stat-key">Comisiones</span></div>
+          <div class="summary-divider"></div>
+          <div class="profile-stat"><span class="profile-stat-val">30.5%</span><span class="profile-stat-key">% promedio</span></div>
+        </div>
+        <!-- Account section -->
+        <div class="profile-section">
+          <div class="profile-section-title">Cuenta</div>
+          <div class="profile-list">
+            <div class="profile-row">
+              <div class="profile-row-left">
+                <div class="profile-row-icon">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                </div>
+                <div><div class="profile-row-text">Nombre</div><div class="profile-row-sub">Manuela Restrepo</div></div>
+              </div>
+              <div class="profile-row-right"><span class="profile-row-arrow">›</span></div>
+            </div>
+            <div class="profile-row">
+              <div class="profile-row-left">
+                <div class="profile-row-icon">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7L12 13 2 7"/></svg>
+                </div>
+                <div><div class="profile-row-text">Correo</div><div class="profile-row-sub">manuela@befine.co</div></div>
+              </div>
+              <div class="profile-row-right"><span class="profile-row-arrow">›</span></div>
+            </div>
+            <div class="profile-row">
+              <div class="profile-row-left">
+                <div class="profile-row-icon amber-bg">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                </div>
+                <div><div class="profile-row-text">Contraseña</div><div class="profile-row-sub">Actualizar contraseña</div></div>
+              </div>
+              <div class="profile-row-right"><span class="profile-row-arrow">›</span></div>
+            </div>
+          </div>
+        </div>
+        <!-- Change password form -->
+        <div class="profile-section">
+          <div class="profile-section-title">Cambiar contraseña</div>
+          <div class="pw-form">
+            <div class="pw-field">
+              <label class="pw-label" for="pw-current">Contraseña actual</label>
+              <input class="pw-input" id="pw-current" type="password" placeholder="••••••••" />
+            </div>
+            <div class="pw-field">
+              <label class="pw-label" for="pw-new">Nueva contraseña</label>
+              <input class="pw-input" id="pw-new" type="password" placeholder="••••••••" />
+            </div>
+            <div class="pw-field" style="margin-bottom:16px;">
+              <label class="pw-label" for="pw-confirm">Confirmar nueva</label>
+              <input class="pw-input" id="pw-confirm" type="password" placeholder="••••••••" />
+            </div>
+            <button class="pw-submit" onclick="submitPassword(this)">Actualizar contraseña</button>
+          </div>
+        </div>
+        <!-- Earnings quick link -->
+        <div class="profile-section">
+          <div class="profile-section-title">Mis ganancias</div>
+          <div class="profile-list">
+            <div class="profile-row">
+              <div class="profile-row-left">
+                <div class="profile-row-icon mint-bg">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+                </div>
+                <div><div class="profile-row-text">Liquidación del mes</div><div class="profile-row-sub">Abr 2025 · $1.284.500</div></div>
+              </div>
+              <div class="profile-row-right"><span class="profile-row-val mint">Ver →</span></div>
+            </div>
+            <div class="profile-row">
+              <div class="profile-row-left">
+                <div class="profile-row-icon pink-bg">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                </div>
+                <div><div class="profile-row-text">Historial de comisiones</div><div class="profile-row-sub">Últimos 3 meses</div></div>
+              </div>
+              <div class="profile-row-right"><span class="profile-row-arrow">›</span></div>
+            </div>
+          </div>
+        </div>
+        <!-- Logout -->
+        <button class="logout-row" onclick="logoutAnim(this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+          Cerrar sesión
+        </button>
+        <div style="height:24px;"></div>
+      </div>
+    </div><!-- /screen-perfil -->
+
+    <!-- ════════════════ SCREEN: CLOTHIER ════════════════ -->
+    <div id="screen-clothier" class="screen-wrap" style="display:none">
+      <div class="scroll-area">
+        <div class="status-bar" aria-hidden="true">
+          <span class="time">9:41</span>
+          <div class="status-icons">
+            <svg width="16" height="10" viewBox="0 0 16 10" fill="var(--text-1)"><rect x="0" y="4" width="3" height="6" rx=".8" opacity=".4"/><rect x="4.5" y="2.5" width="3" height="7.5" rx=".8" opacity=".6"/><rect x="9" y=".5" width="3" height="9.5" rx=".8" opacity=".85"/><rect x="13.5" y="0" width="2.5" height="10" rx=".8"/></svg>
+            <svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x=".5" y=".5" width="22" height="11" rx="3.5" stroke="var(--text-1)" stroke-opacity=".35"/><rect x="2" y="2" width="17" height="8" rx="2" fill="var(--text-1)"/><path d="M24 4v4a2 2 0 000-4z" fill="var(--text-1)" opacity=".4"/></svg>
+          </div>
+        </div>
+        <div class="back-header">
+          <button class="back-btn" onclick="goScreen('inicio')" aria-label="Volver">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <span class="back-title">Confeccionista</span>
+        </div>
+        <div style="height:12px;"></div>
+        <div class="summary-strip" style="margin:0 20px 20px;">
+          <div class="summary-cell"><span class="summary-val mint">$64.500</span><span class="summary-key">Ganado</span></div>
+          <div class="summary-divider"></div>
+          <div class="summary-cell"><span class="summary-val">5</span><span class="summary-key">Piezas</span></div>
+          <div class="summary-divider"></div>
+          <div class="summary-cell"><span class="summary-val amber">5</span><span class="summary-key">Pendientes</span></div>
+        </div>
+        <div style="padding:0 20px;margin-bottom:6px;">
+          <div class="progress-bar-wrap" style="padding:0;margin-bottom:0;">
+            <div class="progress-bar-meta"><span>Progreso del día</span><span id="progress-pct">62%</span></div>
+            <div class="progress-bar-track"><div class="progress-bar-fill" id="progress-fill" style="width:0%"></div></div>
+          </div>
+        </div>
+        <div style="height:18px;"></div>
+        <div class="section-label"><span>Mis lotes asignados</span><span class="count">02</span></div>
+        <div style="padding:0 20px;margin-bottom:24px;">
+          <div class="batch-card">
+            <div class="batch-head">
+              <div class="batch-num">#14</div>
+              <div class="batch-info">
+                <div class="batch-title">Blusas manga corta</div>
+                <div class="batch-subtitle">Moda Alegre S.A.S · 5 piezas</div>
+              </div>
+              <div class="batch-earnings">$37.500</div>
+            </div>
+            <div class="piece-list">
+              <div class="piece-row"><div class="piece-check done"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="var(--mint)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="piece-name done">Pieza #01 — Talla S</span><span class="piece-rate done">$7.500</span></div>
+              <div class="piece-row"><div class="piece-check done"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="var(--mint)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="piece-name done">Pieza #02 — Talla M</span><span class="piece-rate done">$7.500</span></div>
+              <div class="piece-row"><div class="piece-check" onclick="checkPiece(this,event)"></div><span class="piece-name" id="pn-14-3">Pieza #03 — Talla M</span><span class="piece-rate" id="pr-14-3">$7.500</span></div>
+              <div class="piece-row"><div class="piece-check" onclick="checkPiece(this,event)"></div><span class="piece-name" id="pn-14-4">Pieza #04 — Talla L</span><span class="piece-rate" id="pr-14-4">$7.500</span></div>
+              <div class="piece-row"><div class="piece-check" onclick="checkPiece(this,event)"></div><span class="piece-name" id="pn-14-5">Pieza #05 — Talla XL</span><span class="piece-rate" id="pr-14-5">$7.500</span></div>
+            </div>
+            <div class="progress-bar-wrap">
+              <div class="progress-bar-meta"><span>2 / 5 completadas</span><span>40%</span></div>
+              <div class="progress-bar-track"><div class="progress-bar-fill" style="width:40%"></div></div>
+            </div>
+          </div>
+          <div class="batch-card">
+            <div class="batch-head">
+              <div class="batch-num">#15</div>
+              <div class="batch-info">
+                <div class="batch-title">Pantalones slim</div>
+                <div class="batch-subtitle">Urban Flow · 3 piezas</div>
+              </div>
+              <div class="batch-earnings">$27.000</div>
+            </div>
+            <div class="piece-list">
+              <div class="piece-row"><div class="piece-check done"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="var(--mint)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="piece-name done">Pieza #01 — 32×30</span><span class="piece-rate done">$9.000</span></div>
+              <div class="piece-row"><div class="piece-check done"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="var(--mint)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="piece-name done">Pieza #02 — 34×30</span><span class="piece-rate done">$9.000</span></div>
+              <div class="piece-row"><div class="piece-check done"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="var(--mint)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="piece-name done">Pieza #03 — 36×32</span><span class="piece-rate done">$9.000</span></div>
+            </div>
+            <div class="progress-bar-wrap">
+              <div class="progress-bar-meta"><span>3 / 3 completadas</span><span>100%</span></div>
+              <div class="progress-bar-track"><div class="progress-bar-fill" style="width:100%"></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="section-label"><span>Sin asignar · Reclamar</span><span class="count">02</span></div>
+        <div style="padding:0 20px;margin-bottom:24px;">
+          <div class="claim-card" onclick="claimPiece(this)">
+            <div class="claim-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></div>
+            <div class="claim-info"><div class="claim-title">Camiseta básica — Lote #16</div><div class="claim-sub">3 piezas · $6.000 c/u</div></div>
+            <span class="claim-action">Reclamar →</span>
+          </div>
+          <div class="claim-card" onclick="claimPiece(this)">
+            <div class="claim-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></div>
+            <div class="claim-info"><div class="claim-title">Vestido casual — Lote #17</div><div class="claim-sub">2 piezas · $12.000 c/u</div></div>
+            <span class="claim-action">Reclamar →</span>
+          </div>
+        </div>
+      </div>
+    </div><!-- /screen-clothier -->
+
+    <!-- ════════════════ BOTTOM NAV ════════════════ -->
+    <nav class="bottom-nav" aria-label="Navegación principal">
+      <button class="nav-item active" id="nav-inicio" onclick="goScreen('inicio')" aria-label="Inicio">
+        <div class="nav-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M9 22V12h6v10"/></svg>
+        </div>
+        <span class="nav-label">Inicio</span>
+      </button>
+      <button class="nav-item" id="nav-tickets" onclick="goScreen('tickets')" aria-label="Tickets" style="position:relative">
+        <div class="nav-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="nav-tickets-icon"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M9 7h6M9 11h6M9 15h4"/></svg>
+        </div>
+        <span class="nav-badge" aria-label="3">3</span>
+        <span class="nav-label">Tickets</span>
+      </button>
+      <button class="nav-item" id="nav-ediciones" onclick="goScreen('ediciones')" aria-label="Ediciones" style="position:relative">
+        <div class="nav-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="nav-ediciones-icon"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </div>
+        <span class="nav-badge amber-badge" aria-label="1">1</span>
+        <span class="nav-label">Ediciones</span>
+      </button>
+      <button class="nav-item" id="nav-perfil" onclick="goScreen('perfil')" aria-label="Perfil">
+        <div class="nav-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="nav-perfil-icon"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        </div>
+        <span class="nav-label">Perfil</span>
+      </button>
+    </nav>
+
+  </div><!-- /phone -->
+
+</div><!-- /demo-frame -->
+
+<div class="demo-label">
+  <span class="demo-dot"></span>
+  <span id="demo-label-text">Inicio · Estilista</span>
+</div>
+
+<script>
+  // ── CURRENT SCREEN ──────────────────────────────────────────────────────────
+  let currentScreen = 'inicio';
+
+  const SCREEN_LABELS = {
+    inicio: 'Inicio · Estilista',
+    tickets: 'Tickets · Mis servicios de hoy',
+    ediciones: 'Ediciones · Mis solicitudes',
+    perfil: 'Mi perfil',
+    clothier: 'Confeccionista · Mis lotes',
+  };
+
+  const NAV_SCREENS = ['inicio','tickets','ediciones','perfil'];
+
+  function goScreen(name) {
+    // Hide all
+    document.querySelectorAll('.screen-wrap').forEach(s => s.style.display = 'none');
+    // Show target
+    document.getElementById('screen-' + name).style.display = '';
+    // Scroll to top
+    const sa = document.querySelector('#screen-' + name + ' .scroll-area');
+    if (sa) sa.scrollTop = 0;
+    // Update bottom nav
+    NAV_SCREENS.forEach(s => {
+      const btn = document.getElementById('nav-' + s);
+      if (!btn) return;
+      btn.classList.toggle('active', s === name);
+      // swap icon stroke
+      const icon = document.getElementById('nav-' + s + '-icon');
+      if (icon) icon.setAttribute('stroke', s === name ? 'var(--pink)' : 'var(--text-3)');
+    });
+    // Home icon is inline, handle separately
+    const homeBtn = document.getElementById('nav-inicio');
+    if (homeBtn) {
+      const homeIcon = homeBtn.querySelector('svg');
+      if (homeIcon) homeIcon.setAttribute('stroke', name === 'inicio' ? 'var(--pink)' : 'var(--text-3)');
+    }
+    // Update sidebar nav dots
+    document.querySelectorAll('.screen-nav-item').forEach(item => {
+      item.classList.toggle('active', item.id === 'snav-' + name);
+    });
+    // Update demo label
+    document.getElementById('demo-label-text').textContent = SCREEN_LABELS[name] || name;
+    // Clothier: animate progress bar
+    if (name === 'clothier') {
+      setTimeout(() => {
+        const fill = document.getElementById('progress-fill');
+        if (fill) { fill.style.width = '0%'; setTimeout(() => { fill.style.width = '62%'; }, 80); }
+      }, 50);
+    }
+    currentScreen = name;
+  }
+
+  // ── THEME ───────────────────────────────────────────────────────────────────
+  function setTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    document.getElementById('btn-dark').classList.toggle('active', theme === 'dark');
+    document.getElementById('btn-light').classList.toggle('active', theme === 'light');
+  }
+
+  // ── TICKET EXPAND ───────────────────────────────────────────────────────────
+  function toggleTicket(card) {
+    const detail = card.querySelector('.ticket-detail');
+    if (!detail) return;
+    const isOpen = detail.classList.contains('open');
+    // Close all in same list
+    card.closest('[style*="padding"]')?.querySelectorAll('.ticket-detail.open').forEach(d => d.classList.remove('open'));
+    if (!isOpen) detail.classList.add('open');
+  }
+
+  // ── FILTER CHIPS ────────────────────────────────────────────────────────────
+  function filterTickets(btn, filter) {
+    document.querySelectorAll('#screen-tickets .filter-chip').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    const cards = document.querySelectorAll('#tickets-list .ticket-card');
+    cards.forEach(card => {
+      const status = card.getAttribute('data-status');
+      if (filter === 'todos' || filter === 'hoy') {
+        card.style.display = '';
+      } else if (filter === 'activos') {
+        card.style.display = status === 'activo' ? '' : 'none';
+      } else if (filter === 'cerrados') {
+        card.style.display = status === 'cerrado' ? '' : 'none';
+      }
+    });
+  }
+
+  // ── EDIT REQUEST — HOME ─────────────────────────────────────────────────────
+  function approveEditHome(btn) {
+    const card = btn.closest('.edit-card');
+    card.style.transition = 'all 0.3s ease';
+    card.style.opacity = '0';
+    card.style.transform = 'translateX(20px)';
+    setTimeout(() => {
+      card.parentElement.style.display = 'none';
+      // update badge
+      const badge = document.querySelector('#nav-ediciones .nav-badge');
+      if (badge) badge.style.display = 'none';
+    }, 300);
+  }
+  function rejectEditHome(btn) {
+    const card = btn.closest('.edit-card');
+    card.style.transition = 'all 0.3s ease';
+    card.style.opacity = '0';
+    card.style.transform = 'translateX(-20px)';
+    setTimeout(() => { card.parentElement.style.display = 'none'; }, 300);
+  }
+
+  // ── PIECE CHECK ─────────────────────────────────────────────────────────────
+  function checkPiece(checkEl, e) {
+    e.stopPropagation();
+    if (checkEl.classList.contains('done')) return;
+    checkEl.classList.add('done');
+    checkEl.innerHTML = '<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="var(--mint)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    const row = checkEl.closest('.piece-row');
+    const name = row.querySelector('.piece-name');
+    const rate = row.querySelector('.piece-rate');
+    if (name) { name.classList.add('done'); }
+    if (rate) { rate.classList.add('done'); }
+    // update global progress roughly
+    const fill = document.getElementById('progress-fill');
+    const pct = document.getElementById('progress-pct');
+    if (fill && pct) {
+      const cur = parseFloat(fill.style.width) || 62;
+      const next = Math.min(100, cur + 6);
+      fill.style.width = next + '%';
+      pct.textContent = Math.round(next) + '%';
+    }
+  }
+
+  // ── CLAIM ───────────────────────────────────────────────────────────────────
+  function claimPiece(card) {
+    card.style.transition = 'all 0.3s ease';
+    card.style.borderColor = 'rgba(124,209,179,0.5)';
+    card.style.background = 'rgba(124,209,179,0.06)';
+    const action = card.querySelector('.claim-action');
+    if (action) { action.textContent = '✓ Reclamado'; action.style.color = 'var(--mint)'; }
+    card.style.pointerEvents = 'none';
+  }
+
+  // ── PASSWORD SUBMIT ─────────────────────────────────────────────────────────
+  function submitPassword(btn) {
+    const orig = btn.textContent;
+    btn.textContent = 'Actualizando…';
+    btn.style.opacity = '0.7';
+    btn.disabled = true;
+    setTimeout(() => {
+      btn.textContent = '✓ Contraseña actualizada';
+      btn.style.background = 'var(--mint)';
+      btn.style.opacity = '1';
+      setTimeout(() => {
+        btn.textContent = orig;
+        btn.style.background = '';
+        btn.disabled = false;
+        document.querySelectorAll('.pw-input').forEach(i => i.value = '');
+      }, 2000);
+    }, 1200);
+  }
+
+  // ── LOGOUT ANIMATION ────────────────────────────────────────────────────────
+  function logoutAnim(btn) {
+    btn.textContent = 'Cerrando sesión…';
+    btn.style.opacity = '0.6';
+    btn.disabled = true;
+  }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Befine · Nuevo lote — Admin / Secretaria</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..900,0..100,0..1;1,9..144,300..900,0..100,0..1&family=Inter+Tight:ital,wght@0,300..700;1,300..700&family=JetBrains+Mono:wght@300..600&display=swap" rel="stylesheet" />
+  <style>
+    :root,[data-theme="dark"]{
+      --canvas:#010101;--surface-1:#0a0a0a;--surface-2:#141414;--surface-3:#1c1c1c;
+      --text-1:#f2ece1;--text-2:#b8b0a3;--text-3:#807870;--text-4:#4a4640;
+      --rule:#2a2724;--rule-strong:#4a4640;--rule-soft:#1b1917;
+      --pink:#e9408e;--pink-soft:#f06aa5;
+      --pink-halo:rgba(233,64,142,.18);--pink-wash:rgba(233,64,142,.08);
+      --mint:#7cd1b3;--mint-dim:rgba(124,209,179,.12);
+      --amber:#e8b765;--amber-dim:rgba(232,183,101,.12);
+      --font-display:"Fraunces","Times New Roman",serif;
+      --font-body:"Inter Tight",ui-sans-serif,system-ui,sans-serif;
+      --font-mono:"JetBrains Mono",ui-monospace,monospace;
+    }
+    [data-theme="light"]{
+      --canvas:#f7f2ea;--surface-1:#fdfaf3;--surface-2:#efe8db;--surface-3:#e8e0ce;
+      --text-1:#0f0d0a;--text-2:#534b40;--text-3:#8a8073;--text-4:#b8ad9c;
+      --rule:#d9cfbb;--rule-strong:#8a8073;--rule-soft:#e8dfca;
+      --pink:#d93079;--pink-soft:#e9408e;
+      --pink-halo:rgba(217,48,121,.14);--pink-wash:rgba(217,48,121,.06);
+      --mint:#3f9a78;--mint-dim:rgba(63,154,120,.10);
+      --amber:#b8843a;--amber-dim:rgba(184,132,58,.10);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    html,body{min-height:100%;background:var(--canvas);color:var(--text-1);font-family:var(--font-body);-webkit-font-smoothing:antialiased;}
+    body::before{content:"";position:fixed;inset:0;z-index:9999;pointer-events:none;opacity:.028;mix-blend-mode:screen;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)'/%3E%3C/svg%3E");}
+
+    .page{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:32px 20px;position:relative;z-index:1;}
+
+    .modal{width:100%;max-width:500px;background:var(--surface-1);border:1px solid var(--rule);border-radius:16px;
+      box-shadow:0 2px 0 rgba(0,0,0,.4),0 32px 64px -24px rgba(0,0,0,.8);
+      animation:pop .35s cubic-bezier(.22,1,.36,1);}
+    @keyframes pop{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:none;}}
+
+    .modal-header{display:flex;align-items:center;padding:20px 24px 16px;border-bottom:1px solid var(--rule);gap:12px;}
+    .modal-title{font-family:var(--font-display);font-size:1.15rem;font-weight:700;color:var(--text-1);font-style:italic;flex:1;}
+    .close-btn{width:30px;height:30px;border-radius:7px;border:1px solid var(--rule);background:transparent;
+      display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-3);transition:all .12s;}
+    .close-btn:hover{border-color:var(--rule-strong);color:var(--text-1);}
+    .close-btn svg{width:14px;height:14px;}
+    .modal-body{padding:22px 24px;}
+    .modal-footer{padding:14px 24px;border-top:1px solid var(--rule);display:flex;gap:10px;}
+
+    .field{margin-bottom:16px;}
+    .field label{display:block;font-size:.73rem;font-weight:600;color:var(--text-2);letter-spacing:.04em;margin-bottom:6px;}
+    .field input,.field select,.field textarea{display:block;width:100%;padding:9px 12px;background:var(--surface-2);
+      border:1px solid var(--rule);border-radius:8px;color:var(--text-1);font-family:var(--font-body);
+      font-size:.83rem;outline:none;transition:border-color .15s;resize:none;}
+    .field input::placeholder,.field textarea::placeholder{color:var(--text-4);}
+    .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--pink);}
+    .field select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23807870' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat:no-repeat;background-position:right 10px center;padding-right:30px;}
+    .field-row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+    .field-hint{font-size:.7rem;color:var(--text-4);margin-top:5px;}
+
+    /* client search */
+    .search-field{position:relative;}
+    .search-field svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:var(--text-4);}
+    .search-field input{padding-left:34px;}
+    .client-dropdown{background:var(--surface-2);border:1px solid var(--rule);border-radius:8px;margin-top:4px;overflow:hidden;}
+    .cd-item{padding:9px 12px;cursor:pointer;transition:background .12s;border-top:1px solid var(--rule-soft);}
+    .cd-item:first-child{border-top:none;}
+    .cd-item:hover,.cd-item.sel{background:var(--pink-wash);}
+    .cd-name{font-size:.82rem;font-weight:500;color:var(--text-1);}
+    .cd-meta{font-size:.7rem;color:var(--text-3);margin-top:1px;}
+
+    /* clothier multi-select */
+    .clothier-list{display:flex;flex-direction:column;gap:6px;}
+    .clothier-row{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;
+      border:1.5px solid var(--rule);background:var(--surface-2);cursor:pointer;transition:all .15s;}
+    .clothier-row:hover{border-color:var(--rule-strong);}
+    .clothier-row.selected{border-color:var(--amber);background:var(--amber-dim);}
+    .cr-check{width:18px;height:18px;border-radius:4px;border:1.5px solid var(--rule);flex-shrink:0;
+      display:flex;align-items:center;justify-content:center;transition:all .15s;}
+    .clothier-row.selected .cr-check{background:var(--amber);border-color:var(--amber);}
+    .clothier-row.selected .cr-check svg{opacity:1;}
+    .cr-check svg{opacity:0;transition:opacity .15s;width:11px;height:11px;}
+    .cr-av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+      font-family:var(--font-display);font-size:.7rem;font-weight:700;color:#fff;flex-shrink:0;background:var(--surface-3);}
+    .clothier-row.selected .cr-av{background:var(--amber);}
+    .cr-name{font-size:.82rem;font-weight:500;color:var(--text-2);}
+    .clothier-row.selected .cr-name{color:var(--text-1);}
+    .cr-rate{font-family:var(--font-mono);font-size:.72rem;color:var(--text-4);margin-left:auto;}
+    .clothier-row.selected .cr-rate{color:var(--amber);}
+
+    /* piece count input */
+    .piece-count-row{display:flex;align-items:center;gap:10px;}
+    .counter-btn{width:34px;height:34px;border-radius:8px;border:1px solid var(--rule);background:var(--surface-2);
+      color:var(--text-2);font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;
+      transition:all .15s;flex-shrink:0;}
+    .counter-btn:hover{border-color:var(--rule-strong);color:var(--text-1);}
+    .piece-count-row input{flex:1;text-align:center;font-family:var(--font-mono);font-size:1rem;font-weight:600;}
+
+    .btn-ghost{flex:1;padding:10px;border-radius:8px;border:1px solid var(--rule);background:transparent;
+      color:var(--text-2);font-family:var(--font-body);font-size:.82rem;font-weight:600;cursor:pointer;transition:all .15s;}
+    .btn-ghost:hover{border-color:var(--rule-strong);color:var(--text-1);}
+    .btn-save{flex:2;padding:10px;border-radius:8px;border:none;background:var(--pink);color:#fff;
+      font-family:var(--font-body);font-size:.82rem;font-weight:600;cursor:pointer;transition:background .15s;}
+    .btn-save:hover{background:var(--pink-soft);}
+
+    .theme-btn{position:fixed;bottom:16px;right:16px;z-index:100;background:var(--surface-2);border:1px solid var(--rule);
+      border-radius:8px;padding:8px 10px;cursor:pointer;color:var(--text-3);font-size:.72rem;font-family:var(--font-body);
+      display:flex;align-items:center;gap:6px;}
+    .theme-btn:hover{color:var(--text-1);}
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title">Nuevo lote</span>
+        <button class="close-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="field">
+          <label>Cliente *</label>
+          <div class="search-field">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input id="clientInput" placeholder="Buscar cliente…" oninput="showClientDrop()" onfocus="showClientDrop()" />
+          </div>
+          <div id="clientDrop" class="client-dropdown" style="display:none;">
+            <div class="cd-item" onclick="pickClient('Ana Cárdenas','321 777 4455')"><div class="cd-name">Ana Cárdenas</div><div class="cd-meta">321 777 4455</div></div>
+            <div class="cd-item sel" onclick="pickClient('Luis Montoya','312 999 3321')"><div class="cd-name">Luis Montoya</div><div class="cd-meta">312 999 3321 · Empresarial</div></div>
+            <div class="cd-item" onclick="pickClient('Sofía Ruiz','314 333 8877')"><div class="cd-name">Sofía Ruiz</div><div class="cd-meta">314 333 8877</div></div>
+          </div>
+        </div>
+
+        <div class="field-row-2">
+          <div class="field">
+            <label>Tipo de tela *</label>
+            <select>
+              <option value="">Seleccionar…</option>
+              <option selected>Denim</option>
+              <option>Lino</option>
+              <option>Algodón</option>
+              <option>Seda</option>
+              <option>Poliéster</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Prenda *</label>
+            <select>
+              <option value="">Seleccionar…</option>
+              <option selected>Pantalón</option>
+              <option>Blusa</option>
+              <option>Vestido</option>
+              <option>Falda</option>
+              <option>Chaqueta</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Cantidad de piezas *</label>
+          <div class="piece-count-row">
+            <button class="counter-btn" onclick="changeCount(-1)">−</button>
+            <input type="number" id="pieceCount" value="12" min="1" max="500" />
+            <button class="counter-btn" onclick="changeCount(1)">+</button>
+          </div>
+          <div class="field-hint">Cada pieza puede ser reclamada y completada individualmente por el confeccionista.</div>
+        </div>
+
+        <div class="field">
+          <label>Descripción adicional <span style="font-weight:400;color:var(--text-4)">(opcional)</span></label>
+          <textarea rows="2" placeholder="Ej: Pantalones con cierre lateral, talla S-M-L…"></textarea>
+        </div>
+
+        <div class="field">
+          <label>Asignar confeccionistas</label>
+          <div class="clothier-list">
+            <div class="clothier-row selected" onclick="this.classList.toggle('selected')">
+              <div class="cr-check"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></div>
+              <div class="cr-av" style="background:#a78bfa">LV</div>
+              <div class="cr-name">Luis Vargas</div>
+              <div class="cr-rate">$8.500/pieza</div>
+            </div>
+            <div class="clothier-row" onclick="this.classList.toggle('selected')">
+              <div class="cr-check"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></div>
+              <div class="cr-av">CR</div>
+              <div class="cr-name">Claudia Ríos</div>
+              <div class="cr-rate">$9.000/pieza</div>
+            </div>
+            <div class="clothier-row" onclick="this.classList.toggle('selected')">
+              <div class="cr-check"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></div>
+              <div class="cr-av">HM</div>
+              <div class="cr-name">Héctor Mora</div>
+              <div class="cr-rate">$8.000/pieza</div>
+            </div>
+          </div>
+          <div class="field-hint">Si no asignas confeccionistas, cualquier confeccionista activo podrá reclamar piezas.</div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-ghost">Cancelar</button>
+        <button class="btn-save">Crear lote</button>
+      </div>
+    </div>
+  </div>
+
+  <button class="theme-btn" onclick="document.documentElement.dataset.theme=document.documentElement.dataset.theme==='dark'?'light':'dark'">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2"/></svg>
+    Tema
+  </button>
+
+  <script>
+    function showClientDrop(){document.getElementById('clientDrop').style.display='block';}
+    function pickClient(name,meta){
+      document.getElementById('clientInput').value=name;
+      document.getElementById('clientDrop').style.display='none';
+    }
+    function changeCount(delta){
+      const inp=document.getElementById('pieceCount');
+      inp.value=Math.max(1,parseInt(inp.value||1)+delta);
+    }
+    document.addEventListener('click',e=>{
+      if(!e.target.closest('.search-field')&&!e.target.closest('.client-dropdown'))
+        document.getElementById('clientDrop').style.display='none';
+    });
+  </script>
+</body>
+</html>

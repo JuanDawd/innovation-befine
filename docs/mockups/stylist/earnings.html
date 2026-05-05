@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Befine · Mis ganancias — Estilista / Secretaria</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..900,0..100,0..1;1,9..144,300..900,0..100,0..1&family=Inter+Tight:ital,wght@0,300..700;1,300..700&family=JetBrains+Mono:wght@300..600&display=swap" rel="stylesheet" />
+  <style>
+    :root,[data-theme="dark"]{
+      --canvas:#010101;--surface-1:#0a0a0a;--surface-2:#141414;--surface-3:#1c1c1c;
+      --text-1:#f2ece1;--text-2:#b8b0a3;--text-3:#807870;--text-4:#4a4640;
+      --rule:#2a2724;--rule-strong:#4a4640;--rule-soft:#1b1917;
+      --pink:#e9408e;--pink-soft:#f06aa5;--pink-deep:#b82a6c;
+      --pink-halo:rgba(233,64,142,.18);--pink-wash:rgba(233,64,142,.08);
+      --mint:#7cd1b3;--mint-dim:rgba(124,209,179,.12);
+      --amber:#e8b765;--amber-dim:rgba(232,183,101,.12);
+      --font-display:"Fraunces","Times New Roman",serif;
+      --font-body:"Inter Tight",ui-sans-serif,system-ui,sans-serif;
+      --font-mono:"JetBrains Mono",ui-monospace,monospace;
+    }
+    [data-theme="light"]{
+      --canvas:#f7f2ea;--surface-1:#fdfaf3;--surface-2:#efe8db;--surface-3:#e8e0ce;
+      --text-1:#0f0d0a;--text-2:#534b40;--text-3:#8a8073;--text-4:#b8ad9c;
+      --rule:#d9cfbb;--rule-strong:#8a8073;--rule-soft:#e8dfca;
+      --pink:#d93079;--pink-soft:#e9408e;--pink-deep:#a8225a;
+      --pink-halo:rgba(217,48,121,.14);--pink-wash:rgba(217,48,121,.06);
+      --mint:#3f9a78;--mint-dim:rgba(63,154,120,.10);
+      --amber:#b8843a;--amber-dim:rgba(184,132,58,.10);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    html,body{height:100%;background:var(--canvas);color:var(--text-1);font-family:var(--font-body);-webkit-font-smoothing:antialiased;}
+    body::before{content:"";position:fixed;inset:0;z-index:9999;pointer-events:none;opacity:.028;mix-blend-mode:screen;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)'/%3E%3C/svg%3E");}
+    body::after{content:"";position:fixed;top:-200px;left:-160px;width:600px;height:600px;border-radius:50%;
+      background:radial-gradient(circle,var(--pink-halo) 0%,transparent 65%);pointer-events:none;z-index:0;
+      animation:bloom 20s ease-in-out infinite alternate;}
+    @keyframes bloom{from{transform:scale(1);}to{transform:scale(1.12) translate(20px,12px);}}
+
+    /* demo frame */
+    .demo{display:flex;align-items:flex-start;justify-content:center;gap:60px;min-height:100vh;padding:40px 24px;position:relative;z-index:1;}
+
+    /* role toggle */
+    .role-bar{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:200;
+      display:flex;align-items:center;gap:8px;background:var(--surface-2);border:1px solid var(--rule);
+      border-radius:99px;padding:5px 10px;}
+    .role-pill{padding:4px 12px;border-radius:99px;border:1px solid transparent;background:transparent;
+      font-size:.72rem;font-family:var(--font-body);color:var(--text-3);cursor:pointer;transition:all .15s;}
+    .role-pill.active{background:var(--pink-wash);border-color:rgba(233,64,142,.3);color:var(--pink);}
+
+    /* phone shell */
+    .phone{width:390px;min-height:844px;background:var(--canvas);border:1.5px solid var(--rule);border-radius:48px;
+      overflow:hidden;position:relative;flex-shrink:0;
+      box-shadow:0 0 0 6px rgba(0,0,0,.8),0 0 0 8px var(--rule),0 40px 100px -20px rgba(0,0,0,.9),0 0 60px -10px var(--pink-halo);}
+    .island{position:absolute;top:14px;left:50%;transform:translateX(-50%);
+      width:120px;height:34px;background:#000;border-radius:20px;z-index:20;}
+    .status-bar{display:flex;align-items:center;justify-content:space-between;
+      padding:56px 28px 8px;font-size:12px;font-weight:600;color:var(--text-3);}
+    .status-bar .time{font-size:15px;font-weight:700;color:var(--text-1);}
+
+    .scroll-area{overflow-y:auto;height:calc(844px - 34px - 78px);padding-bottom:24px;scrollbar-width:none;}
+    .scroll-area::-webkit-scrollbar{display:none;}
+
+    /* header */
+    .back-header{display:flex;align-items:center;gap:12px;padding:16px 20px 0;}
+    .back-btn{width:32px;height:32px;border-radius:10px;border:1px solid var(--rule);background:var(--surface-1);
+      display:flex;align-items:center;justify-content:center;color:var(--text-2);flex-shrink:0;text-decoration:none;}
+    .back-title{font-family:var(--font-display);font-size:20px;font-weight:700;letter-spacing:-.02em;color:var(--text-1);font-style:italic;}
+
+    /* hero total */
+    .earnings-hero{margin:20px 20px 0;background:var(--surface-1);border:1px solid var(--rule);border-radius:16px;padding:20px;
+      position:relative;overflow:hidden;}
+    .earnings-hero::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(to right,var(--pink),var(--pink-soft));}
+    .eh-period{font-size:.68rem;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--text-4);margin-bottom:6px;}
+    .eh-amount{font-family:var(--font-display);font-size:2.4rem;font-weight:700;color:var(--mint);letter-spacing:-.02em;line-height:1;font-style:italic;}
+    .eh-sub{font-size:.72rem;color:var(--text-3);margin-top:6px;}
+    .eh-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px;}
+    .eh-stat{background:var(--surface-2);border-radius:8px;padding:10px 12px;}
+    .eh-stat-val{font-family:var(--font-mono);font-size:.95rem;font-weight:600;color:var(--text-1);}
+    .eh-stat-val.amber{color:var(--amber);}
+    .eh-stat-label{font-size:.65rem;color:var(--text-4);letter-spacing:.06em;text-transform:uppercase;margin-top:3px;}
+
+    /* period tabs */
+    .period-tabs{display:flex;gap:0;margin:16px 20px 0;background:var(--surface-2);border:1px solid var(--rule);border-radius:10px;overflow:hidden;}
+    .pt-tab{flex:1;padding:9px;border:none;background:transparent;font-family:var(--font-body);font-size:.75rem;
+      color:var(--text-3);cursor:pointer;transition:all .15s;text-align:center;}
+    .pt-tab.active{background:var(--surface-3);color:var(--text-1);}
+
+    /* section label */
+    .section-label{display:flex;align-items:center;gap:10px;padding:0 20px;margin:20px 0 10px;}
+    .section-label::before{content:"";display:block;width:16px;height:1px;background:var(--pink);}
+    .section-label span{font-size:9px;font-weight:600;letter-spacing:.24em;text-transform:uppercase;color:var(--pink);}
+    .section-label .count{margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--text-4);}
+
+    /* ticket earnings row (commission) */
+    .earn-card{margin:0 20px 6px;background:var(--surface-1);border:1px solid var(--rule);border-radius:10px;padding:12px 14px;}
+    .ec-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
+    .ec-ticket{font-family:var(--font-mono);font-size:.72rem;color:var(--text-4);}
+    .ec-earn{font-family:var(--font-mono);font-size:.9rem;font-weight:600;color:var(--mint);}
+    .ec-client{font-size:.8rem;font-weight:500;color:var(--text-1);}
+    .ec-services{font-size:.72rem;color:var(--text-3);margin-top:2px;}
+    .ec-meta{display:flex;gap:8px;margin-top:6px;}
+    .ec-meta-item{font-size:.68rem;color:var(--text-4);font-family:var(--font-mono);}
+
+    /* day earnings row (secretary/daily rate) */
+    .day-earn-card{margin:0 20px 6px;display:flex;align-items:center;gap:12px;
+      background:var(--surface-1);border:1px solid var(--rule);border-radius:10px;padding:12px 14px;}
+    .dec-date{font-family:var(--font-mono);font-size:.72rem;color:var(--text-3);flex-shrink:0;min-width:64px;}
+    .dec-info{flex:1;}
+    .dec-label{font-size:.8rem;color:var(--text-2);}
+    .dec-sub{font-size:.7rem;color:var(--text-4);margin-top:1px;}
+    .dec-amount{font-family:var(--font-mono);font-size:.88rem;font-weight:600;color:var(--mint);}
+
+    /* payout history */
+    .payout-item{margin:0 20px 6px;background:var(--surface-2);border:1px solid var(--rule);border-radius:10px;
+      padding:11px 14px;display:flex;align-items:center;gap:12px;}
+    .pi-icon{width:30px;height:30px;border-radius:8px;background:var(--mint-dim);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .pi-icon svg{width:14px;height:14px;color:var(--mint);}
+    .pi-info{flex:1;}
+    .pi-label{font-size:.8rem;font-weight:500;color:var(--text-1);}
+    .pi-meta{font-size:.7rem;color:var(--text-3);margin-top:1px;}
+    .pi-amount{font-family:var(--font-mono);font-size:.88rem;color:var(--mint);}
+
+    /* bottom nav */
+    .bottom-nav{position:absolute;bottom:0;left:0;right:0;height:78px;background:var(--canvas);
+      border-top:1px solid var(--rule);display:flex;align-items:center;justify-content:space-around;padding:0 10px 10px;}
+    .bn-item{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;cursor:pointer;
+      font-size:.62rem;color:var(--text-4);transition:color .15s;}
+    .bn-item.active{color:var(--pink);}
+    .bn-item svg{width:20px;height:20px;}
+    .bn-dot{width:4px;height:4px;border-radius:50%;background:var(--pink);margin-top:-2px;}
+
+    .theme-btn-fixed{position:fixed;bottom:16px;right:16px;z-index:300;background:var(--surface-2);border:1px solid var(--rule);
+      border-radius:8px;padding:8px 10px;cursor:pointer;color:var(--text-3);font-size:.72rem;font-family:var(--font-body);
+      display:flex;align-items:center;gap:6px;}
+  </style>
+</head>
+<body>
+  <div class="role-bar">
+    <button class="role-pill active" onclick="setRole('stylist',this)">Estilista (comisión)</button>
+    <button class="role-pill" onclick="setRole('secretary',this)">Secretaria (diaria)</button>
+  </div>
+
+  <div class="demo">
+    <div class="phone">
+      <div class="island"></div>
+      <div class="status-bar">
+        <span class="time">9:41</span>
+        <div style="display:flex;gap:5px;align-items:center;">
+          <svg width="15" height="11" viewBox="0 0 15 11" fill="currentColor"><rect x="0" y="4" width="3" height="7" rx="0.5"/><rect x="4" y="2" width="3" height="9" rx="0.5"/><rect x="8" y="0" width="3" height="11" rx="0.5"/><rect x="12" y="0" width="3" height="11" rx="0.5" opacity=".3"/></svg>
+          <svg width="14" height="10" viewBox="0 0 14 10" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M0 3.5C2.5 1 11.5 1 14 3.5M2.5 5.5C4.5 3.5 9.5 3.5 11.5 5.5M5 7.5C6 6.5 8 6.5 9 7.5"/><circle cx="7" cy="9.5" r="0.8" fill="currentColor"/></svg>
+          <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x="0.5" y="0.5" width="21" height="11" rx="3.5" stroke="currentColor" opacity=".35"/><rect x="2" y="2" width="16" height="8" rx="2" fill="currentColor"/><path d="M23 4v4a2 2 0 0 0 0-4z" fill="currentColor" opacity=".4"/></svg>
+        </div>
+      </div>
+
+      <div class="scroll-area" id="scrollArea">
+        <div class="back-header">
+          <a href="../../befine-employee-portal.html" class="back-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          </a>
+          <span class="back-title" id="pageTitle">Mis ganancias</span>
+        </div>
+
+        <div class="earnings-hero">
+          <div class="eh-period" id="heroPeriod">Quincena 1–15 mayo 2026</div>
+          <div class="eh-amount" id="heroAmount">$387.500</div>
+          <div class="eh-sub" id="heroSub">Comisiones por servicios cerrados</div>
+          <div class="eh-stats" id="heroStats">
+            <div class="eh-stat"><div class="eh-stat-val">23</div><div class="eh-stat-label">Tickets</div></div>
+            <div class="eh-stat"><div class="eh-stat-val amber">35%</div><div class="eh-stat-label">Comisión</div></div>
+          </div>
+        </div>
+
+        <div class="period-tabs">
+          <button class="pt-tab active">1–15 may</button>
+          <button class="pt-tab">16–31 abr</button>
+          <button class="pt-tab">1–15 abr</button>
+        </div>
+
+        <div id="earningsList"></div>
+
+        <div class="section-label"><span>Historial de pagos</span></div>
+        <div class="payout-item">
+          <div class="pi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+          <div class="pi-info"><div class="pi-label">Liquidación 1–15 abr</div><div class="pi-meta">Pagado · 16 abr 2026</div></div>
+          <div class="pi-amount">$412.000</div>
+        </div>
+        <div class="payout-item">
+          <div class="pi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+          <div class="pi-info"><div class="pi-label">Liquidación 16–31 mar</div><div class="pi-meta">Pagado · 1 abr 2026</div></div>
+          <div class="pi-amount">$398.500</div>
+        </div>
+        <div style="height:20px;"></div>
+      </div>
+
+      <div class="bottom-nav">
+        <div class="bn-item" onclick="window.location='../../befine-employee-portal.html'">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          Inicio
+        </div>
+        <div class="bn-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Tickets
+        </div>
+        <div class="bn-item active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          Ganancias
+          <div class="bn-dot"></div>
+        </div>
+        <div class="bn-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Perfil
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button class="theme-btn-fixed" onclick="document.documentElement.dataset.theme=document.documentElement.dataset.theme==='dark'?'light':'dark'">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2"/></svg>
+    Tema
+  </button>
+
+  <script>
+    const COMMISSION_DATA = [
+      {ticket:'#T-0341',client:'Laura González',services:'Corte + peinado',total:'$45.000',earn:'$15.750',pct:'35%',date:'2 may'},
+      {ticket:'#T-0339',client:'Valeria Moreno',services:'Coloración completa',total:'$180.000',earn:'$63.000',pct:'35%',date:'1 may'},
+      {ticket:'#T-0336',client:'Ana Cárdenas',services:'Mechas · Tratamiento',total:'$350.000',earn:'$122.500',pct:'35%',date:'30 abr'},
+      {ticket:'#T-0334',client:'Daniela Pérez',services:'Corte + peinado',total:'$45.000',earn:'$15.750',pct:'35%',date:'29 abr'},
+      {ticket:'#T-0331',client:'Sofía Ruiz',services:'Manicure semi',total:'$55.000',earn:'$19.250',pct:'35%',date:'28 abr'},
+    ];
+
+    const DAILY_DATA = [
+      {date:'2 may',day:'Vie',label:'Día laborado',sub:'Apertura: 8:00 · Cierre: 18:00',amount:'$80.000'},
+      {date:'1 may',day:'Jue',label:'Día laborado',sub:'Apertura: 8:00 · Cierre: 17:30',amount:'$80.000'},
+      {date:'30 abr',day:'Mié',label:'Día laborado',sub:'Apertura: 8:30 · Cierre: 18:00',amount:'$80.000'},
+      {date:'29 abr',day:'Mar',label:'Día laborado',sub:'Apertura: 8:00 · Cierre: 18:00',amount:'$80.000'},
+      {date:'28 abr',day:'Lun',label:'Día laborado',sub:'Apertura: 8:15 · Cierre: 17:45',amount:'$80.000'},
+    ];
+
+    let role='stylist';
+
+    function setRole(r,btn){
+      role=r;
+      document.querySelectorAll('.role-pill').forEach(p=>p.classList.remove('active'));
+      btn.classList.add('active');
+      updateView();
+    }
+
+    function updateView(){
+      if(role==='stylist'){
+        document.getElementById('heroPeriod').textContent='Quincena 1–15 mayo 2026';
+        document.getElementById('heroAmount').textContent='$387.500';
+        document.getElementById('heroSub').textContent='Comisiones por servicios cerrados';
+        document.getElementById('heroStats').innerHTML=`
+          <div class="eh-stat"><div class="eh-stat-val">23</div><div class="eh-stat-label">Tickets</div></div>
+          <div class="eh-stat"><div class="eh-stat-val amber">35%</div><div class="eh-stat-label">Comisión</div></div>`;
+        document.getElementById('pageTitle').textContent='Mis ganancias';
+        document.getElementById('earningsList').innerHTML=
+          '<div class="section-label"><span>Servicios cerrados</span><span class="count">23</span></div>'+
+          COMMISSION_DATA.map(r=>`<div class="earn-card">
+            <div class="ec-top"><span class="ec-ticket">${r.ticket}</span><span class="ec-earn">${r.earn}</span></div>
+            <div class="ec-client">${r.client}</div>
+            <div class="ec-services">${r.services}</div>
+            <div class="ec-meta"><span class="ec-meta-item">${r.date}</span><span class="ec-meta-item">Total: ${r.total}</span><span class="ec-meta-item">${r.pct}</span></div>
+          </div>`).join('');
+      } else {
+        document.getElementById('heroPeriod').textContent='Quincena 1–15 mayo 2026';
+        document.getElementById('heroAmount').textContent='$400.000';
+        document.getElementById('heroSub').textContent='Tarifa diaria por días laborados';
+        document.getElementById('heroStats').innerHTML=`
+          <div class="eh-stat"><div class="eh-stat-val">5</div><div class="eh-stat-label">Días laborados</div></div>
+          <div class="eh-stat"><div class="eh-stat-val amber">$80.000</div><div class="eh-stat-label">Tarifa/día</div></div>`;
+        document.getElementById('pageTitle').textContent='Mis ganancias';
+        document.getElementById('earningsList').innerHTML=
+          '<div class="section-label"><span>Días laborados</span><span class="count">5</span></div>'+
+          DAILY_DATA.map(d=>`<div class="day-earn-card">
+            <div class="dec-date">${d.date}<br/><span style="font-size:.6rem;color:var(--text-4)">${d.day}</span></div>
+            <div class="dec-info"><div class="dec-label">${d.label}</div><div class="dec-sub">${d.sub}</div></div>
+            <div class="dec-amount">${d.amount}</div>
+          </div>`).join('');
+      }
+    }
+    updateView();
+  </script>
+</body>
+</html>

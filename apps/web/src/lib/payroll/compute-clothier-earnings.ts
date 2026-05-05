@@ -7,11 +7,11 @@
 
 import { and, eq, inArray } from "drizzle-orm";
 import type { Database } from "@befine/db";
-import { batchPieces, clothBatches, clothPieces, clothPieceVariants } from "@befine/db/schema";
+import { craftablePieces, craftables, clothPieces, clothPieceVariants } from "@befine/db/schema";
 
 export type ClothierEarningsLine = {
-  batchId: string;
-  batchPieceId: string;
+  craftableId: string;
+  craftablePieceId: string;
   pieceName: string;
   variantName: string;
   quantity: number;
@@ -36,21 +36,21 @@ export async function computeClothierEarnings(
 
   const rows = await db
     .select({
-      batchId: clothBatches.id,
-      batchPieceId: batchPieces.id,
+      craftableId: craftables.id,
+      craftablePieceId: craftablePieces.id,
       pieceName: clothPieces.name,
       variantName: clothPieceVariants.name,
       pieceRate: clothPieceVariants.pieceRate,
     })
-    .from(batchPieces)
-    .innerJoin(clothBatches, eq(batchPieces.batchId, clothBatches.id))
-    .innerJoin(clothPieces, eq(batchPieces.clothPieceId, clothPieces.id))
-    .innerJoin(clothPieceVariants, eq(batchPieces.clothPieceVariantId, clothPieceVariants.id))
+    .from(craftablePieces)
+    .innerJoin(craftables, eq(craftablePieces.craftableId, craftables.id))
+    .innerJoin(clothPieces, eq(craftablePieces.clothPieceId, clothPieces.id))
+    .innerJoin(clothPieceVariants, eq(craftablePieces.clothPieceVariantId, clothPieceVariants.id))
     .where(
       and(
-        eq(batchPieces.assignedToEmployeeId, employeeId),
-        eq(batchPieces.status, "approved"),
-        inArray(clothBatches.businessDayId, businessDayIds),
+        eq(craftablePieces.assignedToEmployeeId, employeeId),
+        eq(craftablePieces.status, "approved"),
+        inArray(craftables.businessDayId, businessDayIds),
       ),
     );
 
@@ -58,11 +58,11 @@ export async function computeClothierEarnings(
   let totalEarnings = 0;
 
   for (const row of rows) {
-    const key = `${row.batchId}:${row.batchPieceId}`;
+    const key = `${row.craftableId}:${row.craftablePieceId}`;
     if (!lineMap.has(key)) {
       lineMap.set(key, {
-        batchId: row.batchId,
-        batchPieceId: row.batchPieceId,
+        craftableId: row.craftableId,
+        craftablePieceId: row.craftablePieceId,
         pieceName: row.pieceName,
         variantName: row.variantName,
         quantity: 0,

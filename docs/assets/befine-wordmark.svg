@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="80" viewBox="0 0 360 80" role="img" aria-label="Innovation Befine">
+  
+  <circle cx="40" cy="40" r="38" fill="#050505"></circle>
+  <circle cx="40" cy="40" r="32" fill="none" stroke="#E4448E" stroke-width="3"></circle>
+  <g fill="#E4448E">
+    <rect x="33" y="25" width="14" height="30"></rect>
+    <rect x="25" y="23" width="30" height="6"></rect>
+    <rect x="25" y="52" width="30" height="6"></rect>
+  </g>
+  
+  <text x="92" y="36" font-family="Georgia, &#39;Times New Roman&#39;, serif" font-size="18" font-weight="700" fill="currentColor" letter-spacing="0.5" style="text-transform:uppercase">Innovation</text>
+  <text x="92" y="60" font-family="Georgia, &#39;Times New Roman&#39;, serif" font-size="26" font-weight="700" fill="#E4448E" letter-spacing="1.5" style="text-transform:uppercase">BEFINE</text>
+</svg>

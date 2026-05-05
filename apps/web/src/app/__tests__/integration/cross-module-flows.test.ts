@@ -177,7 +177,7 @@ describe("Flow (b): batch → pieces done → approve → clothier payout covera
   type PieceStatus = "pending" | "done_pending_approval" | "approved";
   type BatchPiece = {
     id: string;
-    batchId: string;
+    craftableId: string;
     businessDayId: string;
     assignedToEmployeeId: string;
     status: PieceStatus;
@@ -212,7 +212,7 @@ describe("Flow (b): batch → pieces done → approve → clothier payout covera
 
     const piece: BatchPiece = {
       id: uuid(),
-      batchId: uuid(),
+      craftableId: uuid(),
       businessDayId: dayId,
       assignedToEmployeeId: empId,
       status: "approved",
@@ -229,7 +229,7 @@ describe("Flow (b): batch → pieces done → approve → clothier payout covera
 
     const piece: BatchPiece = {
       id: uuid(),
-      batchId: uuid(),
+      craftableId: uuid(),
       businessDayId: dayId,
       assignedToEmployeeId: empId,
       status: "done_pending_approval",
@@ -246,7 +246,7 @@ describe("Flow (b): batch → pieces done → approve → clothier payout covera
     const pieces: BatchPiece[] = [
       {
         id: uuid(),
-        batchId: uuid(),
+        craftableId: uuid(),
         businessDayId: dayId,
         assignedToEmployeeId: empId,
         status: "approved",
@@ -254,7 +254,7 @@ describe("Flow (b): batch → pieces done → approve → clothier payout covera
       },
       {
         id: uuid(),
-        batchId: uuid(),
+        craftableId: uuid(),
         businessDayId: dayId,
         assignedToEmployeeId: empId,
         status: "approved",
@@ -262,7 +262,7 @@ describe("Flow (b): batch → pieces done → approve → clothier payout covera
       },
       {
         id: uuid(),
-        batchId: uuid(),
+        craftableId: uuid(),
         businessDayId: dayId,
         assignedToEmployeeId: empId,
         status: "done_pending_approval",
@@ -282,7 +282,7 @@ describe("Flow (b): batch → pieces done → approve → clothier payout covera
     const dayId = uuid();
     const piece: BatchPiece = {
       id: uuid(),
-      batchId: uuid(),
+      craftableId: uuid(),
       businessDayId: dayId,
       assignedToEmployeeId: empId,
       status: "approved",
@@ -384,13 +384,13 @@ describe("Flow (c): large-order payment auto-transition to paid_in_full", () => 
     // Invariant: batch_pieces.large_order_id links production to the order
     // Simulate total computation including linked batches
     const orderTotal = 800_000;
-    const batchPieces = [
+    const craftablePieces = [
       { largeOrderId: "order-1", pieceRate: 15_000, status: "approved" as const },
       { largeOrderId: "order-1", pieceRate: 20_000, status: "approved" as const },
       { largeOrderId: "order-2", pieceRate: 99_000, status: "approved" as const },
     ];
 
-    const linkedCost = batchPieces
+    const linkedCost = craftablePieces
       .filter((p) => p.largeOrderId === "order-1" && p.status === "approved")
       .reduce((s, p) => s + p.pieceRate, 0);
 

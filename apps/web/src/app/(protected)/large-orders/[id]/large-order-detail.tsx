@@ -756,7 +756,7 @@ export function LargeOrderDetail({ order: initialOrder, batches, clothPieces }: 
                 const pct =
                   b.totalPieces > 0 ? Math.round((b.approvedPieces / b.totalPieces) * 100) : 0;
                 return (
-                  <tr key={b.batchId}>
+                  <tr key={b.craftableId}>
                     <td className="px-4 py-2.5">{b.totalPieces}</td>
                     <td className="px-4 py-2.5">{b.approvedPieces}</td>
                     <td className="px-4 py-2.5">

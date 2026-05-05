@@ -11,10 +11,16 @@
 
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import { clothPieces, clothPieceVariants, catalogAuditLog } from "@befine/db/schema";
+import {
+  clothPieces,
+  clothPieceVariants,
+  catalogAuditLog,
+  craftablePieces,
+  employees,
+} from "@befine/db/schema";
 import { createClothPieceSchema, editClothPieceSchema } from "@befine/types";
 import { z } from "zod";
 import type { ActionResult } from "@/lib/action-result";
@@ -27,6 +33,7 @@ export type ClothPieceVariantRow = {
   clothPieceId: string;
   name: string;
   pieceRate: number;
+  sellingPrice: number | null;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -47,6 +54,12 @@ export type ClothPieceRow = {
 const createVariantSchema = z.object({
   name: z.string().min(1).max(100),
   pieceRate: z.number().int().min(0, "La tarifa no puede ser negativa"),
+  sellingPrice: z
+    .number()
+    .int()
+    .min(0, "El precio de venta no puede ser negativo")
+    .nullable()
+    .optional(),
 });
 
 const editVariantSchema = createVariantSchema;
@@ -293,7 +306,12 @@ export async function createClothPieceVariant(
   const db = getDb();
   const [variant] = await db
     .insert(clothPieceVariants)
-    .values({ clothPieceId, name: parsed.data.name, pieceRate: parsed.data.pieceRate })
+    .values({
+      clothPieceId,
+      name: parsed.data.name,
+      pieceRate: parsed.data.pieceRate,
+      sellingPrice: parsed.data.sellingPrice ?? null,
+    })
     .returning();
 
   revalidatePath("/admin/catalog");
@@ -325,7 +343,12 @@ export async function editClothPieceVariant(
   const db = getDb();
   const [updated] = await db
     .update(clothPieceVariants)
-    .set({ name: parsed.data.name, pieceRate: parsed.data.pieceRate, updatedAt: new Date() })
+    .set({
+      name: parsed.data.name,
+      pieceRate: parsed.data.pieceRate,
+      sellingPrice: parsed.data.sellingPrice ?? null,
+      updatedAt: new Date(),
+    })
     .where(eq(clothPieceVariants.id, variantId))
     .returning();
 
@@ -366,4 +389,93 @@ export async function restoreClothPieceVariant(variantId: string): Promise<Actio
     .where(eq(clothPieceVariants.id, variantId));
   revalidatePath("/admin/catalog");
   return { success: true, data: null };
+}
+
+// ─── Sell batch piece ─────────────────────────────────────────────────────────
+
+const sellBatchPieceSchema = z.object({
+  batchPieceId: z.string().uuid("ID de pieza inválido"),
+  priceOverride: z.number().int().min(0).nullable().optional(),
+});
+
+/**
+ * Marks an approved batch_piece as sold.
+ * Snapshots the selling price from the variant (or a cashier override).
+ * Gated to cashier_admin.
+ */
+export async function sellBatchPiece(
+  rawInput: unknown,
+): Promise<ActionResult<{ soldPrice: number }>> {
+  const session = await getAdminSession();
+  if (!session) {
+    const s = await auth.api.getSession({ headers: await headers() });
+    if (!s) return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
+    return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
+  }
+
+  const parsed = sellBatchPieceSchema.safeParse(rawInput);
+  if (!parsed.success)
+    return {
+      success: false,
+      error: {
+        code: "VALIDATION_ERROR",
+        message: "Datos inválidos",
+        details: parsed.error.issues.map((i) => ({ field: i.path.join("."), message: i.message })),
+      },
+    };
+
+  const db = getDb();
+
+  const [emp] = await db
+    .select({ id: employees.id })
+    .from(employees)
+    .where(eq(employees.userId, session.user.id))
+    .limit(1);
+
+  const [piece] = await db
+    .select({
+      id: craftablePieces.id,
+      status: craftablePieces.status,
+      soldAt: craftablePieces.soldAt,
+      clothPieceVariantId: craftablePieces.clothPieceVariantId,
+    })
+    .from(craftablePieces)
+    .where(eq(craftablePieces.id, parsed.data.batchPieceId))
+    .limit(1);
+
+  if (!piece)
+    return { success: false, error: { code: "NOT_FOUND", message: "Pieza no encontrada" } };
+  if (piece.status !== "approved")
+    return {
+      success: false,
+      error: { code: "CONFLICT", message: "Solo se pueden vender piezas aprobadas" },
+    };
+  if (piece.soldAt)
+    return { success: false, error: { code: "CONFLICT", message: "Esta pieza ya fue vendida" } };
+
+  const [variant] = await db
+    .select({ sellingPrice: clothPieceVariants.sellingPrice })
+    .from(clothPieceVariants)
+    .where(eq(clothPieceVariants.id, piece.clothPieceVariantId))
+    .limit(1);
+
+  const effectivePrice = parsed.data.priceOverride ?? variant?.sellingPrice ?? null;
+  if (effectivePrice === null)
+    return {
+      success: false,
+      error: { code: "CONFLICT", message: "Esta variante no tiene precio de venta configurado" },
+    };
+
+  await db
+    .update(craftablePieces)
+    .set({
+      soldAt: new Date(),
+      soldPrice: effectivePrice,
+      soldBy: emp?.id ?? null,
+    })
+    .where(
+      and(eq(craftablePieces.id, parsed.data.batchPieceId), eq(craftablePieces.status, "approved")),
+    );
+
+  return { success: true, data: { soldPrice: effectivePrice } };
 }

@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Befine · Nuevo ticket — Cajero / Secretaria / Estilista</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..900,0..100,0..1;1,9..144,300..900,0..100,0..1&family=Inter+Tight:ital,wght@0,300..700;1,300..700&family=JetBrains+Mono:wght@300..600&display=swap" rel="stylesheet" />
+  <style>
+    :root,[data-theme="dark"]{
+      --canvas:#010101;--surface-1:#0a0a0a;--surface-2:#141414;--surface-3:#1c1c1c;
+      --text-1:#f2ece1;--text-2:#b8b0a3;--text-3:#807870;--text-4:#4a4640;
+      --rule:#2a2724;--rule-strong:#4a4640;--rule-soft:#1b1917;
+      --pink:#e9408e;--pink-soft:#f06aa5;--pink-deep:#b82a6c;
+      --pink-halo:rgba(233,64,142,.18);--pink-wash:rgba(233,64,142,.08);
+      --mint:#7cd1b3;--mint-dim:rgba(124,209,179,.12);
+      --amber:#e8b765;--amber-dim:rgba(232,183,101,.12);
+      --font-display:"Fraunces","Times New Roman",serif;
+      --font-body:"Inter Tight",ui-sans-serif,system-ui,sans-serif;
+      --font-mono:"JetBrains Mono",ui-monospace,monospace;
+    }
+    [data-theme="light"]{
+      --canvas:#f7f2ea;--surface-1:#fdfaf3;--surface-2:#efe8db;--surface-3:#e8e0ce;
+      --text-1:#0f0d0a;--text-2:#534b40;--text-3:#8a8073;--text-4:#b8ad9c;
+      --rule:#d9cfbb;--rule-strong:#8a8073;--rule-soft:#e8dfca;
+      --pink:#d93079;--pink-soft:#e9408e;--pink-deep:#a8225a;
+      --pink-halo:rgba(217,48,121,.14);--pink-wash:rgba(217,48,121,.06);
+      --mint:#3f9a78;--mint-dim:rgba(63,154,120,.10);
+      --amber:#b8843a;--amber-dim:rgba(184,132,58,.10);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    html,body{min-height:100%;background:var(--canvas);color:var(--text-1);font-family:var(--font-body);-webkit-font-smoothing:antialiased;}
+    body::before{content:"";position:fixed;inset:0;z-index:9999;pointer-events:none;opacity:.028;mix-blend-mode:screen;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)'/%3E%3C/svg%3E");}
+
+    /* role selector (demo only) */
+    .role-bar{background:var(--surface-2);border-bottom:1px solid var(--rule);padding:8px 20px;display:flex;align-items:center;gap:8px;}
+    .role-bar span{font-size:.7rem;color:var(--text-4);letter-spacing:.1em;text-transform:uppercase;}
+    .role-pill{padding:4px 12px;border-radius:99px;border:1px solid var(--rule);background:transparent;
+      font-size:.72rem;font-family:var(--font-body);color:var(--text-3);cursor:pointer;transition:all .15s;}
+    .role-pill.active{background:var(--pink-wash);border-color:rgba(233,64,142,.3);color:var(--pink);}
+    .role-pill:hover:not(.active){border-color:var(--rule-strong);color:var(--text-2);}
+
+    /* layout */
+    .page-shell{max-width:640px;margin:0 auto;padding:32px 20px 80px;}
+
+    /* header */
+    .page-header{display:flex;align-items:center;gap:14px;margin-bottom:36px;}
+    .back-btn{width:36px;height:36px;border-radius:10px;border:1px solid var(--rule);background:var(--surface-1);
+      display:flex;align-items:center;justify-content:center;color:var(--text-2);cursor:pointer;flex-shrink:0;
+      text-decoration:none;transition:all .15s;}
+    .back-btn:hover{border-color:var(--rule-strong);color:var(--text-1);}
+    .back-btn svg{width:16px;height:16px;}
+    .page-title{font-family:var(--font-display);font-size:1.6rem;font-weight:700;letter-spacing:-.02em;
+      color:var(--text-1);font-style:italic;}
+
+    /* step progress */
+    .stepper{display:flex;align-items:center;gap:0;margin-bottom:32px;}
+    .step-item{display:flex;align-items:center;flex:1;}
+    .step-item:last-child{flex:none;}
+    .step-circle{width:32px;height:32px;border-radius:50%;border:1.5px solid var(--rule);
+      display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;
+      color:var(--text-4);flex-shrink:0;transition:all .25s;background:var(--surface-1);}
+    .step-item.active .step-circle{border-color:var(--pink);color:var(--pink);background:var(--pink-wash);box-shadow:0 0 10px rgba(233,64,142,.2);}
+    .step-item.done .step-circle{border-color:var(--mint);color:var(--mint);background:var(--mint-dim);}
+    .step-label{font-size:.72rem;color:var(--text-4);margin-left:8px;white-space:nowrap;transition:color .25s;}
+    .step-item.active .step-label{color:var(--text-2);}
+    .step-item.done .step-label{color:var(--text-3);}
+    .step-connector{flex:1;height:1px;background:var(--rule);margin:0 8px;}
+    .step-item.done + .step-item .step-connector,.step-item.done .step-connector{background:var(--mint);}
+
+    /* panels */
+    .panel{display:none;}
+    .panel.active{display:block;animation:fade .3s ease both;}
+    @keyframes fade{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+
+    .section-label{font-size:.65rem;font-weight:600;letter-spacing:.18em;text-transform:uppercase;
+      color:var(--text-3);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+    .section-label::before{content:"";width:14px;height:1px;background:var(--pink);}
+
+    /* client type toggle */
+    .client-tabs{display:flex;gap:0;background:var(--surface-2);border:1px solid var(--rule);border-radius:10px;overflow:hidden;margin-bottom:20px;}
+    .ct-tab{flex:1;padding:11px 16px;border:none;background:transparent;font-family:var(--font-body);
+      font-size:.82rem;font-weight:500;color:var(--text-3);cursor:pointer;transition:all .15s;text-align:center;}
+    .ct-tab.active{background:var(--surface-3);color:var(--text-1);}
+    .ct-tab:hover:not(.active){color:var(--text-2);}
+
+    .search-field{position:relative;margin-bottom:16px;}
+    .search-field svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--text-4);}
+    .search-field input{display:block;width:100%;padding:10px 12px 10px 36px;background:var(--surface-1);
+      border:1px solid var(--rule);border-radius:9px;color:var(--text-1);font-family:var(--font-body);
+      font-size:.85rem;outline:none;transition:border-color .15s;}
+    .search-field input:focus{border-color:var(--pink);}
+    .search-field input::placeholder{color:var(--text-4);}
+
+    .client-result{padding:11px 14px;border-radius:9px;border:1px solid var(--rule);background:var(--surface-1);
+      cursor:pointer;margin-bottom:8px;transition:all .15s;}
+    .client-result:hover,.client-result.selected{border-color:var(--pink);background:var(--pink-wash);}
+    .cr-name{font-size:.85rem;font-weight:600;color:var(--text-1);}
+    .cr-meta{font-size:.72rem;color:var(--text-3);margin-top:2px;}
+
+    .walkin-note{background:var(--surface-2);border:1px solid var(--rule);border-radius:9px;padding:14px 16px;
+      font-size:.8rem;color:var(--text-3);line-height:1.6;}
+
+    /* stylist grid */
+    .stylist-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:20px;}
+    .stylist-card{padding:14px;border-radius:10px;border:1.5px solid var(--rule);background:var(--surface-1);
+      cursor:pointer;text-align:center;transition:all .15s;}
+    .stylist-card:hover,.stylist-card.selected{border-color:var(--pink);background:var(--pink-wash);}
+    .stylist-avatar{width:40px;height:40px;border-radius:50%;background:var(--surface-3);margin:0 auto 8px;
+      display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:.9rem;font-weight:700;color:var(--text-2);}
+    .stylist-card.selected .stylist-avatar{background:var(--pink);color:#fff;}
+    .stylist-name{font-size:.78rem;font-weight:600;color:var(--text-2);}
+    .stylist-card.selected .stylist-name{color:var(--pink);}
+    .stylist-meta{font-size:.68rem;color:var(--text-4);margin-top:2px;}
+
+    /* services */
+    .service-group{margin-bottom:16px;}
+    .sg-header{font-size:.72rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text-3);
+      padding:8px 0;border-bottom:1px solid var(--rule-soft);margin-bottom:8px;}
+    .service-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:9px;
+      border:1px solid transparent;cursor:pointer;transition:all .15s;}
+    .service-item:hover{background:var(--surface-1);border-color:var(--rule);}
+    .service-item.added{background:var(--mint-dim);border-color:rgba(124,209,179,.25);}
+    .si-name{flex:1;font-size:.83rem;color:var(--text-1);}
+    .si-price{font-family:var(--font-mono);font-size:.82rem;color:var(--text-3);}
+    .service-item.added .si-price{color:var(--mint);}
+    .si-check{width:20px;height:20px;border-radius:5px;border:1.5px solid var(--rule);flex-shrink:0;
+      display:flex;align-items:center;justify-content:center;transition:all .15s;}
+    .service-item.added .si-check{background:var(--mint);border-color:var(--mint);}
+    .si-check svg{width:11px;height:11px;color:#fff;opacity:0;transition:opacity .15s;}
+    .service-item.added .si-check svg{opacity:1;}
+
+    /* summary */
+    .summary-card{background:var(--surface-1);border:1px solid var(--rule);border-radius:12px;overflow:hidden;margin-bottom:20px;}
+    .sc-header{padding:14px 18px;border-bottom:1px solid var(--rule);display:flex;align-items:center;justify-content:space-between;}
+    .sc-header h3{font-family:var(--font-display);font-size:.95rem;font-weight:700;color:var(--text-1);font-style:italic;}
+    .sc-meta{font-size:.72rem;color:var(--text-3);}
+    .sc-row{display:flex;align-items:center;justify-content:space-between;padding:11px 18px;
+      border-top:1px solid var(--rule-soft);}
+    .sc-label{font-size:.82rem;color:var(--text-2);}
+    .sc-value{font-family:var(--font-mono);font-size:.82rem;color:var(--text-1);}
+    .sc-row.total{padding-top:14px;margin-top:4px;}
+    .sc-row.total .sc-label{font-weight:700;color:var(--text-1);font-size:.85rem;}
+    .sc-row.total .sc-value{font-size:1.1rem;color:var(--mint);font-weight:700;}
+
+    /* role note */
+    .role-note{background:var(--amber-dim);border:1px solid rgba(232,183,101,.2);border-radius:9px;
+      padding:12px 14px;font-size:.78rem;color:var(--amber);line-height:1.6;margin-bottom:20px;display:none;}
+    .role-note.visible{display:block;}
+
+    /* nav buttons */
+    .step-nav{display:flex;gap:10px;margin-top:24px;}
+    .btn-back{flex:1;padding:12px;border-radius:9px;border:1px solid var(--rule);background:transparent;
+      color:var(--text-2);font-family:var(--font-body);font-size:.85rem;font-weight:600;cursor:pointer;transition:all .15s;}
+    .btn-back:hover{border-color:var(--rule-strong);color:var(--text-1);}
+    .btn-next{flex:2;padding:12px;border-radius:9px;border:none;background:var(--pink);color:#fff;
+      font-family:var(--font-body);font-size:.85rem;font-weight:600;cursor:pointer;transition:background .15s;}
+    .btn-next:hover{background:var(--pink-soft);}
+    .btn-next:disabled{background:var(--surface-3);color:var(--text-4);cursor:not-allowed;}
+
+    .theme-btn{position:fixed;bottom:16px;right:16px;z-index:100;background:var(--surface-2);border:1px solid var(--rule);
+      border-radius:8px;padding:8px 10px;cursor:pointer;color:var(--text-3);font-size:.72rem;font-family:var(--font-body);
+      display:flex;align-items:center;gap:6px;transition:all .15s;}
+    .theme-btn:hover{color:var(--text-1);}
+  </style>
+</head>
+<body>
+  <!-- Role toggle (demo) -->
+  <div class="role-bar">
+    <span>Vista:</span>
+    <button class="role-pill active" onclick="setRole('cashier',this)">Cajero/Admin</button>
+    <button class="role-pill" onclick="setRole('secretary',this)">Secretaria</button>
+    <button class="role-pill" onclick="setRole('stylist',this)">Estilista</button>
+  </div>
+
+  <div class="page-shell">
+    <div class="page-header">
+      <a href="../befine-admin-secretary-portal.html" class="back-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </a>
+      <h1 class="page-title">Nuevo ticket</h1>
+    </div>
+
+    <!-- Stepper -->
+    <div class="stepper">
+      <div class="step-item active" id="si1"><div class="step-circle" id="sc1">1</div><div class="step-label">Cliente</div></div>
+      <div class="step-connector"></div>
+      <div class="step-item" id="si2"><div class="step-circle" id="sc2">2</div><div class="step-label">Estilista</div></div>
+      <div class="step-connector"></div>
+      <div class="step-item" id="si3"><div class="step-circle" id="sc3">3</div><div class="step-label">Servicios</div></div>
+      <div class="step-connector"></div>
+      <div class="step-item" id="si4"><div class="step-circle" id="sc4">4</div><div class="step-label">Confirmar</div></div>
+    </div>
+
+    <!-- Step 1: client -->
+    <div class="panel active" id="panel1">
+      <div class="section-label">Paso 1 — Cliente</div>
+      <div class="client-tabs">
+        <button class="ct-tab active" onclick="setClientType('saved',this)">Cliente guardado</button>
+        <button class="ct-tab" onclick="setClientType('walkin',this)">Walk-in (sin registro)</button>
+      </div>
+
+      <div id="savedSearch">
+        <div class="search-field">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input placeholder="Buscar cliente por nombre o teléfono…" oninput="filterClients(this.value)" />
+        </div>
+        <div id="clientResults">
+          <div class="client-result selected" onclick="selectClient(this)">
+            <div class="cr-name">Laura González</div>
+            <div class="cr-meta">310 555 0101 · 24 visitas · Última: 1 may 2026</div>
+          </div>
+          <div class="client-result" onclick="selectClient(this)">
+            <div class="cr-name">Valeria Moreno</div>
+            <div class="cr-meta">315 222 0034 · 11 visitas · Última: 29 abr 2026</div>
+          </div>
+          <div class="client-result" onclick="selectClient(this)">
+            <div class="cr-name">Daniela Pérez</div>
+            <div class="cr-meta">300 111 9988 · 8 visitas · Última: 27 abr 2026</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="walkinMsg" style="display:none;">
+        <div class="walkin-note">El ticket se registrará como cliente anónimo (walk-in). No se guardará historial de visitas para este cliente.</div>
+      </div>
+
+      <div class="step-nav">
+        <button class="btn-next" onclick="goStep(2)">Continuar →</button>
+      </div>
+    </div>
+
+    <!-- Step 2: stylist -->
+    <div class="panel" id="panel2">
+      <div class="section-label">Paso 2 — Estilista</div>
+      <div class="stylist-grid">
+        <div class="stylist-card selected" onclick="selectStylist(this)">
+          <div class="stylist-avatar">DP</div>
+          <div class="stylist-name">Daniela P.</div>
+          <div class="stylist-meta">Estilista</div>
+        </div>
+        <div class="stylist-card" onclick="selectStylist(this)">
+          <div class="stylist-avatar">MR</div>
+          <div class="stylist-name">María R.</div>
+          <div class="stylist-meta">Estilista</div>
+        </div>
+        <div class="stylist-card" onclick="selectStylist(this)">
+          <div class="stylist-avatar">JM</div>
+          <div class="stylist-name">Juliana M.</div>
+          <div class="stylist-meta">Estilista</div>
+        </div>
+        <div class="stylist-card" onclick="selectStylist(this)">
+          <div class="stylist-avatar">SC</div>
+          <div class="stylist-name">Sara C.</div>
+          <div class="stylist-meta">Estilista</div>
+        </div>
+      </div>
+      <div class="step-nav">
+        <button class="btn-back" onclick="goStep(1)">← Atrás</button>
+        <button class="btn-next" onclick="goStep(3)">Continuar →</button>
+      </div>
+    </div>
+
+    <!-- Step 3: services -->
+    <div class="panel" id="panel3">
+      <div class="section-label">Paso 3 — Servicios</div>
+      <div class="service-group">
+        <div class="sg-header">Cabello</div>
+        <div class="service-item added" onclick="toggleService(this)">
+          <div class="si-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></div>
+          <div class="si-name">Corte + peinado</div>
+          <div class="si-price">$45.000</div>
+        </div>
+        <div class="service-item" onclick="toggleService(this)">
+          <div class="si-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></div>
+          <div class="si-name">Coloración completa</div>
+          <div class="si-price">$180.000</div>
+        </div>
+        <div class="service-item" onclick="toggleService(this)">
+          <div class="si-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></div>
+          <div class="si-name">Mechas / Balayage</div>
+          <div class="si-price">$220.000</div>
+        </div>
+        <div class="service-item" onclick="toggleService(this)">
+          <div class="si-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></div>
+          <div class="si-name">Tratamiento keratina</div>
+          <div class="si-price">$130.000</div>
+        </div>
+      </div>
+      <div class="service-group">
+        <div class="sg-header">Uñas</div>
+        <div class="service-item" onclick="toggleService(this)">
+          <div class="si-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></div>
+          <div class="si-name">Manicure semipermanente</div>
+          <div class="si-price">$55.000</div>
+        </div>
+        <div class="service-item" onclick="toggleService(this)">
+          <div class="si-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></div>
+          <div class="si-name">Pedicure spa</div>
+          <div class="si-price">$65.000</div>
+        </div>
+      </div>
+      <div class="step-nav">
+        <button class="btn-back" onclick="goStep(2)">← Atrás</button>
+        <button class="btn-next" onclick="goStep(4)">Revisar →</button>
+      </div>
+    </div>
+
+    <!-- Step 4: review -->
+    <div class="panel" id="panel4">
+      <div class="section-label">Paso 4 — Confirmar</div>
+
+      <div class="role-note" id="roleNote">
+        Como secretaria, no puedes aplicar descuentos ni procesar el cobro. El ticket quedará abierto para que el cajero lo gestione.
+      </div>
+
+      <div class="summary-card">
+        <div class="sc-header">
+          <h3>Resumen del ticket</h3>
+          <span class="sc-meta">Walk-in · Daniela P.</span>
+        </div>
+        <div class="sc-row"><span class="sc-label">Corte + peinado</span><span class="sc-value">$45.000</span></div>
+        <div class="sc-row total"><span class="sc-label">Total</span><span class="sc-value">$45.000</span></div>
+      </div>
+
+      <div class="step-nav">
+        <button class="btn-back" onclick="goStep(3)">← Atrás</button>
+        <button class="btn-next" onclick="goStep(5)" id="confirmBtn">Abrir ticket</button>
+      </div>
+    </div>
+
+    <!-- Step 5: success -->
+    <div class="panel" id="panel5">
+      <div style="text-align:center;padding:40px 0;">
+        <div style="width:60px;height:60px;border-radius:50%;background:var(--mint-dim);border:1px solid rgba(124,209,179,.3);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--mint)" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+        </div>
+        <div style="font-family:var(--font-display);font-size:1.8rem;font-weight:700;font-style:italic;margin-bottom:8px;">Ticket abierto</div>
+        <div style="font-family:var(--font-mono);font-size:1.1rem;color:var(--pink);margin-bottom:8px;">#T-0342</div>
+        <div style="font-size:.82rem;color:var(--text-3);margin-bottom:32px;">Laura González · Daniela P.</div>
+        <a href="../befine-admin-secretary-portal.html" class="btn-next" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;padding:12px 32px;">Ir al tablero</a>
+      </div>
+    </div>
+  </div>
+
+  <button class="theme-btn" onclick="document.documentElement.dataset.theme=document.documentElement.dataset.theme==='dark'?'light':'dark'">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41"/></svg>
+    Tema
+  </button>
+
+  <script>
+    let currentStep=1;
+    let role='cashier';
+
+    function goStep(n){
+      document.getElementById('panel'+currentStep).classList.remove('active');
+      const si=document.getElementById('si'+currentStep);
+      if(si){si.classList.remove('active');si.classList.add('done');
+        const sc=document.getElementById('sc'+currentStep);
+        if(sc){sc.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>';}}
+      currentStep=n;
+      const p=document.getElementById('panel'+n);
+      if(p){p.classList.add('active');}
+      const si2=document.getElementById('si'+n);
+      if(si2){si2.classList.add('active');}
+    }
+
+    function setClientType(type,btn){
+      document.querySelectorAll('.ct-tab').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('savedSearch').style.display=type==='saved'?'block':'none';
+      document.getElementById('walkinMsg').style.display=type==='walkin'?'block':'none';
+    }
+
+    function selectClient(el){
+      document.querySelectorAll('.client-result').forEach(r=>r.classList.remove('selected'));
+      el.classList.add('selected');
+    }
+
+    function selectStylist(el){
+      document.querySelectorAll('.stylist-card').forEach(c=>c.classList.remove('selected'));
+      el.classList.add('selected');
+    }
+
+    function toggleService(el){el.classList.toggle('added');}
+
+    function filterClients(q){
+      const results=document.querySelectorAll('.client-result');
+      results.forEach(r=>{
+        const name=r.querySelector('.cr-name').textContent.toLowerCase();
+        r.style.display=(!q||name.includes(q.toLowerCase()))?'':'none';
+      });
+    }
+
+    function setRole(r,btn){
+      role=r;
+      document.querySelectorAll('.role-pill').forEach(p=>p.classList.remove('active'));
+      btn.classList.add('active');
+      const note=document.getElementById('roleNote');
+      if(note)note.classList.toggle('visible',r==='secretary');
+    }
+  </script>
+</body>
+</html>

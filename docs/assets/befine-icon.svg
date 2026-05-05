@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="Innovation Befine icon mark">
+  
+  <circle cx="256" cy="256" r="256" fill="#050505"></circle>
+  
+  <circle cx="256" cy="256" r="218" fill="none" stroke="#E9408E" stroke-width="18"></circle>
+  
+  <g fill="#E9408E">
+    
+    <rect x="210" y="150" width="92" height="212"></rect>
+    
+    <rect x="160" y="138" width="192" height="36"></rect>
+    
+    <rect x="160" y="338" width="192" height="36"></rect>
+  </g>
+</svg>

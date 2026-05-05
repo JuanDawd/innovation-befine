@@ -21,8 +21,8 @@ import {
   clients,
   employees,
   users,
-  clothBatches,
-  batchPieces,
+  craftables,
+  craftablePieces,
 } from "@befine/db/schema";
 import {
   createLargeOrderSchema,
@@ -684,7 +684,7 @@ export async function listClientsForOrder(): Promise<ActionResult<ClientOption[]
 // ─── Get batch summary for an order (T060) ───────────────────────────────────
 
 export type OrderBatchSummary = {
-  batchId: string;
+  craftableId: string;
   totalPieces: number;
   approvedPieces: number;
 };
@@ -704,24 +704,24 @@ export async function getLargeOrderBatchSummary(
 
   const db = getDb();
   const batches = await db
-    .select({ id: clothBatches.id })
-    .from(clothBatches)
-    .where(eq(clothBatches.largeOrderId, orderId));
+    .select({ id: craftables.id })
+    .from(craftables)
+    .where(eq(craftables.largeOrderId, orderId));
 
   if (!batches.length) return { success: true, data: [] };
 
   const batchIds = batches.map((b) => b.id);
   const pieces = await db
-    .select({ batchId: batchPieces.batchId, status: batchPieces.status })
-    .from(batchPieces)
-    .where(inArray(batchPieces.batchId, batchIds));
+    .select({ craftableId: craftablePieces.craftableId, status: craftablePieces.status })
+    .from(craftablePieces)
+    .where(inArray(craftablePieces.craftableId, batchIds));
 
   return {
     success: true,
     data: batches.map((b) => {
-      const bp = pieces.filter((p) => p.batchId === b.id);
+      const bp = pieces.filter((p) => p.craftableId === b.id);
       return {
-        batchId: b.id,
+        craftableId: b.id,
         totalPieces: bp.length,
         approvedPieces: bp.filter((p) => p.status === "approved").length,
       };

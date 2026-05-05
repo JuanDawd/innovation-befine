@@ -30,13 +30,19 @@ export {
   serviceVariantsRelations,
   largeOrdersRelations,
   largeOrderPaymentsRelations,
-  clothBatchesRelations,
+  craftablesRelations,
 } from "./relations";
 export { notificationTypeEnum, notifications } from "./notifications";
 export { editRequestStatusEnum, ticketEditRequests } from "./ticket-edit-requests";
-export { batchPieceStatusEnum, claimSourceEnum, clothBatches, batchPieces } from "./cloth-batches";
+export {
+  craftablePieceStatusEnum,
+  craftableClaimSourceEnum,
+  craftableSourceEnum,
+  craftables,
+  craftablePieces,
+} from "./craftables";
 export { appointmentStatusEnum, appointments } from "./appointments";
 export { largeOrderStatusEnum, largeOrders, largeOrderPayments } from "./large-orders";
 export { absenceTypeEnum, employeeAbsences } from "./absences";
-export { payouts, payoutPeriodDays, payoutTicketItems, payoutBatchPieces } from "./payouts";
+export { payouts, payoutPeriodDays, payoutTicketItems, payoutCraftablePieces } from "./payouts";
 export { idempotencyKeys } from "./idempotency";
