@@ -725,7 +725,7 @@
   - Unit: create craftable as secretary → mark piece done as clothier → assert `status = 'done_pending_approval'`.
   - Unit: call `approveCraftablePiece` as stylist → assert `FORBIDDEN`.
 - **Dependencies:** Task 3.4, Task 3.5.
-- **Status:** Pending
+- **Status:** Done
 
 ---
 

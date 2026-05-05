@@ -109,7 +109,9 @@ export async function createCraftable(rawInput: unknown): Promise<ActionResult<{
   if (!creatorEmployee)
     return { success: false, error: { code: "NOT_FOUND", message: "Empleado no encontrado" } };
 
-  // Create batch + pieces atomically
+  const autoApproved = hasRole(session.user, "cashier_admin");
+
+  // Create craftable + pieces atomically
   const txDb = getTxDb();
   const batchId = await txDb.transaction(async (tx) => {
     const [batch] = await tx
@@ -119,6 +121,7 @@ export async function createCraftable(rawInput: unknown): Promise<ActionResult<{
         createdBy: creatorEmployee.id,
         notes: input.notes ?? null,
         largeOrderId: input.largeOrderId ?? null,
+        autoApproved,
       })
       .returning({ id: craftables.id });
 

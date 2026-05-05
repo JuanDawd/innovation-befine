@@ -188,14 +188,31 @@ export async function markPieceDone(
   const txDb = getTxDb();
   const db = getDb();
 
+  // Resolve the piece's parent craftable to check auto_approved flag
+  const [pieceRow] = await db
+    .select({ autoApproved: craftables.autoApproved })
+    .from(craftablePieces)
+    .innerJoin(craftables, eq(craftablePieces.craftableId, craftables.id))
+    .where(eq(craftablePieces.id, pieceId))
+    .limit(1);
+
+  if (!pieceRow)
+    return { success: false, error: { code: "NOT_FOUND", message: "Pieza no encontrada" } };
+
+  const newStatus = pieceRow.autoApproved
+    ? ("approved" as const)
+    : ("done_pending_approval" as const);
+  const now = new Date();
+
   // T09R-R12: storeIdempotency runs inside the same transaction as the mutation
   const successResult: ActionResult<void> = { success: true, data: undefined };
   const txResult = await txDb.transaction(async (tx) => {
     const result = await tx
       .update(craftablePieces)
       .set({
-        status: "done_pending_approval",
-        completedAt: new Date(),
+        status: newStatus,
+        completedAt: now,
+        ...(newStatus === "approved" ? { approvedAt: now, approvedBy: ctx.employeeId } : {}),
         version: expectedVersion + 1,
       })
       .where(
