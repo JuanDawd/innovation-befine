@@ -198,6 +198,10 @@ export async function createLargeOrder(rawInput: unknown): Promise<ActionResult<
           assignedToEmployeeId: p.assignedToEmployeeId ?? null,
           claimSource: p.assignedToEmployeeId ? ("assigned" as const) : null,
           claimedAt: p.assignedToEmployeeId ? new Date() : null,
+          color: p.color ?? null,
+          style: p.style ?? null,
+          size: p.size ?? null,
+          instructions: p.instructions ?? null,
         })),
       );
     }

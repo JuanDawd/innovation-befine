@@ -135,6 +135,10 @@ export async function createCraftable(rawInput: unknown): Promise<ActionResult<{
           claimSource: p.assignedToEmployeeId ? ("assigned" as const) : null,
           claimedAt: p.assignedToEmployeeId ? new Date() : null,
           quantity: p.quantity ?? 1,
+          color: p.color ?? null,
+          style: p.style ?? null,
+          size: p.size ?? null,
+          instructions: p.instructions ?? null,
         })),
       );
     }

@@ -5,6 +5,10 @@ const largeOrderPieceLineSchema = z.object({
   clothPieceVariantId: z.uuid("ID de variante inválido"),
   quantity: z.number().int().min(1).default(1),
   assignedToEmployeeId: z.uuid("ID de empleado inválido").nullable().optional(),
+  color: z.string().max(80).optional(),
+  style: z.string().max(80).optional(),
+  size: z.string().max(40).optional(),
+  instructions: z.string().max(500).optional(),
 });
 
 export type LargeOrderPieceLine = z.infer<typeof largeOrderPieceLineSchema>;

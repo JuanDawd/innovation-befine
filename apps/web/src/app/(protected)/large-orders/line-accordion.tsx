@@ -12,6 +12,10 @@ export type OrderLine = {
   quantity: number;
   unitPrice: number;
   itemDescription: string;
+  color: string;
+  style: string;
+  size: string;
+  instructions: string;
 };
 
 export function buildDescription(lines: OrderLine[], clothPieces: ClothPieceRow[]): string {
@@ -193,6 +197,57 @@ export function LineAccordion({
               onChange={(e) => onUpdate({ itemDescription: e.target.value })}
               placeholder={t("itemDescriptionPlaceholder")}
               className="w-full rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:border-ring resize-none"
+            />
+          </div>
+
+          <div className="grid grid-cols-3 gap-2">
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-muted-foreground">{t("color")}</label>
+              <input
+                type="text"
+                aria-label={t("color")}
+                value={line.color}
+                onChange={(e) => onUpdate({ color: e.target.value })}
+                maxLength={80}
+                placeholder={t("colorPlaceholder")}
+                className="h-8 w-full rounded-md border border-input bg-background px-2.5 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-ring"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-muted-foreground">{t("style")}</label>
+              <input
+                type="text"
+                aria-label={t("style")}
+                value={line.style}
+                onChange={(e) => onUpdate({ style: e.target.value })}
+                maxLength={80}
+                placeholder={t("stylePlaceholder")}
+                className="h-8 w-full rounded-md border border-input bg-background px-2.5 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-ring"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-muted-foreground">{t("size")}</label>
+              <input
+                type="text"
+                aria-label={t("size")}
+                value={line.size}
+                onChange={(e) => onUpdate({ size: e.target.value })}
+                maxLength={40}
+                placeholder={t("sizePlaceholder")}
+                className="h-8 w-full rounded-md border border-input bg-background px-2.5 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-ring"
+              />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-muted-foreground">{t("instructions")}</label>
+            <input
+              type="text"
+              aria-label={t("instructions")}
+              value={line.instructions}
+              onChange={(e) => onUpdate({ instructions: e.target.value })}
+              maxLength={500}
+              placeholder={t("instructionsPlaceholder")}
+              className="h-8 w-full rounded-md border border-input bg-background px-2.5 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-ring"
             />
           </div>
 

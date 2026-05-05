@@ -32,6 +32,10 @@ export function CreateLargeOrderForm({ clients, clothPieces }: Props) {
       quantity: 1,
       unitPrice: 0,
       itemDescription: "",
+      color: "",
+      style: "",
+      size: "",
+      instructions: "",
     },
   ]);
   const [nextKey, setNextKey] = useState(1);
@@ -50,6 +54,10 @@ export function CreateLargeOrderForm({ clients, clothPieces }: Props) {
         quantity: 1,
         unitPrice: 0,
         itemDescription: "",
+        color: "",
+        style: "",
+        size: "",
+        instructions: "",
       },
     ]);
     setNextKey((k) => k + 1);
@@ -127,6 +135,10 @@ export function CreateLargeOrderForm({ clients, clothPieces }: Props) {
         clothPieceId: l.clothPieceId,
         clothPieceVariantId: l.clothPieceVariantId,
         quantity: l.quantity,
+        color: l.color || undefined,
+        style: l.style || undefined,
+        size: l.size || undefined,
+        instructions: l.instructions || undefined,
       })),
     };
 

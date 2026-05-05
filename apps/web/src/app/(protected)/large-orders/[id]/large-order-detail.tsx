@@ -62,6 +62,10 @@ function blankLine(key: number): OrderLine {
     quantity: 1,
     unitPrice: 0,
     itemDescription: "",
+    color: "",
+    style: "",
+    size: "",
+    instructions: "",
   };
 }
 
@@ -90,6 +94,10 @@ function matchLineTocatalog(
       quantity,
       unitPrice: 0,
       itemDescription: notes,
+      color: "",
+      style: "",
+      size: "",
+      instructions: "",
     };
 
   const variant = variantName
@@ -103,6 +111,10 @@ function matchLineTocatalog(
     quantity,
     unitPrice: variant?.pieceRate ?? 0,
     itemDescription: notes,
+    color: "",
+    style: "",
+    size: "",
+    instructions: "",
   };
 }
 
