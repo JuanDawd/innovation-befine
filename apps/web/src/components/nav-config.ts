@@ -38,7 +38,7 @@ export const NAV_ITEMS: Record<AppRole, NavItem[]> = {
     { key: "ticketHistory", href: "/cashier/tickets/history", icon: ReceiptIcon },
     { key: "appointments", href: "/cashier/appointments", icon: CalendarDays },
     { key: "largeOrders", href: "/large-orders", icon: ShoppingBag },
-    { key: "batches", href: "/admin/batches", icon: Layers },
+    { key: "craftables", href: "/admin/craftables", icon: Layers },
     { key: "employees", href: "/admin/employees", icon: Users },
     { key: "catalog", href: "/admin/catalog", icon: BookOpen },
     { key: "absences", href: "/admin/absences", icon: CalendarOff },
@@ -48,7 +48,7 @@ export const NAV_ITEMS: Record<AppRole, NavItem[]> = {
   secretary: [
     { key: "dashboard", href: "/secretary", icon: LayoutDashboard },
     { key: "largeOrders", href: "/large-orders", icon: ShoppingBag },
-    { key: "batches", href: "/secretary/batches", icon: Layers },
+    { key: "craftables", href: "/secretary/craftables", icon: Layers },
     { key: "appointments", href: "/secretary/appointments", icon: CalendarDays },
     { key: "myEarnings", href: "/secretary/earnings", icon: Wallet },
   ],
@@ -69,7 +69,7 @@ export const NAV_GROUPS: NavGroup[] = [
   },
   {
     labelKey: "groupOperations",
-    items: ["appointments", "largeOrders", "batches", "ticketHistory"],
+    items: ["appointments", "largeOrders", "craftables", "ticketHistory"],
   },
   {
     labelKey: "groupPeople",

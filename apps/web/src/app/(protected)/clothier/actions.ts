@@ -258,7 +258,7 @@ export async function markPieceDone(
         recipientEmployeeId: staff.id,
         type: "generic",
         message: "Una pieza de confección está lista para aprobar.",
-        link: "/admin/batches",
+        link: "/admin/craftables",
       }),
     ),
   );

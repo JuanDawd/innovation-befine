@@ -160,8 +160,8 @@ export async function createCraftable(rawInput: unknown): Promise<ActionResult<{
     }),
   );
 
-  revalidatePath("/secretary/batches");
-  revalidatePath("/admin/batches");
+  revalidatePath("/secretary/craftables");
+  revalidatePath("/admin/craftables");
 
   return { success: true, data: { id: batchId } };
 }

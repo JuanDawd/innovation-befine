@@ -18,10 +18,10 @@ import {
   approveCraftablePiece,
   adminMarkCraftablePieceApproved,
   type PendingCraftablePieceApprovalRow,
-} from "@/app/(protected)/batches/approval-actions";
+} from "@/app/(protected)/craftables/approval-actions";
 
-export function BatchApprovalBoard({ isAdmin }: { isAdmin: boolean }) {
-  const t = useTranslations("batches");
+export function CraftableApprovalBoard({ isAdmin }: { isAdmin: boolean }) {
+  const t = useTranslations("craftables");
 
   const [pieces, setPieces] = useState<PendingCraftablePieceApprovalRow[]>([]);
   const [isLoading, startLoadTransition] = useTransition();

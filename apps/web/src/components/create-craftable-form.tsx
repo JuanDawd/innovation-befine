@@ -10,7 +10,7 @@ import {
   listActiveClothiers,
   createCraftable,
   type ClothierOption,
-} from "@/app/(protected)/batches/actions";
+} from "@/app/(protected)/craftables/actions";
 import { listActiveClothPieces } from "@/app/(protected)/admin/catalog/actions/cloth-pieces";
 
 type ClothPieceVariantOption = { id: string; name: string; isActive: boolean };
@@ -24,14 +24,14 @@ type PieceLine = {
   assignedToEmployeeId: string | null;
 };
 
-export function CreateBatchForm({
+export function CreateCraftableForm({
   redirectPath,
   largeOrders = [],
 }: {
   redirectPath: string;
   largeOrders?: LargeOrderOption[];
 }) {
-  const t = useTranslations("batches");
+  const t = useTranslations("craftables");
   const tc = useTranslations("common");
   const router = useRouter();
 

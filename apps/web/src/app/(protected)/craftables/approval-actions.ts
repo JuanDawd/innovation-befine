@@ -153,8 +153,8 @@ export async function approveCraftablePiece(
       error: { code: "STALE_DATA", message: "El estado cambió. Recarga la página." },
     };
 
-  revalidatePath("/admin/batches");
-  revalidatePath("/secretary/batches");
+  revalidatePath("/admin/craftables");
+  revalidatePath("/secretary/craftables");
   return { success: true, data: undefined };
 }
 
@@ -222,7 +222,7 @@ export async function adminMarkCraftablePieceApproved(
       error: { code: "STALE_DATA", message: "El estado cambió. Recarga la página." },
     };
 
-  revalidatePath("/admin/batches");
-  revalidatePath("/secretary/batches");
+  revalidatePath("/admin/craftables");
+  revalidatePath("/secretary/craftables");
   return { success: true, data: undefined };
 }

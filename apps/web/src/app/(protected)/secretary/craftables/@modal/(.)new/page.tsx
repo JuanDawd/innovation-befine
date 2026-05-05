@@ -4,14 +4,14 @@ import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import { hasRole } from "@/lib/middleware-helpers";
 import { ModalShell } from "@/components/modal-shell";
-import { CreateBatchForm } from "@/components/create-batch-form";
+import { CreateCraftableForm } from "@/components/create-craftable-form";
 import { listLargeOrders } from "@/app/(protected)/large-orders/actions";
 
-export default async function AdminNewBatchModal() {
+export default async function SecretaryNewCraftableModal() {
   const session = await auth.api.getSession({ headers: await headers() });
-  if (!session || !hasRole(session.user, "cashier_admin")) redirect("/cashier");
+  if (!session || !hasRole(session.user, "secretary")) redirect("/secretary");
 
-  const [t, ordersResult] = await Promise.all([getTranslations("batches"), listLargeOrders()]);
+  const [t, ordersResult] = await Promise.all([getTranslations("craftables"), listLargeOrders()]);
   const activeOrders = ordersResult.success
     ? ordersResult.data
         .filter((o) => o.status !== "cancelled" && o.status !== "paid_in_full")
@@ -19,8 +19,8 @@ export default async function AdminNewBatchModal() {
     : [];
 
   return (
-    <ModalShell title={t("createBatch")} maxWidth="lg">
-      <CreateBatchForm redirectPath="/admin/batches" largeOrders={activeOrders} />
+    <ModalShell title={t("createCraftable")} maxWidth="lg">
+      <CreateCraftableForm redirectPath="/secretary/craftables" largeOrders={activeOrders} />
     </ModalShell>
   );
 }

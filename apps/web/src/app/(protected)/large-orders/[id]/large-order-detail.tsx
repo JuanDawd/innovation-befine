@@ -731,23 +731,23 @@ export function LargeOrderDetail({ order: initialOrder, batches, clothPieces }: 
         </div>
       )}
 
-      {/* ── Linked batches ── */}
+      {/* ── Linked craftables ── */}
       {batches.length > 0 && (
         <div className="rounded-lg border bg-card overflow-hidden">
           <div className="flex items-center gap-2 px-4 py-3 border-b bg-muted/30">
-            <span className="text-sm font-semibold">{t("batches")}</span>
+            <span className="text-sm font-semibold">{t("craftables")}</span>
           </div>
           <table className="w-full text-sm">
             <thead className="bg-muted/20">
               <tr>
                 <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
-                  {t("batchTotalPieces")}
+                  {t("craftableTotalPieces")}
                 </th>
                 <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
-                  {t("batchApprovedPieces")}
+                  {t("craftableApprovedPieces")}
                 </th>
                 <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
-                  {t("batchProgress")}
+                  {t("craftableProgress")}
                 </th>
               </tr>
             </thead>
