@@ -498,7 +498,7 @@ function VariantEditRow({
           )}
         </div>
       </div>
-      <div className="flex gap-2">
+      <div className="flex gap-2 justify-end">
         <Button type="submit" size="sm" disabled={isPending}>
           {isPending && <Loader2Icon className="mr-1 size-3 animate-spin" />}
           {tc("save")}

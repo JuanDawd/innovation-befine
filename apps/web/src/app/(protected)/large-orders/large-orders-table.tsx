@@ -71,7 +71,7 @@ export function LargeOrdersTable({ orders }: Props) {
             {filtered.map((order) => (
               <tr key={order.id} className="hover:bg-muted/30">
                 <td className="px-4 py-2 font-medium">{order.clientName}</td>
-                <td className="px-4 py-2 max-w-[200px] truncate text-muted-foreground">
+                <td className="px-4 py-2 max-w-50 truncate text-muted-foreground">
                   {order.description}
                 </td>
                 <td className="px-4 py-2 text-right font-mono tabular-nums">

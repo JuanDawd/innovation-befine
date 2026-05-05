@@ -99,7 +99,7 @@ export function BusinessDayPanel({ currentDay, lastClosedDay }: BusinessDayPanel
   }
 
   return (
-    <div className="rounded-xl border bg-card p-6 shadow-sm">
+    <div className="rounded-xl border bg-card p-6 shadow-sm flex-1">
       {/* Status header */}
       <div className="flex items-center gap-3 mb-4">
         {isOpen ? (

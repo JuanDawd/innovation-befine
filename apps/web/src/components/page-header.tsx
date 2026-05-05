@@ -37,7 +37,7 @@ export function PageHeader({ crumbs, title, subtitle, actions, className }: Page
         className,
       )}
     >
-      <div className="min-w-0 flex-1">
+      <div className="min-w-0 flex-2 ">
         {crumbs && crumbs.length > 0 && (
           <nav
             aria-label="breadcrumb"
@@ -75,7 +75,6 @@ export function PageHeader({ crumbs, title, subtitle, actions, className }: Page
           </p>
         )}
       </div>
-
       {actions}
     </header>
   );
