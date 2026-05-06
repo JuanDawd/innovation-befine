@@ -1306,7 +1306,7 @@
 - **Testing Steps:**
   - `turbo test packages/db` → all four cases green.
 - **Dependencies:** Task 4.5.
-- **Status:** Pending
+- **Status:** Complete
 
 ---
 
