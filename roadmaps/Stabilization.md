@@ -1320,7 +1320,7 @@
 - **Testing Steps:**
   - Run the concurrent test in isolation 10 times — always passes (no flakiness).
 - **Dependencies:** Task 4.7.
-- **Status:** Pending
+- **Status:** Complete
 
 ---
 

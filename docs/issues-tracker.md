@@ -1525,6 +1525,16 @@
 
 ---
 
+### M-56 — createAssignment lacks SELECT ... FOR UPDATE; concurrent over-assignment race window exists
+
+- **Severity:** Medium
+- **Status:** Open
+- **Affected:** T4.7 (`apps/web/src/app/(protected)/large-orders/assignment-actions.ts:111-141`)
+- **Description:** `createAssignment` reads `SUM(assignedQuantity)` inside a transaction but does not acquire a row-level lock on the `order_items` row (`SELECT ... FOR UPDATE`). Two concurrent requests that both snapshot the same current total can both pass the capacity check and together exceed `order_items.quantity`. Under the expected low concurrency of a single salon's secretary, the window is narrow, but the invariant is not strictly guaranteed. The concurrent test in `assignments-concurrent.test.ts` documents and models this gap.
+- **Fix:** Add `.for("update")` to the `SELECT quantity FROM order_items` query inside the `createAssignment` transaction. Drizzle supports this via `.for("update")` on a select builder. The lock serializes concurrent inserts so exactly one gets the correct remaining total.
+
+---
+
 ### L-46 — Backup policy references non-existent `vercel env pull` subcommand flag
 
 - **Severity:** Low
