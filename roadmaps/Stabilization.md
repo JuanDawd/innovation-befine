@@ -1247,7 +1247,7 @@
   - Seed: 1 large order, no craftables → logged as `[UNRESOLVED]`.
   - Seed: 1 manual craftable → not processed.
 - **Dependencies:** Task 4.4.
-- **Status:** Pending
+- **Status:** Complete
 
 ---
 
@@ -1264,7 +1264,7 @@
   - Seed: `craftable_piece` with `status = 'pending'` → `completed_quantity = 0`, `approved_quantity = 0`.
   - Run script twice → no duplicate rows.
 - **Dependencies:** Task 4.21.
-- **Status:** Pending
+- **Status:** Complete
 
 ---
 
