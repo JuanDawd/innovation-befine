@@ -1279,7 +1279,7 @@
   - Run backfill on clean seed data → verification returns 0 rows.
   - Manually corrupt one row (set `assigned_quantity` above `order_item.quantity`) → verification returns that row.
 - **Dependencies:** Task 4.22.
-- **Status:** Pending
+- **Status:** Complete
 
 ---
 
