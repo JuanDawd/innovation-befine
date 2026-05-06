@@ -28,6 +28,12 @@ export type CraftablePieceRow = {
   id: string;
   craftableId: string;
   clothPieceName: string;
+  quantity: number;
+  color: string | null;
+  style: string | null;
+  size: string | null;
+  instructions: string | null;
+  autoApproved: boolean;
   assignedToEmployeeId: string | null;
   claimSource: "assigned" | "self_claimed" | null;
   status: "pending" | "done_pending_approval" | "approved";
@@ -72,6 +78,12 @@ export async function listTodayCraftablePieces(): Promise<ActionResult<Craftable
       id: craftablePieces.id,
       craftableId: craftablePieces.craftableId,
       clothPieceName: clothPieces.name,
+      quantity: craftablePieces.quantity,
+      color: craftablePieces.color,
+      style: craftablePieces.style,
+      size: craftablePieces.size,
+      instructions: craftablePieces.instructions,
+      autoApproved: craftables.autoApproved,
       assignedToEmployeeId: craftablePieces.assignedToEmployeeId,
       claimSource: craftablePieces.claimSource,
       status: craftablePieces.status,

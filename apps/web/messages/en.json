@@ -391,7 +391,7 @@
     "view": "View"
   },
   "clothierWork": {
-    "pageTitle": "My work",
+    "pageTitle": "My craftables",
     "myPieces": "My pieces",
     "available": "Available to claim",
     "claim": "Claim",
@@ -400,9 +400,16 @@
     "markDoneError": "Could not update",
     "staleError": "Status changed — please reload",
     "emptyTitle": "No pieces assigned",
-    "emptyDescription": "No pieces assigned — new assignments will appear here",
+    "emptyDescription": "No craftables assigned — new assignments will appear here",
     "progress": "{done} of {total} pieces done",
-    "noOpenDay": "No business day is open."
+    "noOpenDay": "No business day is open.",
+    "viewNotes": "View notes",
+    "color": "Color",
+    "style": "Style",
+    "size": "Size",
+    "instructions": "Instructions",
+    "statusApproved": "Approved",
+    "statusPendingApproval": "Pending approval"
   },
   "craftables": {
     "pageTitle": "Craftables",

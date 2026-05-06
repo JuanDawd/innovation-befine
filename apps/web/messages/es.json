@@ -423,7 +423,7 @@
     "statusPending": "Pendiente"
   },
   "clothierWork": {
-    "pageTitle": "Mi trabajo",
+    "pageTitle": "Mis confeccionables",
     "myPieces": "Mis piezas",
     "available": "Disponibles para reclamar",
     "claim": "Reclamar",
@@ -432,9 +432,16 @@
     "markDoneError": "No se pudo actualizar",
     "staleError": "Estado cambiado — recarga la página",
     "emptyTitle": "Sin piezas asignadas",
-    "emptyDescription": "No hay piezas asignadas — las nuevas asignaciones aparecerán aquí",
+    "emptyDescription": "No hay confeccionables asignados — las nuevas asignaciones aparecerán aquí",
     "progress": "{done} de {total} piezas listas",
-    "noOpenDay": "No hay un día laboral abierto."
+    "noOpenDay": "No hay un día laboral abierto.",
+    "viewNotes": "Ver notas",
+    "color": "Color",
+    "style": "Estilo",
+    "size": "Talla",
+    "instructions": "Instrucciones",
+    "statusApproved": "Aprobado",
+    "statusPendingApproval": "Pendiente aprobación"
   },
   "craftables": {
     "pageTitle": "Confeccionables",

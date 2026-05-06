@@ -870,7 +870,7 @@
   - As clothier on non-auto-approved craftable: mark piece done → amber "Pendiente aprobación" until secretary approves.
   - At 360px: piece with all four per-piece fields → tap "Ver notas" → fields expand inline.
 - **Dependencies:** Task 3.9, Task 3.6, Task 3.3.
-- **Status:** Pending
+- **Status:** Complete
 
 ---
 
