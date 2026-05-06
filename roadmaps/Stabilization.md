@@ -1168,12 +1168,12 @@
   - Skeleton shown during data load.
   - Hidden entirely for `stylist` and `clothier`.
   - Collapsible: collapsed by default, remembers state in `localStorage`.
-- **Testing Steps:**
+- **Testing Steps (manual):**
   - Open large order detail as admin → "Producción" section visible with correct data.
   - Open as `stylist` → section not rendered.
   - Expand section, reload → section remains expanded.
 - **Dependencies:** Task 4.16.
-- **Status:** Pending
+- **Status:** Complete
 
 ---
 

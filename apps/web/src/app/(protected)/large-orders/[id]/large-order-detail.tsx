@@ -14,6 +14,9 @@ import {
   CalendarIcon,
   FileTextIcon,
   CreditCardIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
+  FactoryIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -40,11 +43,16 @@ import {
   parseDescription,
   type OrderLine,
 } from "../line-accordion";
+import { OrderItemProgressTable } from "@/components/order-item-progress-table";
+import type { OrderItemWithProgress } from "@befine/db";
+
+const PRODUCTION_COLLAPSE_KEY = "production-section-collapsed";
 
 type Props = {
   order: LargeOrderRow;
   batches: OrderCraftableSummary[];
   clothPieces: ClothPieceRow[];
+  productionItems: OrderItemWithProgress[] | null;
 };
 
 const ACTIONS_BY_STATUS: Record<string, string[]> = {
@@ -118,12 +126,30 @@ function matchLineTocatalog(
   };
 }
 
-export function LargeOrderDetail({ order: initialOrder, batches, clothPieces }: Props) {
+export function LargeOrderDetail({
+  order: initialOrder,
+  batches,
+  clothPieces,
+  productionItems,
+}: Props) {
   const t = useTranslations("largeOrders");
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const order = initialOrder;
   const [editing, setEditing] = useState(false);
+  const [productionCollapsed, setProductionCollapsed] = useState(() => {
+    if (typeof window === "undefined") return true;
+    const stored = localStorage.getItem(PRODUCTION_COLLAPSE_KEY);
+    return stored !== null ? stored === "true" : true;
+  });
+
+  function toggleProduction() {
+    setProductionCollapsed((v) => {
+      const next = !v;
+      localStorage.setItem(PRODUCTION_COLLAPSE_KEY, String(next));
+      return next;
+    });
+  }
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [acknowledgedDeposits, setAcknowledgedDeposits] = useState(false);
@@ -738,6 +764,33 @@ export function LargeOrderDetail({ order: initialOrder, batches, clothPieces }: 
           ) : (
             <div className="px-4 py-6 text-center">
               <p className="text-sm text-muted-foreground">Sin pagos registrados</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Producción ── */}
+      {productionItems !== null && (
+        <div className="rounded-lg border bg-card overflow-hidden">
+          <button
+            type="button"
+            className="flex w-full items-center justify-between px-4 py-3 border-b bg-muted/30 hover:bg-muted/50 transition-colors"
+            onClick={toggleProduction}
+            aria-expanded={!productionCollapsed}
+          >
+            <div className="flex items-center gap-2">
+              <FactoryIcon className="size-4 text-muted-foreground" />
+              <span className="text-sm font-semibold">Producción</span>
+            </div>
+            {productionCollapsed ? (
+              <ChevronDownIcon className="size-4 text-muted-foreground" />
+            ) : (
+              <ChevronUpIcon className="size-4 text-muted-foreground" />
+            )}
+          </button>
+          {!productionCollapsed && (
+            <div className="p-4">
+              <OrderItemProgressTable items={productionItems} />
             </div>
           )}
         </div>
