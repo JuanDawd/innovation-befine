@@ -349,7 +349,7 @@ export async function editLargeOrder(
 
 export async function transitionLargeOrder(
   rawInput: unknown,
-): Promise<ActionResult<{ status: string }>> {
+): Promise<ActionResult<{ status: string; warning?: string }>> {
   const guard = await requireOrderRole();
   if (!guard.ok)
     return {
@@ -390,6 +390,7 @@ export async function transitionLargeOrder(
     return { success: false, error: { code: "NOT_FOUND", message: "Pedido no encontrado" } };
 
   // If cancelling an order with recorded payments, require explicit acknowledgment
+  let cancelWarning: string | undefined;
   if (action === "cancel") {
     const [paymentSum] = await db
       .select({ total: sum(largeOrderPayments.amount) })
@@ -404,6 +405,37 @@ export async function transitionLargeOrder(
           message: `Este pedido tiene pagos registrados por $${totalPaid.toLocaleString("es-CO")}. Confirma que has revisado la política de reembolso antes de cancelar.`,
         },
       };
+
+    // Block cancellation when any approved assignment exists
+    const itemRows = await db
+      .select({ id: orderItems.id })
+      .from(orderItems)
+      .where(eq(orderItems.largeOrderId, orderId));
+
+    if (itemRows.length > 0) {
+      const itemIds = itemRows.map((i) => i.id);
+      const [assignmentAgg] = await db
+        .select({
+          totalApproved: sql<number>`COALESCE(SUM(${clothPieceAssignments.approvedQuantity}), 0)::int`,
+          allUnstarted: sql<boolean>`BOOL_AND(${clothPieceAssignments.completedQuantity} = 0)`,
+          hasAssignments: sql<boolean>`COUNT(*) > 0`,
+        })
+        .from(clothPieceAssignments)
+        .where(inArray(clothPieceAssignments.orderItemId, itemIds));
+
+      const totalApproved = Number(assignmentAgg?.totalApproved ?? 0);
+      const hasAssignments = Boolean(assignmentAgg?.hasAssignments);
+      const allUnstarted = Boolean(assignmentAgg?.allUnstarted);
+
+      if (totalApproved > 0)
+        return {
+          success: false,
+          error: { code: "CONFLICT", message: "Existen piezas ya aprobadas para esta orden." },
+        };
+
+      if (hasAssignments && allUnstarted)
+        cancelWarning = "Este pedido tiene asignaciones pendientes que serán canceladas.";
+    }
   }
 
   const transitions = ALLOWED_TRANSITIONS[order.status];
@@ -450,7 +482,7 @@ export async function transitionLargeOrder(
 
   revalidatePath("/large-orders");
   revalidatePath(`/large-orders/${orderId}`);
-  return { success: true, data: { status: newStatus } };
+  return { success: true, data: { status: newStatus, warning: cancelWarning } };
 }
 
 // ─── Record payment (T061) ───────────────────────────────────────────────────

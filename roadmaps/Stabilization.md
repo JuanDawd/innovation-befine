@@ -1137,7 +1137,7 @@
   - Unit: cancel order with assignment where `completed_quantity = 0` → success + warning.
   - Unit: cancel order with no assignments → success, no warning.
 - **Dependencies:** Task 4.7.
-- **Status:** Pending
+- **Status:** Complete
 
 ---
 
