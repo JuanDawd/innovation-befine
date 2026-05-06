@@ -896,7 +896,7 @@
   - Insert row with `quantity = 0` → DB rejects.
   - Insert row with `quantity = 5` → row persisted correctly.
 - **Dependencies:** None.
-- **Status:** Pending
+- **Status:** Complete
 
 ---
 
@@ -912,7 +912,7 @@
   - Insert row with `approved_quantity = 4`, `completed_quantity = 3` → DB rejects.
   - Insert valid row → persisted correctly.
 - **Dependencies:** Task 4.1.
-- **Status:** Pending
+- **Status:** Complete
 
 ---
 
@@ -926,7 +926,7 @@
   - Insert a log row referencing a valid assignment → persisted.
   - Insert with `quantity = 0` → DB rejects.
 - **Dependencies:** Task 4.2.
-- **Status:** Pending
+- **Status:** Complete
 
 ---
 
@@ -941,7 +941,7 @@
   - Apply migration → run the `\d` commands and verify.
   - Roll back → tables gone.
 - **Dependencies:** Task 4.1, Task 4.2, Task 4.3.
-- **Status:** Pending
+- **Status:** Complete
 
 ---
 
@@ -960,7 +960,7 @@
   - Unit: order item qty=10, two assignments of 4 each → returns 2.
   - Unit: order item qty=5, assignment of 7 (anomaly) → returns 0 and logs warning.
 - **Dependencies:** Task 4.2.
-- **Status:** Pending
+- **Status:** Complete
 
 ---
 
@@ -976,7 +976,7 @@
   - Unit: `approveAssignmentQuantitySchema.parse({ approvedQuantity: -1, ... })` → throws.
   - Import from `@befine/types` in a server action → compiles.
 - **Dependencies:** None.
-- **Status:** Pending
+- **Status:** Complete
 
 ---
 
@@ -997,7 +997,7 @@
   - Unit: call as `stylist` → `FORBIDDEN`.
   - Integration: two concurrent transactions each requesting 6 on qty=10 → one succeeds, one `CONFLICT`.
 - **Dependencies:** Task 4.5, Task 4.6.
-- **Status:** Pending
+- **Status:** Complete
 
 ---
 
@@ -1017,7 +1017,7 @@
   - Unit: clothier updates another clothier's assignment → `FORBIDDEN`.
   - Unit: valid update → version incremented, log row created.
 - **Dependencies:** Task 4.6, Task 4.3.
-- **Status:** Pending
+- **Status:** Complete
 
 ---
 
@@ -1036,7 +1036,7 @@
   - Unit: call as `clothier` → `FORBIDDEN`.
   - Unit: valid approval → version incremented.
 - **Dependencies:** Task 4.6.
-- **Status:** Pending
+- **Status:** Complete
 
 ---
 
@@ -1055,7 +1055,7 @@
   - Unit: item qty=10, assignment of 6 → one real row + unassigned row with `assignedQuantity=4`.
   - Unit: item qty=0 → `progressPct = 0` (no crash).
 - **Dependencies:** Task 4.5.
-- **Status:** Pending
+- **Status:** Complete
 
 ---
 
@@ -1071,7 +1071,7 @@
   - Unit: large order with no items → returns `[]`.
   - Integration: call as `stylist` → `FORBIDDEN`.
 - **Dependencies:** Task 4.10.
-- **Status:** Pending
+- **Status:** Complete
 
 ---
 
@@ -1089,7 +1089,7 @@
   - Unit: `removeOrderItem` with existing assignment → `CONFLICT`.
   - Unit: `removeOrderItem` with no assignments → `quantity` set to 0.
 - **Dependencies:** Task 4.7.
-- **Status:** Pending
+- **Status:** Complete
 
 ---
 

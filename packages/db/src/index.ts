@@ -46,3 +46,4 @@ export { schema };
 export * from "./queries/analytics";
 export * from "./queries/payroll";
 export * from "./queries/craftables";
+export * from "./queries/order-items";
