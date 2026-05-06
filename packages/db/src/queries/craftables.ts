@@ -20,6 +20,8 @@ import {
   largeOrders,
   clothPieces,
   clothPieceVariants,
+  orderItems,
+  clothPieceAssignments,
 } from "../schema";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -112,12 +114,15 @@ export async function getCraftablesDashboard(db: Database): Promise<CraftableDas
     assigneeMap.get(row.craftableId)!.add(row.employeeName);
   }
 
-  // 5. Large order client names for craftables linked to orders
+  // 5. Large order client names + quantity-weighted progress for large_order craftables
   const largeOrderIds = [
     ...new Set(craftableRows.map((c) => c.largeOrderId).filter(Boolean) as string[]),
   ];
 
   const clientNameMap = new Map<string, string>();
+  // Map: largeOrderId → { totalQuantity, approvedQuantity }
+  const largeOrderProgressMap = new Map<string, { totalQty: number; approvedQty: number }>();
+
   if (largeOrderIds.length > 0) {
     const orderClientRows = await db
       .select({ orderId: largeOrders.id, clientName: clients.name })
@@ -126,6 +131,25 @@ export async function getCraftablesDashboard(db: Database): Promise<CraftableDas
       .where(inArray(largeOrders.id, largeOrderIds));
 
     for (const r of orderClientRows) clientNameMap.set(r.orderId, r.clientName);
+
+    // Aggregate order_items quantity and approved assignment quantity per large order
+    const progressRows = await db
+      .select({
+        largeOrderId: orderItems.largeOrderId,
+        totalQty: sql<number>`COALESCE(SUM(${orderItems.quantity}), 0)::int`,
+        approvedQty: sql<number>`COALESCE(SUM(${clothPieceAssignments.approvedQuantity}), 0)::int`,
+      })
+      .from(orderItems)
+      .leftJoin(clothPieceAssignments, eq(clothPieceAssignments.orderItemId, orderItems.id))
+      .where(inArray(orderItems.largeOrderId, largeOrderIds))
+      .groupBy(orderItems.largeOrderId);
+
+    for (const r of progressRows) {
+      largeOrderProgressMap.set(r.largeOrderId, {
+        totalQty: Number(r.totalQty),
+        approvedQty: Number(r.approvedQty),
+      });
+    }
   }
 
   // 6. Build result rows, classify as today / wip, exclude fully-approved past-day ones
@@ -144,7 +168,14 @@ export async function getCraftablesDashboard(db: Database): Promise<CraftableDas
     if (!isToday && !isPastDay) continue;
 
     const pending = counts.total - counts.approved;
-    const progressPct = counts.total > 0 ? Math.round((counts.approved / counts.total) * 100) : 0;
+
+    let progressPct: number;
+    if (c.source === "large_order" && c.largeOrderId) {
+      const lo = largeOrderProgressMap.get(c.largeOrderId);
+      progressPct = lo && lo.totalQty > 0 ? Math.round((lo.approvedQty / lo.totalQty) * 100) : 0;
+    } else {
+      progressPct = counts.total > 0 ? Math.round((counts.approved / counts.total) * 100) : 0;
+    }
 
     result.push({
       id: c.id,

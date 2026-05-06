@@ -1106,7 +1106,7 @@
   - Unit: craftable with `order_item.quantity = 0` → `progressPct = 0` (no crash).
   - Unit: manual craftable → `progressPct` computed as before.
 - **Dependencies:** Task 4.10.
-- **Status:** Pending
+- **Status:** Complete
 
 ---
 
