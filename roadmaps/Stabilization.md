@@ -1228,7 +1228,7 @@
   - Fully assigned craftable → no badge.
   - Manual craftable → no badge regardless of quantities.
 - **Dependencies:** Task 4.5, Task 4.17.
-- **Status:** Pending
+- **Status:** Complete
 
 ---
 

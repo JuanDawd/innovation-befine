@@ -42,6 +42,7 @@ export type CraftableDashboardRow = {
   progressPct: number;
   assignedEmployeeNames: string[];
   section: "today" | "wip";
+  unassignedQuantity: number;
 };
 
 // ─── Query ────────────────────────────────────────────────────────────────────
@@ -120,8 +121,11 @@ export async function getCraftablesDashboard(db: Database): Promise<CraftableDas
   ];
 
   const clientNameMap = new Map<string, string>();
-  // Map: largeOrderId → { totalQuantity, approvedQuantity }
-  const largeOrderProgressMap = new Map<string, { totalQty: number; approvedQty: number }>();
+  // Map: largeOrderId → { totalQty, approvedQty, totalAssigned }
+  const largeOrderProgressMap = new Map<
+    string,
+    { totalQty: number; approvedQty: number; totalAssigned: number }
+  >();
 
   if (largeOrderIds.length > 0) {
     const orderClientRows = await db
@@ -132,12 +136,13 @@ export async function getCraftablesDashboard(db: Database): Promise<CraftableDas
 
     for (const r of orderClientRows) clientNameMap.set(r.orderId, r.clientName);
 
-    // Aggregate order_items quantity and approved assignment quantity per large order
+    // Aggregate order_items quantity, approved assignment quantity, and total assigned per large order
     const progressRows = await db
       .select({
         largeOrderId: orderItems.largeOrderId,
         totalQty: sql<number>`COALESCE(SUM(${orderItems.quantity}), 0)::int`,
         approvedQty: sql<number>`COALESCE(SUM(${clothPieceAssignments.approvedQuantity}), 0)::int`,
+        totalAssigned: sql<number>`COALESCE(SUM(${clothPieceAssignments.assignedQuantity}), 0)::int`,
       })
       .from(orderItems)
       .leftJoin(clothPieceAssignments, eq(clothPieceAssignments.orderItemId, orderItems.id))
@@ -148,6 +153,7 @@ export async function getCraftablesDashboard(db: Database): Promise<CraftableDas
       largeOrderProgressMap.set(r.largeOrderId, {
         totalQty: Number(r.totalQty),
         approvedQty: Number(r.approvedQty),
+        totalAssigned: Number(r.totalAssigned),
       });
     }
   }
@@ -170,9 +176,11 @@ export async function getCraftablesDashboard(db: Database): Promise<CraftableDas
     const pending = counts.total - counts.approved;
 
     let progressPct: number;
+    let unassignedQuantity = 0;
     if (c.source === "large_order" && c.largeOrderId) {
       const lo = largeOrderProgressMap.get(c.largeOrderId);
       progressPct = lo && lo.totalQty > 0 ? Math.round((lo.approvedQty / lo.totalQty) * 100) : 0;
+      unassignedQuantity = lo ? Math.max(0, lo.totalQty - lo.totalAssigned) : 0;
     } else {
       progressPct = counts.total > 0 ? Math.round((counts.approved / counts.total) * 100) : 0;
     }
@@ -193,6 +201,7 @@ export async function getCraftablesDashboard(db: Database): Promise<CraftableDas
       progressPct,
       assignedEmployeeNames: [...(assigneeMap.get(c.id) ?? [])],
       section: isToday ? "today" : "wip",
+      unassignedQuantity,
     });
   }
 

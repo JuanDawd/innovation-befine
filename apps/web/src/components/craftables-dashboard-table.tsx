@@ -80,8 +80,22 @@ function DashboardSection({
                     <td className="px-3 py-2.5 text-right font-mono tabular-nums">
                       {row.totalPieces}
                     </td>
-                    <td className="px-3 py-2.5 text-muted-foreground hidden md:table-cell max-w-[140px] truncate">
-                      {row.largeOrderClientName ?? t("noOrder")}
+                    <td className="px-3 py-2.5 hidden md:table-cell max-w-[180px]">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-muted-foreground truncate">
+                          {row.largeOrderClientName ?? t("noOrder")}
+                        </span>
+                        {row.source === "large_order" &&
+                          row.unassignedQuantity > 0 &&
+                          row.largeOrderId && (
+                            <Link
+                              href={`/large-orders/${row.largeOrderId}#produccion`}
+                              className="text-xs font-medium text-amber-600 dark:text-amber-400 hover:underline"
+                            >
+                              {row.unassignedQuantity} uds. sin asignar
+                            </Link>
+                          )}
+                      </div>
                     </td>
                     <td className="px-3 py-2.5">
                       <div className="flex items-center gap-1.5">
