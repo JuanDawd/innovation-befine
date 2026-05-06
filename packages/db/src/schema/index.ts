@@ -42,7 +42,9 @@ export {
   craftablePieces,
 } from "./craftables";
 export { appointmentStatusEnum, appointments } from "./appointments";
-export { largeOrderStatusEnum, largeOrders, largeOrderPayments } from "./large-orders";
+export { largeOrderStatusEnum, largeOrders, orderItems, largeOrderPayments } from "./large-orders";
 export { absenceTypeEnum, employeeAbsences } from "./absences";
 export { payouts, payoutPeriodDays, payoutTicketItems, payoutCraftablePieces } from "./payouts";
 export { idempotencyKeys } from "./idempotency";
+export { clothPieceAssignments } from "./assignments";
+export { productionLogs } from "./production-logs";

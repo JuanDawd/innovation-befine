@@ -9,6 +9,7 @@
 
 import {
   bigint,
+  check,
   index,
   integer,
   pgEnum,
@@ -16,9 +17,12 @@ import {
   text,
   timestamp,
   uuid,
+  varchar,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { clients } from "./clients";
 import { employees } from "./employees";
+import { clothPieces, clothPieceVariants } from "./cloth-pieces";
 import { paymentMethodEnum } from "./enums";
 
 export const largeOrderStatusEnum = pgEnum("large_order_status_enum", [
@@ -54,6 +58,31 @@ export const largeOrders = pgTable(
   (table) => [
     index("idx_large_orders_client").on(table.clientId),
     index("idx_large_orders_status").on(table.status),
+  ],
+);
+
+export const orderItems = pgTable(
+  "order_items",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    largeOrderId: uuid("large_order_id")
+      .notNull()
+      .references(() => largeOrders.id, { onDelete: "restrict" }),
+    clothPieceId: uuid("cloth_piece_id")
+      .notNull()
+      .references(() => clothPieces.id, { onDelete: "restrict" }),
+    clothPieceVariantId: uuid("cloth_piece_variant_id")
+      .notNull()
+      .references(() => clothPieceVariants.id, { onDelete: "restrict" }),
+    pieceName: varchar("piece_name", { length: 120 }).notNull(),
+    quantity: integer("quantity").notNull(),
+    notes: text("notes"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    check("chk_order_items_quantity", sql`${t.quantity} >= 1`),
+    index("idx_order_items_large_order").on(t.largeOrderId),
   ],
 );
 
