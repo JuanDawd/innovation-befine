@@ -1156,7 +1156,7 @@
   - At 360px: Completado/Aprobado hidden; Pieza, Empleado, Asignado, Progreso visible.
   - axe scan → no violations.
 - **Dependencies:** Task 4.11.
-- **Status:** Pending
+- **Status:** Complete
 
 ---
 
