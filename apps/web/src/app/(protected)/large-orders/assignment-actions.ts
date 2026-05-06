@@ -5,7 +5,13 @@ import { and, eq, sql, sum } from "drizzle-orm";
 import * as Sentry from "@sentry/nextjs";
 import { auth } from "@/lib/auth";
 import { getDb, getTxDb } from "@/lib/db";
-import { orderItems, clothPieceAssignments, productionLogs, employees } from "@befine/db/schema";
+import {
+  orderItems,
+  clothPieceAssignments,
+  productionLogs,
+  employees,
+  users,
+} from "@befine/db/schema";
 import {
   createAssignmentSchema,
   updateCompletedQuantitySchema,
@@ -343,4 +349,30 @@ export async function getOrderItemsWithProgressData(
   const db = getDb();
   const data = await getOrderItemsWithProgress(db, largeOrderId);
   return { success: true, data };
+}
+
+// ─── Task 4.18: listActiveClothiers ──────────────────────────────────────────
+
+export type ClothierOption = { id: string; name: string };
+
+export async function listActiveClothiers(): Promise<ActionResult<ClothierOption[]>> {
+  const guard = await requireAdminOrSecretary();
+  if (!guard.ok)
+    return {
+      success: false,
+      error: {
+        code: guard.code,
+        message: guard.code === "UNAUTHORIZED" ? "No autenticado" : "Sin permisos",
+      },
+    };
+
+  const db = getDb();
+  const rows = await db
+    .select({ id: employees.id, name: users.name })
+    .from(employees)
+    .innerJoin(users, eq(employees.userId, users.id))
+    .where(and(eq(employees.isActive, true), eq(employees.role, "clothier")))
+    .orderBy(users.name);
+
+  return { success: true, data: rows };
 }

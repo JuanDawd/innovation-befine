@@ -4,7 +4,10 @@ import Link from "next/link";
 import { ChevronLeftIcon } from "lucide-react";
 import { getLargeOrder, getLargeOrderCraftableSummary } from "../actions";
 import { listActiveClothPieces } from "@/app/(protected)/admin/catalog/actions/cloth-pieces";
-import { getOrderItemsWithProgressData } from "@/app/(protected)/large-orders/assignment-actions";
+import {
+  getOrderItemsWithProgressData,
+  listActiveClothiers,
+} from "@/app/(protected)/large-orders/assignment-actions";
 import { LargeOrderDetail } from "./large-order-detail";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -19,12 +22,14 @@ export default async function LargeOrderDetailPage({
   if (!UUID_RE.test(id)) redirect("/large-orders/new");
   const t = await getTranslations("largeOrders");
 
-  const [orderResult, batchResult, piecesResult, productionResult] = await Promise.all([
-    getLargeOrder(id),
-    getLargeOrderCraftableSummary(id),
-    listActiveClothPieces(),
-    getOrderItemsWithProgressData(id),
-  ]);
+  const [orderResult, batchResult, piecesResult, productionResult, clothiersResult] =
+    await Promise.all([
+      getLargeOrder(id),
+      getLargeOrderCraftableSummary(id),
+      listActiveClothPieces(),
+      getOrderItemsWithProgressData(id),
+      listActiveClothiers(),
+    ]);
 
   if (!orderResult.success) notFound();
 
@@ -32,6 +37,7 @@ export default async function LargeOrderDetailPage({
   const clothPieces = piecesResult.success ? piecesResult.data : [];
   // null when user lacks permission (stylist/clothier) — detail component hides section accordingly
   const productionItems = productionResult.success ? productionResult.data : null;
+  const clothiers = clothiersResult.success ? clothiersResult.data : [];
 
   return (
     <div className="flex flex-col gap-5 p-4 md:p-6 max-w-2xl mx-auto w-full">
@@ -48,6 +54,7 @@ export default async function LargeOrderDetailPage({
           batches={batches}
           clothPieces={clothPieces}
           productionItems={productionItems}
+          clothiers={clothiers}
         />
       </div>
     </div>

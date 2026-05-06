@@ -1192,7 +1192,7 @@
   - Submit valid assignment → new row appears in table.
   - Submit duplicate assignment that causes a race → `CONFLICT` toast shown.
 - **Dependencies:** Task 4.7, Task 4.16.
-- **Status:** Pending
+- **Status:** Complete
 
 ---
 

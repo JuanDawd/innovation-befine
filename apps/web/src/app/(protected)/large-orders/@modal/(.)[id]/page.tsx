@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { getLargeOrder, getLargeOrderCraftableSummary } from "../../actions";
 import { listActiveClothPieces } from "@/app/(protected)/admin/catalog/actions/cloth-pieces";
-import { getOrderItemsWithProgressData } from "../../assignment-actions";
+import { getOrderItemsWithProgressData, listActiveClothiers } from "../../assignment-actions";
 import { ModalShell } from "@/components/modal-shell";
 import { LargeOrderDetail } from "../../[id]/large-order-detail";
 
@@ -17,18 +17,21 @@ export default async function LargeOrderDetailModal({
   // Let the static (.)new route handle its own segment
   if (!UUID_RE.test(id)) return null;
 
-  const [orderResult, batchResult, piecesResult, productionResult] = await Promise.all([
-    getLargeOrder(id),
-    getLargeOrderCraftableSummary(id),
-    listActiveClothPieces(),
-    getOrderItemsWithProgressData(id),
-  ]);
+  const [orderResult, batchResult, piecesResult, productionResult, clothiersResult] =
+    await Promise.all([
+      getLargeOrder(id),
+      getLargeOrderCraftableSummary(id),
+      listActiveClothPieces(),
+      getOrderItemsWithProgressData(id),
+      listActiveClothiers(),
+    ]);
 
   if (!orderResult.success) notFound();
 
   const batches = batchResult.success ? batchResult.data : [];
   const clothPieces = piecesResult.success ? piecesResult.data : [];
   const productionItems = productionResult.success ? productionResult.data : null;
+  const clothiers = clothiersResult.success ? clothiersResult.data : [];
 
   return (
     <ModalShell title={orderResult.data.clientName} maxWidth="2xl">
@@ -37,6 +40,7 @@ export default async function LargeOrderDetailModal({
         batches={batches}
         clothPieces={clothPieces}
         productionItems={productionItems}
+        clothiers={clothiers}
       />
     </ModalShell>
   );

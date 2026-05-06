@@ -45,6 +45,7 @@ import {
 } from "../line-accordion";
 import { OrderItemProgressTable } from "@/components/order-item-progress-table";
 import type { OrderItemWithProgress } from "@befine/db";
+import { createAssignment, type ClothierOption } from "../assignment-actions";
 
 const PRODUCTION_COLLAPSE_KEY = "production-section-collapsed";
 
@@ -53,6 +54,7 @@ type Props = {
   batches: OrderCraftableSummary[];
   clothPieces: ClothPieceRow[];
   productionItems: OrderItemWithProgress[] | null;
+  clothiers?: ClothierOption[];
 };
 
 const ACTIONS_BY_STATUS: Record<string, string[]> = {
@@ -131,6 +133,7 @@ export function LargeOrderDetail({
   batches,
   clothPieces,
   productionItems,
+  clothiers = [],
 }: Props) {
   const t = useTranslations("largeOrders");
   const router = useRouter();
@@ -790,7 +793,23 @@ export function LargeOrderDetail({
           </button>
           {!productionCollapsed && (
             <div className="p-4">
-              <OrderItemProgressTable items={productionItems} />
+              <OrderItemProgressTable
+                items={productionItems}
+                canAssign={clothiers.length > 0}
+                clothiers={clothiers}
+                onAssign={async (orderItemId, craftablePieceId, assigneeId, assignedQuantity) => {
+                  const res = await createAssignment({
+                    orderItemId,
+                    craftablePieceId,
+                    assigneeId,
+                    assignedQuantity,
+                  });
+                  return res.success
+                    ? { success: true }
+                    : { success: false, error: { message: res.error.message } };
+                }}
+                onRefresh={() => router.refresh()}
+              />
             </div>
           )}
         </div>
