@@ -23,6 +23,8 @@ import {
   users,
   craftables,
   craftablePieces,
+  orderItems,
+  clothPieceAssignments,
 } from "@befine/db/schema";
 import { getCurrentBusinessDay } from "@/lib/business-day";
 import {
@@ -276,6 +278,41 @@ export async function editLargeOrder(
         message: `El precio total no puede ser menor a lo ya pagado ($${totalPaid.toLocaleString("es-CO")})`,
       },
     };
+
+  // Guard: verify no order item has more assigned units than its quantity
+  const itemRows = await db
+    .select({ id: orderItems.id, quantity: orderItems.quantity })
+    .from(orderItems)
+    .where(eq(orderItems.largeOrderId, orderId));
+
+  if (itemRows.length > 0) {
+    const itemIds = itemRows.map((i) => i.id);
+    const assignedSums = await db
+      .select({
+        orderItemId: clothPieceAssignments.orderItemId,
+        totalAssigned: sum(clothPieceAssignments.assignedQuantity),
+      })
+      .from(clothPieceAssignments)
+      .where(inArray(clothPieceAssignments.orderItemId, itemIds))
+      .groupBy(clothPieceAssignments.orderItemId);
+
+    const assignedMap = new Map(
+      assignedSums.map((r) => [r.orderItemId, Number(r.totalAssigned ?? 0)]),
+    );
+
+    for (const item of itemRows) {
+      const assigned = assignedMap.get(item.id) ?? 0;
+      if (assigned > item.quantity) {
+        return {
+          success: false,
+          error: {
+            code: "CONFLICT",
+            message: `No se puede reducir la cantidad por debajo de la ya asignada (${assigned} unidades)`,
+          },
+        };
+      }
+    }
+  }
 
   const result = await db
     .update(largeOrders)

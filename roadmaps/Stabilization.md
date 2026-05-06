@@ -1121,7 +1121,7 @@
   - Unit: order has 10 assigned units; reduce to 9 → `CONFLICT`.
   - Unit: order has 10 assigned units; increase to 12 → success.
 - **Dependencies:** Task 4.7.
-- **Status:** Pending
+- **Status:** Complete
 
 ---
 
