@@ -33,6 +33,27 @@ Used by the `StatusBadge` component. Maps entity statuses to visual categories:
 | `success` (green)   | `bg-status-success`   | closed, approved, delivered, paid_in_full, completed |
 | `negative` (red)    | `bg-status-negative`  | cancelled, no_show                                   |
 
+### Craftable status mapping
+
+Used by `CraftableStatusBadge`. Maps craftable-level status keys to the standard status categories above:
+
+| Craftable status   | Category            | Colour                |
+| ------------------ | ------------------- | --------------------- |
+| `not_started`      | `initial` (grey)    | `bg-status-initial`   |
+| `in_progress`      | `progress` (blue)   | `bg-status-progress`  |
+| `pending_approval` | `attention` (amber) | `bg-status-attention` |
+| `all_approved`     | `success` (green)   | `bg-status-success`   |
+
+### Craftable progress bar color thresholds
+
+Used by `CraftableProgressBar`. Colors the indicator based on completion percentage:
+
+| Range  | Colour | Token                 |
+| ------ | ------ | --------------------- |
+| < 30%  | red    | `bg-status-negative`  |
+| 30–79% | amber  | `bg-status-attention` |
+| ≥ 80%  | green  | `bg-status-success`   |
+
 ### Typography scale
 
 | Level | Class                                   | Usage                         |

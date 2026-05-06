@@ -12,6 +12,7 @@ import { useTranslations } from "next-intl";
 import { CheckCircle2Icon, CircleIcon, Loader2Icon, PlusCircleIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CraftableProgressBar } from "@/components/ui/craftable-progress-bar";
 import {
   listTodayCraftablePieces,
   claimPiece,
@@ -97,12 +98,11 @@ export function ClothierWorkBoard({ employeeId }: { employeeId: string }) {
           <p className="text-xs text-muted-foreground">
             {t("progress", { done: doneCount, total: totalMine })}
           </p>
-          <div className="h-2 rounded-full bg-muted overflow-hidden">
-            <div
-              className="h-full rounded-full bg-primary transition-all"
-              style={{ width: `${totalMine > 0 ? (doneCount / totalMine) * 100 : 0}%` }}
-            />
-          </div>
+          <CraftableProgressBar
+            pct={totalMine > 0 ? Math.round((doneCount / totalMine) * 100) : 0}
+            showLabel={false}
+            className="w-full"
+          />
         </div>
       )}
 

@@ -851,7 +851,7 @@
   - Render `CraftableProgressBar` at 0%, 29%, 30%, 79%, 80%, 100% → verify color transitions.
   - Run axe on the dashboard page → no violations on progress bars.
 - **Dependencies:** Task 3.12, Task 3.13.
-- **Status:** Pending
+- **Status:** Complete
 
 ---
 

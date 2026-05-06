@@ -7,6 +7,11 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { StatusBadge } from "@/components/ui/status-badge";
+import {
+  CraftableStatusBadge,
+  type CraftableStatusKey,
+} from "@/components/ui/craftable-status-badge";
+import { CraftableProgressBar } from "@/components/ui/craftable-progress-bar";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -30,6 +35,22 @@ function pieceBadgeStatus(status: CraftablePieceDetailRow["status"]): string {
     case "approved":
       return "success";
   }
+}
+
+function deriveCraftableStatus(pieces: CraftablePieceDetailRow[]): CraftableStatusKey {
+  if (pieces.length === 0) return "not_started";
+  const approved = pieces.filter((p) => p.status === "approved").length;
+  const pending = pieces.filter((p) => p.status === "pending").length;
+  if (approved >= pieces.length) return "all_approved";
+  if (pending < pieces.length - approved) return "pending_approval";
+  if (approved > 0) return "in_progress";
+  return "not_started";
+}
+
+function craftableProgressPct(pieces: CraftablePieceDetailRow[]): number {
+  if (pieces.length === 0) return 0;
+  const approved = pieces.filter((p) => p.status === "approved").length;
+  return Math.round((approved / pieces.length) * 100);
 }
 
 // ─── Collapsible notes ────────────────────────────────────────────────────────
@@ -266,6 +287,9 @@ export function CraftableDetail({ initialData, isEditor, backHref }: Props) {
     year: "numeric",
   });
 
+  const craftableStatus = deriveCraftableStatus(data.pieces);
+  const progressPct = craftableProgressPct(data.pieces);
+
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6 lg:p-8">
       <div className="flex items-center gap-3">
@@ -277,7 +301,10 @@ export function CraftableDetail({ initialData, isEditor, backHref }: Props) {
           <ArrowLeftIcon className="h-4 w-4" />
         </Link>
         <h1 className="text-xl font-semibold">{t("detailTitle")}</h1>
+        <CraftableStatusBadge status={craftableStatus} />
       </div>
+
+      {data.pieces.length > 0 && <CraftableProgressBar pct={progressPct} className="max-w-xs" />}
 
       {/* Craftable metadata */}
       <div className="rounded-lg border border-border p-4 text-sm flex flex-wrap gap-x-6 gap-y-2">

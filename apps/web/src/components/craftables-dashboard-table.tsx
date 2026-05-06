@@ -4,12 +4,14 @@ import { useState, useTransition, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { type LucideIcon, Loader2Icon, PackageIcon, ClockIcon } from "lucide-react";
-import { StatusBadge } from "@/components/ui/status-badge";
 import { EmptyState } from "@/components/ui/empty-state";
+import {
+  CraftableStatusBadge,
+  type CraftableStatusKey,
+} from "@/components/ui/craftable-status-badge";
+import { CraftableProgressBar } from "@/components/ui/craftable-progress-bar";
 import type { CraftableDashboardRow } from "@befine/db";
 import { getCraftablesDashboardData } from "@/app/(protected)/craftables/actions";
-
-type CraftableStatusKey = "not_started" | "in_progress" | "pending_approval" | "all_approved";
 
 function deriveCraftableStatus(row: CraftableDashboardRow): CraftableStatusKey {
   if (row.totalPieces === 0 || row.approvedPieces === 0) {
@@ -19,33 +21,6 @@ function deriveCraftableStatus(row: CraftableDashboardRow): CraftableStatusKey {
   if (row.approvedPieces >= row.totalPieces) return "all_approved";
   if (row.pendingPieces < row.totalPieces - row.approvedPieces) return "pending_approval";
   return "in_progress";
-}
-
-function statusToBadgeStatus(key: CraftableStatusKey): string {
-  switch (key) {
-    case "not_started":
-      return "initial";
-    case "in_progress":
-      return "progress";
-    case "pending_approval":
-      return "attention";
-    case "all_approved":
-      return "success";
-  }
-}
-
-function ProgressBar({ pct }: { pct: number }) {
-  const color =
-    pct >= 80 ? "bg-status-success" : pct >= 30 ? "bg-status-attention" : "bg-status-negative";
-
-  return (
-    <div className="flex items-center gap-2 min-w-[80px]">
-      <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
-        <div className={`h-full rounded-full ${color}`} style={{ width: `${pct}%` }} />
-      </div>
-      <span className="text-xs tabular-nums text-muted-foreground w-8 text-right">{pct}%</span>
-    </div>
-  );
 }
 
 function DashboardSection({
@@ -89,16 +64,6 @@ function DashboardSection({
             <tbody className="divide-y divide-border">
               {rows.map((row) => {
                 const statusKey = deriveCraftableStatus(row);
-                const badgeStatus = statusToBadgeStatus(statusKey);
-                const statusLabel = t(
-                  statusKey === "not_started"
-                    ? "statusNotStarted"
-                    : statusKey === "in_progress"
-                      ? "statusInProgress"
-                      : statusKey === "pending_approval"
-                        ? "statusPendingApproval"
-                        : "statusAllApproved",
-                );
                 const assigned =
                   row.assignedEmployeeNames.length > 0
                     ? row.assignedEmployeeNames.join(", ")
@@ -107,7 +72,7 @@ function DashboardSection({
                 return (
                   <tr key={row.id} className="hover:bg-muted/30">
                     <td className="px-3 py-2.5">
-                      <StatusBadge status={badgeStatus} label={statusLabel} />
+                      <CraftableStatusBadge status={statusKey} />
                     </td>
                     <td className="px-3 py-2.5 text-muted-foreground hidden sm:table-cell max-w-[160px] truncate">
                       {assigned}
@@ -123,7 +88,7 @@ function DashboardSection({
                         <span className="text-xs tabular-nums text-muted-foreground whitespace-nowrap">
                           {row.approvedPieces}/{row.totalPieces}
                         </span>
-                        <ProgressBar pct={row.progressPct} />
+                        <CraftableProgressBar pct={row.progressPct} />
                       </div>
                     </td>
                     <td className="px-3 py-2.5">
