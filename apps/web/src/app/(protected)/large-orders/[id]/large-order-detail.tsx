@@ -45,7 +45,13 @@ import {
 } from "../line-accordion";
 import { OrderItemProgressTable } from "@/components/order-item-progress-table";
 import type { OrderItemWithProgress } from "@befine/db";
-import { createAssignment, type ClothierOption } from "../assignment-actions";
+import {
+  createAssignment,
+  updateCompletedQuantity,
+  approveAssignmentQuantity,
+  type ClothierOption,
+  type ProductionUserContext,
+} from "../assignment-actions";
 
 const PRODUCTION_COLLAPSE_KEY = "production-section-collapsed";
 
@@ -55,6 +61,8 @@ type Props = {
   clothPieces: ClothPieceRow[];
   productionItems: OrderItemWithProgress[] | null;
   clothiers?: ClothierOption[];
+  userRole?: ProductionUserContext["role"];
+  currentEmployeeId?: string | null;
 };
 
 const ACTIONS_BY_STATUS: Record<string, string[]> = {
@@ -134,6 +142,8 @@ export function LargeOrderDetail({
   clothPieces,
   productionItems,
   clothiers = [],
+  userRole = "other",
+  currentEmployeeId = null,
 }: Props) {
   const t = useTranslations("largeOrders");
   const router = useRouter();
@@ -795,8 +805,12 @@ export function LargeOrderDetail({
             <div className="p-4">
               <OrderItemProgressTable
                 items={productionItems}
-                canAssign={clothiers.length > 0}
+                canAssign={
+                  clothiers.length > 0 && (userRole === "cashier_admin" || userRole === "secretary")
+                }
                 clothiers={clothiers}
+                userRole={userRole}
+                currentEmployeeId={currentEmployeeId}
                 onAssign={async (orderItemId, craftablePieceId, assigneeId, assignedQuantity) => {
                   const res = await createAssignment({
                     orderItemId,
@@ -807,6 +821,32 @@ export function LargeOrderDetail({
                   return res.success
                     ? { success: true }
                     : { success: false, error: { message: res.error.message } };
+                }}
+                onReportProgress={async (assignmentId, completedQuantity, expectedVersion) => {
+                  const res = await updateCompletedQuantity({
+                    assignmentId,
+                    completedQuantity,
+                    expectedVersion,
+                  });
+                  return res.success
+                    ? { success: true }
+                    : {
+                        success: false,
+                        error: { message: res.error.message, code: res.error.code },
+                      };
+                }}
+                onApprove={async (assignmentId, approvedQuantity, expectedVersion) => {
+                  const res = await approveAssignmentQuantity({
+                    assignmentId,
+                    approvedQuantity,
+                    expectedVersion,
+                  });
+                  return res.success
+                    ? { success: true }
+                    : {
+                        success: false,
+                        error: { message: res.error.message, code: res.error.code },
+                      };
                 }}
                 onRefresh={() => router.refresh()}
               />

@@ -7,6 +7,7 @@ import { listActiveClothPieces } from "@/app/(protected)/admin/catalog/actions/c
 import {
   getOrderItemsWithProgressData,
   listActiveClothiers,
+  getCurrentUserProductionContext,
 } from "@/app/(protected)/large-orders/assignment-actions";
 import { LargeOrderDetail } from "./large-order-detail";
 
@@ -22,13 +23,14 @@ export default async function LargeOrderDetailPage({
   if (!UUID_RE.test(id)) redirect("/large-orders/new");
   const t = await getTranslations("largeOrders");
 
-  const [orderResult, batchResult, piecesResult, productionResult, clothiersResult] =
+  const [orderResult, batchResult, piecesResult, productionResult, clothiersResult, userCtx] =
     await Promise.all([
       getLargeOrder(id),
       getLargeOrderCraftableSummary(id),
       listActiveClothPieces(),
       getOrderItemsWithProgressData(id),
       listActiveClothiers(),
+      getCurrentUserProductionContext(),
     ]);
 
   if (!orderResult.success) notFound();
@@ -55,6 +57,8 @@ export default async function LargeOrderDetailPage({
           clothPieces={clothPieces}
           productionItems={productionItems}
           clothiers={clothiers}
+          userRole={userCtx.role}
+          currentEmployeeId={userCtx.employeeId}
         />
       </div>
     </div>

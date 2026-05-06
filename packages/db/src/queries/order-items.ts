@@ -42,6 +42,7 @@ export type AssignmentProgressRow = {
   approvedQuantity: number;
   progressPct: number;
   dataAnomaly: boolean;
+  version: number;
 };
 
 export async function getAssignmentProgress(
@@ -64,6 +65,7 @@ export async function getAssignmentProgress(
       assignedQuantity: clothPieceAssignments.assignedQuantity,
       completedQuantity: clothPieceAssignments.completedQuantity,
       approvedQuantity: clothPieceAssignments.approvedQuantity,
+      version: clothPieceAssignments.version,
     })
     .from(clothPieceAssignments)
     .innerJoin(employees, eq(clothPieceAssignments.assigneeId, employees.id))
@@ -88,6 +90,7 @@ export async function getAssignmentProgress(
     approvedQuantity: r.approvedQuantity,
     progressPct: item.quantity > 0 ? Math.round((r.approvedQuantity / item.quantity) * 100) : 0,
     dataAnomaly,
+    version: r.version,
   }));
 
   const unassigned = Math.max(0, item.quantity - totalAssigned);
@@ -101,6 +104,7 @@ export async function getAssignmentProgress(
       approvedQuantity: 0,
       progressPct: 0,
       dataAnomaly: false,
+      version: 0,
     });
   }
 

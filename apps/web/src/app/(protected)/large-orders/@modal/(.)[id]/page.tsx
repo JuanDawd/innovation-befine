@@ -1,7 +1,11 @@
 import { notFound } from "next/navigation";
 import { getLargeOrder, getLargeOrderCraftableSummary } from "../../actions";
 import { listActiveClothPieces } from "@/app/(protected)/admin/catalog/actions/cloth-pieces";
-import { getOrderItemsWithProgressData, listActiveClothiers } from "../../assignment-actions";
+import {
+  getOrderItemsWithProgressData,
+  listActiveClothiers,
+  getCurrentUserProductionContext,
+} from "../../assignment-actions";
 import { ModalShell } from "@/components/modal-shell";
 import { LargeOrderDetail } from "../../[id]/large-order-detail";
 
@@ -17,13 +21,14 @@ export default async function LargeOrderDetailModal({
   // Let the static (.)new route handle its own segment
   if (!UUID_RE.test(id)) return null;
 
-  const [orderResult, batchResult, piecesResult, productionResult, clothiersResult] =
+  const [orderResult, batchResult, piecesResult, productionResult, clothiersResult, userCtx] =
     await Promise.all([
       getLargeOrder(id),
       getLargeOrderCraftableSummary(id),
       listActiveClothPieces(),
       getOrderItemsWithProgressData(id),
       listActiveClothiers(),
+      getCurrentUserProductionContext(),
     ]);
 
   if (!orderResult.success) notFound();
@@ -41,6 +46,8 @@ export default async function LargeOrderDetailModal({
         clothPieces={clothPieces}
         productionItems={productionItems}
         clothiers={clothiers}
+        userRole={userCtx.role}
+        currentEmployeeId={userCtx.employeeId}
       />
     </ModalShell>
   );

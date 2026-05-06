@@ -351,6 +351,33 @@ export async function getOrderItemsWithProgressData(
   return { success: true, data };
 }
 
+// ─── Task 4.19: getCurrentUserProductionContext ──────────────────────────────
+
+export type ProductionUserContext = {
+  role: "cashier_admin" | "secretary" | "clothier" | "other";
+  employeeId: string | null;
+};
+
+export async function getCurrentUserProductionContext(): Promise<ProductionUserContext> {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) return { role: "other", employeeId: null };
+
+  const db = getDb();
+  const [emp] = await db
+    .select({ id: employees.id })
+    .from(employees)
+    .where(eq(employees.userId, session.user.id))
+    .limit(1);
+
+  const user = session.user as { role?: string };
+  const role = (user.role ?? "") as ProductionUserContext["role"];
+  const validRoles: ProductionUserContext["role"][] = ["cashier_admin", "secretary", "clothier"];
+  return {
+    role: validRoles.includes(role) ? role : "other",
+    employeeId: emp?.id ?? null,
+  };
+}
+
 // ─── Task 4.18: listActiveClothiers ──────────────────────────────────────────
 
 export type ClothierOption = { id: string; name: string };

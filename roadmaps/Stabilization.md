@@ -1211,7 +1211,7 @@
   - As admin: click "Aprobar" → enter valid qty → row updates.
   - Simulate `STALE_DATA` → toast shown, row reverts.
 - **Dependencies:** Task 4.8, Task 4.9, Task 4.16.
-- **Status:** Pending
+- **Status:** Complete
 
 ---
 
