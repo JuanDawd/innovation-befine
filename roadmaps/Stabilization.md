@@ -1293,7 +1293,7 @@
 - **Testing Steps:**
   - `turbo test packages/db` → all assignment tests green.
 - **Dependencies:** Task 4.7, Task 4.8, Task 4.9.
-- **Status:** Pending
+- **Status:** Complete
 
 ---
 
