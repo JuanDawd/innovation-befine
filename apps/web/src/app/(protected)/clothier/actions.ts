@@ -1,18 +1,18 @@
 "use server";
 
 /**
- * Clothier craftable actions — T046
+ * Clothier product actions — T046
  *
- * listTodayCraftablePieces: clothier — returns their assigned + unassigned pieces for the current day.
- * claimPiece:               clothier — self-claim an unassigned piece (optimistic lock).
- * markPieceDone:            clothier — transition piece to done_pending_approval.
+ * listTodayProductPieces: clothier — returns their assigned + unassigned pieces for the current day.
+ * claimPiece:             clothier — self-claim an unassigned piece (optimistic lock).
+ * markPieceDone:          clothier — transition piece to done_pending_approval.
  */
 
 import { headers } from "next/headers";
 import { eq, and, or, isNull, inArray } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { getDb, getTxDb } from "@/lib/db";
-import { employees, users, craftables, craftablePieces, clothPieces } from "@befine/db/schema";
+import { employees, users, products, productPieces, clothPieces } from "@befine/db/schema";
 import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
 import { getCurrentBusinessDay } from "@/lib/business-day";
@@ -24,9 +24,9 @@ import { pieceActionSchema } from "@befine/types";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export type CraftablePieceRow = {
+export type ProductPieceRow = {
   id: string;
-  craftableId: string;
+  productId: string;
   clothPieceName: string;
   quantity: number;
   color: string | null;
@@ -61,9 +61,9 @@ async function getClothierEmployee(): Promise<{
   return { session, employeeId: emp.id, userId: session.user.id };
 }
 
-// ─── List today's craftable pieces for this clothier ─────────────────────────
+// ─── List today's product pieces for this clothier ───────────────────────────
 
-export async function listTodayCraftablePieces(): Promise<ActionResult<CraftablePieceRow[]>> {
+export async function listTodayProductPieces(): Promise<ActionResult<ProductPieceRow[]>> {
   const ctx = await getClothierEmployee();
   if (!ctx) return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
 
@@ -72,36 +72,36 @@ export async function listTodayCraftablePieces(): Promise<ActionResult<Craftable
 
   const db = getDb();
 
-  // Pieces assigned to this clothier OR unassigned — from today's craftables
+  // Pieces assigned to this clothier OR unassigned — from today's products
   const rows = await db
     .select({
-      id: craftablePieces.id,
-      craftableId: craftablePieces.craftableId,
+      id: productPieces.id,
+      productId: productPieces.productId,
       clothPieceName: clothPieces.name,
-      quantity: craftablePieces.quantity,
-      color: craftablePieces.color,
-      style: craftablePieces.style,
-      size: craftablePieces.size,
-      instructions: craftablePieces.instructions,
-      autoApproved: craftables.autoApproved,
-      assignedToEmployeeId: craftablePieces.assignedToEmployeeId,
-      claimSource: craftablePieces.claimSource,
-      status: craftablePieces.status,
-      version: craftablePieces.version,
+      quantity: productPieces.quantity,
+      color: productPieces.color,
+      style: productPieces.style,
+      size: productPieces.size,
+      instructions: productPieces.instructions,
+      autoApproved: products.autoApproved,
+      assignedToEmployeeId: productPieces.assignedToEmployeeId,
+      claimSource: productPieces.claimSource,
+      status: productPieces.status,
+      version: productPieces.version,
     })
-    .from(craftablePieces)
-    .innerJoin(craftables, eq(craftablePieces.craftableId, craftables.id))
-    .innerJoin(clothPieces, eq(craftablePieces.clothPieceId, clothPieces.id))
+    .from(productPieces)
+    .innerJoin(products, eq(productPieces.productId, products.id))
+    .innerJoin(clothPieces, eq(productPieces.clothPieceId, clothPieces.id))
     .where(
       and(
-        eq(craftables.businessDayId, businessDay.id),
+        eq(products.businessDayId, businessDay.id),
         or(
-          eq(craftablePieces.assignedToEmployeeId, ctx.employeeId),
-          isNull(craftablePieces.assignedToEmployeeId),
+          eq(productPieces.assignedToEmployeeId, ctx.employeeId),
+          isNull(productPieces.assignedToEmployeeId),
         ),
       ),
     )
-    .orderBy(craftablePieces.status);
+    .orderBy(productPieces.status);
 
   return { success: true, data: rows };
 }
@@ -136,7 +136,7 @@ export async function claimPiece(
   const db = getDb();
 
   const result = await db
-    .update(craftablePieces)
+    .update(productPieces)
     .set({
       assignedToEmployeeId: ctx.employeeId,
       claimSource: "self_claimed",
@@ -145,12 +145,12 @@ export async function claimPiece(
     })
     .where(
       and(
-        eq(craftablePieces.id, pieceId),
-        isNull(craftablePieces.assignedToEmployeeId),
-        eq(craftablePieces.version, expectedVersion),
+        eq(productPieces.id, pieceId),
+        isNull(productPieces.assignedToEmployeeId),
+        eq(productPieces.version, expectedVersion),
       ),
     )
-    .returning({ id: craftablePieces.id });
+    .returning({ id: productPieces.id });
 
   if (result.length === 0)
     return {
@@ -200,12 +200,12 @@ export async function markPieceDone(
   const txDb = getTxDb();
   const db = getDb();
 
-  // Resolve the piece's parent craftable to check auto_approved flag
+  // Resolve the piece's parent product to check auto_approved flag
   const [pieceRow] = await db
-    .select({ autoApproved: craftables.autoApproved })
-    .from(craftablePieces)
-    .innerJoin(craftables, eq(craftablePieces.craftableId, craftables.id))
-    .where(eq(craftablePieces.id, pieceId))
+    .select({ autoApproved: products.autoApproved })
+    .from(productPieces)
+    .innerJoin(products, eq(productPieces.productId, products.id))
+    .where(eq(productPieces.id, pieceId))
     .limit(1);
 
   if (!pieceRow)
@@ -220,7 +220,7 @@ export async function markPieceDone(
   const successResult: ActionResult<void> = { success: true, data: undefined };
   const txResult = await txDb.transaction(async (tx) => {
     const result = await tx
-      .update(craftablePieces)
+      .update(productPieces)
       .set({
         status: newStatus,
         completedAt: now,
@@ -229,13 +229,13 @@ export async function markPieceDone(
       })
       .where(
         and(
-          eq(craftablePieces.id, pieceId),
-          eq(craftablePieces.assignedToEmployeeId, ctx.employeeId),
-          eq(craftablePieces.status, "pending"),
-          eq(craftablePieces.version, expectedVersion),
+          eq(productPieces.id, pieceId),
+          eq(productPieces.assignedToEmployeeId, ctx.employeeId),
+          eq(productPieces.status, "pending"),
+          eq(productPieces.version, expectedVersion),
         ),
       )
-      .returning({ id: craftablePieces.id });
+      .returning({ id: productPieces.id });
 
     if (result.length === 0) return null;
 
@@ -270,7 +270,7 @@ export async function markPieceDone(
         recipientEmployeeId: staff.id,
         type: "generic",
         message: "Una pieza de confección está lista para aprobar.",
-        link: "/admin/craftables",
+        link: "/admin/products",
       }),
     ),
   );

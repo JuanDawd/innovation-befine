@@ -6,7 +6,7 @@ export default async function AnalyticsPage() {
   const emptyMetrics = {
     revenue: 0,
     serviceRevenue: 0,
-    craftableSalesRevenue: 0,
+    productSalesRevenue: 0,
     jobs: 0,
     earnings: 0,
     earningsBySource: { service: 0, pieceCreated: 0, workedDay: 0 },

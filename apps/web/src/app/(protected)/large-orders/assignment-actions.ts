@@ -78,7 +78,7 @@ export async function createAssignment(
       },
     };
 
-  const { orderItemId, craftablePieceId, assigneeId, assignedQuantity } = parsed.data;
+  const { orderItemId, productPieceId, assigneeId, assignedQuantity } = parsed.data;
 
   const rl = await checkRateLimit(rateLimits.general, guard.session!.user.id);
   if (!rl.allowed)
@@ -133,7 +133,7 @@ export async function createAssignment(
 
     const [inserted] = await tx
       .insert(clothPieceAssignments)
-      .values({ orderItemId, craftablePieceId, assigneeId, assignedQuantity })
+      .values({ orderItemId, productPieceId, assigneeId, assignedQuantity })
       .returning({ id: clothPieceAssignments.id });
 
     const unassigned = item.quantity - currentAssigned - assignedQuantity;

@@ -42,7 +42,7 @@ async function requireAdmin() {
 export type PeriodMetrics = {
   revenue: number;
   serviceRevenue: number;
-  craftableSalesRevenue: number;
+  productSalesRevenue: number;
   jobs: number;
   earnings: number;
   earningsBySource: {
@@ -124,7 +124,7 @@ export async function getAnalyticsSummary(
       current: {
         revenue: currentRevenue.totalRevenue,
         serviceRevenue: currentRevenue.serviceRevenue,
-        craftableSalesRevenue: currentRevenue.craftableSalesRevenue,
+        productSalesRevenue: currentRevenue.productSalesRevenue,
         jobs: currentRevenue.totalJobs,
         earnings: sumEarnings(currentEarnings),
         earningsBySource: {
@@ -136,7 +136,7 @@ export async function getAnalyticsSummary(
       prior: {
         revenue: priorRevenue.totalRevenue,
         serviceRevenue: priorRevenue.serviceRevenue,
-        craftableSalesRevenue: priorRevenue.craftableSalesRevenue,
+        productSalesRevenue: priorRevenue.productSalesRevenue,
         jobs: priorRevenue.totalJobs,
         earnings: sumEarnings(priorEarnings),
         earningsBySource: {

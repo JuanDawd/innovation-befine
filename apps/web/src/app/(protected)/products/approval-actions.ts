@@ -1,11 +1,11 @@
 "use server";
 
 /**
- * Craftable piece approval actions — T047
+ * Product piece approval actions — T047
  *
  * listPendingApprovals: secretary/admin — pieces in done_pending_approval state.
- * approvePiece:         secretary/admin — transition piece to approved.
- * adminMarkApproved:    admin only — mark a piece approved directly (skipping clothier step).
+ * approveProductPiece:         secretary/admin — transition piece to approved.
+ * adminMarkProductPieceApproved:    admin only — mark a piece approved directly (skipping clothier step).
  */
 
 import { headers } from "next/headers";
@@ -15,8 +15,8 @@ import { getDb } from "@/lib/db";
 import {
   employees,
   users,
-  craftables,
-  craftablePieces,
+  products,
+  productPieces,
   clothPieces,
   clothPieceVariants,
 } from "@befine/db/schema";
@@ -29,9 +29,9 @@ import { pieceActionSchema } from "@befine/types";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export type PendingCraftablePieceApprovalRow = {
+export type PendingProductPieceApprovalRow = {
   id: string;
-  craftableId: string;
+  productId: string;
   clothPieceName: string;
   clothPieceVariantName: string;
   assignedToEmployeeId: string | null;
@@ -60,8 +60,8 @@ async function getStaffEmployee(): Promise<{ employeeId: string; userId: string 
 
 // ─── List pending approvals ───────────────────────────────────────────────────
 
-export async function listPendingCraftablePieceApprovals(): Promise<
-  ActionResult<PendingCraftablePieceApprovalRow[]>
+export async function listPendingProductPieceApprovals(): Promise<
+  ActionResult<PendingProductPieceApprovalRow[]>
 > {
   const ctx = await getStaffEmployee();
   if (!ctx) return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
@@ -73,37 +73,37 @@ export async function listPendingCraftablePieceApprovals(): Promise<
 
   const rows = await db
     .select({
-      id: craftablePieces.id,
-      craftableId: craftablePieces.craftableId,
+      id: productPieces.id,
+      productId: productPieces.productId,
       clothPieceName: clothPieces.name,
       clothPieceVariantName: clothPieceVariants.name,
-      assignedToEmployeeId: craftablePieces.assignedToEmployeeId,
+      assignedToEmployeeId: productPieces.assignedToEmployeeId,
       assignedEmployeeName: users.name,
-      claimSource: craftablePieces.claimSource,
-      status: craftablePieces.status,
-      completedAt: craftablePieces.completedAt,
-      version: craftablePieces.version,
+      claimSource: productPieces.claimSource,
+      status: productPieces.status,
+      completedAt: productPieces.completedAt,
+      version: productPieces.version,
     })
-    .from(craftablePieces)
-    .innerJoin(craftables, eq(craftablePieces.craftableId, craftables.id))
-    .innerJoin(clothPieces, eq(craftablePieces.clothPieceId, clothPieces.id))
-    .innerJoin(clothPieceVariants, eq(craftablePieces.clothPieceVariantId, clothPieceVariants.id))
-    .leftJoin(employees, eq(craftablePieces.assignedToEmployeeId, employees.id))
+    .from(productPieces)
+    .innerJoin(products, eq(productPieces.productId, products.id))
+    .innerJoin(clothPieces, eq(productPieces.clothPieceId, clothPieces.id))
+    .innerJoin(clothPieceVariants, eq(productPieces.clothPieceVariantId, clothPieceVariants.id))
+    .leftJoin(employees, eq(productPieces.assignedToEmployeeId, employees.id))
     .leftJoin(users, eq(employees.userId, users.id))
     .where(
       and(
-        eq(craftables.businessDayId, businessDay.id),
-        inArray(craftablePieces.status, ["done_pending_approval", "pending"]),
+        eq(products.businessDayId, businessDay.id),
+        inArray(productPieces.status, ["done_pending_approval", "pending"]),
       ),
     )
-    .orderBy(craftablePieces.status, craftablePieces.completedAt);
+    .orderBy(productPieces.status, productPieces.completedAt);
 
   return { success: true, data: rows };
 }
 
 // ─── Approve a piece (done_pending_approval → approved) ──────────────────────
 
-export async function approveCraftablePiece(
+export async function approveProductPiece(
   rawPieceId: unknown,
   rawExpectedVersion: unknown,
 ): Promise<ActionResult<void>> {
@@ -131,7 +131,7 @@ export async function approveCraftablePiece(
   const db = getDb();
 
   const result = await db
-    .update(craftablePieces)
+    .update(productPieces)
     .set({
       status: "approved",
       approvedAt: new Date(),
@@ -140,12 +140,12 @@ export async function approveCraftablePiece(
     })
     .where(
       and(
-        eq(craftablePieces.id, pieceId),
-        eq(craftablePieces.status, "done_pending_approval"),
-        eq(craftablePieces.version, expectedVersion),
+        eq(productPieces.id, pieceId),
+        eq(productPieces.status, "done_pending_approval"),
+        eq(productPieces.version, expectedVersion),
       ),
     )
-    .returning({ id: craftablePieces.id });
+    .returning({ id: productPieces.id });
 
   if (result.length === 0)
     return {
@@ -153,14 +153,14 @@ export async function approveCraftablePiece(
       error: { code: "STALE_DATA", message: "El estado cambió. Recarga la página." },
     };
 
-  revalidatePath("/admin/craftables");
-  revalidatePath("/secretary/craftables");
+  revalidatePath("/admin/products");
+  revalidatePath("/secretary/products");
   return { success: true, data: undefined };
 }
 
 // ─── Admin: directly approve a pending piece (skip clothier step) ─────────────
 
-export async function adminMarkCraftablePieceApproved(
+export async function adminMarkProductPieceApproved(
   rawPieceId: unknown,
   rawExpectedVersion: unknown,
 ): Promise<ActionResult<void>> {
@@ -199,7 +199,7 @@ export async function adminMarkCraftablePieceApproved(
     return { success: false, error: { code: "NOT_FOUND", message: "Empleado no encontrado" } };
 
   const result = await db
-    .update(craftablePieces)
+    .update(productPieces)
     .set({
       status: "approved",
       completedAt: new Date(),
@@ -209,12 +209,12 @@ export async function adminMarkCraftablePieceApproved(
     })
     .where(
       and(
-        eq(craftablePieces.id, pieceId),
-        eq(craftablePieces.status, "pending"),
-        eq(craftablePieces.version, expectedVersion),
+        eq(productPieces.id, pieceId),
+        eq(productPieces.status, "pending"),
+        eq(productPieces.version, expectedVersion),
       ),
     )
-    .returning({ id: craftablePieces.id });
+    .returning({ id: productPieces.id });
 
   if (result.length === 0)
     return {
@@ -222,7 +222,7 @@ export async function adminMarkCraftablePieceApproved(
       error: { code: "STALE_DATA", message: "El estado cambió. Recarga la página." },
     };
 
-  revalidatePath("/admin/craftables");
-  revalidatePath("/secretary/craftables");
+  revalidatePath("/admin/products");
+  revalidatePath("/secretary/products");
   return { success: true, data: undefined };
 }

@@ -6,8 +6,8 @@
  * rules enforced by each module.
  *
  * Flow (a): appointment → ticket → checkout → payout includes the ticket
- * Flow (b): craftable → pieces done → approve → payout includes pieces
- * Flow (c): large-order → link craftables → record payments → paid_in_full
+ * Flow (b): product → pieces done → approve → payout includes pieces
+ * Flow (c): large-order → link products → record payments → paid_in_full
  * Flow (d): offline queue flush deduplicates on retry
  */
 
@@ -171,13 +171,13 @@ describe("Flow (a): appointment → ticket → checkout → payout coverage", ()
   });
 });
 
-// ─── Flow (b): Craftable → Pieces Done → Approve → Payout Includes Pieces ────
+// ─── Flow (b): Product → Pieces Done → Approve → Payout Includes Pieces ─────
 
-describe("Flow (b): craftable → pieces done → approve → clothier payout coverage", () => {
+describe("Flow (b): product → pieces done → approve → clothier payout coverage", () => {
   type PieceStatus = "pending" | "done_pending_approval" | "approved";
-  type CraftablePiece = {
+  type ProductPiece = {
     id: string;
-    craftableId: string;
+    productId: string;
     businessDayId: string;
     assignedToEmployeeId: string;
     status: PieceStatus;
@@ -185,7 +185,7 @@ describe("Flow (b): craftable → pieces done → approve → clothier payout co
   };
 
   function computeClothierUnsettled(
-    pieces: CraftablePiece[],
+    pieces: ProductPiece[],
     settledDays: { employeeId: string; businessDayId: string }[],
     employeeId: string,
     closedDayIds: string[],
@@ -210,9 +210,9 @@ describe("Flow (b): craftable → pieces done → approve → clothier payout co
     const empId = uuid();
     const dayId = uuid();
 
-    const piece: CraftablePiece = {
+    const piece: ProductPiece = {
       id: uuid(),
-      craftableId: uuid(),
+      productId: uuid(),
       businessDayId: dayId,
       assignedToEmployeeId: empId,
       status: "approved",
@@ -227,9 +227,9 @@ describe("Flow (b): craftable → pieces done → approve → clothier payout co
     const empId = uuid();
     const dayId = uuid();
 
-    const piece: CraftablePiece = {
+    const piece: ProductPiece = {
       id: uuid(),
-      craftableId: uuid(),
+      productId: uuid(),
       businessDayId: dayId,
       assignedToEmployeeId: empId,
       status: "done_pending_approval",
@@ -243,10 +243,10 @@ describe("Flow (b): craftable → pieces done → approve → clothier payout co
   it("payout total = sum of approved piece rates", () => {
     const empId = uuid();
     const dayId = uuid();
-    const pieces: CraftablePiece[] = [
+    const pieces: ProductPiece[] = [
       {
         id: uuid(),
-        craftableId: uuid(),
+        productId: uuid(),
         businessDayId: dayId,
         assignedToEmployeeId: empId,
         status: "approved",
@@ -254,7 +254,7 @@ describe("Flow (b): craftable → pieces done → approve → clothier payout co
       },
       {
         id: uuid(),
-        craftableId: uuid(),
+        productId: uuid(),
         businessDayId: dayId,
         assignedToEmployeeId: empId,
         status: "approved",
@@ -262,7 +262,7 @@ describe("Flow (b): craftable → pieces done → approve → clothier payout co
       },
       {
         id: uuid(),
-        craftableId: uuid(),
+        productId: uuid(),
         businessDayId: dayId,
         assignedToEmployeeId: empId,
         status: "done_pending_approval",
@@ -280,9 +280,9 @@ describe("Flow (b): craftable → pieces done → approve → clothier payout co
   it("day settles after payout covers it — no more unsettled", () => {
     const empId = uuid();
     const dayId = uuid();
-    const piece: CraftablePiece = {
+    const piece: ProductPiece = {
       id: uuid(),
-      craftableId: uuid(),
+      productId: uuid(),
       businessDayId: dayId,
       assignedToEmployeeId: empId,
       status: "approved",
@@ -296,21 +296,21 @@ describe("Flow (b): craftable → pieces done → approve → clothier payout co
   });
 
   it("piece variant rate is used (not cloth_piece base rate)", () => {
-    // Invariant: craftable_pieces joins cloth_piece_variants, not cloth_pieces directly
+    // Invariant: product_pieces joins cloth_piece_variants, not cloth_pieces directly
     // Simulate variant resolution
     const variants = [
       { id: "v1", clothPieceId: "cp1", name: "Dos piezas", pieceRate: 12_000 },
       { id: "v2", clothPieceId: "cp1", name: "Entera", pieceRate: 18_000 },
     ];
 
-    const craftablePieceVariantId = "v2";
-    const resolvedRate = variants.find((v) => v.id === craftablePieceVariantId)?.pieceRate;
+    const productPieceVariantId = "v2";
+    const resolvedRate = variants.find((v) => v.id === productPieceVariantId)?.pieceRate;
 
     expect(resolvedRate).toBe(18_000);
   });
 });
 
-// ─── Flow (c): Large-order → Link craftables → Payments → paid_in_full ────────
+// ─── Flow (c): Large-order → Link products → Payments → paid_in_full ────────
 
 describe("Flow (c): large-order payment auto-transition to paid_in_full", () => {
   type OrderStatus = "pending" | "in_progress" | "paid_in_full" | "cancelled";
@@ -380,17 +380,17 @@ describe("Flow (c): large-order payment auto-transition to paid_in_full", () => 
     expect(computeOrderStatus(order)).toBe("pending");
   });
 
-  it("linked craftable pieces are included in order value", () => {
-    // Invariant: craftable_pieces linked via craftables.large_order_id
-    // Simulate total computation including linked craftables
+  it("linked product pieces are included in order value", () => {
+    // Invariant: product_pieces linked via products.large_order_id
+    // Simulate total computation including linked products
     const orderTotal = 800_000;
-    const craftablePieces = [
+    const productPieces = [
       { largeOrderId: "order-1", pieceRate: 15_000, status: "approved" as const },
       { largeOrderId: "order-1", pieceRate: 20_000, status: "approved" as const },
       { largeOrderId: "order-2", pieceRate: 99_000, status: "approved" as const },
     ];
 
-    const linkedCost = craftablePieces
+    const linkedCost = productPieces
       .filter((p) => p.largeOrderId === "order-1" && p.status === "approved")
       .reduce((s, p) => s + p.pieceRate, 0);
 

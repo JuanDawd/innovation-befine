@@ -1,10 +1,10 @@
 import { describe, it, expect } from "vitest";
 
-// ─── Pure-logic mirrors of getCraftablesDashboard internals ───────────────────
+// ─── Pure-logic mirrors of getProductsDashboard internals ───────────────────
 
 type Section = "today" | "wip";
 
-type MockCraftable = {
+type MockProduct = {
   id: string;
   businessDayId: string;
   businessDayOpenedAt: Date;
@@ -18,8 +18,8 @@ type MockCraftable = {
 
 type PieceCounts = { total: number; approved: number };
 
-function classifyCraftable(
-  c: MockCraftable,
+function classifyProduct(
+  c: MockProduct,
   counts: PieceCounts,
   todayId: string | null,
 ): Section | null {
@@ -52,9 +52,9 @@ const NOW = new Date("2026-05-05T12:00:00Z");
 const YESTERDAY = new Date("2026-05-04T08:00:00Z");
 const TWO_DAYS_AGO = new Date("2026-05-03T08:00:00Z");
 
-function makeCraftable(
-  overrides: Partial<MockCraftable> & { id: string; businessDayId: string },
-): MockCraftable {
+function makeProduct(
+  overrides: Partial<MockProduct> & { id: string; businessDayId: string },
+): MockProduct {
   return {
     businessDayOpenedAt: NOW,
     businessDayClosedAt: null,
@@ -69,53 +69,53 @@ function makeCraftable(
 
 // ─── Classification tests ─────────────────────────────────────────────────────
 
-describe("classifyCraftable — section assignment", () => {
+describe("classifyProduct — section assignment", () => {
   const todayId = "today-day";
 
-  it("craftable from open (today) business day → 'today'", () => {
-    const c = makeCraftable({ id: "c1", businessDayId: todayId });
-    expect(classifyCraftable(c, { total: 2, approved: 1 }, todayId)).toBe("today");
+  it("product from open (today) business day → 'today'", () => {
+    const c = makeProduct({ id: "c1", businessDayId: todayId });
+    expect(classifyProduct(c, { total: 2, approved: 1 }, todayId)).toBe("today");
   });
 
-  it("craftable from today with zero pieces → still 'today'", () => {
-    const c = makeCraftable({ id: "c1", businessDayId: todayId });
-    expect(classifyCraftable(c, { total: 0, approved: 0 }, todayId)).toBe("today");
+  it("product from today with zero pieces → still 'today'", () => {
+    const c = makeProduct({ id: "c1", businessDayId: todayId });
+    expect(classifyProduct(c, { total: 0, approved: 0 }, todayId)).toBe("today");
   });
 
-  it("craftable from past day with pending pieces → 'wip'", () => {
-    const c = makeCraftable({
+  it("product from past day with pending pieces → 'wip'", () => {
+    const c = makeProduct({
       id: "c2",
       businessDayId: "past-day",
       businessDayOpenedAt: YESTERDAY,
       businessDayClosedAt: new Date("2026-05-04T18:00:00Z"),
     });
-    expect(classifyCraftable(c, { total: 3, approved: 1 }, todayId)).toBe("wip");
+    expect(classifyProduct(c, { total: 3, approved: 1 }, todayId)).toBe("wip");
   });
 
-  it("craftable from past day — all pieces approved → excluded (null)", () => {
-    const c = makeCraftable({
+  it("product from past day — all pieces approved → excluded (null)", () => {
+    const c = makeProduct({
       id: "c3",
       businessDayId: "past-day",
       businessDayOpenedAt: YESTERDAY,
       businessDayClosedAt: new Date("2026-05-04T18:00:00Z"),
     });
-    expect(classifyCraftable(c, { total: 3, approved: 3 }, todayId)).toBeNull();
+    expect(classifyProduct(c, { total: 3, approved: 3 }, todayId)).toBeNull();
   });
 
-  it("craftable from past day with zero pieces → excluded (null)", () => {
-    const c = makeCraftable({
+  it("product from past day with zero pieces → excluded (null)", () => {
+    const c = makeProduct({
       id: "c4",
       businessDayId: "past-day",
       businessDayClosedAt: new Date("2026-05-04T18:00:00Z"),
     });
-    expect(classifyCraftable(c, { total: 0, approved: 0 }, todayId)).toBeNull();
+    expect(classifyProduct(c, { total: 0, approved: 0 }, todayId)).toBeNull();
   });
 
-  it("no open business day → today's craftables still classified as 'today'", () => {
-    // todayId=null means no open day; craftable with that businessDayId won't match
-    const c = makeCraftable({ id: "c5", businessDayId: "some-day", businessDayClosedAt: null });
+  it("no open business day → today's products still classified as 'today'", () => {
+    // todayId=null means no open day; product with that businessDayId won't match
+    const c = makeProduct({ id: "c5", businessDayId: "some-day", businessDayClosedAt: null });
     // closedAt is null but businessDayId !== todayId (null) → isPastDay is false, !isToday → null
-    expect(classifyCraftable(c, { total: 1, approved: 0 }, null)).toBeNull();
+    expect(classifyProduct(c, { total: 1, approved: 0 }, null)).toBeNull();
   });
 });
 

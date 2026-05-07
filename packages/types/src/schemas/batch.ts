@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const craftablePieceLineSchema = z.object({
+export const productPieceLineSchema = z.object({
   clothPieceId: z.uuid("ID de pieza inválido"),
   clothPieceVariantId: z.uuid("ID de variante inválido"),
   assignedToEmployeeId: z.uuid("ID de empleado inválido").nullable(),
@@ -11,18 +11,16 @@ export const craftablePieceLineSchema = z.object({
   instructions: z.string().max(500).optional(),
 });
 
-export const createCraftableSchema = z.object({
+export const createProductSchema = z.object({
   notes: z.string().max(500).optional(),
   largeOrderId: z.uuid("ID de pedido inválido").optional(),
-  pieces: z
-    .array(craftablePieceLineSchema)
-    .min(1, "El confeccionable debe tener al menos una pieza"),
+  pieces: z.array(productPieceLineSchema).min(1, "El producto debe tener al menos una pieza"),
 });
 
-export type CreateCraftableInput = z.infer<typeof createCraftableSchema>;
-export type CraftablePieceLine = z.infer<typeof craftablePieceLineSchema>;
+export type CreateProductInput = z.infer<typeof createProductSchema>;
+export type ProductPieceLine = z.infer<typeof productPieceLineSchema>;
 
-export const updateCraftablePieceSchema = z.object({
+export const updateProductPieceSchema = z.object({
   id: z.uuid("ID de pieza inválido"),
   version: z.number().int().min(1),
   quantity: z.number().int().min(1, "La cantidad mínima es 1").max(999),
@@ -32,4 +30,4 @@ export const updateCraftablePieceSchema = z.object({
   instructions: z.string().max(500).optional(),
 });
 
-export type UpdateCraftablePieceInput = z.infer<typeof updateCraftablePieceSchema>;
+export type UpdateProductPieceInput = z.infer<typeof updateProductPieceSchema>;

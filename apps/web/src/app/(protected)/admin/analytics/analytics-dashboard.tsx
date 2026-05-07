@@ -500,7 +500,7 @@ export function AnalyticsDashboard({ initialData }: { initialData: AnalyticsSumm
           </div>
 
           {/* Revenue breakdown */}
-          {(data.current.serviceRevenue > 0 || data.current.craftableSalesRevenue > 0) && (
+          {(data.current.serviceRevenue > 0 || data.current.productSalesRevenue > 0) && (
             <div className="grid grid-cols-2 gap-3 print:grid-cols-2">
               <MetricCard
                 label={t("serviceRevenue")}
@@ -509,9 +509,9 @@ export function AnalyticsDashboard({ initialData }: { initialData: AnalyticsSumm
                 mono
               />
               <MetricCard
-                label={t("craftableSalesRevenue")}
-                value={data.current.craftableSalesRevenue}
-                priorValue={data.prior.craftableSalesRevenue}
+                label={t("productSalesRevenue")}
+                value={data.current.productSalesRevenue}
+                priorValue={data.prior.productSalesRevenue}
                 mono
               />
             </div>

@@ -1,17 +1,17 @@
 /**
  * T064 — Clothier earnings computation
  *
- * Sums cloth_piece_variants.piece_rate for all approved craftable pieces
+ * Sums cloth_piece_variants.piece_rate for all approved product pieces
  * assigned to the employee in the given business days.
  */
 
 import { and, eq, inArray } from "drizzle-orm";
 import type { Database } from "@befine/db";
-import { craftablePieces, craftables, clothPieces, clothPieceVariants } from "@befine/db/schema";
+import { productPieces, products, clothPieces, clothPieceVariants } from "@befine/db/schema";
 
 export type ClothierEarningsLine = {
-  craftableId: string;
-  craftablePieceId: string;
+  productId: string;
+  productPieceId: string;
   pieceName: string;
   variantName: string;
   quantity: number;
@@ -36,21 +36,21 @@ export async function computeClothierEarnings(
 
   const rows = await db
     .select({
-      craftableId: craftables.id,
-      craftablePieceId: craftablePieces.id,
+      productId: products.id,
+      productPieceId: productPieces.id,
       pieceName: clothPieces.name,
       variantName: clothPieceVariants.name,
       pieceRate: clothPieceVariants.pieceRate,
     })
-    .from(craftablePieces)
-    .innerJoin(craftables, eq(craftablePieces.craftableId, craftables.id))
-    .innerJoin(clothPieces, eq(craftablePieces.clothPieceId, clothPieces.id))
-    .innerJoin(clothPieceVariants, eq(craftablePieces.clothPieceVariantId, clothPieceVariants.id))
+    .from(productPieces)
+    .innerJoin(products, eq(productPieces.productId, products.id))
+    .innerJoin(clothPieces, eq(productPieces.clothPieceId, clothPieces.id))
+    .innerJoin(clothPieceVariants, eq(productPieces.clothPieceVariantId, clothPieceVariants.id))
     .where(
       and(
-        eq(craftablePieces.assignedToEmployeeId, employeeId),
-        eq(craftablePieces.status, "approved"),
-        inArray(craftables.businessDayId, businessDayIds),
+        eq(productPieces.assignedToEmployeeId, employeeId),
+        eq(productPieces.status, "approved"),
+        inArray(products.businessDayId, businessDayIds),
       ),
     );
 
@@ -58,11 +58,11 @@ export async function computeClothierEarnings(
   let totalEarnings = 0;
 
   for (const row of rows) {
-    const key = `${row.craftableId}:${row.craftablePieceId}`;
+    const key = `${row.productId}:${row.productPieceId}`;
     if (!lineMap.has(key)) {
       lineMap.set(key, {
-        craftableId: row.craftableId,
-        craftablePieceId: row.craftablePieceId,
+        productId: row.productId,
+        productPieceId: row.productPieceId,
         pieceName: row.pieceName,
         variantName: row.variantName,
         quantity: 0,

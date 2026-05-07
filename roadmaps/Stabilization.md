@@ -876,8 +876,8 @@
 
 ## Phase 4: Production Assignment Model
 
-**Started:** —
-**Status:** Pending — all tasks pending.
+**Started:** 2026-05-04
+**Status:** Complete — all tasks done.
 
 > Introduces `order_items` and `cloth_piece_assignments` as the authoritative production tracking layer. All tasks target data consistency and correctness within the defined model. No new features.
 
@@ -1339,7 +1339,7 @@
   - Visit `/admin/craftables` → 404 or redirect to `/admin/products`.
   - Check sidebar nav for all roles → labels show "Productos".
 - **Dependencies:** Task 4.1–4.26 (all Phase 4 tasks complete before renaming).
-- **Status:** Pending
+- **Status:** Complete
 
 ---
 

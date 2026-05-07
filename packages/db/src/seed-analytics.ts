@@ -31,12 +31,12 @@ import {
   ticketItems,
   ticketPayments,
   checkoutSessions,
-  craftables,
-  craftablePieces,
+  products,
+  productPieces,
   payouts,
   payoutPeriodDays,
   payoutTicketItems,
-  payoutCraftablePieces,
+  payoutProductPieces,
   employeeAbsences,
   largeOrders,
   largeOrderPayments,
@@ -91,12 +91,12 @@ async function clearAnalyticsData() {
   console.log("🗑️  Clearing analytics seed data...");
 
   // Delete in reverse FK order — all tables that reference business_days or tickets
-  await db.delete(payoutCraftablePieces);
+  await db.delete(payoutProductPieces);
   await db.delete(payoutTicketItems);
   await db.delete(payoutPeriodDays);
   await db.delete(payouts);
-  await db.delete(craftablePieces);
-  await db.delete(craftables);
+  await db.delete(productPieces);
+  await db.delete(products);
   await db.delete(ticketPayments);
   await db.delete(ticketItems);
   await db.delete(tickets);
@@ -274,16 +274,16 @@ async function run() {
     // Seed cloth batches + pieces for clothiers
     if (clothierEmps.length > 0 && pieceRows.length > 0) {
       const [batch] = await db
-        .insert(craftables)
+        .insert(products)
         .values({ businessDayId: day.id, createdBy: adminEmp.id })
-        .returning({ id: craftables.id });
+        .returning({ id: products.id });
 
       for (const clothier of clothierEmps) {
         const numPieces = dow === 6 ? randomInt(1, 3) : randomInt(2, 6);
         for (let p = 0; p < numPieces; p++) {
           const piece = pieceRows[randomInt(0, pieceRows.length - 1)];
-          await db.insert(craftablePieces).values({
-            craftableId: batch.id,
+          await db.insert(productPieces).values({
+            productId: batch.id,
             clothPieceId: piece.clothPieceId,
             clothPieceVariantId: piece.variantId,
             assignedToEmployeeId: clothier.id,

@@ -1,9 +1,9 @@
 /**
- * Craftables dashboard query — Task 3.8
+ * Products dashboard query — Task 3.8
  *
- * getCraftablesDashboard returns:
- *   - Today's craftables (belonging to the current open business day)
- *   - WIP craftables (past days with ≥1 non-approved piece)
+ * getProductsDashboard returns:
+ *   - Today's products (belonging to the current open business day)
+ *   - WIP products (past days with ≥1 non-approved piece)
  *
  * Sort: WIP first (oldest day first), then today's (newest first).
  */
@@ -11,8 +11,8 @@
 import { and, eq, inArray, isNull, ne, sql } from "drizzle-orm";
 import type { Database } from "../index";
 import {
-  craftables,
-  craftablePieces,
+  products,
+  productPieces,
   businessDays,
   employees,
   users,
@@ -26,7 +26,7 @@ import {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export type CraftableDashboardRow = {
+export type ProductDashboardRow = {
   id: string;
   businessDayId: string;
   businessDayOpenedAt: Date;
@@ -47,7 +47,7 @@ export type CraftableDashboardRow = {
 
 // ─── Query ────────────────────────────────────────────────────────────────────
 
-export async function getCraftablesDashboard(db: Database): Promise<CraftableDashboardRow[]> {
+export async function getProductsDashboard(db: Database): Promise<ProductDashboardRow[]> {
   // 1. Find the open business day id (today)
   const [openDay] = await db
     .select({ id: businessDays.id })
@@ -57,67 +57,62 @@ export async function getCraftablesDashboard(db: Database): Promise<CraftableDas
 
   const todayId = openDay?.id ?? null;
 
-  // 2. Fetch craftables: today's OR from any past day — we'll filter WIP in JS
+  // 2. Fetch products: today's OR from any past day — we'll filter WIP in JS
   //    We need the business day's openedAt for sorting.
-  const craftableRows = await db
+  const productRows = await db
     .select({
-      id: craftables.id,
-      businessDayId: craftables.businessDayId,
+      id: products.id,
+      businessDayId: products.businessDayId,
       businessDayOpenedAt: businessDays.openedAt,
       businessDayClosedAt: businessDays.closedAt,
-      source: craftables.source,
-      autoApproved: craftables.autoApproved,
-      notes: craftables.notes,
-      createdAt: craftables.createdAt,
-      largeOrderId: craftables.largeOrderId,
+      source: products.source,
+      autoApproved: products.autoApproved,
+      notes: products.notes,
+      createdAt: products.createdAt,
+      largeOrderId: products.largeOrderId,
     })
-    .from(craftables)
-    .innerJoin(businessDays, eq(craftables.businessDayId, businessDays.id));
+    .from(products)
+    .innerJoin(businessDays, eq(products.businessDayId, businessDays.id));
 
-  if (craftableRows.length === 0) return [];
+  if (productRows.length === 0) return [];
 
-  const craftableIds = craftableRows.map((c) => c.id);
+  const productIds = productRows.map((c) => c.id);
 
-  // 3. Aggregate piece counts per craftable
+  // 3. Aggregate piece counts per product
   const pieceCounts = await db
     .select({
-      craftableId: craftablePieces.craftableId,
+      productId: productPieces.productId,
       total: sql<number>`count(*)::int`,
-      approved: sql<number>`count(*) filter (where ${craftablePieces.status} = 'approved')::int`,
+      approved: sql<number>`count(*) filter (where ${productPieces.status} = 'approved')::int`,
     })
-    .from(craftablePieces)
-    .where(inArray(craftablePieces.craftableId, craftableIds))
-    .groupBy(craftablePieces.craftableId);
+    .from(productPieces)
+    .where(inArray(productPieces.productId, productIds))
+    .groupBy(productPieces.productId);
 
   const countMap = new Map(
-    pieceCounts.map((r) => [r.craftableId, { total: r.total, approved: r.approved }]),
+    pieceCounts.map((r) => [r.productId, { total: r.total, approved: r.approved }]),
   );
 
-  // 4. Distinct assigned employee names per craftable
+  // 4. Distinct assigned employee names per product
   const assigneeRows = await db
     .select({
-      craftableId: craftablePieces.craftableId,
+      productId: productPieces.productId,
       employeeName: users.name,
     })
-    .from(craftablePieces)
-    .innerJoin(employees, eq(craftablePieces.assignedToEmployeeId, employees.id))
+    .from(productPieces)
+    .innerJoin(employees, eq(productPieces.assignedToEmployeeId, employees.id))
     .innerJoin(users, eq(employees.userId, users.id))
-    .where(
-      and(
-        inArray(craftablePieces.craftableId, craftableIds),
-        ne(craftablePieces.status, "approved"),
-      ),
-    );
+    .where(and(inArray(productPieces.productId, productIds), ne(productPieces.status, "approved")));
 
   const assigneeMap = new Map<string, Set<string>>();
   for (const row of assigneeRows) {
-    if (!assigneeMap.has(row.craftableId)) assigneeMap.set(row.craftableId, new Set());
-    assigneeMap.get(row.craftableId)!.add(row.employeeName);
+    if (!assigneeMap.has(row.productId)) assigneeMap.set(row.productId, new Set());
+    assigneeMap.get(row.productId)!.add(row.employeeName);
   }
 
-  // 5. Large order client names + quantity-weighted progress for large_order craftables
+  // 5. Large order client names + quantity-weighted progress for large_order products
   const largeOrderIds = [
-    ...new Set(craftableRows.map((c) => c.largeOrderId).filter(Boolean) as string[]),
+    ...new Set(productRows.map((c) => c.largeOrderId).filter(Boolean) as string[]),
   ];
 
   const clientNameMap = new Map<string, string>();
@@ -159,9 +154,9 @@ export async function getCraftablesDashboard(db: Database): Promise<CraftableDas
   }
 
   // 6. Build result rows, classify as today / wip, exclude fully-approved past-day ones
-  const result: CraftableDashboardRow[] = [];
+  const result: ProductDashboardRow[] = [];
 
-  for (const c of craftableRows) {
+  for (const c of productRows) {
     const counts = countMap.get(c.id) ?? { total: 0, approved: 0 };
     const isToday = c.businessDayId === todayId;
     const isPastDay = !isToday && c.businessDayClosedAt !== null;
@@ -216,9 +211,9 @@ export async function getCraftablesDashboard(db: Database): Promise<CraftableDas
   return result;
 }
 
-// ─── Craftable detail ─────────────────────────────────────────────────────────
+// ─── Product detail ─────────────────────────────────────────────────────────
 
-export type CraftablePieceDetailRow = {
+export type ProductPieceDetailRow = {
   id: string;
   clothPieceId: string;
   clothPieceName: string;
@@ -235,7 +230,7 @@ export type CraftablePieceDetailRow = {
   version: number;
 };
 
-export type CraftableDetailRow = {
+export type ProductDetailRow = {
   id: string;
   businessDayId: string;
   businessDayOpenedAt: Date;
@@ -245,69 +240,69 @@ export type CraftableDetailRow = {
   createdAt: Date;
   largeOrderId: string | null;
   largeOrderClientName: string | null;
-  pieces: CraftablePieceDetailRow[];
+  pieces: ProductPieceDetailRow[];
 };
 
-export async function getCraftableDetail(
+export async function getProductDetail(
   db: Database,
-  craftableId: string,
-): Promise<CraftableDetailRow | null> {
-  const [craftable] = await db
+  productId: string,
+): Promise<ProductDetailRow | null> {
+  const [product] = await db
     .select({
-      id: craftables.id,
-      businessDayId: craftables.businessDayId,
+      id: products.id,
+      businessDayId: products.businessDayId,
       businessDayOpenedAt: businessDays.openedAt,
-      source: craftables.source,
-      autoApproved: craftables.autoApproved,
-      notes: craftables.notes,
-      createdAt: craftables.createdAt,
-      largeOrderId: craftables.largeOrderId,
+      source: products.source,
+      autoApproved: products.autoApproved,
+      notes: products.notes,
+      createdAt: products.createdAt,
+      largeOrderId: products.largeOrderId,
     })
-    .from(craftables)
-    .innerJoin(businessDays, eq(craftables.businessDayId, businessDays.id))
-    .where(eq(craftables.id, craftableId))
+    .from(products)
+    .innerJoin(businessDays, eq(products.businessDayId, businessDays.id))
+    .where(eq(products.id, productId))
     .limit(1);
 
-  if (!craftable) return null;
+  if (!product) return null;
 
   const pieceRows = await db
     .select({
-      id: craftablePieces.id,
-      clothPieceId: craftablePieces.clothPieceId,
+      id: productPieces.id,
+      clothPieceId: productPieces.clothPieceId,
       clothPieceName: clothPieces.name,
-      clothPieceVariantId: craftablePieces.clothPieceVariantId,
+      clothPieceVariantId: productPieces.clothPieceVariantId,
       clothPieceVariantName: clothPieceVariants.name,
-      assignedToEmployeeId: craftablePieces.assignedToEmployeeId,
+      assignedToEmployeeId: productPieces.assignedToEmployeeId,
       assignedEmployeeName: users.name,
-      status: craftablePieces.status,
-      quantity: craftablePieces.quantity,
-      color: craftablePieces.color,
-      style: craftablePieces.style,
-      size: craftablePieces.size,
-      instructions: craftablePieces.instructions,
-      version: craftablePieces.version,
+      status: productPieces.status,
+      quantity: productPieces.quantity,
+      color: productPieces.color,
+      style: productPieces.style,
+      size: productPieces.size,
+      instructions: productPieces.instructions,
+      version: productPieces.version,
     })
-    .from(craftablePieces)
-    .innerJoin(clothPieces, eq(craftablePieces.clothPieceId, clothPieces.id))
-    .innerJoin(clothPieceVariants, eq(craftablePieces.clothPieceVariantId, clothPieceVariants.id))
-    .leftJoin(employees, eq(craftablePieces.assignedToEmployeeId, employees.id))
+    .from(productPieces)
+    .innerJoin(clothPieces, eq(productPieces.clothPieceId, clothPieces.id))
+    .innerJoin(clothPieceVariants, eq(productPieces.clothPieceVariantId, clothPieceVariants.id))
+    .leftJoin(employees, eq(productPieces.assignedToEmployeeId, employees.id))
     .leftJoin(users, eq(employees.userId, users.id))
-    .where(eq(craftablePieces.craftableId, craftableId))
-    .orderBy(craftablePieces.createdAt);
+    .where(eq(productPieces.productId, productId))
+    .orderBy(productPieces.createdAt);
 
   let largeOrderClientName: string | null = null;
-  if (craftable.largeOrderId) {
+  if (product.largeOrderId) {
     const [orderRow] = await db
       .select({ clientName: clients.name })
       .from(largeOrders)
       .innerJoin(clients, eq(largeOrders.clientId, clients.id))
-      .where(eq(largeOrders.id, craftable.largeOrderId))
+      .where(eq(largeOrders.id, product.largeOrderId))
       .limit(1);
     largeOrderClientName = orderRow?.clientName ?? null;
   }
 
   return {
-    ...craftable,
+    ...product,
     largeOrderClientName,
     pieces: pieceRows.map((p) => ({
       id: p.id,

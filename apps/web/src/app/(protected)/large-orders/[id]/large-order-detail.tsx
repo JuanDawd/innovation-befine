@@ -34,7 +34,7 @@ import {
   editLargeOrder,
   recordLargeOrderPayment,
   type LargeOrderRow,
-  type OrderCraftableSummary,
+  type OrderProductSummary,
 } from "../actions";
 import type { ClothPieceRow } from "@/app/(protected)/admin/catalog/actions/cloth-pieces";
 import {
@@ -57,7 +57,7 @@ const PRODUCTION_COLLAPSE_KEY = "production-section-collapsed";
 
 type Props = {
   order: LargeOrderRow;
-  batches: OrderCraftableSummary[];
+  batches: OrderProductSummary[];
   clothPieces: ClothPieceRow[];
   productionItems: OrderItemWithProgress[] | null;
   clothiers?: ClothierOption[];
@@ -811,10 +811,10 @@ export function LargeOrderDetail({
                 clothiers={clothiers}
                 userRole={userRole}
                 currentEmployeeId={currentEmployeeId}
-                onAssign={async (orderItemId, craftablePieceId, assigneeId, assignedQuantity) => {
+                onAssign={async (orderItemId, productPieceId, assigneeId, assignedQuantity) => {
                   const res = await createAssignment({
                     orderItemId,
-                    craftablePieceId,
+                    productPieceId,
                     assigneeId,
                     assignedQuantity,
                   });
@@ -855,23 +855,23 @@ export function LargeOrderDetail({
         </div>
       )}
 
-      {/* ── Linked craftables ── */}
+      {/* ── Linked products ── */}
       {batches.length > 0 && (
         <div className="rounded-lg border bg-card overflow-hidden">
           <div className="flex items-center gap-2 px-4 py-3 border-b bg-muted/30">
-            <span className="text-sm font-semibold">{t("craftables")}</span>
+            <span className="text-sm font-semibold">{t("products")}</span>
           </div>
           <table className="w-full text-sm">
             <thead className="bg-muted/20">
               <tr>
                 <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
-                  {t("craftableTotalPieces")}
+                  {t("productTotalPieces")}
                 </th>
                 <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
-                  {t("craftableApprovedPieces")}
+                  {t("productApprovedPieces")}
                 </th>
                 <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
-                  {t("craftableProgress")}
+                  {t("productProgress")}
                 </th>
               </tr>
             </thead>
@@ -880,7 +880,7 @@ export function LargeOrderDetail({
                 const pct =
                   b.totalPieces > 0 ? Math.round((b.approvedPieces / b.totalPieces) * 100) : 0;
                 return (
-                  <tr key={b.craftableId}>
+                  <tr key={b.productId}>
                     <td className="px-4 py-2.5">{b.totalPieces}</td>
                     <td className="px-4 py-2.5">{b.approvedPieces}</td>
                     <td className="px-4 py-2.5">

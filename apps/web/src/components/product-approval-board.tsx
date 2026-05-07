@@ -1,9 +1,9 @@
 "use client";
 
 /**
- * CraftableApprovalBoard — T047
+ * ProductApprovalBoard — T047
  *
- * Secretary/admin view for approving craftable pieces.
+ * Secretary/admin view for approving product pieces.
  * Admins also see a "Approve directly" button for pending pieces.
  */
 
@@ -14,23 +14,23 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import {
-  listPendingCraftablePieceApprovals,
-  approveCraftablePiece,
-  adminMarkCraftablePieceApproved,
-  type PendingCraftablePieceApprovalRow,
-} from "@/app/(protected)/craftables/approval-actions";
+  listPendingProductPieceApprovals,
+  approveProductPiece,
+  adminMarkProductPieceApproved,
+  type PendingProductPieceApprovalRow,
+} from "@/app/(protected)/products/approval-actions";
 
-export function CraftableApprovalBoard({ isAdmin }: { isAdmin: boolean }) {
-  const t = useTranslations("craftables");
+export function ProductApprovalBoard({ isAdmin }: { isAdmin: boolean }) {
+  const t = useTranslations("products");
 
-  const [pieces, setPieces] = useState<PendingCraftablePieceApprovalRow[]>([]);
+  const [pieces, setPieces] = useState<PendingProductPieceApprovalRow[]>([]);
   const [isLoading, startLoadTransition] = useTransition();
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [errorMap, setErrorMap] = useState<Record<string, string>>({});
 
   const load = useCallback(() => {
     startLoadTransition(async () => {
-      const res = await listPendingCraftablePieceApprovals();
+      const res = await listPendingProductPieceApprovals();
       if (res.success) setPieces(res.data);
     });
   }, []);
@@ -39,9 +39,9 @@ export function CraftableApprovalBoard({ isAdmin }: { isAdmin: boolean }) {
     load();
   }, [load]);
 
-  async function handleApprove(piece: PendingCraftablePieceApprovalRow) {
+  async function handleApprove(piece: PendingProductPieceApprovalRow) {
     setPendingId(piece.id);
-    const res = await approveCraftablePiece(piece.id, piece.version);
+    const res = await approveProductPiece(piece.id, piece.version);
     setPendingId(null);
     if (!res.success) {
       setErrorMap((m) => ({
@@ -53,9 +53,9 @@ export function CraftableApprovalBoard({ isAdmin }: { isAdmin: boolean }) {
     }
   }
 
-  async function handleAdminApprove(piece: PendingCraftablePieceApprovalRow) {
+  async function handleAdminApprove(piece: PendingProductPieceApprovalRow) {
     setPendingId(piece.id);
-    const res = await adminMarkCraftablePieceApproved(piece.id, piece.version);
+    const res = await adminMarkProductPieceApproved(piece.id, piece.version);
     setPendingId(null);
     if (!res.success) {
       setErrorMap((m) => ({

@@ -8,7 +8,7 @@
 import { relations } from "drizzle-orm";
 import { services, serviceVariants } from "./services";
 import { largeOrders, largeOrderPayments } from "./large-orders";
-import { craftables } from "./craftables";
+import { products } from "./products";
 
 export const servicesRelations = relations(services, ({ many }) => ({
   variants: many(serviceVariants),
@@ -23,7 +23,7 @@ export const serviceVariantsRelations = relations(serviceVariants, ({ one }) => 
 
 export const largeOrdersRelations = relations(largeOrders, ({ many }) => ({
   payments: many(largeOrderPayments),
-  craftables: many(craftables),
+  products: many(products),
 }));
 
 export const largeOrderPaymentsRelations = relations(largeOrderPayments, ({ one }) => ({
@@ -33,9 +33,9 @@ export const largeOrderPaymentsRelations = relations(largeOrderPayments, ({ one 
   }),
 }));
 
-export const craftablesRelations = relations(craftables, ({ one }) => ({
+export const productsRelations = relations(products, ({ one }) => ({
   largeOrder: one(largeOrders, {
-    fields: [craftables.largeOrderId],
+    fields: [products.largeOrderId],
     references: [largeOrders.id],
   }),
 }));

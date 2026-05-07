@@ -23,11 +23,11 @@ import {
   payouts,
   payoutPeriodDays,
   payoutTicketItems,
-  payoutCraftablePieces,
+  payoutProductPieces,
   ticketItems,
-  craftablePieces,
+  productPieces,
   tickets,
-  craftables,
+  products,
 } from "@befine/db/schema";
 import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
@@ -343,23 +343,23 @@ export async function recordPayout(rawInput: unknown): Promise<ActionResult<{ id
             .values(items.map((item) => ({ payoutId: payout.id, ticketItemId: item.id })));
       }
 
-      // Link covered craftable pieces (clothiers)
+      // Link covered product pieces (clothiers)
       if (emp.role === "clothier") {
         const pieces = await tx
-          .select({ id: craftablePieces.id })
-          .from(craftablePieces)
-          .innerJoin(craftables, eq(craftablePieces.craftableId, craftables.id))
+          .select({ id: productPieces.id })
+          .from(productPieces)
+          .innerJoin(products, eq(productPieces.productId, products.id))
           .where(
             and(
-              eq(craftablePieces.assignedToEmployeeId, input.employeeId),
-              eq(craftablePieces.status, "approved"),
-              inArray(craftables.businessDayId, input.businessDayIds),
+              eq(productPieces.assignedToEmployeeId, input.employeeId),
+              eq(productPieces.status, "approved"),
+              inArray(products.businessDayId, input.businessDayIds),
             ),
           );
         if (pieces.length > 0)
           await tx
-            .insert(payoutCraftablePieces)
-            .values(pieces.map((p) => ({ payoutId: payout.id, craftablePieceId: p.id })));
+            .insert(payoutProductPieces)
+            .values(pieces.map((p) => ({ payoutId: payout.id, productPieceId: p.id })));
       }
 
       return payout.id;
@@ -509,14 +509,14 @@ export async function getUnsettledEmployees(): Promise<ActionResult<UnsettledEmp
       );
     } else if (emp.role === "clothier") {
       const workDays = await db
-        .selectDistinct({ businessDayId: craftables.businessDayId })
-        .from(craftablePieces)
-        .innerJoin(craftables, eq(craftablePieces.craftableId, craftables.id))
+        .selectDistinct({ businessDayId: products.businessDayId })
+        .from(productPieces)
+        .innerJoin(products, eq(productPieces.productId, products.id))
         .where(
           and(
-            eq(craftablePieces.assignedToEmployeeId, emp.id),
-            eq(craftablePieces.status, "approved"),
-            inArray(craftables.businessDayId, closedDayIds),
+            eq(productPieces.assignedToEmployeeId, emp.id),
+            eq(productPieces.status, "approved"),
+            inArray(products.businessDayId, closedDayIds),
           ),
         );
       unsettledDays = closedDays.filter(

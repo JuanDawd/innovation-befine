@@ -2,7 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeftIcon } from "lucide-react";
-import { getLargeOrder, getLargeOrderCraftableSummary } from "../actions";
+import { getLargeOrder, getLargeOrderProductSummary } from "../actions";
 import { listActiveClothPieces } from "@/app/(protected)/admin/catalog/actions/cloth-pieces";
 import {
   getOrderItemsWithProgressData,
@@ -26,7 +26,7 @@ export default async function LargeOrderDetailPage({
   const [orderResult, batchResult, piecesResult, productionResult, clothiersResult, userCtx] =
     await Promise.all([
       getLargeOrder(id),
-      getLargeOrderCraftableSummary(id),
+      getLargeOrderProductSummary(id),
       listActiveClothPieces(),
       getOrderItemsWithProgressData(id),
       listActiveClothiers(),

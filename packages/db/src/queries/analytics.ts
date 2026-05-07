@@ -13,8 +13,8 @@ import type { Database } from "../index";
 import {
   tickets,
   ticketItems,
-  craftablePieces,
-  craftables,
+  productPieces,
+  products,
   clothPieceVariants,
   employees,
   users,
@@ -27,7 +27,7 @@ import {
 export type RevenuePeriodResult = {
   totalRevenue: number;
   serviceRevenue: number;
-  craftableSalesRevenue: number;
+  productSalesRevenue: number;
   totalJobs: number;
 };
 
@@ -57,7 +57,7 @@ export type DailyRevenueRow = {
   date: string;
   revenue: number;
   serviceRevenue: number;
-  craftableSalesRevenue: number;
+  productSalesRevenue: number;
   jobs: number;
 };
 
@@ -72,7 +72,7 @@ export async function revenueByPeriod(
   businessDayIds: string[],
 ): Promise<RevenuePeriodResult> {
   if (businessDayIds.length === 0)
-    return { totalRevenue: 0, serviceRevenue: 0, craftableSalesRevenue: 0, totalJobs: 0 };
+    return { totalRevenue: 0, serviceRevenue: 0, productSalesRevenue: 0, totalJobs: 0 };
 
   const [ticketRows, salesRows] = await Promise.all([
     db
@@ -94,25 +94,25 @@ export async function revenueByPeriod(
       ),
     db
       .select({
-        revenue: sql<number>`COALESCE(SUM(${craftablePieces.soldPrice}), 0)::bigint`,
+        revenue: sql<number>`COALESCE(SUM(${productPieces.soldPrice}), 0)::bigint`,
       })
-      .from(craftablePieces)
-      .innerJoin(craftables, eq(craftablePieces.craftableId, craftables.id))
+      .from(productPieces)
+      .innerJoin(products, eq(productPieces.productId, products.id))
       .where(
         and(
-          inArray(craftables.businessDayId, businessDayIds),
-          sql`${craftablePieces.soldAt} IS NOT NULL`,
+          inArray(products.businessDayId, businessDayIds),
+          sql`${productPieces.soldAt} IS NOT NULL`,
         ),
       ),
   ]);
 
   const serviceRevenue = Number(ticketRows[0]?.revenue ?? 0);
-  const craftableSalesRevenue = Number(salesRows[0]?.revenue ?? 0);
+  const productSalesRevenue = Number(salesRows[0]?.revenue ?? 0);
 
   return {
-    totalRevenue: serviceRevenue + craftableSalesRevenue,
+    totalRevenue: serviceRevenue + productSalesRevenue,
     serviceRevenue,
-    craftableSalesRevenue,
+    productSalesRevenue,
     totalJobs: Number(ticketRows[0]?.jobs ?? 0),
   };
 }
@@ -212,25 +212,25 @@ export async function earningsByEmployee(
   // Clothier earnings + job count (pieces)
   const clothierRows = await db
     .select({
-      employeeId: craftablePieces.assignedToEmployeeId,
+      employeeId: productPieces.assignedToEmployeeId,
       employeeName: users.name,
       role: employees.role,
       totalEarnings: sql<number>`COALESCE(SUM(${clothPieceVariants.pieceRate}), 0)::bigint`,
-      jobCount: sql<number>`COUNT(${craftablePieces.id})::int`,
+      jobCount: sql<number>`COUNT(${productPieces.id})::int`,
     })
-    .from(craftablePieces)
-    .innerJoin(craftables, eq(craftablePieces.craftableId, craftables.id))
-    .innerJoin(clothPieceVariants, eq(craftablePieces.clothPieceVariantId, clothPieceVariants.id))
-    .innerJoin(employees, eq(craftablePieces.assignedToEmployeeId, employees.id))
+    .from(productPieces)
+    .innerJoin(products, eq(productPieces.productId, products.id))
+    .innerJoin(clothPieceVariants, eq(productPieces.clothPieceVariantId, clothPieceVariants.id))
+    .innerJoin(employees, eq(productPieces.assignedToEmployeeId, employees.id))
     .innerJoin(users, eq(employees.userId, users.id))
     .where(
       and(
-        inArray(craftables.businessDayId, businessDayIds),
-        eq(craftablePieces.status, "approved"),
+        inArray(products.businessDayId, businessDayIds),
+        eq(productPieces.status, "approved"),
         activeFilter,
       ),
     )
-    .groupBy(craftablePieces.assignedToEmployeeId, users.name, employees.role);
+    .groupBy(productPieces.assignedToEmployeeId, users.name, employees.role);
 
   const result = new Map<string, EarningsByEmployee>();
 
@@ -376,31 +376,31 @@ export async function dailyRevenueBreakdown(
       .orderBy(businessDays.openedAt),
     db
       .select({
-        businessDayId: craftables.businessDayId,
-        revenue: sql<number>`COALESCE(SUM(${craftablePieces.soldPrice}), 0)::bigint`,
+        businessDayId: products.businessDayId,
+        revenue: sql<number>`COALESCE(SUM(${productPieces.soldPrice}), 0)::bigint`,
       })
-      .from(craftablePieces)
-      .innerJoin(craftables, eq(craftablePieces.craftableId, craftables.id))
+      .from(productPieces)
+      .innerJoin(products, eq(productPieces.productId, products.id))
       .where(
         and(
-          inArray(craftables.businessDayId, businessDayIds),
-          sql`${craftablePieces.soldAt} IS NOT NULL`,
+          inArray(products.businessDayId, businessDayIds),
+          sql`${productPieces.soldAt} IS NOT NULL`,
         ),
       )
-      .groupBy(craftables.businessDayId),
+      .groupBy(products.businessDayId),
   ]);
 
   const salesByDay = new Map(salesRows.map((r) => [r.businessDayId, Number(r.revenue)]));
 
   return ticketRows.map((r) => {
     const serviceRevenue = Number(r.revenue);
-    const craftableSalesRevenue = salesByDay.get(r.businessDayId) ?? 0;
+    const productSalesRevenue = salesByDay.get(r.businessDayId) ?? 0;
     return {
       businessDayId: r.businessDayId,
       date: toBogotaDate(new Date(r.openedAt)),
-      revenue: serviceRevenue + craftableSalesRevenue,
+      revenue: serviceRevenue + productSalesRevenue,
       serviceRevenue,
-      craftableSalesRevenue,
+      productSalesRevenue,
       jobs: Number(r.jobs),
     };
   });
@@ -563,23 +563,23 @@ export async function employeeDayBreakdown(
   if (emp.role === "clothier") {
     const rows = await db
       .select({
-        businessDayId: craftables.businessDayId,
+        businessDayId: products.businessDayId,
         openedAt: businessDays.openedAt,
-        jobs: sql<number>`COUNT(${craftablePieces.id})::int`,
+        jobs: sql<number>`COUNT(${productPieces.id})::int`,
         earnings: sql<number>`COALESCE(SUM(${clothPieceVariants.pieceRate}), 0)::bigint`,
       })
-      .from(craftablePieces)
-      .innerJoin(craftables, eq(craftablePieces.craftableId, craftables.id))
-      .innerJoin(clothPieceVariants, eq(craftablePieces.clothPieceVariantId, clothPieceVariants.id))
-      .innerJoin(businessDays, eq(craftables.businessDayId, businessDays.id))
+      .from(productPieces)
+      .innerJoin(products, eq(productPieces.productId, products.id))
+      .innerJoin(clothPieceVariants, eq(productPieces.clothPieceVariantId, clothPieceVariants.id))
+      .innerJoin(businessDays, eq(products.businessDayId, businessDays.id))
       .where(
         and(
-          eq(craftablePieces.assignedToEmployeeId, employeeId),
-          inArray(craftables.businessDayId, businessDayIds),
-          eq(craftablePieces.status, "approved"),
+          eq(productPieces.assignedToEmployeeId, employeeId),
+          inArray(products.businessDayId, businessDayIds),
+          eq(productPieces.status, "approved"),
         ),
       )
-      .groupBy(craftables.businessDayId, businessDays.openedAt)
+      .groupBy(products.businessDayId, businessDays.openedAt)
       .orderBy(businessDays.openedAt);
 
     return rows.map((r) => ({

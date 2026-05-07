@@ -1,7 +1,7 @@
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 
-interface CraftableProgressBarProps {
+interface ProductProgressBarProps {
   pct: number;
   className?: string;
   showLabel?: boolean;
@@ -13,11 +13,7 @@ function progressIndicatorColor(pct: number): string {
   return "bg-status-negative";
 }
 
-export function CraftableProgressBar({
-  pct,
-  className,
-  showLabel = true,
-}: CraftableProgressBarProps) {
+export function ProductProgressBar({ pct, className, showLabel = true }: ProductProgressBarProps) {
   const clamped = Math.min(100, Math.max(0, pct));
   return (
     <div className={cn("flex items-center gap-2 min-w-[80px]", className)}>

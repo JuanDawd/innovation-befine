@@ -18,7 +18,7 @@ import {
   clothPieces,
   clothPieceVariants,
   catalogAuditLog,
-  craftablePieces,
+  productPieces,
   employees,
 } from "@befine/db/schema";
 import { createClothPieceSchema, editClothPieceSchema } from "@befine/types";
@@ -391,19 +391,19 @@ export async function restoreClothPieceVariant(variantId: string): Promise<Actio
   return { success: true, data: null };
 }
 
-// ─── Sell craftable piece ─────────────────────────────────────────────────────
+// ─── Sell product piece ─────────────────────────────────────────────────────
 
-const sellCraftablePieceSchema = z.object({
-  craftablePieceId: z.string().uuid("ID de pieza inválido"),
+const sellProductPieceSchema = z.object({
+  productPieceId: z.string().uuid("ID de pieza inválido"),
   priceOverride: z.number().int().min(0).nullable().optional(),
 });
 
 /**
- * Marks an approved craftable_piece as sold.
+ * Marks an approved product_piece as sold.
  * Snapshots the selling price from the variant (or a cashier override).
  * Gated to cashier_admin.
  */
-export async function sellCraftablePiece(
+export async function sellProductPiece(
   rawInput: unknown,
 ): Promise<ActionResult<{ soldPrice: number }>> {
   const session = await getAdminSession();
@@ -413,7 +413,7 @@ export async function sellCraftablePiece(
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
   }
 
-  const parsed = sellCraftablePieceSchema.safeParse(rawInput);
+  const parsed = sellProductPieceSchema.safeParse(rawInput);
   if (!parsed.success)
     return {
       success: false,
@@ -434,13 +434,13 @@ export async function sellCraftablePiece(
 
   const [piece] = await db
     .select({
-      id: craftablePieces.id,
-      status: craftablePieces.status,
-      soldAt: craftablePieces.soldAt,
-      clothPieceVariantId: craftablePieces.clothPieceVariantId,
+      id: productPieces.id,
+      status: productPieces.status,
+      soldAt: productPieces.soldAt,
+      clothPieceVariantId: productPieces.clothPieceVariantId,
     })
-    .from(craftablePieces)
-    .where(eq(craftablePieces.id, parsed.data.craftablePieceId))
+    .from(productPieces)
+    .where(eq(productPieces.id, parsed.data.productPieceId))
     .limit(1);
 
   if (!piece)
@@ -467,17 +467,14 @@ export async function sellCraftablePiece(
     };
 
   await db
-    .update(craftablePieces)
+    .update(productPieces)
     .set({
       soldAt: new Date(),
       soldPrice: effectivePrice,
       soldBy: emp?.id ?? null,
     })
     .where(
-      and(
-        eq(craftablePieces.id, parsed.data.craftablePieceId),
-        eq(craftablePieces.status, "approved"),
-      ),
+      and(eq(productPieces.id, parsed.data.productPieceId), eq(productPieces.status, "approved")),
     );
 
   return { success: true, data: { soldPrice: effectivePrice } };

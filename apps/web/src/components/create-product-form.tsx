@@ -8,9 +8,9 @@ import { PlusIcon, Trash2Icon, Loader2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   listActiveClothiers,
-  createCraftable,
+  createProduct,
   type ClothierOption,
-} from "@/app/(protected)/craftables/actions";
+} from "@/app/(protected)/products/actions";
 import { listActiveClothPieces } from "@/app/(protected)/admin/catalog/actions/cloth-pieces";
 
 type ClothPieceVariantOption = { id: string; name: string; isActive: boolean };
@@ -29,14 +29,14 @@ type PieceLine = {
   instructions: string;
 };
 
-export function CreateCraftableForm({
+export function CreateProductForm({
   redirectPath,
   largeOrders = [],
 }: {
   redirectPath: string;
   largeOrders?: LargeOrderOption[];
 }) {
-  const t = useTranslations("craftables");
+  const t = useTranslations("products");
   const tc = useTranslations("common");
   const router = useRouter();
 
@@ -128,7 +128,7 @@ export function CreateCraftableForm({
     }
 
     startSubmitTransition(async () => {
-      const result = await createCraftable({
+      const result = await createProduct({
         notes: notes.trim() || undefined,
         largeOrderId: largeOrderId || undefined,
         pieces: lines.map((l) => ({
@@ -175,12 +175,12 @@ export function CreateCraftableForm({
       {/* Linked large order (T060) */}
       {largeOrders.length > 0 && (
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium" htmlFor="craftable-order">
+          <label className="text-sm font-medium" htmlFor="product-order">
             Pedido grande vinculado{" "}
             <span className="text-muted-foreground font-normal">{tc("optional")}</span>
           </label>
           <select
-            id="craftable-order"
+            id="product-order"
             value={largeOrderId}
             onChange={(e) => setLargeOrderId(e.target.value)}
             className="h-9 rounded-md border border-input bg-transparent px-3 text-sm focus-visible:outline-none focus-visible:border-ring"
@@ -197,11 +197,11 @@ export function CreateCraftableForm({
 
       {/* Notes */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium" htmlFor="craftable-notes">
+        <label className="text-sm font-medium" htmlFor="product-notes">
           {t("notes")} <span className="text-muted-foreground font-normal">{tc("optional")}</span>
         </label>
         <textarea
-          id="craftable-notes"
+          id="product-notes"
           placeholder={t("notesPlaceholder")}
           value={notes}
           onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value)}

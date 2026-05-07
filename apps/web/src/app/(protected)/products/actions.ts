@@ -1,26 +1,26 @@
 "use server";
 
 /**
- * Craftable server actions — T045 / stab3.12
+ * Product server actions — T045 / stab3.12
  *
- * listActiveClothiers: secretary/admin — for craftable assignment dropdowns.
- * createCraftable: secretary/admin — creates a craftable + pieces, sends notifications.
- * getCraftablesDashboardData: secretary/admin — today's and WIP craftables.
+ * listActiveClothiers: secretary/admin — for product assignment dropdowns.
+ * createProduct: secretary/admin — creates a product + pieces, sends notifications.
+ * getProductsDashboardData: secretary/admin — today's and WIP products.
  */
 
 import { headers } from "next/headers";
 import { eq, and } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { getDb, getTxDb } from "@/lib/db";
-import { employees, users, craftables, craftablePieces } from "@befine/db/schema";
+import { employees, users, products, productPieces } from "@befine/db/schema";
 import {
-  createCraftableSchema,
-  updateCraftablePieceSchema,
-  type CreateCraftableInput,
-  type UpdateCraftablePieceInput,
+  createProductSchema,
+  updateProductPieceSchema,
+  type CreateProductInput,
+  type UpdateProductPieceInput,
 } from "@befine/types";
-import { getCraftablesDashboard, getCraftableDetail } from "@befine/db";
-import type { CraftableDashboardRow, CraftableDetailRow } from "@befine/db";
+import { getProductsDashboard, getProductDetail } from "@befine/db";
+import type { ProductDashboardRow, ProductDetailRow } from "@befine/db";
 import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
 import { getCurrentBusinessDay } from "@/lib/business-day";
@@ -35,7 +35,7 @@ export type ClothierOption = {
   name: string;
 };
 
-export type CraftableRow = {
+export type ProductRow = {
   id: string;
   businessDayId: string;
   notes: string | null;
@@ -63,9 +63,9 @@ export async function listActiveClothiers(): Promise<ActionResult<ClothierOption
   return { success: true, data: rows };
 }
 
-// ─── Create craftable ─────────────────────────────────────────────────────────
+// ─── Create product ─────────────────────────────────────────────────────────
 
-export async function createCraftable(rawInput: unknown): Promise<ActionResult<{ id: string }>> {
+export async function createProduct(rawInput: unknown): Promise<ActionResult<{ id: string }>> {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session)
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
@@ -82,7 +82,7 @@ export async function createCraftable(rawInput: unknown): Promise<ActionResult<{
       },
     };
 
-  const parsed = createCraftableSchema.safeParse(rawInput);
+  const parsed = createProductSchema.safeParse(rawInput);
   if (!parsed.success) {
     return {
       success: false,
@@ -97,7 +97,7 @@ export async function createCraftable(rawInput: unknown): Promise<ActionResult<{
     };
   }
 
-  const input: CreateCraftableInput = parsed.data;
+  const input: CreateProductInput = parsed.data;
 
   const businessDay = await getCurrentBusinessDay();
   if (!businessDay)
@@ -119,11 +119,11 @@ export async function createCraftable(rawInput: unknown): Promise<ActionResult<{
 
   const autoApproved = hasRole(session.user, "cashier_admin");
 
-  // Create craftable + pieces atomically
+  // Create product + pieces atomically
   const txDb = getTxDb();
-  const craftableId = await txDb.transaction(async (tx) => {
-    const [craftable] = await tx
-      .insert(craftables)
+  const productId = await txDb.transaction(async (tx) => {
+    const [product] = await tx
+      .insert(products)
       .values({
         businessDayId: businessDay.id,
         createdBy: creatorEmployee.id,
@@ -131,12 +131,12 @@ export async function createCraftable(rawInput: unknown): Promise<ActionResult<{
         largeOrderId: input.largeOrderId ?? null,
         autoApproved,
       })
-      .returning({ id: craftables.id });
+      .returning({ id: products.id });
 
     if (input.pieces.length > 0) {
-      await tx.insert(craftablePieces).values(
+      await tx.insert(productPieces).values(
         input.pieces.map((p) => ({
-          craftableId: craftable.id,
+          productId: product.id,
           clothPieceId: p.clothPieceId,
           clothPieceVariantId: p.clothPieceVariantId,
           assignedToEmployeeId: p.assignedToEmployeeId ?? null,
@@ -151,7 +151,7 @@ export async function createCraftable(rawInput: unknown): Promise<ActionResult<{
       );
     }
 
-    return craftable.id;
+    return product.id;
   });
 
   // Notify each clothier who received an assignment (post-commit, deduplicated)
@@ -173,15 +173,15 @@ export async function createCraftable(rawInput: unknown): Promise<ActionResult<{
     }),
   );
 
-  revalidatePath("/secretary/craftables");
-  revalidatePath("/admin/craftables");
+  revalidatePath("/secretary/products");
+  revalidatePath("/admin/products");
 
-  return { success: true, data: { id: craftableId } };
+  return { success: true, data: { id: productId } };
 }
 
-// ─── Craftables dashboard ─────────────────────────────────────────────────────
+// ─── Products dashboard ─────────────────────────────────────────────────────
 
-export async function getCraftablesDashboardData(): Promise<ActionResult<CraftableDashboardRow[]>> {
+export async function getProductsDashboardData(): Promise<ActionResult<ProductDashboardRow[]>> {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session)
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
@@ -189,15 +189,15 @@ export async function getCraftablesDashboardData(): Promise<ActionResult<Craftab
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
 
   const db = getDb();
-  const rows = await getCraftablesDashboard(db);
+  const rows = await getProductsDashboard(db);
   return { success: true, data: rows };
 }
 
-// ─── Craftable detail ─────────────────────────────────────────────────────────
+// ─── Product detail ─────────────────────────────────────────────────────────
 
-export async function getCraftableDetailData(
-  craftableId: string,
-): Promise<ActionResult<CraftableDetailRow>> {
+export async function getProductDetailData(
+  productId: string,
+): Promise<ActionResult<ProductDetailRow>> {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session)
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
@@ -205,14 +205,14 @@ export async function getCraftableDetailData(
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
 
   const db = getDb();
-  const row = await getCraftableDetail(db, craftableId);
+  const row = await getProductDetail(db, productId);
   if (!row) return { success: false, error: { code: "NOT_FOUND", message: "No encontrado" } };
   return { success: true, data: row };
 }
 
-// ─── Update craftable piece ───────────────────────────────────────────────────
+// ─── Update product piece ───────────────────────────────────────────────────
 
-export async function updateCraftablePiece(rawInput: unknown): Promise<ActionResult<void>> {
+export async function updateProductPiece(rawInput: unknown): Promise<ActionResult<void>> {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session)
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
@@ -229,7 +229,7 @@ export async function updateCraftablePiece(rawInput: unknown): Promise<ActionRes
       },
     };
 
-  const parsed = updateCraftablePieceSchema.safeParse(rawInput);
+  const parsed = updateProductPieceSchema.safeParse(rawInput);
   if (!parsed.success)
     return {
       success: false,
@@ -240,11 +240,11 @@ export async function updateCraftablePiece(rawInput: unknown): Promise<ActionRes
       },
     };
 
-  const input: UpdateCraftablePieceInput = parsed.data;
+  const input: UpdateProductPieceInput = parsed.data;
 
   const db = getDb();
   const result = await db
-    .update(craftablePieces)
+    .update(productPieces)
     .set({
       quantity: input.quantity,
       color: input.color ?? null,
@@ -253,8 +253,8 @@ export async function updateCraftablePiece(rawInput: unknown): Promise<ActionRes
       instructions: input.instructions ?? null,
       version: input.version + 1,
     })
-    .where(and(eq(craftablePieces.id, input.id), eq(craftablePieces.version, input.version)))
-    .returning({ id: craftablePieces.id });
+    .where(and(eq(productPieces.id, input.id), eq(productPieces.version, input.version)))
+    .returning({ id: productPieces.id });
 
   if (result.length === 0)
     return {
@@ -262,8 +262,8 @@ export async function updateCraftablePiece(rawInput: unknown): Promise<ActionRes
       error: { code: "STALE_DATA", message: "Estado cambiado — recarga la página" },
     };
 
-  revalidatePath("/secretary/craftables");
-  revalidatePath("/admin/craftables");
+  revalidatePath("/secretary/products");
+  revalidatePath("/admin/products");
 
   return { success: true, data: undefined };
 }

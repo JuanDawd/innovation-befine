@@ -21,7 +21,7 @@ export const removeOrderItemSchema = z.object({
 
 export const createAssignmentSchema = z.object({
   orderItemId: z.uuid("ID de ítem inválido"),
-  craftablePieceId: z.uuid("ID de pieza confeccionable inválido"),
+  productPieceId: z.uuid("ID de pieza de producto inválido"),
   assigneeId: z.uuid("ID de empleado inválido"),
   assignedQuantity: z.number().int().min(1, "La cantidad asignada debe ser al menos 1"),
 });

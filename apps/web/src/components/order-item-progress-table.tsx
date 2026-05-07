@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { PackageSearch, PlusIcon, PencilIcon } from "lucide-react";
 import { toast } from "sonner";
-import { CraftableProgressBar } from "@/components/ui/craftable-progress-bar";
+import { ProductProgressBar } from "@/components/ui/product-progress-bar";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import type { OrderItemWithProgress, AssignmentProgressRow } from "@befine/db";
@@ -22,7 +22,7 @@ interface OrderItemProgressTableProps {
   currentEmployeeId?: string | null;
   onAssign?: (
     orderItemId: string,
-    craftablePieceId: string,
+    productPieceId: string,
     assigneeId: string,
     assignedQuantity: number,
   ) => Promise<ActionResult>;
@@ -278,7 +278,7 @@ function ItemSection({
       </div>
 
       <div className="mt-1 px-1">
-        <CraftableProgressBar pct={pct} className="w-full" />
+        <ProductProgressBar pct={pct} className="w-full" />
       </div>
     </section>
   );
@@ -390,7 +390,7 @@ function AssignmentRow({
         {isUnassigned ? (
           <span className="text-xs text-muted-foreground">—</span>
         ) : (
-          <CraftableProgressBar pct={rowPct} className="min-w-[80px]" />
+          <ProductProgressBar pct={rowPct} className="min-w-[80px]" />
         )}
       </td>
       <td className="px-3 py-2">

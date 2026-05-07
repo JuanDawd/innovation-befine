@@ -15,20 +15,20 @@ import { employees } from "./employees";
 import { clothPieces, clothPieceVariants } from "./cloth-pieces";
 import { largeOrders } from "./large-orders";
 
-export const craftablePieceStatusEnum = pgEnum("craftable_piece_status_enum", [
+export const productPieceStatusEnum = pgEnum("craftable_piece_status_enum", [
   "pending",
   "done_pending_approval",
   "approved",
 ]);
 
-export const craftableClaimSourceEnum = pgEnum("craftable_claim_source_enum", [
+export const productClaimSourceEnum = pgEnum("craftable_claim_source_enum", [
   "assigned",
   "self_claimed",
 ]);
 
-export const craftableSourceEnum = pgEnum("craftable_source_enum", ["manual", "large_order"]);
+export const productSourceEnum = pgEnum("craftable_source_enum", ["manual", "large_order"]);
 
-export const craftables = pgTable("craftables", {
+export const products = pgTable("craftables", {
   id: uuid("id").primaryKey().defaultRandom(),
   businessDayId: uuid("business_day_id")
     .notNull()
@@ -38,18 +38,18 @@ export const craftables = pgTable("craftables", {
     .references(() => employees.id, { onDelete: "restrict" }),
   notes: text("notes"),
   largeOrderId: uuid("large_order_id").references(() => largeOrders.id, { onDelete: "restrict" }),
-  source: craftableSourceEnum("source").notNull().default("manual"),
+  source: productSourceEnum("source").notNull().default("manual"),
   autoApproved: boolean("auto_approved").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
-export const craftablePieces = pgTable(
+export const productPieces = pgTable(
   "craftable_pieces",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    craftableId: uuid("craftable_id")
+    productId: uuid("craftable_id")
       .notNull()
-      .references(() => craftables.id, { onDelete: "restrict" }),
+      .references(() => products.id, { onDelete: "restrict" }),
     clothPieceId: uuid("cloth_piece_id")
       .notNull()
       .references(() => clothPieces.id, { onDelete: "restrict" }),
@@ -59,9 +59,9 @@ export const craftablePieces = pgTable(
     assignedToEmployeeId: uuid("assigned_to_employee_id").references(() => employees.id, {
       onDelete: "restrict",
     }),
-    claimSource: craftableClaimSourceEnum("claim_source"),
+    claimSource: productClaimSourceEnum("claim_source"),
     claimedAt: timestamp("claimed_at", { withTimezone: true }),
-    status: craftablePieceStatusEnum("status").notNull().default("pending"),
+    status: productPieceStatusEnum("status").notNull().default("pending"),
     completedAt: timestamp("completed_at", { withTimezone: true }),
     approvedAt: timestamp("approved_at", { withTimezone: true }),
     approvedBy: uuid("approved_by").references(() => employees.id, { onDelete: "restrict" }),
@@ -78,7 +78,7 @@ export const craftablePieces = pgTable(
   },
   (t) => [
     index("idx_craftable_pieces_employee_status").on(t.assignedToEmployeeId, t.status),
-    index("idx_craftable_pieces_craftable_id").on(t.craftableId),
+    index("idx_craftable_pieces_craftable_id").on(t.productId),
     index("idx_craftable_pieces_sold_at").on(t.soldAt),
   ],
 );

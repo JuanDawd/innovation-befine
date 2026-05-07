@@ -1,7 +1,7 @@
 import { check, index, integer, pgTable, timestamp, uuid } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { orderItems } from "./large-orders";
-import { craftablePieces } from "./craftables";
+import { productPieces } from "./products";
 import { employees } from "./employees";
 
 export const clothPieceAssignments = pgTable(
@@ -11,9 +11,9 @@ export const clothPieceAssignments = pgTable(
     orderItemId: uuid("order_item_id")
       .notNull()
       .references(() => orderItems.id, { onDelete: "restrict" }),
-    craftablePieceId: uuid("craftable_piece_id")
+    productPieceId: uuid("craftable_piece_id")
       .notNull()
-      .references(() => craftablePieces.id, { onDelete: "restrict" }),
+      .references(() => productPieces.id, { onDelete: "restrict" }),
     assigneeId: uuid("assignee_id")
       .notNull()
       .references(() => employees.id, { onDelete: "restrict" }),

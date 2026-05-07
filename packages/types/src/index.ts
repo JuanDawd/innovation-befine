@@ -32,12 +32,12 @@ export {
   type PaidOfflineCheckoutInput,
 } from "./schemas/checkout";
 export {
-  createCraftableSchema,
-  craftablePieceLineSchema,
-  updateCraftablePieceSchema,
-  type CreateCraftableInput,
-  type CraftablePieceLine,
-  type UpdateCraftablePieceInput,
+  createProductSchema,
+  productPieceLineSchema,
+  updateProductPieceSchema,
+  type CreateProductInput,
+  type ProductPieceLine,
+  type UpdateProductPieceInput,
 } from "./schemas/batch";
 export {
   createAppointmentSchema,

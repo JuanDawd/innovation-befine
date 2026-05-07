@@ -3,21 +3,21 @@ import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import { hasRole } from "@/lib/middleware-helpers";
 import { getDb } from "@/lib/db";
-import { getCraftableDetail } from "@befine/db";
-import { CraftableDetail } from "@/components/craftable-detail";
+import { getProductDetail } from "@befine/db";
+import { ProductDetail } from "@/components/product-detail";
 
-export default async function SecretaryCraftableDetailPage({
+export default async function AdminProductDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
   const session = await auth.api.getSession({ headers: await headers() });
-  if (!session || !hasRole(session.user, "secretary")) redirect("/secretary");
+  if (!session || !hasRole(session.user, "cashier_admin")) redirect("/cashier");
 
   const db = getDb();
-  const data = await getCraftableDetail(db, id);
+  const data = await getProductDetail(db, id);
   if (!data) notFound();
 
-  return <CraftableDetail initialData={data} isEditor={true} backHref="/secretary/craftables" />;
+  return <ProductDetail initialData={data} isEditor={true} backHref="/admin/products" />;
 }

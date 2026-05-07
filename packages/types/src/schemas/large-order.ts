@@ -23,7 +23,7 @@ export const createLargeOrderSchema = z
     // Optional initial deposit (creates first large_order_payments record)
     initialDepositAmount: z.number().int().min(0).optional(),
     initialDepositMethod: z.enum(["cash", "card", "transfer"]).optional(),
-    // Optional pieces — auto-creates a craftable linked to this order
+    // Optional pieces — auto-creates a product linked to this order
     pieces: z.array(largeOrderPieceLineSchema).optional(),
   })
   .refine(

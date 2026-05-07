@@ -5,15 +5,12 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { type LucideIcon, Loader2Icon, PackageIcon, ClockIcon } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
-import {
-  CraftableStatusBadge,
-  type CraftableStatusKey,
-} from "@/components/ui/craftable-status-badge";
-import { CraftableProgressBar } from "@/components/ui/craftable-progress-bar";
-import type { CraftableDashboardRow } from "@befine/db";
-import { getCraftablesDashboardData } from "@/app/(protected)/craftables/actions";
+import { ProductStatusBadge, type ProductStatusKey } from "@/components/ui/product-status-badge";
+import { ProductProgressBar } from "@/components/ui/product-progress-bar";
+import type { ProductDashboardRow } from "@befine/db";
+import { getProductsDashboardData } from "@/app/(protected)/products/actions";
 
-function deriveCraftableStatus(row: CraftableDashboardRow): CraftableStatusKey {
+function deriveProductStatus(row: ProductDashboardRow): ProductStatusKey {
   if (row.totalPieces === 0 || row.approvedPieces === 0) {
     if (row.pendingPieces > 0) return "not_started";
     return "not_started";
@@ -30,14 +27,14 @@ function DashboardSection({
   emptyText,
   icon,
 }: {
-  rows: CraftableDashboardRow[];
+  rows: ProductDashboardRow[];
   isAdmin: boolean;
   title: string;
   emptyText: string;
   icon: LucideIcon;
 }) {
-  const t = useTranslations("craftables");
-  const detailBase = isAdmin ? "/admin/craftables" : "/secretary/craftables";
+  const t = useTranslations("products");
+  const detailBase = isAdmin ? "/admin/products" : "/secretary/products";
 
   return (
     <div className="flex flex-col gap-2">
@@ -63,7 +60,7 @@ function DashboardSection({
             </thead>
             <tbody className="divide-y divide-border">
               {rows.map((row) => {
-                const statusKey = deriveCraftableStatus(row);
+                const statusKey = deriveProductStatus(row);
                 const assigned =
                   row.assignedEmployeeNames.length > 0
                     ? row.assignedEmployeeNames.join(", ")
@@ -72,7 +69,7 @@ function DashboardSection({
                 return (
                   <tr key={row.id} className="hover:bg-muted/30">
                     <td className="px-3 py-2.5">
-                      <CraftableStatusBadge status={statusKey} />
+                      <ProductStatusBadge status={statusKey} />
                     </td>
                     <td className="px-3 py-2.5 text-muted-foreground hidden sm:table-cell max-w-[160px] truncate">
                       {assigned}
@@ -102,7 +99,7 @@ function DashboardSection({
                         <span className="text-xs tabular-nums text-muted-foreground whitespace-nowrap">
                           {row.approvedPieces}/{row.totalPieces}
                         </span>
-                        <CraftableProgressBar pct={row.progressPct} />
+                        <ProductProgressBar pct={row.progressPct} />
                       </div>
                     </td>
                     <td className="px-3 py-2.5">
@@ -124,14 +121,14 @@ function DashboardSection({
   );
 }
 
-export function CraftablesDashboardTable({ isAdmin }: { isAdmin: boolean }) {
-  const t = useTranslations("craftables");
-  const [rows, setRows] = useState<CraftableDashboardRow[]>([]);
+export function ProductsDashboardTable({ isAdmin }: { isAdmin: boolean }) {
+  const t = useTranslations("products");
+  const [rows, setRows] = useState<ProductDashboardRow[]>([]);
   const [isLoading, startLoad] = useTransition();
 
   const load = useCallback(() => {
     startLoad(async () => {
-      const res = await getCraftablesDashboardData();
+      const res = await getProductsDashboardData();
       if (res.success) setRows(res.data);
     });
   }, []);

@@ -21,8 +21,8 @@ import {
   clients,
   employees,
   users,
-  craftables,
-  craftablePieces,
+  products,
+  productPieces,
   orderItems,
   clothPieceAssignments,
 } from "@befine/db/schema";
@@ -145,7 +145,7 @@ export async function createLargeOrder(rawInput: unknown): Promise<ActionResult<
 
   const autoApproved = hasRole(guard.session!.user, "cashier_admin");
 
-  // Only create a craftable if pieces were provided AND a business day is open
+  // Only create a product if pieces were provided AND a business day is open
   const businessDay = parsed.data.pieces?.length ? await getCurrentBusinessDay() : null;
 
   const txDb = getTxDb();
@@ -178,10 +178,10 @@ export async function createLargeOrder(rawInput: unknown): Promise<ActionResult<
       });
     }
 
-    // Auto-create craftable when pieces are provided and a business day is open
+    // Auto-create product when pieces are provided and a business day is open
     if (parsed.data.pieces?.length && businessDay) {
-      const [craftable] = await tx
-        .insert(craftables)
+      const [product] = await tx
+        .insert(products)
         .values({
           businessDayId: businessDay.id,
           createdBy: creatorEmp.id,
@@ -189,11 +189,11 @@ export async function createLargeOrder(rawInput: unknown): Promise<ActionResult<
           source: "large_order",
           autoApproved,
         })
-        .returning({ id: craftables.id });
+        .returning({ id: products.id });
 
-      await tx.insert(craftablePieces).values(
+      await tx.insert(productPieces).values(
         parsed.data.pieces.map((p) => ({
-          craftableId: craftable.id,
+          productId: product.id,
           clothPieceId: p.clothPieceId,
           clothPieceVariantId: p.clothPieceVariantId,
           quantity: p.quantity,
@@ -692,7 +692,7 @@ export async function listLargeOrders(
   };
 }
 
-// ─── Get single large order with payments + craftable summary (T060, T062) ───
+// ─── Get single large order with payments + product summary (T060, T062) ─────
 
 export async function getLargeOrder(orderId: string): Promise<ActionResult<LargeOrderRow>> {
   const guard = await requireOrderRole();
@@ -787,17 +787,17 @@ export async function listClientsForOrder(): Promise<ActionResult<ClientOption[]
   return { success: true, data: rows };
 }
 
-// ─── Get craftable summary for an order (T060) ───────────────────────────────
+// ─── Get product summary for an order (T060) ───────────────────────────────
 
-export type OrderCraftableSummary = {
-  craftableId: string;
+export type OrderProductSummary = {
+  productId: string;
   totalPieces: number;
   approvedPieces: number;
 };
 
-export async function getLargeOrderCraftableSummary(
+export async function getLargeOrderProductSummary(
   orderId: string,
-): Promise<ActionResult<OrderCraftableSummary[]>> {
+): Promise<ActionResult<OrderProductSummary[]>> {
   const guard = await requireOrderRole();
   if (!guard.ok)
     return {
@@ -809,25 +809,25 @@ export async function getLargeOrderCraftableSummary(
     };
 
   const db = getDb();
-  const craftableRows = await db
-    .select({ id: craftables.id })
-    .from(craftables)
-    .where(eq(craftables.largeOrderId, orderId));
+  const productRows = await db
+    .select({ id: products.id })
+    .from(products)
+    .where(eq(products.largeOrderId, orderId));
 
-  if (!craftableRows.length) return { success: true, data: [] };
+  if (!productRows.length) return { success: true, data: [] };
 
-  const craftableIds = craftableRows.map((c) => c.id);
+  const productIds = productRows.map((c) => c.id);
   const pieces = await db
-    .select({ craftableId: craftablePieces.craftableId, status: craftablePieces.status })
-    .from(craftablePieces)
-    .where(inArray(craftablePieces.craftableId, craftableIds));
+    .select({ productId: productPieces.productId, status: productPieces.status })
+    .from(productPieces)
+    .where(inArray(productPieces.productId, productIds));
 
   return {
     success: true,
-    data: craftableRows.map((c) => {
-      const cp = pieces.filter((p) => p.craftableId === c.id);
+    data: productRows.map((c) => {
+      const cp = pieces.filter((p) => p.productId === c.id);
       return {
-        craftableId: c.id,
+        productId: c.id,
         totalPieces: cp.length,
         approvedPieces: cp.filter((p) => p.status === "approved").length,
       };

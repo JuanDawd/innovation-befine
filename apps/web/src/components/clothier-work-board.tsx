@@ -12,18 +12,18 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { CraftableProgressBar } from "@/components/ui/craftable-progress-bar";
+import { ProductProgressBar } from "@/components/ui/product-progress-bar";
 import { StatusBadge } from "@/components/ui/status-badge";
 import {
-  listTodayCraftablePieces,
+  listTodayProductPieces,
   claimPiece,
   markPieceDone,
-  type CraftablePieceRow,
+  type ProductPieceRow,
 } from "@/app/(protected)/clothier/actions";
 
 // ─── Per-piece notes (collapsible) ───────────────────────────────────────────
 
-function PieceNotes({ piece }: { piece: CraftablePieceRow }) {
+function PieceNotes({ piece }: { piece: ProductPieceRow }) {
   const t = useTranslations("clothierWork");
   const [open, setOpen] = useState(false);
   const hasNotes = piece.color || piece.style || piece.size || piece.instructions;
@@ -75,7 +75,7 @@ function PieceNotes({ piece }: { piece: CraftablePieceRow }) {
 
 // ─── Piece status badge ───────────────────────────────────────────────────────
 
-function PieceStatusBadge({ status }: { status: CraftablePieceRow["status"] }) {
+function PieceStatusBadge({ status }: { status: ProductPieceRow["status"] }) {
   const t = useTranslations("clothierWork");
   if (status === "approved") return <StatusBadge status="success" label={t("statusApproved")} />;
   if (status === "done_pending_approval")
@@ -88,14 +88,14 @@ function PieceStatusBadge({ status }: { status: CraftablePieceRow["status"] }) {
 export function ClothierWorkBoard({ employeeId }: { employeeId: string }) {
   const t = useTranslations("clothierWork");
 
-  const [pieces, setPieces] = useState<CraftablePieceRow[]>([]);
+  const [pieces, setPieces] = useState<ProductPieceRow[]>([]);
   const [isLoading, startLoadTransition] = useTransition();
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [errorMap, setErrorMap] = useState<Record<string, string>>({});
 
   const load = useCallback(() => {
     startLoadTransition(async () => {
-      const res = await listTodayCraftablePieces();
+      const res = await listTodayProductPieces();
       if (res.success) setPieces(res.data);
     });
   }, []);
@@ -112,7 +112,7 @@ export function ClothierWorkBoard({ employeeId }: { employeeId: string }) {
   ).length;
   const totalMine = myPieces.length;
 
-  async function handleClaim(piece: CraftablePieceRow) {
+  async function handleClaim(piece: ProductPieceRow) {
     setPendingId(piece.id);
     const res = await claimPiece(piece.id, piece.version);
     setPendingId(null);
@@ -123,7 +123,7 @@ export function ClothierWorkBoard({ employeeId }: { employeeId: string }) {
     }
   }
 
-  async function handleMarkDone(piece: CraftablePieceRow) {
+  async function handleMarkDone(piece: ProductPieceRow) {
     setPendingId(piece.id);
     const res = await markPieceDone(piece.id, piece.version);
     setPendingId(null);
@@ -163,7 +163,7 @@ export function ClothierWorkBoard({ employeeId }: { employeeId: string }) {
           <p className="text-xs text-muted-foreground">
             {t("progress", { done: doneCount, total: totalMine })}
           </p>
-          <CraftableProgressBar
+          <ProductProgressBar
             pct={totalMine > 0 ? Math.round((doneCount / totalMine) * 100) : 0}
             showLabel={false}
             className="w-full"

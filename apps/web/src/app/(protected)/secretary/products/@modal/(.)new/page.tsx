@@ -4,14 +4,14 @@ import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import { hasRole } from "@/lib/middleware-helpers";
 import { ModalShell } from "@/components/modal-shell";
-import { CreateCraftableForm } from "@/components/create-craftable-form";
+import { CreateProductForm } from "@/components/create-product-form";
 import { listLargeOrders } from "@/app/(protected)/large-orders/actions";
 
-export default async function SecretaryNewCraftableModal() {
+export default async function SecretaryNewProductModal() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session || !hasRole(session.user, "secretary")) redirect("/secretary");
 
-  const [t, ordersResult] = await Promise.all([getTranslations("craftables"), listLargeOrders()]);
+  const [t, ordersResult] = await Promise.all([getTranslations("products"), listLargeOrders()]);
   const activeOrders = ordersResult.success
     ? ordersResult.data
         .filter((o) => o.status !== "cancelled" && o.status !== "paid_in_full")
@@ -19,8 +19,8 @@ export default async function SecretaryNewCraftableModal() {
     : [];
 
   return (
-    <ModalShell title={t("createCraftable")} maxWidth="lg">
-      <CreateCraftableForm redirectPath="/secretary/craftables" largeOrders={activeOrders} />
+    <ModalShell title={t("createProduct")} maxWidth="lg">
+      <CreateProductForm redirectPath="/secretary/products" largeOrders={activeOrders} />
     </ModalShell>
   );
 }

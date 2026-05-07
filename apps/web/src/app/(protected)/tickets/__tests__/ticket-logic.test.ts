@@ -177,7 +177,7 @@ describe("Override price recomputation", () => {
   });
 });
 
-// ─── Craftable piece state guards ────────────────────────────────────────────
+// ─── Product piece state guards ──────────────────────────────────────────────
 
 type PieceStatus = "pending" | "done_pending_approval" | "approved";
 
@@ -197,8 +197,8 @@ function canMarkDone(
   return status === "pending" && assignedToEmployeeId === claimantEmployeeId;
 }
 
-describe("Craftable piece state guards", () => {
-  describe("approveCraftablePiece", () => {
+describe("Product piece state guards", () => {
+  describe("approveProductPiece", () => {
     it("allows approval from done_pending_approval", () => {
       expect(canApprovePiece("done_pending_approval")).toBe(true);
     });
@@ -212,7 +212,7 @@ describe("Craftable piece state guards", () => {
     });
   });
 
-  describe("adminMarkCraftablePieceApproved (skip clothier step)", () => {
+  describe("adminMarkProductPieceApproved (skip clothier step)", () => {
     it("allows direct approval from pending", () => {
       expect(canAdminMarkApproved("pending")).toBe(true);
     });

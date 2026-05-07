@@ -72,7 +72,7 @@ const recordPayoutSchema = z.object({
   notes: z.string().max(500).nullish(),
 });
 
-const createCraftableSchema = z.object({
+const createProductSchema = z.object({
   notes: z.string().max(500).optional(),
   largeOrderId: z.uuid().optional(),
   pieces: z
@@ -219,8 +219,8 @@ describe("Role gate: admin/payroll/actions", () => {
   });
 });
 
-describe("Role gate: craftables/actions", () => {
-  it("createCraftable — allowed: cashier_admin, secretary", () => {
+describe("Role gate: products/actions", () => {
+  it("createProduct — allowed: cashier_admin, secretary", () => {
     expectOnlyRoles(["cashier_admin", "secretary"], "cashier_admin", "secretary");
   });
 
@@ -229,22 +229,22 @@ describe("Role gate: craftables/actions", () => {
   });
 });
 
-describe("Role gate: craftables/approval-actions", () => {
-  it("approveCraftablePiece — allowed: cashier_admin, secretary", () => {
+describe("Role gate: products/approval-actions", () => {
+  it("approveProductPiece — allowed: cashier_admin, secretary", () => {
     expectOnlyRoles(["cashier_admin", "secretary"], "cashier_admin", "secretary");
   });
 
-  it("adminMarkCraftablePieceApproved — cashier_admin only", () => {
+  it("adminMarkProductPieceApproved — cashier_admin only", () => {
     expectOnlyRoles(["cashier_admin"], "cashier_admin");
   });
 
-  it("listPendingCraftablePieceApprovals — allowed: cashier_admin, secretary", () => {
+  it("listPendingProductPieceApprovals — allowed: cashier_admin, secretary", () => {
     expectOnlyRoles(["cashier_admin", "secretary"], "cashier_admin", "secretary");
   });
 });
 
 describe("Role gate: clothier/actions", () => {
-  it("listTodayCraftablePieces — clothier only", () => {
+  it("listTodayProductPieces — clothier only", () => {
     expectOnlyRoles(["clothier"], "clothier");
   });
 
@@ -457,7 +457,7 @@ describe("UNAUTHORIZED: null session denied on all mutation gates", () => {
     { name: "processCheckout", roles: ["cashier_admin"] },
     { name: "processPaidOfflineCheckout", roles: ["cashier_admin"] },
     { name: "recordPayout", roles: ["cashier_admin"] },
-    { name: "createCraftable", roles: ["cashier_admin", "secretary"] },
+    { name: "createProduct", roles: ["cashier_admin", "secretary"] },
     { name: "markPieceDone", roles: ["clothier"] },
     { name: "createAppointment", roles: ["cashier_admin", "secretary"] },
     { name: "createClient", roles: ["cashier_admin", "secretary"] },
@@ -654,8 +654,8 @@ describe("VALIDATION_ERROR: recordPayoutSchema", () => {
   });
 });
 
-describe("VALIDATION_ERROR: createCraftableSchema", () => {
-  const validCraftable = {
+describe("VALIDATION_ERROR: createProductSchema", () => {
+  const validProduct = {
     pieces: [
       {
         clothPieceId: uid(),
@@ -665,17 +665,17 @@ describe("VALIDATION_ERROR: createCraftableSchema", () => {
     ],
   };
 
-  it("accepts valid craftable input", () => {
-    expect(createCraftableSchema.safeParse(validCraftable).success).toBe(true);
+  it("accepts valid product input", () => {
+    expect(createProductSchema.safeParse(validProduct).success).toBe(true);
   });
 
   it("rejects empty pieces array", () => {
-    expect(createCraftableSchema.safeParse({ pieces: [] }).success).toBe(false);
+    expect(createProductSchema.safeParse({ pieces: [] }).success).toBe(false);
   });
 
   it("rejects non-uuid clothPieceId", () => {
     expect(
-      createCraftableSchema.safeParse({
+      createProductSchema.safeParse({
         pieces: [
           {
             clothPieceId: "bad",

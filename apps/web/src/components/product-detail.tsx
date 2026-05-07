@@ -7,11 +7,8 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { StatusBadge } from "@/components/ui/status-badge";
-import {
-  CraftableStatusBadge,
-  type CraftableStatusKey,
-} from "@/components/ui/craftable-status-badge";
-import { CraftableProgressBar } from "@/components/ui/craftable-progress-bar";
+import { ProductStatusBadge, type ProductStatusKey } from "@/components/ui/product-status-badge";
+import { ProductProgressBar } from "@/components/ui/product-progress-bar";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -20,13 +17,13 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { updateCraftablePiece } from "@/app/(protected)/craftables/actions";
-import { updateCraftablePieceSchema, type UpdateCraftablePieceInput } from "@befine/types";
-import type { CraftableDetailRow, CraftablePieceDetailRow } from "@befine/db";
+import { updateProductPiece } from "@/app/(protected)/products/actions";
+import { updateProductPieceSchema, type UpdateProductPieceInput } from "@befine/types";
+import type { ProductDetailRow, ProductPieceDetailRow } from "@befine/db";
 
 // ─── Piece status mapping ─────────────────────────────────────────────────────
 
-function pieceBadgeStatus(status: CraftablePieceDetailRow["status"]): string {
+function pieceBadgeStatus(status: ProductPieceDetailRow["status"]): string {
   switch (status) {
     case "pending":
       return "initial";
@@ -37,7 +34,7 @@ function pieceBadgeStatus(status: CraftablePieceDetailRow["status"]): string {
   }
 }
 
-function deriveCraftableStatus(pieces: CraftablePieceDetailRow[]): CraftableStatusKey {
+function deriveProductStatus(pieces: ProductPieceDetailRow[]): ProductStatusKey {
   if (pieces.length === 0) return "not_started";
   const approved = pieces.filter((p) => p.status === "approved").length;
   const pending = pieces.filter((p) => p.status === "pending").length;
@@ -47,7 +44,7 @@ function deriveCraftableStatus(pieces: CraftablePieceDetailRow[]): CraftableStat
   return "not_started";
 }
 
-function craftableProgressPct(pieces: CraftablePieceDetailRow[]): number {
+function productProgressPct(pieces: ProductPieceDetailRow[]): number {
   if (pieces.length === 0) return 0;
   const approved = pieces.filter((p) => p.status === "approved").length;
   return Math.round((approved / pieces.length) * 100);
@@ -55,8 +52,8 @@ function craftableProgressPct(pieces: CraftablePieceDetailRow[]): number {
 
 // ─── Collapsible notes ────────────────────────────────────────────────────────
 
-function PieceNotes({ piece }: { piece: CraftablePieceDetailRow }) {
-  const t = useTranslations("craftables");
+function PieceNotes({ piece }: { piece: ProductPieceDetailRow }) {
+  const t = useTranslations("products");
   const [open, setOpen] = useState(false);
   const hasNotes = piece.color || piece.style || piece.size || piece.instructions;
 
@@ -108,12 +105,12 @@ function PieceNotes({ piece }: { piece: CraftablePieceDetailRow }) {
 // ─── Edit piece dialog ────────────────────────────────────────────────────────
 
 type EditDialogProps = {
-  piece: CraftablePieceDetailRow;
+  piece: ProductPieceDetailRow;
   onSaved: () => void;
 };
 
 function EditPieceDialog({ piece, onSaved }: EditDialogProps) {
-  const t = useTranslations("craftables");
+  const t = useTranslations("products");
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
@@ -123,8 +120,8 @@ function EditPieceDialog({ piece, onSaved }: EditDialogProps) {
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<UpdateCraftablePieceInput>({
-    resolver: zodResolver(updateCraftablePieceSchema),
+  } = useForm<UpdateProductPieceInput>({
+    resolver: zodResolver(updateProductPieceSchema),
     defaultValues: {
       id: piece.id,
       version: piece.version,
@@ -142,10 +139,10 @@ function EditPieceDialog({ piece, onSaved }: EditDialogProps) {
     setOpen(v);
   }
 
-  function onSubmit(data: UpdateCraftablePieceInput) {
+  function onSubmit(data: UpdateProductPieceInput) {
     setServerError(null);
     startTransition(async () => {
-      const res = await updateCraftablePiece(data);
+      const res = await updateProductPiece(data);
       if (!res.success) {
         setServerError(res.error.code === "STALE_DATA" ? t("staleError") : t("editPieceError"));
         return;
@@ -262,20 +259,20 @@ function EditPieceDialog({ piece, onSaved }: EditDialogProps) {
 // ─── Main detail component ────────────────────────────────────────────────────
 
 type Props = {
-  initialData: CraftableDetailRow;
+  initialData: ProductDetailRow;
   isEditor: boolean;
   backHref: string;
 };
 
-export function CraftableDetail({ initialData, isEditor, backHref }: Props) {
-  const t = useTranslations("craftables");
-  const [data, setData] = useState<CraftableDetailRow>(initialData);
+export function ProductDetail({ initialData, isEditor, backHref }: Props) {
+  const t = useTranslations("products");
+  const [data, setData] = useState<ProductDetailRow>(initialData);
   const [isPending, startTransition] = useTransition();
 
   async function reload() {
-    const { getCraftableDetailData } = await import("@/app/(protected)/craftables/actions");
+    const { getProductDetailData } = await import("@/app/(protected)/products/actions");
     startTransition(async () => {
-      const res = await getCraftableDetailData(data.id);
+      const res = await getProductDetailData(data.id);
       if (res.success) setData(res.data);
     });
   }
@@ -287,8 +284,8 @@ export function CraftableDetail({ initialData, isEditor, backHref }: Props) {
     year: "numeric",
   });
 
-  const craftableStatus = deriveCraftableStatus(data.pieces);
-  const progressPct = craftableProgressPct(data.pieces);
+  const productStatus = deriveProductStatus(data.pieces);
+  const progressPct = productProgressPct(data.pieces);
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6 lg:p-8">
@@ -301,12 +298,12 @@ export function CraftableDetail({ initialData, isEditor, backHref }: Props) {
           <ArrowLeftIcon className="h-4 w-4" />
         </Link>
         <h1 className="text-xl font-semibold">{t("detailTitle")}</h1>
-        <CraftableStatusBadge status={craftableStatus} />
+        <ProductStatusBadge status={productStatus} />
       </div>
 
-      {data.pieces.length > 0 && <CraftableProgressBar pct={progressPct} className="max-w-xs" />}
+      {data.pieces.length > 0 && <ProductProgressBar pct={progressPct} className="max-w-xs" />}
 
-      {/* Craftable metadata */}
+      {/* Product metadata */}
       <div className="rounded-lg border border-border p-4 text-sm flex flex-wrap gap-x-6 gap-y-2">
         <div>
           <span className="text-muted-foreground">{t("colBusinessDay")}: </span>
