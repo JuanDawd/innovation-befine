@@ -48,3 +48,4 @@ export { payouts, payoutPeriodDays, payoutTicketItems, payoutProductPieces } fro
 export { idempotencyKeys } from "./idempotency";
 export { clothPieceAssignments } from "./assignments";
 export { productionLogs } from "./production-logs";
+export { clothSales } from "./cloth-sales";

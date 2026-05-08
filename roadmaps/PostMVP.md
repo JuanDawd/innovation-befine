@@ -370,3 +370,27 @@
   - Open day at Location A → Location B still shows "no open day".
   - Log a ticket at Location A → it does not appear in Location B's ticket list.
 - **Dependencies:** Task H.1.
+
+---
+
+## Phase I: Cloth Sales Inventory
+
+> Stock tracking for retail cloth piece sales. Not in MVP — sales are recorded without stock enforcement.
+
+---
+
+### Task I.1: Stock management for cloth piece variants
+
+- **Description:** Track physical stock levels for each `cloth_piece_variant`. Add a `stock_quantity` column to `cloth_piece_variants`. Enforce stock checks on `createClothSale` (reject if insufficient stock). Add stock adjustment actions for admins (restock, correction with reason). Show current stock level in the admin catalog and the sell modal.
+- **Acceptance Criteria:**
+  - `cloth_piece_variants.stock_quantity integer NOT NULL DEFAULT 0` column added with migration.
+  - `createClothSale` rejects with `CONFLICT / INSUFFICIENT_STOCK` if `stock_quantity < requested quantity`.
+  - Stock is decremented atomically inside the `createClothSale` transaction.
+  - Admin can adjust stock (add/subtract) with a required reason — logged to `catalog_audit_log`.
+  - Sell modal shows available stock next to each variant.
+  - Stock level shown in admin catalog variant list.
+- **Testing Steps:**
+  - Set stock = 2, attempt to sell 3 → rejected with INSUFFICIENT_STOCK.
+  - Sell 2 → stock becomes 0 → further sales blocked.
+  - Admin restocks + 10 → stock becomes 10 → sales resume.
+- **Dependencies:** cloth_sales table (MVP).

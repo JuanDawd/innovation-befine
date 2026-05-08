@@ -25,7 +25,7 @@ export default async function AdminProductsPage() {
         </Link>
       </div>
       <ProductsDashboardTable isAdmin={true} />
-      <ProductApprovalBoard isAdmin={true} />
+      <ProductApprovalBoard />
     </div>
   );
 }

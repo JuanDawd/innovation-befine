@@ -11,6 +11,7 @@ import {
   UserRoundIcon,
   CreditCardIcon,
   PlusIcon,
+  ShoppingBagIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { signOut } from "@/lib/auth-client";
@@ -44,6 +45,7 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { LogServiceForm } from "@/components/log-service-form";
 import { CheckoutForm } from "@/components/checkout-form";
+import { SellClothPieceModal } from "@/components/sell-cloth-piece-modal";
 import type { NotificationRow } from "@/app/(protected)/notifications/actions";
 import type { AppRole } from "@befine/types";
 
@@ -264,6 +266,7 @@ export function AppShell({
 
   const [logServiceOpen, setLogServiceOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [sellOpen, setSellOpen] = useState(false);
 
   const navItems = NAV_ITEMS[role];
   const grouped = resolveGroups(NAV_ITEMS[role]);
@@ -361,6 +364,14 @@ export function AppShell({
                 <span>{t("tickets.logService")}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
+            {role === "cashier_admin" && (
+              <SidebarMenuItem>
+                <SidebarMenuButton onClick={() => setSellOpen(true)} tooltip="Vender prenda">
+                  <ShoppingBagIcon aria-hidden="true" />
+                  <span>Vender prenda</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )}
             <SidebarMenuItem>
               <SidebarMenuButton
                 onClick={() => setCheckoutOpen(true)}
@@ -425,6 +436,8 @@ export function AppShell({
           {checkoutOpen && <CheckoutForm onClose={() => setCheckoutOpen(false)} />}
         </DialogContent>
       </Dialog>
+
+      <SellClothPieceModal open={sellOpen} onOpenChange={setSellOpen} />
     </SidebarProvider>
   );
 }
