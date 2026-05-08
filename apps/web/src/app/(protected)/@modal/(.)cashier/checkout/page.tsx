@@ -7,7 +7,7 @@ import { CheckoutForm } from "@/components/checkout-form";
 
 export default async function CheckoutModal() {
   const session = await auth.api.getSession({ headers: await headers() });
-  if (!session || !hasRole(session.user, "cashier_admin")) redirect("/cashier");
+  if (!session || !hasRole(session.user, "cashier", "admin")) redirect("/cashier");
 
   return (
     <ModalShell title="Cobrar" maxWidth="xl">

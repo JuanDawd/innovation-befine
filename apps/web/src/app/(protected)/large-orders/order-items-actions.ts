@@ -14,7 +14,7 @@ import { revalidatePath } from "next/cache";
 async function requireAdminOrSecretary() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) return { ok: false as const, code: "UNAUTHORIZED" as const, session: null };
-  if (!hasRole(session.user, "cashier_admin", "secretary"))
+  if (!hasRole(session.user, "admin", "secretary"))
     return { ok: false as const, code: "FORBIDDEN" as const, session: null };
   return { ok: true as const, code: null, session };
 }

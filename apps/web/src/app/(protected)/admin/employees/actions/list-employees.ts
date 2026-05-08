@@ -4,7 +4,7 @@
  * List employees server action — T014
  *
  * Returns all employees with their user data (name, email, role).
- * Only cashier_admin can call this.
+ * Only admin can call this.
  */
 
 import { headers } from "next/headers";
@@ -36,7 +36,7 @@ export async function listEmployees(): Promise<ActionResult<EmployeeListItem[]>>
   if (!session) {
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
   }
-  if (!hasRole(session.user, "cashier_admin")) {
+  if (!hasRole(session.user, "admin")) {
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
   }
 

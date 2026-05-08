@@ -9,7 +9,7 @@ import { listLargeOrders } from "@/app/(protected)/large-orders/actions";
 
 export default async function AdminNewProductModal() {
   const session = await auth.api.getSession({ headers: await headers() });
-  if (!session || !hasRole(session.user, "cashier_admin")) redirect("/cashier");
+  if (!session || !hasRole(session.user, "admin")) redirect("/admin");
 
   const [t, ordersResult] = await Promise.all([getTranslations("products"), listLargeOrders()]);
   const activeOrders = ordersResult.success

@@ -25,7 +25,7 @@ const updateSettingsSchema = z.object({
 async function getAdminSession() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) return null;
-  if (!hasRole(session.user, "cashier_admin")) return null;
+  if (!hasRole(session.user, "admin")) return null;
   return session;
 }
 
@@ -33,7 +33,7 @@ export async function getBusinessSettings(): Promise<ActionResult<BusinessSettin
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session)
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
-  if (!hasRole(session.user, "cashier_admin"))
+  if (!hasRole(session.user, "admin"))
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
 
   const db = getDb();

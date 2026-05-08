@@ -6,7 +6,7 @@
  * listBusinessDays: returns all business days for day navigation (admin/cashier).
  * listClosedTickets: returns closed tickets for a given business day, with optional client search.
  * getClosedTicketDetail: returns full detail (line items + payment breakdown) for one ticket.
- * reopenTicket: transitions a closed ticket back to reopened status (cashier_admin only).
+ * reopenTicket: transitions a closed ticket back to reopened status (cashier/admin only).
  */
 
 import { headers } from "next/headers";
@@ -84,7 +84,7 @@ export type ClosedTicketDetail = {
 async function requireAdminOrCashier() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) return { ok: false, code: "UNAUTHORIZED" as const, userId: null };
-  if (!hasRole(session.user, "cashier_admin"))
+  if (!hasRole(session.user, "cashier", "admin"))
     return { ok: false, code: "FORBIDDEN" as const, userId: null };
   return { ok: true, code: null, userId: session.user.id };
 }

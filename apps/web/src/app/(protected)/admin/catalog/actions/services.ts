@@ -4,7 +4,7 @@
  * Service catalog server actions — T024, T109
  *
  * CRUD for services and service_variants.
- * Only cashier_admin can mutate; all authenticated roles can read (T028).
+ * Only admin can mutate; all authenticated roles can read (T028).
  * Every mutation writes to catalog_audit_log.
  * editVariant triggers price-change notifications to secretaries (T109).
  */
@@ -61,7 +61,7 @@ export type ServiceRow = {
 async function getAdminSession() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) return null;
-  if (!hasRole(session.user, "cashier_admin")) return null;
+  if (!hasRole(session.user, "admin")) return null;
   return session;
 }
 
@@ -126,7 +126,7 @@ export async function listAllServices(): Promise<ActionResult<ServiceRow[]>> {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session)
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
-  if (!hasRole(session.user, "cashier_admin")) {
+  if (!hasRole(session.user, "admin")) {
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
   }
 

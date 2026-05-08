@@ -208,18 +208,22 @@ describe("Overpayment guard", () => {
 // ─── Role gates ──────────────────────────────────────────────────────────────
 
 describe("Role gates for large-order mutations", () => {
-  type Role = "cashier_admin" | "secretary" | "stylist" | "clothier";
+  type Role = "cashier" | "admin" | "secretary" | "stylist" | "clothier";
 
   function canWriteLargeOrder(role: Role): boolean {
-    return role === "cashier_admin" || role === "secretary";
+    return role === "admin" || role === "secretary";
   }
 
-  it("cashier_admin can write large orders", () => {
-    expect(canWriteLargeOrder("cashier_admin")).toBe(true);
+  it("admin can write large orders", () => {
+    expect(canWriteLargeOrder("admin")).toBe(true);
   });
 
   it("secretary can write large orders", () => {
     expect(canWriteLargeOrder("secretary")).toBe(true);
+  });
+
+  it("cashier cannot write large orders", () => {
+    expect(canWriteLargeOrder("cashier")).toBe(false);
   });
 
   it("stylist cannot write large orders", () => {

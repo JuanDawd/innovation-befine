@@ -21,7 +21,8 @@
     "no": "No"
   },
   "roles": {
-    "cashier_admin": "Administrator",
+    "cashier": "Cashier",
+    "admin": "Admin",
     "secretary": "Secretary",
     "stylist": "Stylist",
     "clothier": "Clothier"
@@ -589,7 +590,8 @@
     "cash": "Cash",
     "card": "Card",
     "transfer": "Transfer",
-    "role_cashier_admin": "Admin",
+    "role_cashier": "Cashier",
+    "role_admin": "Admin",
     "role_secretary": "Secretary",
     "role_stylist": "Stylist",
     "role_clothier": "Clothier",

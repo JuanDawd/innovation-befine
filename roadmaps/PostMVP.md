@@ -373,6 +373,30 @@
 
 ---
 
+## Phase J: UI Primitives Migration
+
+> Migrate the primitive layer from `@base-ui/react` to Radix UI (the layer shadcn/ui ships). The `components/ui/` wrappers already use shadcn-style APIs; only the internal primitive imports change.
+
+---
+
+### Task J.1: Replace `@base-ui/react` Dialog with Radix UI Dialog primitive
+
+- **Description:** The `components/ui/dialog.tsx` wrapper currently imports from `@base-ui/react/dialog`. Replace the primitive with `@radix-ui/react-dialog` (shadcn/ui's underlying primitive). Migrate the `render` prop pattern (`<DialogTrigger render={<Button />}>`) to Radix's `asChild` pattern. All 14 consumer components that import from `@/components/ui/dialog` must continue to work without changes — the public API (`Dialog`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogClose`, etc.) must remain identical.
+- **Acceptance Criteria:**
+  - `@base-ui/react` dependency removed from `apps/web/package.json`.
+  - `components/ui/dialog.tsx` imports from `@radix-ui/react-dialog`.
+  - All 14 dialog consumers compile and render without changes.
+  - `turbo typecheck` and `turbo lint` pass with zero errors.
+  - Every dialog tested manually: opens, closes on Escape, closes on backdrop click, closes on `×` button.
+  - Accessibility: `aria-modal="true"`, focus trapped inside dialog, focus restored on close.
+- **Testing Steps:**
+  - Open and close each of the 14 consumer dialogs → correct behavior in all cases.
+  - Keyboard: Tab through dialog → focus stays inside. Escape → closes.
+  - axe scan on each dialog → no violations.
+- **Dependencies:** None.
+
+---
+
 ## Phase I: Cloth Sales Inventory
 
 > Stock tracking for retail cloth piece sales. Not in MVP — sales are recorded without stock enforcement.

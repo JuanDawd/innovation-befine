@@ -30,7 +30,7 @@ import { toZonedTime } from "date-fns-tz";
 async function requireAdminOrSecretary() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) return { ok: false as const, code: "UNAUTHORIZED" as const, session: null };
-  if (!hasRole(session.user, "cashier_admin", "secretary"))
+  if (!hasRole(session.user, "admin", "secretary"))
     return { ok: false as const, code: "FORBIDDEN" as const, session: null };
   return { ok: true as const, code: null, session };
 }
@@ -39,7 +39,7 @@ async function requireAssignmentRole() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session)
     return { ok: false as const, code: "UNAUTHORIZED" as const, session: null, employeeId: null };
-  if (!hasRole(session.user, "cashier_admin", "secretary", "clothier"))
+  if (!hasRole(session.user, "admin", "secretary", "clothier"))
     return { ok: false as const, code: "FORBIDDEN" as const, session: null, employeeId: null };
 
   const db = getDb();
@@ -354,7 +354,7 @@ export async function getOrderItemsWithProgressData(
 // ─── Task 4.19: getCurrentUserProductionContext ──────────────────────────────
 
 export type ProductionUserContext = {
-  role: "cashier_admin" | "secretary" | "clothier" | "other";
+  role: "admin" | "secretary" | "clothier" | "other";
   employeeId: string | null;
 };
 
@@ -371,7 +371,7 @@ export async function getCurrentUserProductionContext(): Promise<ProductionUserC
 
   const user = session.user as { role?: string };
   const role = (user.role ?? "") as ProductionUserContext["role"];
-  const validRoles: ProductionUserContext["role"][] = ["cashier_admin", "secretary", "clothier"];
+  const validRoles: ProductionUserContext["role"][] = ["admin", "secretary", "clothier"];
   return {
     role: validRoles.includes(role) ? role : "other",
     employeeId: emp?.id ?? null,

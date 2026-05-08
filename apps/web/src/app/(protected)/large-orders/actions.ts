@@ -3,12 +3,12 @@
 /**
  * Large order server actions — T058, T059, T061
  *
- * createLargeOrder:          cashier_admin, secretary
- * editLargeOrder:            cashier_admin, secretary
- * transitionLargeOrder:      cashier_admin, secretary (cancel requires reason)
- * recordLargeOrderPayment:   cashier_admin, secretary
- * listLargeOrders:           cashier_admin, secretary
- * getLargeOrder:             cashier_admin, secretary
+ * createLargeOrder:          admin, secretary
+ * editLargeOrder:            admin, secretary
+ * transitionLargeOrder:      admin, secretary (cancel requires reason)
+ * recordLargeOrderPayment:   admin, secretary
+ * listLargeOrders:           admin, secretary
+ * getLargeOrder:             admin, secretary
  */
 
 import { headers } from "next/headers";
@@ -74,7 +74,7 @@ async function requireOrderRole() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session)
     return { ok: false as const, code: "UNAUTHORIZED" as const, userId: null, session: null };
-  if (!hasRole(session.user, "cashier_admin", "secretary"))
+  if (!hasRole(session.user, "admin", "secretary"))
     return { ok: false as const, code: "FORBIDDEN" as const, userId: null, session: null };
   return { ok: true as const, code: null, userId: session.user.id, session };
 }
@@ -143,7 +143,7 @@ export async function createLargeOrder(rawInput: unknown): Promise<ActionResult<
       error: { code: "VALIDATION_ERROR", message: "El cliente está archivado" },
     };
 
-  const autoApproved = hasRole(guard.session!.user, "cashier_admin");
+  const autoApproved = hasRole(guard.session!.user, "admin");
 
   // Only create a product if pieces were provided AND a business day is open
   const businessDay = parsed.data.pieces?.length ? await getCurrentBusinessDay() : null;

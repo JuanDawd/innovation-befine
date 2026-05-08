@@ -49,7 +49,7 @@ export async function listActiveClothiers(): Promise<ActionResult<ClothierOption
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session)
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
-  if (!hasRole(session.user, "cashier_admin", "secretary"))
+  if (!hasRole(session.user, "admin", "secretary"))
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
 
   const db = getDb();
@@ -69,7 +69,7 @@ export async function createProduct(rawInput: unknown): Promise<ActionResult<{ i
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session)
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
-  if (!hasRole(session.user, "cashier_admin", "secretary"))
+  if (!hasRole(session.user, "admin", "secretary"))
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
 
   const rl = await checkRateLimit(rateLimits.general, session.user.id);
@@ -117,7 +117,7 @@ export async function createProduct(rawInput: unknown): Promise<ActionResult<{ i
   if (!creatorEmployee)
     return { success: false, error: { code: "NOT_FOUND", message: "Empleado no encontrado" } };
 
-  const autoApproved = hasRole(session.user, "cashier_admin");
+  const autoApproved = hasRole(session.user, "admin");
 
   // Create product + pieces atomically
   const txDb = getTxDb();
@@ -185,7 +185,7 @@ export async function getProductsDashboardData(): Promise<ActionResult<ProductDa
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session)
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
-  if (!hasRole(session.user, "cashier_admin", "secretary"))
+  if (!hasRole(session.user, "admin", "secretary"))
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
 
   const db = getDb();
@@ -201,7 +201,7 @@ export async function getProductDetailData(
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session)
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
-  if (!hasRole(session.user, "cashier_admin", "secretary"))
+  if (!hasRole(session.user, "admin", "secretary"))
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
 
   const db = getDb();
@@ -216,7 +216,7 @@ export async function updateProductPiece(rawInput: unknown): Promise<ActionResul
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session)
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
-  if (!hasRole(session.user, "cashier_admin", "secretary"))
+  if (!hasRole(session.user, "admin", "secretary"))
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
 
   const rl = await checkRateLimit(rateLimits.general, session.user.id);

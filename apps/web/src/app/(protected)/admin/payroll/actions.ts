@@ -93,7 +93,7 @@ async function requireAdmin() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session)
     return { ok: false as const, code: "UNAUTHORIZED" as const, userId: null, user: null };
-  if (!hasRole(session.user, "cashier_admin"))
+  if (!hasRole(session.user, "admin"))
     return { ok: false as const, code: "FORBIDDEN" as const, userId: null, user: null };
   return { ok: true as const, code: null, userId: session.user.id, user: session.user };
 }
@@ -485,7 +485,7 @@ export async function getUnsettledEmployees(): Promise<ActionResult<UnsettledEmp
     .select({ id: employees.id, role: employees.role, name: users.name })
     .from(employees)
     .innerJoin(users, eq(employees.userId, users.id))
-    .where(and(eq(employees.isActive, true), not(eq(employees.role, "cashier_admin"))));
+    .where(and(eq(employees.isActive, true), not(eq(employees.role, "admin"))));
 
   const result: UnsettledEmployee[] = [];
 

@@ -88,14 +88,24 @@ describe("isSharedApp", () => {
 });
 
 describe("roleCanAccess", () => {
-  it("cashier_admin can access /cashier routes", () => {
-    expect(roleCanAccess("cashier_admin", "/cashier")).toBe(true);
-    expect(roleCanAccess("cashier_admin", "/cashier/tickets")).toBe(true);
+  it("cashier can access /cashier routes", () => {
+    expect(roleCanAccess("cashier", "/cashier")).toBe(true);
+    expect(roleCanAccess("cashier", "/cashier/tickets")).toBe(true);
   });
 
-  it("cashier_admin can access /admin routes", () => {
-    expect(roleCanAccess("cashier_admin", "/admin/employees")).toBe(true);
-    expect(roleCanAccess("cashier_admin", "/admin/settings")).toBe(true);
+  it("cashier cannot access /admin routes by default", () => {
+    expect(roleCanAccess("cashier", "/admin/employees")).toBe(false);
+    expect(roleCanAccess("cashier", "/admin/settings")).toBe(false);
+  });
+
+  it("admin can access /admin routes", () => {
+    expect(roleCanAccess("admin", "/admin/employees")).toBe(true);
+    expect(roleCanAccess("admin", "/admin/settings")).toBe(true);
+  });
+
+  it("admin can also access /cashier routes", () => {
+    expect(roleCanAccess("admin", "/cashier")).toBe(true);
+    expect(roleCanAccess("admin", "/cashier/tickets")).toBe(true);
   });
 
   it("secretary can access /secretary routes", () => {
@@ -140,16 +150,18 @@ describe("roleCanAccess", () => {
   });
 
   it("all roles can access /profile (shared app path)", () => {
-    expect(roleCanAccess("cashier_admin", "/profile")).toBe(true);
+    expect(roleCanAccess("cashier", "/profile")).toBe(true);
+    expect(roleCanAccess("admin", "/profile")).toBe(true);
     expect(roleCanAccess("secretary", "/profile")).toBe(true);
     expect(roleCanAccess("stylist", "/profile")).toBe(true);
     expect(roleCanAccess("clothier", "/profile")).toBe(true);
   });
 
-  it("cashier_admin and secretary can access /large-orders (shared app path)", () => {
-    expect(roleCanAccess("cashier_admin", "/large-orders")).toBe(true);
-    expect(roleCanAccess("cashier_admin", "/large-orders/new")).toBe(true);
-    expect(roleCanAccess("cashier_admin", "/large-orders/abc-123")).toBe(true);
+  it("admin, cashier and secretary can access /large-orders (shared app path)", () => {
+    expect(roleCanAccess("admin", "/large-orders")).toBe(true);
+    expect(roleCanAccess("admin", "/large-orders/new")).toBe(true);
+    expect(roleCanAccess("admin", "/large-orders/abc-123")).toBe(true);
+    expect(roleCanAccess("cashier", "/large-orders")).toBe(true);
     expect(roleCanAccess("secretary", "/large-orders")).toBe(true);
     expect(roleCanAccess("secretary", "/large-orders/new")).toBe(true);
   });
@@ -161,19 +173,20 @@ describe("roleCanAccess", () => {
   });
 
   it("cashierCanAccessAdmin=false: cashier cannot access /admin routes (default)", () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const cashier = "cashier" as any;
-    expect(roleCanAccess("cashier_admin", "/admin/analytics", false)).toBe(true);
-    // "cashier" is the post-split role — blocked by default
-    expect(roleCanAccess(cashier, "/admin/analytics", false)).toBe(false);
-    expect(roleCanAccess(cashier, "/admin/settings", false)).toBe(false);
+    expect(roleCanAccess("admin", "/admin/analytics", false)).toBe(true);
+    // cashier role — blocked by default
+    expect(roleCanAccess("cashier", "/admin/analytics", false)).toBe(false);
+    expect(roleCanAccess("cashier", "/admin/settings", false)).toBe(false);
   });
 
   it("cashierCanAccessAdmin=true: cashier role gains access to /admin routes", () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const cashier = "cashier" as any;
-    expect(roleCanAccess(cashier, "/admin/analytics", true)).toBe(true);
-    expect(roleCanAccess(cashier, "/admin/settings", true)).toBe(true);
+    expect(roleCanAccess("cashier", "/admin/analytics", true)).toBe(true);
+    expect(roleCanAccess("cashier", "/admin/settings", true)).toBe(true);
+  });
+
+  it("admin always has access to /admin regardless of cashierCanAccessAdmin flag", () => {
+    expect(roleCanAccess("admin", "/admin/analytics", false)).toBe(true);
+    expect(roleCanAccess("admin", "/admin/analytics", true)).toBe(true);
   });
 });
 
@@ -207,8 +220,9 @@ describe("isFinancialBlockedForSecretary", () => {
 });
 
 describe("ROLE_HOME", () => {
-  it("maps all four roles to their home paths", () => {
-    expect(ROLE_HOME.cashier_admin).toBe("/cashier");
+  it("maps all five roles to their home paths", () => {
+    expect(ROLE_HOME.cashier).toBe("/cashier");
+    expect(ROLE_HOME.admin).toBe("/admin");
     expect(ROLE_HOME.secretary).toBe("/secretary");
     expect(ROLE_HOME.stylist).toBe("/stylist");
     expect(ROLE_HOME.clothier).toBe("/clothier");

@@ -4,7 +4,7 @@
  * AppointmentList — T052
  *
  * Day-view appointment list with date navigation and stylist filter.
- * Used by secretary and cashier_admin.
+ * Used by secretary and admin.
  */
 
 import { useState, useTransition, useEffect, useCallback } from "react";

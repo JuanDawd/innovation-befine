@@ -42,7 +42,7 @@ export type EmployeeOption = {
 async function requireAdmin() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) return { ok: false as const, code: "UNAUTHORIZED" as const, userId: null };
-  if (!hasRole(session.user, "cashier_admin"))
+  if (!hasRole(session.user, "admin"))
     return { ok: false as const, code: "FORBIDDEN" as const, userId: null };
   return { ok: true as const, code: null, userId: session.user.id };
 }

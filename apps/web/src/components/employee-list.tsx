@@ -49,7 +49,7 @@ const STYLIST_SUBTYPES = [
   { value: "spa_manager" },
 ] as const;
 
-const APP_ROLES = ["cashier_admin", "secretary", "stylist", "clothier"] as const;
+const APP_ROLES = ["cashier", "admin", "secretary", "stylist", "clothier"] as const;
 
 const editSchema = z.object({
   name: z.string().min(2).max(100),

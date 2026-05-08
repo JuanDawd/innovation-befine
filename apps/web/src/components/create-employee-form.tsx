@@ -19,7 +19,8 @@ import { createEmployee } from "@/app/(protected)/admin/employees/actions/create
 import { useState } from "react";
 
 const APP_ROLES = [
-  { value: "cashier_admin", labelKey: "cashier_admin" },
+  { value: "cashier", labelKey: "cashier" },
+  { value: "admin", labelKey: "admin" },
   { value: "secretary", labelKey: "secretary" },
   { value: "stylist", labelKey: "stylist" },
   { value: "clothier", labelKey: "clothier" },

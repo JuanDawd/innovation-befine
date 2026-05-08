@@ -12,7 +12,7 @@
 
 import type { AppRole } from "@befine/types";
 
-export const ALL_ROLES: AppRole[] = ["cashier_admin", "secretary", "stylist", "clothier"];
+export const ALL_ROLES: AppRole[] = ["cashier", "admin", "secretary", "stylist", "clothier"];
 
 /** Mirrors the hasRole helper from @/lib/middleware-helpers */
 export function hasRole(user: { role?: string | null }, ...roles: AppRole[]): boolean {

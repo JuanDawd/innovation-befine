@@ -10,7 +10,7 @@ import { CheckoutForm } from "@/components/checkout-form";
 
 export default async function CheckoutPage() {
   const session = await auth.api.getSession({ headers: await headers() });
-  if (!session || !hasRole(session.user, "cashier_admin")) redirect("/cashier");
+  if (!session || !hasRole(session.user, "cashier", "admin")) redirect("/cashier");
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6 max-w-xl mx-auto w-full">

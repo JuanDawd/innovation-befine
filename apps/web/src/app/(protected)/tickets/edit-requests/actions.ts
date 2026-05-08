@@ -4,8 +4,8 @@
  * Ticket edit request actions — T041
  *
  * requestEdit:              secretary / stylist — submit a request to change a ticket item's variant
- * listPendingEditRequests:  cashier_admin — list all open requests for today's business day
- * resolveEditRequest:       cashier_admin — approve (updates item) or reject (no change)
+ * listPendingEditRequests:  cashier/admin — list all open requests for today's business day
+ * resolveEditRequest:       cashier/admin — approve (updates item) or reject (no change)
  * listMyEditRequests:       secretary / stylist — list their own open requests on today's tickets
  */
 
@@ -200,7 +200,7 @@ export async function listPendingEditRequests(): Promise<ActionResult<PendingEdi
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session)
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
-  if (!hasRole(session.user, "cashier_admin"))
+  if (!hasRole(session.user, "cashier", "admin"))
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
 
   const businessDay = await getCurrentBusinessDay();
@@ -315,7 +315,7 @@ export async function resolveEditRequest(
   if (!ctx) return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
 
   const { session, employeeId: cashierId } = ctx;
-  if (!hasRole(session.user, "cashier_admin"))
+  if (!hasRole(session.user, "cashier", "admin"))
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
 
   const rl = await checkRateLimit(rateLimits.general, session.user.id);

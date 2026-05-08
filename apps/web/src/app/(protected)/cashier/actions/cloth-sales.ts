@@ -71,7 +71,7 @@ const createClothSaleSchema = z
 async function getCashierSession() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) return null;
-  if (!hasRole(session.user, "cashier_admin")) return null;
+  if (!hasRole(session.user, "cashier", "admin")) return null;
   return session;
 }
 
@@ -81,7 +81,7 @@ export async function listClientsForSale(): Promise<ActionResult<ClientOption[]>
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session)
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
-  if (!hasRole(session.user, "cashier_admin", "secretary"))
+  if (!hasRole(session.user, "cashier", "admin", "secretary"))
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
 
   const db = getDb();
@@ -100,7 +100,7 @@ export async function listSellableClothPieces(): Promise<ActionResult<SellableCl
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session)
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
-  if (!hasRole(session.user, "cashier_admin", "secretary"))
+  if (!hasRole(session.user, "cashier", "admin", "secretary"))
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
 
   const db = getDb();

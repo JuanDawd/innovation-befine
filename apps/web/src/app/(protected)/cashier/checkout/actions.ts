@@ -3,7 +3,7 @@
 /**
  * Checkout server actions — T038, T039, T040
  *
- * processCheckout: cashier_admin only. Creates checkout_session, ticket_payments,
+ * processCheckout: cashier/admin only. Creates checkout_session, ticket_payments,
  * closes all selected tickets — atomically, with optimistic locking.
  */
 
@@ -65,7 +65,7 @@ export async function getAwaitingPaymentTickets(
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session)
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
-  if (!hasRole(session.user, "cashier_admin"))
+  if (!hasRole(session.user, "cashier", "admin"))
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
 
   const businessDay = await getCurrentBusinessDay();
@@ -138,7 +138,7 @@ export async function processCheckout(rawInput: unknown): Promise<ActionResult<C
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session)
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
-  if (!hasRole(session.user, "cashier_admin"))
+  if (!hasRole(session.user, "cashier", "admin"))
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
 
   const rl = await checkRateLimit(rateLimits.general, session.user.id);
@@ -484,7 +484,7 @@ export async function processPaidOfflineCheckout(
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session)
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
-  if (!hasRole(session.user, "cashier_admin"))
+  if (!hasRole(session.user, "cashier", "admin"))
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
 
   const rl = await checkRateLimit(rateLimits.general, session.user.id);
@@ -631,7 +631,7 @@ export async function setOverridePrice(
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session)
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
-  if (!hasRole(session.user, "cashier_admin"))
+  if (!hasRole(session.user, "cashier", "admin"))
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
 
   const rl = await checkRateLimit(rateLimits.general, session.user.id);
@@ -701,7 +701,7 @@ export async function listPriceOverrides(): Promise<ActionResult<OverrideHistory
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session)
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
-  if (!hasRole(session.user, "cashier_admin"))
+  if (!hasRole(session.user, "cashier", "admin"))
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
 
   const db = getDb();

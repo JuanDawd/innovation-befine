@@ -147,7 +147,7 @@ function ItemSection({
     });
   }
 
-  const canApprove = userRole === "cashier_admin" || userRole === "secretary";
+  const canApprove = userRole === "admin" || userRole === "secretary";
 
   return (
     <section aria-label={item.pieceName}>

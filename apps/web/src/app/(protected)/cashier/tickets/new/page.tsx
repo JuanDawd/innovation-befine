@@ -1,6 +1,6 @@
 /**
  * Cashier — log service page (T035)
- * cashier_admin can log a ticket for any active stylist.
+ * cashier/admin can log a ticket for any active stylist.
  */
 
 import { getTranslations } from "next-intl/server";
@@ -14,7 +14,7 @@ import { LogServiceForm } from "@/components/log-service-form";
 export default async function CashierLogServicePage() {
   const t = await getTranslations("tickets");
   const session = await auth.api.getSession({ headers: await headers() });
-  if (!session || !hasRole(session.user, "cashier_admin")) redirect("/cashier");
+  if (!session || !hasRole(session.user, "cashier", "admin")) redirect("/cashier");
 
   const empResult = await getCurrentEmployeeId();
   const currentEmployeeId = empResult.success ? empResult.data.employeeId : "";

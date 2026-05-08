@@ -32,7 +32,7 @@ const seedUsers: SeedUser[] = [
   {
     email: "admin@befine.dev",
     name: "Admin",
-    role: "cashier_admin",
+    role: "admin",
     password: getEnv("SEED_ADMIN_PASSWORD", "Admin123!"),
   },
   {

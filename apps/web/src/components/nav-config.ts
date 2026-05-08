@@ -34,7 +34,13 @@ export type NavItem = {
 export type NavGroup = { labelKey: string; items: string[] };
 
 export const NAV_ITEMS: Record<AppRole, NavItem[]> = {
-  cashier_admin: [
+  cashier: [
+    { key: "dashboard", href: "/cashier", icon: LayoutDashboard },
+    { key: "ticketHistory", href: "/cashier/tickets/history", icon: ReceiptIcon },
+    { key: "appointments", href: "/cashier/appointments", icon: CalendarDays },
+    { key: "largeOrders", href: "/large-orders", icon: ShoppingBag },
+  ],
+  admin: [
     { key: "dashboard", href: "/cashier", icon: LayoutDashboard },
     { key: "ticketHistory", href: "/cashier/tickets/history", icon: ReceiptIcon },
     { key: "appointments", href: "/cashier/appointments", icon: CalendarDays },

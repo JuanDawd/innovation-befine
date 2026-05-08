@@ -38,7 +38,8 @@ export const SHARED_APP_PATHS = ["/profile", "/large-orders"];
 
 /** Where each role is redirected after login; also the route prefix they own */
 export const ROLE_HOME: Record<AppRole, string> = {
-  cashier_admin: "/cashier",
+  cashier: "/cashier",
+  admin: "/admin",
   secretary: "/secretary",
   stylist: "/stylist",
   clothier: "/clothier",
@@ -81,12 +82,11 @@ export function isSharedApp(pathname: string): boolean {
 
 /**
  * Returns true if the role is permitted to access the path.
- * Each role owns its own prefix; cashier_admin also owns /admin.
+ * Each role owns its own prefix; admin also owns /cashier.
  * All authenticated roles can access SHARED_APP_PATHS (e.g. /profile).
  *
- * @param cashierCanAccessAdmin - when true, the "cashier" role (post-split) is also
+ * @param cashierCanAccessAdmin - when true, the "cashier" role is also
  *   allowed to access /admin routes. Sourced from business_settings with a short TTL cache.
- *   Has no effect on "cashier_admin" (which already owns /admin).
  */
 export function roleCanAccess(
   role: AppRole | undefined,
@@ -97,9 +97,10 @@ export function roleCanAccess(
   if (isSharedApp(pathname)) return true;
   const home = ROLE_HOME[role];
   if (pathname.startsWith(home)) return true;
-  if (role === "cashier_admin" && pathname.startsWith("/admin")) return true;
-  if (cashierCanAccessAdmin && role === ("cashier" as AppRole) && pathname.startsWith("/admin"))
-    return true;
+  // admin role always has access to both /admin and /cashier
+  if (role === "admin" && pathname.startsWith("/cashier")) return true;
+  // cashier role can access /admin when the toggle is enabled
+  if (cashierCanAccessAdmin && role === "cashier" && pathname.startsWith("/admin")) return true;
   return false;
 }
 
@@ -116,7 +117,7 @@ export function isFinancialBlockedForSecretary(pathname: string): boolean {
  * Accepts the user object (or any object with a `role` property) from a Better Auth session.
  *
  * @example
- *   if (!hasRole(session.user, "cashier_admin")) return FORBIDDEN;
+ *   if (!hasRole(session.user, "admin")) return FORBIDDEN;
  */
 export function hasRole(user: { role?: string | null }, ...roles: AppRole[]): boolean {
   return roles.includes(user.role as AppRole);

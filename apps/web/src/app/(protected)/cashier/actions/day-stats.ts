@@ -4,7 +4,7 @@
  * Day-at-a-glance stats — T093
  *
  * Returns today's revenue, closed ticket count, and open ticket count for the current business day.
- * Requires cashier_admin role.
+ * Requires cashier or admin role.
  */
 
 import { headers } from "next/headers";
@@ -26,7 +26,7 @@ export async function getDayStats(): Promise<ActionResult<DayStats>> {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session)
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
-  if (!hasRole(session.user, "cashier_admin"))
+  if (!hasRole(session.user, "cashier", "admin"))
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
 
   const businessDay = await getCurrentBusinessDay();

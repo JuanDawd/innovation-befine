@@ -3,7 +3,7 @@
 /**
  * Appointment server actions — T050, T032b
  *
- * createAppointment: secretary and cashier_admin.
+ * createAppointment: secretary and admin.
  * transitionAppointment: handles status transitions including no-show count
  *   increment/decrement (T032b) inside a DB transaction for atomicity.
  */
@@ -43,7 +43,7 @@ export type ConflictDetail = {
 async function requireBookingRole() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) return { ok: false as const, code: "UNAUTHORIZED" as const, userId: null };
-  if (!hasRole(session.user, "cashier_admin", "secretary"))
+  if (!hasRole(session.user, "admin", "secretary"))
     return { ok: false as const, code: "FORBIDDEN" as const, userId: null };
   return { ok: true as const, code: null, userId: session.user.id };
 }

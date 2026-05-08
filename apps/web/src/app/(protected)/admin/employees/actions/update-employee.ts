@@ -3,7 +3,7 @@
 /**
  * Update employee server action — T014 (edit), T015 (earnings flag), T022a (deactivate)
  *
- * All mutations require cashier_admin role.
+ * All mutations require admin role.
  */
 
 import { headers } from "next/headers";
@@ -34,7 +34,7 @@ import { hasRole } from "@/lib/middleware-helpers";
 
 const editEmployeeSchema = z.object({
   name: z.string().min(2).max(100),
-  role: z.enum(["cashier_admin", "secretary", "stylist", "clothier"]),
+  role: z.enum(["cashier", "admin", "secretary", "stylist", "clothier"]),
   stylistSubtype: z
     .enum(["hairdresser", "manicurist", "masseuse", "makeup_artist", "spa_manager"])
     .nullable()
@@ -55,7 +55,7 @@ export async function editEmployee(
   if (!session) {
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
   }
-  if (!hasRole(session.user, "cashier_admin")) {
+  if (!hasRole(session.user, "admin")) {
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
   }
 
@@ -180,7 +180,7 @@ export async function setShowEarnings(
   if (!session) {
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
   }
-  if (!hasRole(session.user, "cashier_admin")) {
+  if (!hasRole(session.user, "admin")) {
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
   }
 
@@ -211,7 +211,7 @@ export async function deactivateEmployee(
   if (!session) {
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
   }
-  if (!hasRole(session.user, "cashier_admin")) {
+  if (!hasRole(session.user, "admin")) {
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
   }
 
@@ -361,7 +361,7 @@ export async function terminateEmployee(
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session)
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
-  if (!hasRole(session.user, "cashier_admin"))
+  if (!hasRole(session.user, "admin"))
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
 
   const parsed = terminateEmployeeSchema.safeParse(rawInput);

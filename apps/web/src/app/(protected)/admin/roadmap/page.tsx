@@ -25,7 +25,7 @@ const STATUS_META: Record<TaskStatus, { label: string; className: string }> = {
 
 export default async function AdminRoadmapPage() {
   const session = await auth.api.getSession({ headers: await headers() });
-  if (!session || !hasRole(session.user, "cashier_admin")) redirect("/403");
+  if (!session || !hasRole(session.user, "admin")) redirect("/403");
 
   const roadmaps = await getRoadmaps();
 

@@ -4,7 +4,7 @@
  * LogServiceForm — T035
  *
  * Ticket creation form shared by cashier, secretary, and stylist roles.
- * - cashier_admin / secretary: employee selector shown (all active stylists)
+ * - cashier / admin / secretary: employee selector shown (all active stylists)
  * - stylist: employee pre-selected to self, selector hidden
  */
 

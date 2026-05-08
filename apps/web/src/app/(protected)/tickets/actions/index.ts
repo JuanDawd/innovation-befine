@@ -3,8 +3,8 @@
 /**
  * Ticket server actions — T035
  *
- * createTicket: stylist (own), secretary/cashier_admin (any stylist).
- * listActiveStylists: secretary/cashier_admin only — used to populate employee selector.
+ * createTicket: stylist (own), secretary/cashier/admin (any stylist).
+ * listActiveStylists: secretary/cashier/admin only — used to populate employee selector.
  */
 
 import { headers } from "next/headers";
@@ -67,13 +67,13 @@ export async function getCurrentEmployeeId(): Promise<ActionResult<{ employeeId:
   return { success: true, data: { employeeId: emp.id } };
 }
 
-// ─── List active stylists (secretary / cashier_admin) ─────────────────────────
+// ─── List active stylists (secretary / cashier / admin) ───────────────────────
 
 export async function listActiveStylists(): Promise<ActionResult<StylistOption[]>> {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session)
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
-  if (!hasRole(session.user, "cashier_admin", "secretary"))
+  if (!hasRole(session.user, "cashier", "admin", "secretary"))
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
 
   const db = getDb();
@@ -100,7 +100,7 @@ export async function createTicket(rawInput: unknown): Promise<ActionResult<Tick
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
 
   const isStylist = hasRole(session.user, "stylist");
-  const isStaff = hasRole(session.user, "cashier_admin", "secretary");
+  const isStaff = hasRole(session.user, "cashier", "admin", "secretary");
   if (!isStylist && !isStaff)
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
 
@@ -274,7 +274,7 @@ export async function listOpenTickets(): Promise<ActionResult<DashboardTicket[]>
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session)
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
-  if (!hasRole(session.user, "cashier_admin", "secretary"))
+  if (!hasRole(session.user, "cashier", "admin", "secretary"))
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
 
   const businessDay = await getCurrentBusinessDay();
@@ -333,10 +333,10 @@ export async function listOpenTickets(): Promise<ActionResult<DashboardTicket[]>
 
 /**
  * Allowed transitions:
- *   logged → awaiting_payment   : stylist (own), secretary, cashier_admin
- *   awaiting_payment → closed   : cashier_admin only (T038)
- *   closed → reopened            : cashier_admin only
- *   reopened → awaiting_payment : cashier_admin only
+ *   logged → awaiting_payment   : stylist (own), secretary, cashier, admin
+ *   awaiting_payment → closed   : cashier/admin only (T038)
+ *   closed → reopened            : cashier/admin only
+ *   reopened → awaiting_payment : cashier/admin only
  */
 type TransitionInput = { ticketId: string };
 
@@ -375,7 +375,7 @@ export async function transitionToAwaitingPayment(
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
 
   const isStylist = hasRole(session.user, "stylist");
-  const isStaff = hasRole(session.user, "cashier_admin", "secretary");
+  const isStaff = hasRole(session.user, "cashier", "admin", "secretary");
   if (!isStylist && !isStaff)
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
 
@@ -434,7 +434,7 @@ export async function transitionReopenedToAwaitingPayment(
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session)
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
-  if (!hasRole(session.user, "cashier_admin"))
+  if (!hasRole(session.user, "cashier", "admin"))
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
 
   const rl = await checkRateLimit(rateLimits.general, session.user.id);

@@ -46,7 +46,7 @@ export type PendingProductPieceApprovalRow = {
 
 async function getStaffEmployee(): Promise<{ employeeId: string; userId: string } | null> {
   const session = await auth.api.getSession({ headers: await headers() });
-  if (!session || !hasRole(session.user, "cashier_admin", "secretary")) return null;
+  if (!session || !hasRole(session.user, "admin", "secretary")) return null;
 
   const db = getDb();
   const [emp] = await db
@@ -175,7 +175,7 @@ export async function adminMarkProductPieceApproved(
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session)
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
-  if (!hasRole(session.user, "cashier_admin"))
+  if (!hasRole(session.user, "admin"))
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
 
   const rl = await checkRateLimit(rateLimits.general, session.user.id);

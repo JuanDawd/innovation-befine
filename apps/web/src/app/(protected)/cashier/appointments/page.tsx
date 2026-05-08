@@ -11,7 +11,7 @@ import { AppointmentList } from "@/components/appointment-list";
 
 export default async function CashierAppointmentsPage() {
   const session = await auth.api.getSession({ headers: await headers() });
-  if (!session || !hasRole(session.user, "cashier_admin")) redirect("/cashier");
+  if (!session || !hasRole(session.user, "cashier", "admin")) redirect("/cashier");
 
   const t = await getTranslations("appointments");
 

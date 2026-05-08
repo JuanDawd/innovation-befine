@@ -13,16 +13,16 @@ function resolveMarkDoneStatus(autoApproved: boolean): ProductPieceStatus {
 
 // ─── RBAC guard for approveProductPiece ─────────────────────────────────────
 
-type EmployeeRole = "cashier_admin" | "secretary" | "stylist" | "clothier";
+type EmployeeRole = "cashier" | "admin" | "secretary" | "stylist" | "clothier";
 
 function canApproveProductPiece(role: EmployeeRole): boolean {
-  return role === "cashier_admin" || role === "secretary";
+  return role === "admin" || role === "secretary";
 }
 
 // ─── auto_approved flag at creation time ─────────────────────────────────────
 
 function resolveAutoApproved(creatorRole: EmployeeRole): boolean {
-  return creatorRole === "cashier_admin";
+  return creatorRole === "admin";
 }
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
@@ -38,8 +38,8 @@ describe("product auto-approval status resolution", () => {
 });
 
 describe("auto_approved flag at product creation", () => {
-  it("cashier_admin creator → auto_approved = true", () => {
-    expect(resolveAutoApproved("cashier_admin")).toBe(true);
+  it("admin creator → auto_approved = true", () => {
+    expect(resolveAutoApproved("admin")).toBe(true);
   });
 
   it("secretary creator → auto_approved = false", () => {
@@ -52,8 +52,8 @@ describe("auto_approved flag at product creation", () => {
 });
 
 describe("approveProductPiece RBAC guard", () => {
-  it("cashier_admin can approve", () => {
-    expect(canApproveProductPiece("cashier_admin")).toBe(true);
+  it("admin can approve", () => {
+    expect(canApproveProductPiece("admin")).toBe(true);
   });
 
   it("secretary can approve", () => {

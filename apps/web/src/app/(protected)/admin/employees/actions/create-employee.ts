@@ -4,7 +4,7 @@
  * Create employee server action — T013
  *
  * Creates a Better Auth user + employee record in one operation.
- * Only cashier_admin can call this.
+ * Only admin can call this.
  *
  * Password handling:
  * - If Resend (T054) is available: generate a random temporary password,
@@ -36,7 +36,7 @@ export async function createEmployee(rawInput: unknown): Promise<ActionResult<Cr
   if (!session) {
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
   }
-  if (!hasRole(session.user, "cashier_admin")) {
+  if (!hasRole(session.user, "admin")) {
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
   }
 

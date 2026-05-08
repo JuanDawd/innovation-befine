@@ -3,7 +3,7 @@
 /**
  * BookAppointmentForm — T050
  *
- * Secretary / cashier_admin can book an appointment:
+ * Secretary / admin can book an appointment:
  * - Client selector (saved or guest)
  * - Stylist dropdown (active stylists only)
  * - Service summary (free text, optional service_variant_id unused in MVP form)

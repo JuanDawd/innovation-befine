@@ -4,7 +4,7 @@
  * ClosedTicketHistory — T092
  *
  * Client component: day selector, client search, ticket list, detail sheet.
- * Roles: cashier_admin only.
+ * Roles: cashier/admin only.
  */
 
 import { useState, useTransition, useCallback } from "react";

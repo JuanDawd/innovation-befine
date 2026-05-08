@@ -123,123 +123,124 @@ function uid() {
 // ─── Section 1: Role-gate contracts ──────────────────────────────────────────
 
 describe("Role gate: tickets/actions", () => {
-  const createTicketRoles: AppRole[] = ["cashier_admin", "secretary", "stylist"];
+  const createTicketRoles: AppRole[] = ["cashier", "admin", "secretary", "stylist"];
 
-  it("createTicket — allowed: cashier_admin, secretary, stylist", () => {
-    expectOnlyRoles(createTicketRoles, "cashier_admin", "secretary", "stylist");
+  it("createTicket — allowed: cashier, admin, secretary, stylist", () => {
+    expectOnlyRoles(createTicketRoles, "cashier", "admin", "secretary", "stylist");
   });
 
   it("createTicket — clothier is forbidden", () => {
     const clothier = makeUser("clothier");
-    expect(hasRole(clothier, "cashier_admin", "secretary", "stylist")).toBe(false);
+    expect(hasRole(clothier, "cashier", "admin", "secretary", "stylist")).toBe(false);
   });
 
   it("createTicket — unauthenticated is denied", () => {
-    expectUnauthenticated(["cashier_admin", "secretary", "stylist"]);
+    expectUnauthenticated(["cashier", "admin", "secretary", "stylist"]);
   });
 
-  it("listActiveStylists — allowed: cashier_admin, secretary", () => {
-    expectOnlyRoles(["cashier_admin", "secretary"], "cashier_admin", "secretary");
+  it("listActiveStylists — allowed: cashier, admin, secretary", () => {
+    expectOnlyRoles(["cashier", "admin", "secretary"], "cashier", "admin", "secretary");
   });
 
-  it("transitionToAwaitingPayment — allowed: cashier_admin, secretary, stylist", () => {
+  it("transitionToAwaitingPayment — allowed: cashier, admin, secretary, stylist", () => {
     expectOnlyRoles(
-      ["cashier_admin", "secretary", "stylist"],
-      "cashier_admin",
+      ["cashier", "admin", "secretary", "stylist"],
+      "cashier",
+      "admin",
       "secretary",
       "stylist",
     );
   });
 
-  it("transitionReopenedToAwaitingPayment — cashier_admin only", () => {
-    expectOnlyRoles(["cashier_admin"], "cashier_admin");
+  it("transitionReopenedToAwaitingPayment — cashier/admin only", () => {
+    expectOnlyRoles(["cashier", "admin"], "cashier", "admin");
   });
 });
 
 describe("Role gate: cashier/checkout/actions", () => {
-  it("processCheckout — cashier_admin only", () => {
-    expectOnlyRoles(["cashier_admin"], "cashier_admin");
+  it("processCheckout — cashier/admin only", () => {
+    expectOnlyRoles(["cashier", "admin"], "cashier", "admin");
   });
 
-  it("processPaidOfflineCheckout — cashier_admin only", () => {
-    expectOnlyRoles(["cashier_admin"], "cashier_admin");
+  it("processPaidOfflineCheckout — cashier/admin only", () => {
+    expectOnlyRoles(["cashier", "admin"], "cashier", "admin");
   });
 
-  it("setOverridePrice — cashier_admin only", () => {
-    expectOnlyRoles(["cashier_admin"], "cashier_admin");
+  it("setOverridePrice — cashier/admin only", () => {
+    expectOnlyRoles(["cashier", "admin"], "cashier", "admin");
   });
 
-  it("getAwaitingPaymentTickets — cashier_admin only", () => {
-    expectOnlyRoles(["cashier_admin"], "cashier_admin");
+  it("getAwaitingPaymentTickets — cashier/admin only", () => {
+    expectOnlyRoles(["cashier", "admin"], "cashier", "admin");
   });
 
-  it("listPriceOverrides — cashier_admin only", () => {
-    expectOnlyRoles(["cashier_admin"], "cashier_admin");
+  it("listPriceOverrides — cashier/admin only", () => {
+    expectOnlyRoles(["cashier", "admin"], "cashier", "admin");
   });
 });
 
 describe("Role gate: cashier/actions (business day)", () => {
-  it("openBusinessDay — cashier_admin only", () => {
-    expectOnlyRoles(["cashier_admin"], "cashier_admin");
+  it("openBusinessDay — cashier/admin only", () => {
+    expectOnlyRoles(["cashier", "admin"], "cashier", "admin");
   });
 
-  it("closeBusinessDay — cashier_admin only", () => {
-    expectOnlyRoles(["cashier_admin"], "cashier_admin");
+  it("closeBusinessDay — cashier/admin only", () => {
+    expectOnlyRoles(["cashier", "admin"], "cashier", "admin");
   });
 
-  it("reopenBusinessDay — cashier_admin only", () => {
-    expectOnlyRoles(["cashier_admin"], "cashier_admin");
+  it("reopenBusinessDay — cashier/admin only", () => {
+    expectOnlyRoles(["cashier", "admin"], "cashier", "admin");
   });
 });
 
 describe("Role gate: admin/payroll/actions", () => {
-  it("recordPayout — cashier_admin only", () => {
-    expectOnlyRoles(["cashier_admin"], "cashier_admin");
+  it("recordPayout — admin only", () => {
+    expectOnlyRoles(["admin"], "admin");
   });
 
-  it("listPayouts — cashier_admin only", () => {
-    expectOnlyRoles(["cashier_admin"], "cashier_admin");
+  it("listPayouts — admin only", () => {
+    expectOnlyRoles(["admin"], "admin");
   });
 
-  it("previewEarnings — cashier_admin only", () => {
-    expectOnlyRoles(["cashier_admin"], "cashier_admin");
+  it("previewEarnings — admin only", () => {
+    expectOnlyRoles(["admin"], "admin");
   });
 
   it("getMyEarnings — allowed: stylist, clothier, secretary", () => {
     expectOnlyRoles(["stylist", "clothier", "secretary"], "stylist", "clothier", "secretary");
   });
 
-  it("getMyEarnings — cashier_admin is NOT allowed", () => {
-    const admin = makeUser("cashier_admin");
+  it("getMyEarnings — admin is NOT allowed", () => {
+    const admin = makeUser("admin");
     expect(hasRole(admin, "stylist", "clothier", "secretary")).toBe(false);
   });
 
-  it("getUnsettledEmployees — cashier_admin only", () => {
-    expectOnlyRoles(["cashier_admin"], "cashier_admin");
+  it("getUnsettledEmployees — admin only", () => {
+    expectOnlyRoles(["admin"], "admin");
   });
 });
 
 describe("Role gate: products/actions", () => {
-  it("createProduct — allowed: cashier_admin, secretary", () => {
-    expectOnlyRoles(["cashier_admin", "secretary"], "cashier_admin", "secretary");
+  it("createProduct — allowed: admin, secretary", () => {
+    expectOnlyRoles(["admin", "secretary"], "admin", "secretary");
   });
 
-  it("listActiveClothiers — allowed: cashier_admin, secretary", () => {
-    expectOnlyRoles(["cashier_admin", "secretary"], "cashier_admin", "secretary");
+  it("listActiveClothiers — allowed: admin, secretary", () => {
+    expectOnlyRoles(["admin", "secretary"], "admin", "secretary");
   });
 });
 
 describe("Role gate: products/approval-actions", () => {
-  it("approveProductPiece — allowed: cashier_admin, secretary", () => {
-    expectOnlyRoles(["cashier_admin", "secretary"], "cashier_admin", "secretary");
+  it("approveProductPiece — allowed: admin, secretary", () => {
+    expectOnlyRoles(["admin", "secretary"], "admin", "secretary");
   });
 
-  it("adminMarkProductPieceApproved — cashier_admin only", () => {
-    expectOnlyRoles(["cashier_admin"], "cashier_admin");
+  it("adminMarkProductPieceApproved — admin only", () => {
+    expectOnlyRoles(["admin"], "admin");
   });
 
-  it("listPendingProductPieceApprovals — allowed: cashier_admin, secretary", () => {
-    expectOnlyRoles(["cashier_admin", "secretary"], "cashier_admin", "secretary");
+  it("listPendingProductPieceApprovals — allowed: admin, secretary", () => {
+    expectOnlyRoles(["admin", "secretary"], "admin", "secretary");
   });
 });
 
@@ -258,148 +259,138 @@ describe("Role gate: clothier/actions", () => {
 });
 
 describe("Role gate: appointments/actions", () => {
-  it("createAppointment — allowed: cashier_admin, secretary", () => {
-    expectOnlyRoles(["cashier_admin", "secretary"], "cashier_admin", "secretary");
+  it("createAppointment — allowed: admin, secretary", () => {
+    expectOnlyRoles(["admin", "secretary"], "admin", "secretary");
   });
 
-  it("transitionAppointment — allowed: cashier_admin, secretary, stylist", () => {
-    expectOnlyRoles(
-      ["cashier_admin", "secretary", "stylist"],
-      "cashier_admin",
-      "secretary",
-      "stylist",
-    );
+  it("transitionAppointment — allowed: admin, secretary, stylist", () => {
+    expectOnlyRoles(["admin", "secretary", "stylist"], "admin", "secretary", "stylist");
   });
 
-  it("acknowledgeAppointmentPriceChange — allowed: cashier_admin, secretary", () => {
-    expectOnlyRoles(["cashier_admin", "secretary"], "cashier_admin", "secretary");
+  it("acknowledgeAppointmentPriceChange — allowed: admin, secretary", () => {
+    expectOnlyRoles(["admin", "secretary"], "admin", "secretary");
   });
 });
 
 describe("Role gate: clients/actions", () => {
-  it("searchClients — allowed: cashier_admin, secretary, stylist", () => {
-    expectOnlyRoles(
-      ["cashier_admin", "secretary", "stylist"],
-      "cashier_admin",
-      "secretary",
-      "stylist",
-    );
+  it("searchClients — allowed: admin, secretary, stylist", () => {
+    expectOnlyRoles(["admin", "secretary", "stylist"], "admin", "secretary", "stylist");
   });
 
-  it("createClient — allowed: cashier_admin, secretary", () => {
-    expectOnlyRoles(["cashier_admin", "secretary"], "cashier_admin", "secretary");
+  it("createClient — allowed: admin, secretary", () => {
+    expectOnlyRoles(["admin", "secretary"], "admin", "secretary");
   });
 
-  it("editClient — allowed: cashier_admin, secretary", () => {
-    expectOnlyRoles(["cashier_admin", "secretary"], "cashier_admin", "secretary");
+  it("editClient — allowed: admin, secretary", () => {
+    expectOnlyRoles(["admin", "secretary"], "admin", "secretary");
   });
 
-  it("archiveClient — allowed: cashier_admin, secretary", () => {
-    expectOnlyRoles(["cashier_admin", "secretary"], "cashier_admin", "secretary");
+  it("archiveClient — allowed: admin, secretary", () => {
+    expectOnlyRoles(["admin", "secretary"], "admin", "secretary");
   });
 
-  it("listClients — allowed: cashier_admin, secretary", () => {
-    expectOnlyRoles(["cashier_admin", "secretary"], "cashier_admin", "secretary");
+  it("listClients — allowed: admin, secretary", () => {
+    expectOnlyRoles(["admin", "secretary"], "admin", "secretary");
   });
 });
 
 describe("Role gate: large-orders/actions", () => {
-  it("createLargeOrder — allowed: cashier_admin, secretary", () => {
-    expectOnlyRoles(["cashier_admin", "secretary"], "cashier_admin", "secretary");
+  it("createLargeOrder — allowed: admin, secretary", () => {
+    expectOnlyRoles(["admin", "secretary"], "admin", "secretary");
   });
 
-  it("recordLargeOrderPayment — cashier_admin only", () => {
-    expectOnlyRoles(["cashier_admin"], "cashier_admin");
+  it("recordLargeOrderPayment — admin only", () => {
+    expectOnlyRoles(["admin"], "admin");
   });
 
-  it("transitionLargeOrder — allowed: cashier_admin, secretary", () => {
-    expectOnlyRoles(["cashier_admin", "secretary"], "cashier_admin", "secretary");
+  it("transitionLargeOrder — allowed: admin, secretary", () => {
+    expectOnlyRoles(["admin", "secretary"], "admin", "secretary");
   });
 });
 
 describe("Role gate: admin/employees/actions", () => {
-  it("createEmployee — cashier_admin only", () => {
-    expectOnlyRoles(["cashier_admin"], "cashier_admin");
+  it("createEmployee — admin only", () => {
+    expectOnlyRoles(["admin"], "admin");
   });
 
-  it("editEmployee — cashier_admin only", () => {
-    expectOnlyRoles(["cashier_admin"], "cashier_admin");
+  it("editEmployee — admin only", () => {
+    expectOnlyRoles(["admin"], "admin");
   });
 
-  it("terminateEmployee — cashier_admin only", () => {
-    expectOnlyRoles(["cashier_admin"], "cashier_admin");
+  it("terminateEmployee — admin only", () => {
+    expectOnlyRoles(["admin"], "admin");
   });
 
-  it("listEmployees — cashier_admin only", () => {
-    expectOnlyRoles(["cashier_admin"], "cashier_admin");
+  it("listEmployees — admin only", () => {
+    expectOnlyRoles(["admin"], "admin");
   });
 });
 
 describe("Role gate: admin/absences/actions", () => {
-  it("logAbsence — cashier_admin only", () => {
-    expectOnlyRoles(["cashier_admin"], "cashier_admin");
+  it("logAbsence — admin only", () => {
+    expectOnlyRoles(["admin"], "admin");
   });
 
-  it("deleteAbsence — cashier_admin only", () => {
-    expectOnlyRoles(["cashier_admin"], "cashier_admin");
+  it("deleteAbsence — admin only", () => {
+    expectOnlyRoles(["admin"], "admin");
   });
 });
 
 describe("Role gate: admin/analytics/actions", () => {
-  it("getAnalyticsSummary — cashier_admin only", () => {
-    expectOnlyRoles(["cashier_admin"], "cashier_admin");
+  it("getAnalyticsSummary — admin only", () => {
+    expectOnlyRoles(["admin"], "admin");
   });
 
-  it("getEmployeePerformance — cashier_admin only", () => {
-    expectOnlyRoles(["cashier_admin"], "cashier_admin");
+  it("getEmployeePerformance — admin only", () => {
+    expectOnlyRoles(["admin"], "admin");
   });
 
-  it("getAnalyticsCsvData — cashier_admin only", () => {
-    expectOnlyRoles(["cashier_admin"], "cashier_admin");
+  it("getAnalyticsCsvData — admin only", () => {
+    expectOnlyRoles(["admin"], "admin");
   });
 
-  it("getEmployeeDrillDown — cashier_admin only", () => {
-    expectOnlyRoles(["cashier_admin"], "cashier_admin");
+  it("getEmployeeDrillDown — admin only", () => {
+    expectOnlyRoles(["admin"], "admin");
   });
 });
 
 describe("Role gate: admin/catalog/actions/services", () => {
-  it("createService — cashier_admin only", () => {
-    expectOnlyRoles(["cashier_admin"], "cashier_admin");
+  it("createService — admin only", () => {
+    expectOnlyRoles(["admin"], "admin");
   });
 
-  it("editService — cashier_admin only", () => {
-    expectOnlyRoles(["cashier_admin"], "cashier_admin");
+  it("editService — admin only", () => {
+    expectOnlyRoles(["admin"], "admin");
   });
 
-  it("deactivateService — cashier_admin only", () => {
-    expectOnlyRoles(["cashier_admin"], "cashier_admin");
+  it("deactivateService — admin only", () => {
+    expectOnlyRoles(["admin"], "admin");
   });
 
-  it("addVariant — cashier_admin only", () => {
-    expectOnlyRoles(["cashier_admin"], "cashier_admin");
+  it("addVariant — admin only", () => {
+    expectOnlyRoles(["admin"], "admin");
   });
 
   it("listActiveServices — any authenticated role", () => {
     for (const role of ALL_ROLES) {
       const user = makeUser(role);
-      // "any" = all four roles are permitted
-      expect(hasRole(user, "cashier_admin", "secretary", "stylist", "clothier")).toBe(true);
+      // "any" = all five roles are permitted
+      expect(hasRole(user, "cashier", "admin", "secretary", "stylist", "clothier")).toBe(true);
     }
   });
 });
 
 describe("Role gate: admin/catalog/actions/cloth-pieces", () => {
-  it("createClothPiece — cashier_admin only", () => {
-    expectOnlyRoles(["cashier_admin"], "cashier_admin");
+  it("createClothPiece — admin only", () => {
+    expectOnlyRoles(["admin"], "admin");
   });
 
-  it("editClothPiece — cashier_admin only", () => {
-    expectOnlyRoles(["cashier_admin"], "cashier_admin");
+  it("editClothPiece — admin only", () => {
+    expectOnlyRoles(["admin"], "admin");
   });
 
-  it("listActiveClothPieces — allowed: cashier_admin, secretary", () => {
-    expectOnlyRoles(["cashier_admin", "secretary"], "cashier_admin", "secretary");
+  it("listActiveClothPieces — allowed: admin, secretary", () => {
+    expectOnlyRoles(["admin", "secretary"], "admin", "secretary");
   });
 });
 
@@ -408,33 +399,33 @@ describe("Role gate: tickets/edit-requests/actions", () => {
     expectOnlyRoles(["stylist"], "stylist");
   });
 
-  it("resolveEditRequest — cashier_admin only", () => {
-    expectOnlyRoles(["cashier_admin"], "cashier_admin");
+  it("resolveEditRequest — cashier/admin only", () => {
+    expectOnlyRoles(["cashier", "admin"], "cashier", "admin");
   });
 
-  it("listPendingEditRequests — cashier_admin only", () => {
-    expectOnlyRoles(["cashier_admin"], "cashier_admin");
+  it("listPendingEditRequests — cashier/admin only", () => {
+    expectOnlyRoles(["cashier", "admin"], "cashier", "admin");
   });
 });
 
 describe("Role gate: admin/tickets/history/actions", () => {
-  it("listBusinessDays — cashier_admin only", () => {
-    expectOnlyRoles(["cashier_admin"], "cashier_admin");
+  it("listBusinessDays — cashier/admin only", () => {
+    expectOnlyRoles(["cashier", "admin"], "cashier", "admin");
   });
 
-  it("listClosedTickets — cashier_admin only", () => {
-    expectOnlyRoles(["cashier_admin"], "cashier_admin");
+  it("listClosedTickets — cashier/admin only", () => {
+    expectOnlyRoles(["cashier", "admin"], "cashier", "admin");
   });
 
-  it("reopenTicket — cashier_admin only", () => {
-    expectOnlyRoles(["cashier_admin"], "cashier_admin");
+  it("reopenTicket — cashier/admin only", () => {
+    expectOnlyRoles(["cashier", "admin"], "cashier", "admin");
   });
 });
 
 describe("Role gate: notifications/actions", () => {
   it("listNotifications — any authenticated role", () => {
     for (const role of ALL_ROLES) {
-      expect(hasRole(makeUser(role), "cashier_admin", "secretary", "stylist", "clothier")).toBe(
+      expect(hasRole(makeUser(role), "cashier", "admin", "secretary", "stylist", "clothier")).toBe(
         true,
       );
     }
@@ -442,7 +433,7 @@ describe("Role gate: notifications/actions", () => {
 
   it("markRead — any authenticated role", () => {
     for (const role of ALL_ROLES) {
-      expect(hasRole(makeUser(role), "cashier_admin", "secretary", "stylist", "clothier")).toBe(
+      expect(hasRole(makeUser(role), "cashier", "admin", "secretary", "stylist", "clothier")).toBe(
         true,
       );
     }
@@ -453,24 +444,24 @@ describe("Role gate: notifications/actions", () => {
 
 describe("UNAUTHORIZED: null session denied on all mutation gates", () => {
   const allMutationGates: Array<{ name: string; roles: AppRole[] }> = [
-    { name: "createTicket", roles: ["cashier_admin", "secretary", "stylist"] },
-    { name: "processCheckout", roles: ["cashier_admin"] },
-    { name: "processPaidOfflineCheckout", roles: ["cashier_admin"] },
-    { name: "recordPayout", roles: ["cashier_admin"] },
-    { name: "createProduct", roles: ["cashier_admin", "secretary"] },
+    { name: "createTicket", roles: ["cashier", "admin", "secretary", "stylist"] },
+    { name: "processCheckout", roles: ["cashier", "admin"] },
+    { name: "processPaidOfflineCheckout", roles: ["cashier", "admin"] },
+    { name: "recordPayout", roles: ["admin"] },
+    { name: "createProduct", roles: ["admin", "secretary"] },
     { name: "markPieceDone", roles: ["clothier"] },
-    { name: "createAppointment", roles: ["cashier_admin", "secretary"] },
-    { name: "createClient", roles: ["cashier_admin", "secretary"] },
-    { name: "recordLargeOrderPayment", roles: ["cashier_admin"] },
-    { name: "createEmployee", roles: ["cashier_admin"] },
-    { name: "logAbsence", roles: ["cashier_admin"] },
-    { name: "createService", roles: ["cashier_admin"] },
-    { name: "openBusinessDay", roles: ["cashier_admin"] },
-    { name: "closeBusinessDay", roles: ["cashier_admin"] },
+    { name: "createAppointment", roles: ["admin", "secretary"] },
+    { name: "createClient", roles: ["admin", "secretary"] },
+    { name: "recordLargeOrderPayment", roles: ["admin"] },
+    { name: "createEmployee", roles: ["admin"] },
+    { name: "logAbsence", roles: ["admin"] },
+    { name: "createService", roles: ["admin"] },
+    { name: "openBusinessDay", roles: ["cashier", "admin"] },
+    { name: "closeBusinessDay", roles: ["cashier", "admin"] },
     { name: "requestEdit", roles: ["stylist"] },
-    { name: "resolveEditRequest", roles: ["cashier_admin"] },
-    { name: "reopenTicket", roles: ["cashier_admin"] },
-    { name: "terminateEmployee", roles: ["cashier_admin"] },
+    { name: "resolveEditRequest", roles: ["cashier", "admin"] },
+    { name: "reopenTicket", roles: ["cashier", "admin"] },
+    { name: "terminateEmployee", roles: ["admin"] },
   ];
 
   for (const { name, roles } of allMutationGates) {

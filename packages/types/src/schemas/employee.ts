@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const APP_ROLES = ["cashier_admin", "secretary", "stylist", "clothier"] as const;
+const APP_ROLES = ["cashier", "admin", "secretary", "stylist", "clothier"] as const;
 const STYLIST_SUBTYPES = [
   "hairdresser",
   "manicurist",

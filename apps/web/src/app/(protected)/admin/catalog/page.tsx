@@ -2,7 +2,7 @@
  * Admin catalog page — T024, T027
  *
  * Server component: fetches all services and cloth pieces, renders tabbed UI.
- * Only cashier_admin can access (enforced by middleware + server actions).
+ * Only admin can access (enforced by middleware + server actions).
  */
 
 import { Suspense } from "react";

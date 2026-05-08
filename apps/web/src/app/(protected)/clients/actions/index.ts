@@ -4,7 +4,7 @@
  * Client server actions — T030, T032
  *
  * Search, create, edit, archive, and unarchive saved clients.
- * Accessible to cashier_admin and secretary roles.
+ * Accessible to admin and secretary roles.
  */
 
 import { headers } from "next/headers";
@@ -37,7 +37,7 @@ export type ClientRow = {
 async function getClientSession() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) return null;
-  if (!hasRole(session.user, "cashier_admin", "secretary")) return null;
+  if (!hasRole(session.user, "admin", "secretary")) return null;
   return session;
 }
 
@@ -52,7 +52,7 @@ export async function searchClients(query: string): Promise<ActionResult<ClientR
   if (!session)
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
   // Stylist needs read-only search when logging tickets (LogServiceForm); mutations stay cashier/secretary.
-  if (!hasRole(session.user, "cashier_admin", "secretary", "stylist"))
+  if (!hasRole(session.user, "admin", "secretary", "stylist"))
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
 
   const db = getDb();

@@ -152,13 +152,13 @@ async function run() {
     .where(eq(clothPieceVariants.isActive, true));
 
   // Find admin user
-  const adminEmp = empRows.find((e) => e.role === "cashier_admin");
+  const adminEmp = empRows.find((e) => e.role === "admin");
   const stylistEmps = empRows.filter((e) => e.role === "stylist");
   const clothierEmps = empRows.filter((e) => e.role === "clothier");
   const secretaryEmps = empRows.filter((e) => e.role === "secretary");
 
   if (!adminEmp) {
-    console.error("❌ No cashier_admin employee found");
+    console.error("❌ No admin employee found");
     process.exit(1);
   }
 

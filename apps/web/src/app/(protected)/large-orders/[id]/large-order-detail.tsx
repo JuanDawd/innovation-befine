@@ -806,7 +806,7 @@ export function LargeOrderDetail({
               <OrderItemProgressTable
                 items={productionItems}
                 canAssign={
-                  clothiers.length > 0 && (userRole === "cashier_admin" || userRole === "secretary")
+                  clothiers.length > 0 && (userRole === "admin" || userRole === "secretary")
                 }
                 clothiers={clothiers}
                 userRole={userRole}

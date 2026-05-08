@@ -8,7 +8,7 @@ import { BookAppointmentForm } from "@/components/book-appointment-form";
 
 export default async function CashierNewAppointmentModal() {
   const session = await auth.api.getSession({ headers: await headers() });
-  if (!session || !hasRole(session.user, "cashier_admin")) redirect("/cashier");
+  if (!session || !hasRole(session.user, "cashier", "admin")) redirect("/cashier");
 
   const t = await getTranslations("appointments");
 

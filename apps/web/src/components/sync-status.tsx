@@ -51,7 +51,7 @@ export function SyncStatus({ role }: { role: AppRole }) {
         <p className="text-xs text-amber-700 dark:text-amber-400 text-center">
           {t("offlineDescription")}
         </p>
-        {role === "cashier_admin" && (
+        {(role === "cashier" || role === "admin") && (
           <p className="text-xs text-amber-700 dark:text-amber-400 text-center font-medium">
             {t("offlineCashierNote")}
           </p>

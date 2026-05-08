@@ -6,7 +6,7 @@
  * cloth_pieces: garment family (name/description, no price).
  * cloth_piece_variants: construction types with piece_rate.
  *
- * Only cashier_admin can mutate; secretary can read (T028).
+ * Only admin can mutate; secretary can read (T028).
  */
 
 import { headers } from "next/headers";
@@ -69,7 +69,7 @@ const editVariantSchema = createVariantSchema;
 async function getAdminSession() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) return null;
-  if (!hasRole(session.user, "cashier_admin")) return null;
+  if (!hasRole(session.user, "admin")) return null;
   return session;
 }
 
@@ -99,7 +99,7 @@ export async function listActiveClothPieces(): Promise<ActionResult<ClothPieceRo
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session)
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
-  if (!hasRole(session.user, "cashier_admin", "secretary"))
+  if (!hasRole(session.user, "admin", "secretary"))
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
 
   const db = getDb();
@@ -125,7 +125,7 @@ export async function listAllClothPieces(): Promise<ActionResult<ClothPieceRow[]
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session)
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
-  if (!hasRole(session.user, "cashier_admin"))
+  if (!hasRole(session.user, "admin"))
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
 
   const db = getDb();
@@ -401,7 +401,7 @@ const sellProductPieceSchema = z.object({
 /**
  * Marks an approved product_piece as sold.
  * Snapshots the selling price from the variant (or a cashier override).
- * Gated to cashier_admin.
+ * Gated to admin.
  */
 export async function sellProductPiece(
   rawInput: unknown,

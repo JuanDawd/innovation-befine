@@ -102,7 +102,8 @@ function CompanyStrip() {
 }
 
 const ROLE_LABELS: Record<AppRole, string> = {
-  cashier_admin: "Admin",
+  cashier: "Cajero",
+  admin: "Admin",
   secretary: "Secretaria",
   stylist: "Estilista",
   clothier: "Confeccionista",
@@ -364,7 +365,7 @@ export function AppShell({
                 <span>{t("tickets.logService")}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
-            {role === "cashier_admin" && (
+            {(role === "cashier" || role === "admin") && (
               <SidebarMenuItem>
                 <SidebarMenuButton onClick={() => setSellOpen(true)} tooltip="Vender prenda">
                   <ShoppingBagIcon aria-hidden="true" />

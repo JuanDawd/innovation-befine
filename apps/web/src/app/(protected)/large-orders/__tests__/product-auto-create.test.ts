@@ -4,16 +4,16 @@ import { describe, it, expect } from "vitest";
 // A product is created only when:
 //   1. pieces array is non-empty
 //   2. a business day is open
-// auto_approved follows the same rule as manual products: cashier_admin → true
+// auto_approved follows the same rule as manual products: admin → true
 
-type Role = "cashier_admin" | "secretary" | "stylist" | "clothier";
+type Role = "cashier" | "admin" | "secretary" | "stylist" | "clothier";
 
 function shouldCreateProduct(pieces: unknown[], businessDayOpen: boolean): boolean {
   return pieces.length > 0 && businessDayOpen;
 }
 
 function resolveAutoApproved(role: Role): boolean {
-  return role === "cashier_admin";
+  return role === "admin";
 }
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
@@ -39,8 +39,8 @@ describe("auto-create product from large order", () => {
 });
 
 describe("auto_approved on product from large order", () => {
-  it("cashier_admin creator → auto_approved = true", () => {
-    expect(resolveAutoApproved("cashier_admin")).toBe(true);
+  it("admin creator → auto_approved = true", () => {
+    expect(resolveAutoApproved("admin")).toBe(true);
   });
 
   it("secretary creator → auto_approved = false", () => {

@@ -18,7 +18,7 @@ export default async function NewLargeOrderModal() {
     listActiveClothPieces(),
   ]);
 
-  const isCashierAdmin = session ? hasRole(session.user, "cashier_admin") : false;
+  const isCashierAdmin = session ? hasRole(session.user, "admin") : false;
   const clients = clientsResult.success ? clientsResult.data : [];
   const clothPieces = piecesResult.success ? piecesResult.data : [];
 

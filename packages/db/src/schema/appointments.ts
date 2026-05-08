@@ -15,7 +15,7 @@ import { serviceVariants } from "./services";
 /**
  * appointments — T049
  *
- * Booking record created by secretary or cashier_admin.
+ * Booking record created by secretary or admin.
  * Either client_id (saved client) or guest_name must be present.
  * service_variant_id links to the catalog for auto-populating tickets;
  * when null, service_summary (free text) is used as a fallback.

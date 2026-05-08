@@ -9,7 +9,7 @@ import { CreateLargeOrderForm } from "../create-large-order-form";
 
 export default async function NewLargeOrderPage() {
   const session = await auth.api.getSession({ headers: await headers() });
-  if (!session || !hasRole(session.user, "cashier_admin", "secretary")) redirect("/large-orders");
+  if (!session || !hasRole(session.user, "admin", "secretary")) redirect("/large-orders");
 
   const t = await getTranslations("largeOrders");
   const [clientsResult, piecesResult] = await Promise.all([
@@ -19,7 +19,7 @@ export default async function NewLargeOrderPage() {
 
   const clients = clientsResult.success ? clientsResult.data : [];
   const clothPieces = piecesResult.success ? piecesResult.data : [];
-  const isCashierAdmin = hasRole(session.user, "cashier_admin");
+  const isCashierAdmin = hasRole(session.user, "admin");
 
   return (
     <div className="flex flex-col gap-5 p-4 md:p-6 max-w-xl mx-auto w-full">

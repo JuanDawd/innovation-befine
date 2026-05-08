@@ -17,8 +17,8 @@ const ac = createAccessControl({
   session: ["list", "revoke", "delete"],
 });
 
-// Only cashier_admin can manage users via the admin plugin
-const cashierAdminRole = ac.newRole({
+// Only admin can manage users via the admin plugin
+const adminRole = ac.newRole({
   user: ["create", "list", "set-role", "ban", "delete", "set-password", "get", "update"],
   session: ["list", "revoke", "delete"],
 });
@@ -100,10 +100,11 @@ export const auth = betterAuth({
   plugins: [
     admin({
       defaultRole: "stylist",
-      adminRoles: ["cashier_admin"],
+      adminRoles: ["admin"],
       ac,
       roles: {
-        cashier_admin: cashierAdminRole,
+        cashier: noAdminRole,
+        admin: adminRole,
         secretary: noAdminRole,
         stylist: noAdminRole,
         clothier: noAdminRole,

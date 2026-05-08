@@ -1406,6 +1406,7 @@
   - Sign in as `admin` → navigate to `/cashier` → renders (admin can use POS).
   - `grep -r "cashier_admin" apps/ packages/ --include="*.ts" --include="*.tsx"` → zero matches outside migrations.
 - **Dependencies:** Task 5.0 (settings page must exist and be re-gated to `admin` in the same PR).
+- **Status:** Done
 
 ---
 

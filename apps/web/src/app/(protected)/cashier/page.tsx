@@ -81,10 +81,10 @@ export default async function CashierHomePage() {
   return (
     <div className="flex flex-col gap-8 p-6 md:p-10">
       <PageHeader
-        crumbs={["Innovations", "Befine", t("roles.cashier_admin")]}
+        crumbs={["Innovations", "Befine", t("roles.cashier")]}
         title={
           <>
-            {t("roles.cashier_admin")}
+            {t("roles.cashier")}
             <em>.</em>
           </>
         }

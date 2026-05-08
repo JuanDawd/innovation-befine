@@ -5,7 +5,7 @@
  * Used by useRealtimeEvent() hook internally — never call this directly.
  *
  * Auth gates (T04R-R1):
- *   cashier       → cashier_admin only
+ *   cashier       → cashier or admin
  *   clothier      → clothier only
  *   notifications → any authenticated employee; events scoped to caller's employee_id
  */
@@ -23,9 +23,9 @@ import type { AppRole } from "@befine/types";
 const VALID_CHANNELS: RealtimeChannel[] = ["cashier", "clothier", "notifications"];
 
 const CHANNEL_ROLES: Record<RealtimeChannel, AppRole[]> = {
-  cashier: ["cashier_admin"],
+  cashier: ["cashier", "admin"],
   clothier: ["clothier"],
-  notifications: ["cashier_admin", "secretary", "stylist", "clothier"],
+  notifications: ["cashier", "admin", "secretary", "stylist", "clothier"],
 };
 
 export async function GET(req: Request, { params }: { params: Promise<{ channel: string }> }) {

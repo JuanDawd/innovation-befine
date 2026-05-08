@@ -4,7 +4,7 @@
  * Business day server actions — T019
  *
  * Open, close, and reopen the business day.
- * All actions require cashier_admin role.
+ * All actions require cashier or admin role.
  * Financial constraint: only one open day at a time (enforced at DB level too).
  */
 
@@ -28,7 +28,7 @@ export async function openBusinessDay(): Promise<ActionResult<BusinessDay>> {
   if (!session) {
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
   }
-  if (!hasRole(session.user, "cashier_admin")) {
+  if (!hasRole(session.user, "cashier", "admin")) {
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
   }
 
@@ -73,7 +73,7 @@ export async function closeBusinessDay(businessDayId: string): Promise<ActionRes
   if (!session) {
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
   }
-  if (!hasRole(session.user, "cashier_admin")) {
+  if (!hasRole(session.user, "cashier", "admin")) {
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
   }
 
@@ -106,7 +106,7 @@ export async function reopenBusinessDay(rawInput: unknown): Promise<ActionResult
   if (!session) {
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
   }
-  if (!hasRole(session.user, "cashier_admin")) {
+  if (!hasRole(session.user, "cashier", "admin")) {
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
   }
 

@@ -13,7 +13,7 @@ export default async function AdminProductDetailPage({
 }) {
   const { id } = await params;
   const session = await auth.api.getSession({ headers: await headers() });
-  if (!session || !hasRole(session.user, "cashier_admin")) redirect("/cashier");
+  if (!session || !hasRole(session.user, "admin")) redirect("/admin");
 
   const db = getDb();
   const data = await getProductDetail(db, id);
