@@ -9,6 +9,7 @@ import {
   isFinancialBlockedForSecretary,
   ROLE_HOME,
 } from "@/lib/middleware-helpers";
+import { getCashierCanAccessAdminCached } from "@/lib/middleware-settings";
 
 /**
  * Middleware — session check and role-path enforcement.
@@ -60,7 +61,8 @@ export async function middleware(request: NextRequest) {
     return NextResponse.rewrite(new URL("/403", request.url));
   }
 
-  if (!roleCanAccess(role, pathname)) {
+  const cashierCanAccessAdmin = await getCashierCanAccessAdminCached();
+  if (!roleCanAccess(role, pathname, cashierCanAccessAdmin)) {
     return NextResponse.rewrite(new URL("/403", request.url));
   }
 

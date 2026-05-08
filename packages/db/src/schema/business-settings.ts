@@ -23,6 +23,17 @@ export const businessSettings = pgTable(
     enforceSubtypeServiceRestriction: boolean("enforce_subtype_service_restriction")
       .notNull()
       .default(false),
+    /**
+     * When false (default), employees must register with an email address.
+     * When true, employees may register with a nickname/username instead.
+     */
+    employeeAuthRequiresEmail: boolean("employee_auth_requires_email").notNull().default(true),
+    /**
+     * When false (default), the cashier role cannot access /admin URLs.
+     * When true, cashier role is granted read/write access to /admin routes.
+     * Enforced in middleware with ~60 s TTL cache.
+     */
+    cashierCanAccessAdmin: boolean("cashier_can_access_admin").notNull().default(false),
     createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull().defaultNow(),
   },

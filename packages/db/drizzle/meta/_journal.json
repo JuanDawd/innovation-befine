@@ -218,6 +218,13 @@
       "when": 1778198453064,
       "tag": "0030_cloth_sales",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1778200940821,
+      "tag": "0031_previous_the_renegades",
+      "breakpoints": true
     }
   ]
 }

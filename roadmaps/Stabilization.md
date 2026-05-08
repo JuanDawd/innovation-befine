@@ -1352,7 +1352,64 @@
 
 ---
 
-### Task 5.1: Icon audit and replacement across screens
+### Task 5.0: Admin settings page — auth mode and cashier URL access
+
+- **Description:** Add an `/admin/settings` page where the `cashier_admin` role can configure two store-level toggles: (1) whether employees must register with an email address or may use a nickname/username instead, and (2) whether the `cashier` role can access `/admin` URLs (relevant once Task 5.1 splits roles). Persist settings in the existing `business_settings` single-row table (two new boolean columns). Read both toggles in auth and middleware at runtime — no redeploy required to change them.
+- **Scope:**
+  - **DB:** Add `employee_auth_requires_email boolean NOT NULL DEFAULT true` and `cashier_can_access_admin boolean NOT NULL DEFAULT false` to `business_settings`. Generate and apply migration.
+  - **Settings page:** `/admin/settings` — server component reads current settings row, renders a client form with two toggle switches (`Switch` from shadcn/ui). Submit calls `updateBusinessSettings` server action (role-gated to `cashier_admin`). Show current value on load, success/error toast on save.
+  - **Auth enforcement (email vs nickname):** When `employee_auth_requires_email = false`, switch Better Auth employee creation to use the `username` plugin (or allow `email = null`). When `true` (default), existing behavior is unchanged.
+  - **Middleware enforcement (cashier → admin):** In `middleware.ts`, after reading the session, also read `business_settings.cashier_can_access_admin`. If `true`, allow `cashier` role to pass the `/admin` prefix check. Cache the setting with a short TTL (e.g. 60 s) to avoid a DB hit on every request.
+  - **Sidebar:** Add "Configuración" nav item back under `cashier_admin` role only (was removed in Task 1.11), pointing to `/admin/settings`.
+- **Acceptance Criteria:**
+  - `/admin/settings` renders with current toggle states, visible to `cashier_admin` role only.
+  - Toggling `cashier_can_access_admin = true` → a `cashier` user can navigate to `/admin/analytics` without a 403.
+  - Toggling `cashier_can_access_admin = false` → `cashier` gets 403 on any `/admin/*` route.
+  - Toggling `employee_auth_requires_email = false` → creating an employee with an empty email and a nickname succeeds.
+  - Toggling `employee_auth_requires_email = true` → creating an employee without an email returns a validation error.
+  - `secretary`, `stylist`, `clothier` visiting `/admin/settings` → 403 or redirect.
+  - `turbo typecheck`, `turbo lint`, and `turbo test` pass.
+- **Testing Steps:**
+  - As `cashier_admin`: toggle `cashier_can_access_admin` on → sign in as `cashier` → `/admin/analytics` renders.
+  - As `cashier_admin`: toggle `cashier_can_access_admin` off → sign in as `cashier` → `/admin/analytics` returns 403.
+  - As `cashier_admin`: toggle `employee_auth_requires_email` off → create employee with nickname only → succeeds.
+  - As `cashier_admin`: toggle `employee_auth_requires_email` on → create employee without email → validation error.
+  - As `secretary`: navigate to `/admin/settings` → redirect or 403.
+- **Dependencies:** None.
+- **Status:** Done
+
+---
+
+### Task 5.1: Split `cashier_admin` into `cashier` and `admin` roles
+
+- **Description:** `cashier_admin` is a single role that owns both till operations (`/cashier`) and management functions (`/admin`). Split it into two distinct roles: `cashier` (POS only) and `admin` (management only), so a person who operates the register cannot access payroll, analytics, or employee records unless they are also an admin. Existing `cashier_admin` accounts must be migrated to `admin` (or both roles if the store owner operates the register too). All `hasRole(session.user, "cashier_admin")` call sites must be updated to gate on whichever of the two new roles is appropriate.
+- **Scope:**
+  - `packages/types/src/roles.ts`: replace `"cashier_admin"` with `"cashier"` and `"admin"`.
+  - `packages/auth` / `apps/web/src/lib/auth.ts`: update `adminRoles` to `["admin"]`; add `"cashier"` as a regular role.
+  - Middleware (`src/middleware.ts` + `src/lib/middleware-helpers.ts`): assign `/cashier` prefix to `cashier`; assign `/admin` prefix to `admin`. Decide whether `admin` may also access `/cashier` (recommended: yes — admin can always operate the register).
+  - All `hasRole(...)` call sites in server actions and API routes: re-gate each to `"cashier"`, `"admin"`, or both as appropriate. POS mutations (cloth sales, service logging, checkout) → `cashier | admin`. Management mutations (payroll, employee CRUD, analytics export, catalog edits) → `admin` only.
+  - Employee creation form: offer `cashier`, `admin`, `secretary`, `stylist`, `clothier` as role choices.
+  - DB seed / migration script: any existing `cashier_admin` user rows updated to `admin` (one-time script).
+  - i18n: update role display names in `es.json` and `en.json`.
+  - Update Task 5.0 settings page gate from `cashier_admin` to `admin`.
+- **Acceptance Criteria:**
+  - `"cashier_admin"` does not appear anywhere in source (except migration history and this roadmap).
+  - A user with `role = "cashier"` can log services and process checkouts but gets `FORBIDDEN` on `/admin/*` routes.
+  - A user with `role = "admin"` can access `/admin/*` and also `/cashier/*`.
+  - Creating an employee requires choosing between `cashier` and `admin` (no combined option).
+  - `turbo typecheck`, `turbo lint`, and `turbo test` all pass with zero errors.
+  - No regression on any existing server action that was previously gated to `cashier_admin`.
+- **Testing Steps:**
+  - Sign in as `cashier` → navigate to `/admin/payroll` → redirected or 403.
+  - Sign in as `cashier` → log a service ticket → succeeds.
+  - Sign in as `admin` → navigate to `/admin/analytics` → renders.
+  - Sign in as `admin` → navigate to `/cashier` → renders (admin can use POS).
+  - `grep -r "cashier_admin" apps/ packages/ --include="*.ts" --include="*.tsx"` → zero matches outside migrations.
+- **Dependencies:** Task 5.0 (settings page must exist and be re-gated to `admin` in the same PR).
+
+---
+
+### Task 5.2: Icon audit and replacement across screens
 
 - **Description:** Several screens use no icons, wrong icons, or inconsistent sizes. Icon-only controls lack `aria-label`. Audit every surface and replace text-only or ad-hoc icons with Lucide icons. Standardise sizes: `size-4` inside buttons, `size-5` or `size-6` standalone. Add `aria-label` to every icon-only interactive element.
 - **Acceptance Criteria:**
@@ -1366,7 +1423,7 @@
 
 ---
 
-### Task 5.2: Annotate hardest steps in role training guides
+### Task 5.3: Annotate hardest steps in role training guides
 
 - **Description:** Each of the four training guides (cashier_admin, secretary, stylist, clothier) lacks screenshots on its 2–3 hardest steps. Trainees cannot follow text-only instructions for non-obvious flows. Capture annotated screenshots (red outline + numbered callout) and embed them under the matching step section in each guide's markdown file.
 - **Acceptance Criteria:**
@@ -1380,7 +1437,7 @@
 
 ---
 
-### Task 5.3: Diagnose and permanently fix recurring `AppShell` hydration mismatch
+### Task 5.4: Diagnose and permanently fix recurring `AppShell` hydration mismatch
 
 - **Description:** `AppShell` triggers a React hydration mismatch that recurs each time new code is added, suggesting a structural root cause rather than an isolated bug. The fix has been applied multiple times but regresses. This task is a full root-cause investigation: identify which part of `AppShell` produces different server vs. client HTML (likely browser-only APIs, conditional rendering based on `typeof window`, cookie/localStorage reads before mount, or a third-party component that renders differently on server), then apply a durable fix that does not regress as the component grows.
 - **Acceptance Criteria:**

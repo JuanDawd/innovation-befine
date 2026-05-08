@@ -1,0 +1,2 @@
+ALTER TABLE "business_settings" ADD COLUMN "employee_auth_requires_email" boolean DEFAULT true NOT NULL;--> statement-breakpoint
+ALTER TABLE "business_settings" ADD COLUMN "cashier_can_access_admin" boolean DEFAULT false NOT NULL;

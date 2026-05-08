@@ -83,12 +83,24 @@ export function isSharedApp(pathname: string): boolean {
  * Returns true if the role is permitted to access the path.
  * Each role owns its own prefix; cashier_admin also owns /admin.
  * All authenticated roles can access SHARED_APP_PATHS (e.g. /profile).
+ *
+ * @param cashierCanAccessAdmin - when true, the "cashier" role (post-split) is also
+ *   allowed to access /admin routes. Sourced from business_settings with a short TTL cache.
+ *   Has no effect on "cashier_admin" (which already owns /admin).
  */
-export function roleCanAccess(role: AppRole | undefined, pathname: string): boolean {
+export function roleCanAccess(
+  role: AppRole | undefined,
+  pathname: string,
+  cashierCanAccessAdmin = false,
+): boolean {
   if (!role) return false;
   if (isSharedApp(pathname)) return true;
   const home = ROLE_HOME[role];
-  return pathname.startsWith(home) || (role === "cashier_admin" && pathname.startsWith("/admin"));
+  if (pathname.startsWith(home)) return true;
+  if (role === "cashier_admin" && pathname.startsWith("/admin")) return true;
+  if (cashierCanAccessAdmin && role === ("cashier" as AppRole) && pathname.startsWith("/admin"))
+    return true;
+  return false;
 }
 
 /**

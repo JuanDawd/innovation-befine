@@ -159,6 +159,22 @@ describe("roleCanAccess", () => {
     expect(roleCanAccess("stylist", "/large-orders")).toBe(true);
     expect(roleCanAccess("clothier", "/large-orders")).toBe(true);
   });
+
+  it("cashierCanAccessAdmin=false: cashier cannot access /admin routes (default)", () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const cashier = "cashier" as any;
+    expect(roleCanAccess("cashier_admin", "/admin/analytics", false)).toBe(true);
+    // "cashier" is the post-split role — blocked by default
+    expect(roleCanAccess(cashier, "/admin/analytics", false)).toBe(false);
+    expect(roleCanAccess(cashier, "/admin/settings", false)).toBe(false);
+  });
+
+  it("cashierCanAccessAdmin=true: cashier role gains access to /admin routes", () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const cashier = "cashier" as any;
+    expect(roleCanAccess(cashier, "/admin/analytics", true)).toBe(true);
+    expect(roleCanAccess(cashier, "/admin/settings", true)).toBe(true);
+  });
 });
 
 describe("isFinancialBlockedForSecretary", () => {
