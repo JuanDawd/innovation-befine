@@ -3,8 +3,7 @@
 /**
  * ProductApprovalBoard — T047
  *
- * Secretary/admin view for approving product pieces.
- * Admins also see a "Approve directly" button for pending pieces.
+ * Secretary/admin view for approving product pieces that clothiers have marked as done.
  */
 
 import { useState, useTransition, useEffect, useCallback } from "react";
@@ -16,11 +15,10 @@ import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import {
   listPendingProductPieceApprovals,
   approveProductPiece,
-  adminMarkProductPieceApproved,
   type PendingProductPieceApprovalRow,
 } from "@/app/(protected)/products/approval-actions";
 
-export function ProductApprovalBoard({ isAdmin }: { isAdmin: boolean }) {
+export function ProductApprovalBoard() {
   const t = useTranslations("products");
 
   const [pieces, setPieces] = useState<PendingProductPieceApprovalRow[]>([]);
@@ -53,23 +51,6 @@ export function ProductApprovalBoard({ isAdmin }: { isAdmin: boolean }) {
     }
   }
 
-  async function handleAdminApprove(piece: PendingProductPieceApprovalRow) {
-    setPendingId(piece.id);
-    const res = await adminMarkProductPieceApproved(piece.id, piece.version);
-    setPendingId(null);
-    if (!res.success) {
-      setErrorMap((m) => ({
-        ...m,
-        [piece.id]: res.error.code === "STALE_DATA" ? t("staleError") : t("approveError"),
-      }));
-    } else {
-      load();
-    }
-  }
-
-  const pending = pieces.filter((p) => p.status === "done_pending_approval");
-  const directApprovable = pieces.filter((p) => p.status === "pending" && isAdmin);
-
   if (isLoading && pieces.length === 0) {
     return (
       <div className="flex items-center gap-2 py-8 text-sm text-muted-foreground">
@@ -79,11 +60,9 @@ export function ProductApprovalBoard({ isAdmin }: { isAdmin: boolean }) {
     );
   }
 
-  if (pending.length === 0 && directApprovable.length === 0) {
+  if (pieces.length === 0) {
     return <EmptyState icon={CheckCircle2Icon} title={t("noApprovals")} />;
   }
-
-  const allRows = [...pending, ...(isAdmin ? directApprovable : [])];
 
   return (
     <div className="flex flex-col gap-4">
@@ -94,64 +73,33 @@ export function ProductApprovalBoard({ isAdmin }: { isAdmin: boolean }) {
             <tr>
               <th className="px-4 py-3 text-left font-medium">{t("colPiece")}</th>
               <th className="px-4 py-3 text-left font-medium">{t("colClothier")}</th>
-              <th className="px-4 py-3 text-left font-medium">{t("colStatus")}</th>
               <th className="px-4 py-3 text-left font-medium">{t("colActions")}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {allRows.map((piece) => (
+            {pieces.map((piece) => (
               <tr key={piece.id} className="hover:bg-muted/30">
                 <td className="px-4 py-3 font-medium">{piece.clothPieceName}</td>
                 <td className="px-4 py-3 text-muted-foreground">
                   {piece.assignedEmployeeName ?? "—"}
                 </td>
                 <td className="px-4 py-3">
-                  <span
-                    className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-                      piece.status === "done_pending_approval"
-                        ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                        : "bg-muted text-muted-foreground"
-                    }`}
-                  >
-                    {piece.status === "done_pending_approval" ? "Listo" : "Pendiente"}
-                  </span>
-                </td>
-                <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
-                    {piece.status === "done_pending_approval" && (
-                      <ConfirmationDialog
-                        trigger={
-                          <Button size="sm" disabled={pendingId === piece.id}>
-                            {pendingId === piece.id ? (
-                              <Loader2Icon className="h-4 w-4 animate-spin" />
-                            ) : (
-                              t("approve")
-                            )}
-                          </Button>
-                        }
-                        title={t("approveConfirmTitle")}
-                        description={t("approveConfirmDescription")}
-                        confirmLabel={t("approve")}
-                        onConfirm={() => handleApprove(piece)}
-                      />
-                    )}
-                    {piece.status === "pending" && isAdmin && (
-                      <ConfirmationDialog
-                        trigger={
-                          <Button size="sm" variant="outline" disabled={pendingId === piece.id}>
-                            {pendingId === piece.id ? (
-                              <Loader2Icon className="h-4 w-4 animate-spin" />
-                            ) : (
-                              t("approveDirectly")
-                            )}
-                          </Button>
-                        }
-                        title={t("approveDirectlyConfirmTitle")}
-                        description={t("approveDirectlyConfirmDescription")}
-                        confirmLabel={t("approveDirectly")}
-                        onConfirm={() => handleAdminApprove(piece)}
-                      />
-                    )}
+                    <ConfirmationDialog
+                      trigger={
+                        <Button size="sm" disabled={pendingId === piece.id}>
+                          {pendingId === piece.id ? (
+                            <Loader2Icon className="h-4 w-4 animate-spin" />
+                          ) : (
+                            t("approve")
+                          )}
+                        </Button>
+                      }
+                      title={t("approveConfirmTitle")}
+                      description={t("approveConfirmDescription")}
+                      confirmLabel={t("approve")}
+                      onConfirm={() => handleApprove(piece)}
+                    />
                     {errorMap[piece.id] && (
                       <p className="text-xs text-destructive">{errorMap[piece.id]}</p>
                     )}

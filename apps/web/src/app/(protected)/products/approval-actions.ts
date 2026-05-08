@@ -9,7 +9,7 @@
  */
 
 import { headers } from "next/headers";
-import { eq, and, inArray } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import {
@@ -93,10 +93,10 @@ export async function listPendingProductPieceApprovals(): Promise<
     .where(
       and(
         eq(products.businessDayId, businessDay.id),
-        inArray(productPieces.status, ["done_pending_approval", "pending"]),
+        eq(productPieces.status, "done_pending_approval"),
       ),
     )
-    .orderBy(productPieces.status, productPieces.completedAt);
+    .orderBy(productPieces.completedAt);
 
   return { success: true, data: rows };
 }
