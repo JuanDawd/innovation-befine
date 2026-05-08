@@ -818,7 +818,11 @@ export async function getLargeOrderProductSummary(
 
   const productIds = productRows.map((c) => c.id);
   const pieces = await db
-    .select({ productId: productPieces.productId, status: productPieces.status })
+    .select({
+      productId: productPieces.productId,
+      status: productPieces.status,
+      quantity: productPieces.quantity,
+    })
     .from(productPieces)
     .where(inArray(productPieces.productId, productIds));
 
@@ -828,8 +832,10 @@ export async function getLargeOrderProductSummary(
       const cp = pieces.filter((p) => p.productId === c.id);
       return {
         productId: c.id,
-        totalPieces: cp.length,
-        approvedPieces: cp.filter((p) => p.status === "approved").length,
+        totalPieces: cp.reduce((sum, p) => sum + p.quantity, 0),
+        approvedPieces: cp
+          .filter((p) => p.status === "approved")
+          .reduce((sum, p) => sum + p.quantity, 0),
       };
     }),
   };

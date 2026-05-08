@@ -82,8 +82,8 @@ export async function getProductsDashboard(db: Database): Promise<ProductDashboa
   const pieceCounts = await db
     .select({
       productId: productPieces.productId,
-      total: sql<number>`count(*)::int`,
-      approved: sql<number>`count(*) filter (where ${productPieces.status} = 'approved')::int`,
+      total: sql<number>`coalesce(sum(${productPieces.quantity}), 0)::int`,
+      approved: sql<number>`coalesce(sum(${productPieces.quantity}) filter (where ${productPieces.status} = 'approved'), 0)::int`,
     })
     .from(productPieces)
     .where(inArray(productPieces.productId, productIds))
