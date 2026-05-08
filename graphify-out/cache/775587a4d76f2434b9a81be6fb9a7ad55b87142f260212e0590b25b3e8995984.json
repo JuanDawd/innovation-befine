@@ -1,0 +1,187 @@
+{
+  "nodes": [
+    {
+      "id": "apps_web_src_app_protected_cashier_actions_day_stats_ts",
+      "label": "day-stats.ts",
+      "file_type": "code",
+      "source_file": "apps/web/src/app/(protected)/cashier/actions/day-stats.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "day_stats_getdaystats",
+      "label": "getDayStats()",
+      "file_type": "code",
+      "source_file": "apps/web/src/app/(protected)/cashier/actions/day-stats.ts",
+      "source_location": "L25"
+    }
+  ],
+  "edges": [
+    {
+      "source": "apps_web_src_app_protected_cashier_actions_day_stats_ts",
+      "target": "headers",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/cashier/actions/day-stats.ts",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_app_protected_cashier_actions_day_stats_ts",
+      "target": "drizzle_orm",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/cashier/actions/day-stats.ts",
+      "source_location": "L12",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_app_protected_cashier_actions_day_stats_ts",
+      "target": "auth",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/cashier/actions/day-stats.ts",
+      "source_location": "L13",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_app_protected_cashier_actions_day_stats_ts",
+      "target": "db",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/cashier/actions/day-stats.ts",
+      "source_location": "L14",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_app_protected_cashier_actions_day_stats_ts",
+      "target": "schema",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/cashier/actions/day-stats.ts",
+      "source_location": "L15",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_app_protected_cashier_actions_day_stats_ts",
+      "target": "action_result",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/cashier/actions/day-stats.ts",
+      "source_location": "L16",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_app_protected_cashier_actions_day_stats_ts",
+      "target": "middleware_helpers",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/cashier/actions/day-stats.ts",
+      "source_location": "L17",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_app_protected_cashier_actions_day_stats_ts",
+      "target": "business_day",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/cashier/actions/day-stats.ts",
+      "source_location": "L18",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_app_protected_cashier_actions_day_stats_ts",
+      "target": "day_stats_getdaystats",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/cashier/actions/day-stats.ts",
+      "source_location": "L25",
+      "weight": 1.0
+    }
+  ],
+  "raw_calls": [
+    {
+      "caller_nid": "day_stats_getdaystats",
+      "callee": "getSession",
+      "source_file": "apps/web/src/app/(protected)/cashier/actions/day-stats.ts",
+      "source_location": "L26"
+    },
+    {
+      "caller_nid": "day_stats_getdaystats",
+      "callee": "headers",
+      "source_file": "apps/web/src/app/(protected)/cashier/actions/day-stats.ts",
+      "source_location": "L26"
+    },
+    {
+      "caller_nid": "day_stats_getdaystats",
+      "callee": "hasRole",
+      "source_file": "apps/web/src/app/(protected)/cashier/actions/day-stats.ts",
+      "source_location": "L29"
+    },
+    {
+      "caller_nid": "day_stats_getdaystats",
+      "callee": "getCurrentBusinessDay",
+      "source_file": "apps/web/src/app/(protected)/cashier/actions/day-stats.ts",
+      "source_location": "L32"
+    },
+    {
+      "caller_nid": "day_stats_getdaystats",
+      "callee": "getDb",
+      "source_file": "apps/web/src/app/(protected)/cashier/actions/day-stats.ts",
+      "source_location": "L35"
+    },
+    {
+      "caller_nid": "day_stats_getdaystats",
+      "callee": "where",
+      "source_file": "apps/web/src/app/(protected)/cashier/actions/day-stats.ts",
+      "source_location": "L38"
+    },
+    {
+      "caller_nid": "day_stats_getdaystats",
+      "callee": "innerJoin",
+      "source_file": "apps/web/src/app/(protected)/cashier/actions/day-stats.ts",
+      "source_location": "L38"
+    },
+    {
+      "caller_nid": "day_stats_getdaystats",
+      "callee": "from",
+      "source_file": "apps/web/src/app/(protected)/cashier/actions/day-stats.ts",
+      "source_location": "L38"
+    },
+    {
+      "caller_nid": "day_stats_getdaystats",
+      "callee": "select",
+      "source_file": "apps/web/src/app/(protected)/cashier/actions/day-stats.ts",
+      "source_location": "L38"
+    },
+    {
+      "caller_nid": "day_stats_getdaystats",
+      "callee": "eq",
+      "source_file": "apps/web/src/app/(protected)/cashier/actions/day-stats.ts",
+      "source_location": "L45"
+    },
+    {
+      "caller_nid": "day_stats_getdaystats",
+      "callee": "and",
+      "source_file": "apps/web/src/app/(protected)/cashier/actions/day-stats.ts",
+      "source_location": "L46"
+    },
+    {
+      "caller_nid": "day_stats_getdaystats",
+      "callee": "eq",
+      "source_file": "apps/web/src/app/(protected)/cashier/actions/day-stats.ts",
+      "source_location": "L46"
+    },
+    {
+      "caller_nid": "day_stats_getdaystats",
+      "callee": "eq",
+      "source_file": "apps/web/src/app/(protected)/cashier/actions/day-stats.ts",
+      "source_location": "L46"
+    },
+    {
+      "caller_nid": "day_stats_getdaystats",
+      "callee": "reduce",
+      "source_file": "apps/web/src/app/(protected)/cashier/actions/day-stats.ts",
+      "source_location": "L48"
+    }
+  ]
+}

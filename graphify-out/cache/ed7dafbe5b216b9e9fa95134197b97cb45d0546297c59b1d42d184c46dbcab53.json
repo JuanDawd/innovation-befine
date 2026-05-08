@@ -1,0 +1,486 @@
+{
+  "nodes": [
+    {
+      "id": "issues_tracker_doc",
+      "label": "Issues Tracker",
+      "file_type": "document",
+      "source_file": "docs/issues-tracker.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "issues_c01",
+      "label": "C-01: Missing appointment_id on tickets",
+      "file_type": "document",
+      "source_file": "docs/issues-tracker.md",
+      "source_location": "C-01",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "issues_c02",
+      "label": "C-02: Missing P4B to P7 dependency edge",
+      "file_type": "document",
+      "source_file": "docs/issues-tracker.md",
+      "source_location": "C-02",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "issues_c03",
+      "label": "C-03: Currency decision resolved as COP",
+      "file_type": "document",
+      "source_file": "docs/issues-tracker.md",
+      "source_location": "C-03",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "issues_c04",
+      "label": "C-04: No data privacy compliance research",
+      "file_type": "document",
+      "source_file": "docs/issues-tracker.md",
+      "source_location": "C-04",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "issues_c05",
+      "label": "C-05: Deactivated employees can still log in",
+      "file_type": "document",
+      "source_file": "docs/issues-tracker.md",
+      "source_location": "C-05",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "issues_c06",
+      "label": "C-06: SSE channels publicly subscribable",
+      "file_type": "document",
+      "source_file": "docs/issues-tracker.md",
+      "source_location": "C-06",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "issues_c07",
+      "label": "C-07: createNotification exposed as server action",
+      "file_type": "document",
+      "source_file": "docs/issues-tracker.md",
+      "source_location": "C-07",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "issues_c08",
+      "label": "C-08: neon-http driver broke db.transaction",
+      "file_type": "document",
+      "source_file": "docs/issues-tracker.md",
+      "source_location": "C-08",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "issues_c09",
+      "label": "C-09: price_change_acknowledged default inverted",
+      "file_type": "document",
+      "source_file": "docs/issues-tracker.md",
+      "source_location": "C-09",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "issues_c10",
+      "label": "C-10: reschedule action missing from T053",
+      "file_type": "document",
+      "source_file": "docs/issues-tracker.md",
+      "source_location": "C-10",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "issues_c12",
+      "label": "C-12: recordPayout double-pay check outside transaction",
+      "file_type": "document",
+      "source_file": "docs/issues-tracker.md",
+      "source_location": "C-12",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "issues_c13",
+      "label": "C-13: payouts missing idempotency_key",
+      "file_type": "document",
+      "source_file": "docs/issues-tracker.md",
+      "source_location": "C-13",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "issues_c14",
+      "label": "C-14: getUnsettledPeriodsForEmployee blocks deactivation always",
+      "file_type": "document",
+      "source_file": "docs/issues-tracker.md",
+      "source_location": "C-14",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "issues_c15",
+      "label": "C-15: Secretary unsettled detection ignores absences",
+      "file_type": "document",
+      "source_file": "docs/issues-tracker.md",
+      "source_location": "C-15",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "issues_c16",
+      "label": "C-16: Analytics silently excludes open business day",
+      "file_type": "document",
+      "source_file": "docs/issues-tracker.md",
+      "source_location": "C-16",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "issues_c17",
+      "label": "C-17: earningsByEmployee returns 0 for secretaries",
+      "file_type": "document",
+      "source_file": "docs/issues-tracker.md",
+      "source_location": "C-17",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "issues_c18",
+      "label": "C-18: paidOffline offline-checkout flow is stub",
+      "file_type": "document",
+      "source_file": "docs/issues-tracker.md",
+      "source_location": "C-18",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "issues_c19",
+      "label": "C-19: createTicket not wired to shared idempotency helper",
+      "file_type": "document",
+      "source_file": "docs/issues-tracker.md",
+      "source_location": "C-19",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "issues_tracker_doc",
+      "target": "issues_c01",
+      "relation": "tracks",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/issues-tracker.md",
+      "source_location": "C-01",
+      "weight": 1.0
+    },
+    {
+      "source": "issues_tracker_doc",
+      "target": "issues_c02",
+      "relation": "tracks",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/issues-tracker.md",
+      "source_location": "C-02",
+      "weight": 1.0
+    },
+    {
+      "source": "issues_tracker_doc",
+      "target": "issues_c03",
+      "relation": "tracks",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/issues-tracker.md",
+      "source_location": "C-03",
+      "weight": 1.0
+    },
+    {
+      "source": "issues_tracker_doc",
+      "target": "issues_c04",
+      "relation": "tracks",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/issues-tracker.md",
+      "source_location": "C-04",
+      "weight": 1.0
+    },
+    {
+      "source": "issues_tracker_doc",
+      "target": "issues_c05",
+      "relation": "tracks",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/issues-tracker.md",
+      "source_location": "C-05",
+      "weight": 1.0
+    },
+    {
+      "source": "issues_tracker_doc",
+      "target": "issues_c06",
+      "relation": "tracks",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/issues-tracker.md",
+      "source_location": "C-06",
+      "weight": 1.0
+    },
+    {
+      "source": "issues_tracker_doc",
+      "target": "issues_c07",
+      "relation": "tracks",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/issues-tracker.md",
+      "source_location": "C-07",
+      "weight": 1.0
+    },
+    {
+      "source": "issues_tracker_doc",
+      "target": "issues_c08",
+      "relation": "tracks",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/issues-tracker.md",
+      "source_location": "C-08",
+      "weight": 1.0
+    },
+    {
+      "source": "issues_tracker_doc",
+      "target": "issues_c09",
+      "relation": "tracks",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/issues-tracker.md",
+      "source_location": "C-09",
+      "weight": 1.0
+    },
+    {
+      "source": "issues_tracker_doc",
+      "target": "issues_c10",
+      "relation": "tracks",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/issues-tracker.md",
+      "source_location": "C-10",
+      "weight": 1.0
+    },
+    {
+      "source": "issues_tracker_doc",
+      "target": "issues_c12",
+      "relation": "tracks",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/issues-tracker.md",
+      "source_location": "C-12",
+      "weight": 1.0
+    },
+    {
+      "source": "issues_tracker_doc",
+      "target": "issues_c13",
+      "relation": "tracks",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/issues-tracker.md",
+      "source_location": "C-13",
+      "weight": 1.0
+    },
+    {
+      "source": "issues_tracker_doc",
+      "target": "issues_c14",
+      "relation": "tracks",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/issues-tracker.md",
+      "source_location": "C-14",
+      "weight": 1.0
+    },
+    {
+      "source": "issues_tracker_doc",
+      "target": "issues_c15",
+      "relation": "tracks",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/issues-tracker.md",
+      "source_location": "C-15",
+      "weight": 1.0
+    },
+    {
+      "source": "issues_tracker_doc",
+      "target": "issues_c16",
+      "relation": "tracks",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/issues-tracker.md",
+      "source_location": "C-16",
+      "weight": 1.0
+    },
+    {
+      "source": "issues_tracker_doc",
+      "target": "issues_c17",
+      "relation": "tracks",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/issues-tracker.md",
+      "source_location": "C-17",
+      "weight": 1.0
+    },
+    {
+      "source": "issues_tracker_doc",
+      "target": "issues_c18",
+      "relation": "tracks",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/issues-tracker.md",
+      "source_location": "C-18",
+      "weight": 1.0
+    },
+    {
+      "source": "issues_tracker_doc",
+      "target": "issues_c19",
+      "relation": "tracks",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/issues-tracker.md",
+      "source_location": "C-19",
+      "weight": 1.0
+    },
+    {
+      "source": "issues_c01",
+      "target": "project_plan_phase4a",
+      "relation": "affects",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/issues-tracker.md",
+      "source_location": "C-01",
+      "weight": 1.0
+    },
+    {
+      "source": "issues_c02",
+      "target": "project_plan_phase7",
+      "relation": "affects",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/issues-tracker.md",
+      "source_location": "C-02",
+      "weight": 1.0
+    },
+    {
+      "source": "issues_c06",
+      "target": "project_plan_phase4a",
+      "relation": "affects",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/issues-tracker.md",
+      "source_location": "C-06",
+      "weight": 1.0
+    },
+    {
+      "source": "issues_c08",
+      "target": "project_plan_phase4a",
+      "relation": "affects",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/issues-tracker.md",
+      "source_location": "C-08",
+      "weight": 1.0
+    },
+    {
+      "source": "issues_c12",
+      "target": "project_plan_phase7",
+      "relation": "affects",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/issues-tracker.md",
+      "source_location": "C-12",
+      "weight": 1.0
+    },
+    {
+      "source": "issues_c13",
+      "target": "project_plan_phase7",
+      "relation": "affects",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/issues-tracker.md",
+      "source_location": "C-13",
+      "weight": 1.0
+    },
+    {
+      "source": "issues_c16",
+      "target": "project_plan_phase8",
+      "relation": "affects",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/issues-tracker.md",
+      "source_location": "C-16",
+      "weight": 1.0
+    },
+    {
+      "source": "issues_c17",
+      "target": "project_plan_phase8",
+      "relation": "affects",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/issues-tracker.md",
+      "source_location": "C-17",
+      "weight": 1.0
+    },
+    {
+      "source": "issues_c18",
+      "target": "project_plan_phase9",
+      "relation": "affects",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/issues-tracker.md",
+      "source_location": "C-18",
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": []
+}

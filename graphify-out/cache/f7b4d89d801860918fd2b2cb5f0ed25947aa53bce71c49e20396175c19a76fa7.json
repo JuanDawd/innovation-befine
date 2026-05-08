@@ -1,0 +1,633 @@
+{
+  "nodes": [
+    {
+      "id": "phase00_foundation",
+      "label": "Phase 0 \u2014 Foundation",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 1",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "phase00_subphase_0a",
+      "label": "Phase 0A \u2014 Infrastructure (T001,T003-T011,T085,T094,T095)",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 6",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "phase00_subphase_0b",
+      "label": "Phase 0B \u2014 Standards & Design (T002,T077,T097-T099,T103,T104)",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 8",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t001_monorepo",
+      "label": "T001 \u2014 Initialize Next.js monorepo with Turborepo",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 12",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t002_code_quality",
+      "label": "T002 \u2014 Configure code quality tooling",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 30",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t003_env_vars",
+      "label": "T003 \u2014 Environment variable schema",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 62",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t004_vercel_setup",
+      "label": "T004 \u2014 Vercel project setup",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 74",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t005_neon_postgres",
+      "label": "T005 \u2014 Neon Postgres setup",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 88",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t006_drizzle_orm",
+      "label": "T006 \u2014 Drizzle ORM setup and migration workflow",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 112",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t007_better_auth",
+      "label": "T007 \u2014 Better Auth spike and integration",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 139",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t008_ui_library",
+      "label": "T008 \u2014 UI component library spike (shadcn/ui + Tailwind)",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 157",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t009_sse_spike",
+      "label": "T009 \u2014 SSE (Server-Sent Events) spike",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 185",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t010_rbac_roles",
+      "label": "T010 \u2014 RBAC role definitions",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 209",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t011_seed_script",
+      "label": "T011 \u2014 Seed script for development",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 227",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t077_offline_policy",
+      "label": "T077 \u2014 Offline policy document",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 245",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t085_sentry",
+      "label": "T085 \u2014 Sentry error tracking setup",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 271",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t094_testing_infra",
+      "label": "T094 \u2014 Testing infrastructure (Vitest + Playwright)",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 291",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t095_cicd",
+      "label": "T095 \u2014 CI/CD pipeline (GitHub Actions)",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 318",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t097_api_conventions",
+      "label": "T097 \u2014 API design conventions document",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 340",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t098_realtime_sse",
+      "label": "T098 \u2014 Real-time abstraction layer (SSE / packages/realtime)",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 368",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t099_i18n",
+      "label": "T099 \u2014 Internationalization (next-intl, ES+EN)",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 390",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t103_design_system",
+      "label": "T103 \u2014 Design system, design tokens, and component patterns",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 413",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t104_wireframes",
+      "label": "T104 \u2014 Key screen wireframes and layout specification",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 458",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_payment_method_enum",
+      "label": "Shared payment_method_enum (cash|card|transfer)",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 135",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_realtime_sse_abstraction",
+      "label": "packages/realtime SSE abstraction layer",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 368",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_rbac",
+      "label": "RBAC roles: admin, secretary, stylist, clothier",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 209",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "phase00_foundation",
+      "target": "phase00_subphase_0a",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 6",
+      "weight": 1.0
+    },
+    {
+      "source": "phase00_foundation",
+      "target": "phase00_subphase_0b",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 8",
+      "weight": 1.0
+    },
+    {
+      "source": "phase00_subphase_0a",
+      "target": "t001_monorepo",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 6",
+      "weight": 1.0
+    },
+    {
+      "source": "phase00_subphase_0b",
+      "target": "t002_code_quality",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 8",
+      "weight": 1.0
+    },
+    {
+      "source": "phase00_subphase_0b",
+      "target": "t077_offline_policy",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 8",
+      "weight": 1.0
+    },
+    {
+      "source": "phase00_subphase_0b",
+      "target": "t097_api_conventions",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 8",
+      "weight": 1.0
+    },
+    {
+      "source": "phase00_subphase_0b",
+      "target": "t098_realtime_sse",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 8",
+      "weight": 1.0
+    },
+    {
+      "source": "phase00_subphase_0b",
+      "target": "t099_i18n",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 8",
+      "weight": 1.0
+    },
+    {
+      "source": "phase00_subphase_0b",
+      "target": "t103_design_system",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 8",
+      "weight": 1.0
+    },
+    {
+      "source": "phase00_subphase_0b",
+      "target": "t104_wireframes",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 8",
+      "weight": 1.0
+    },
+    {
+      "source": "t002_code_quality",
+      "target": "t001_monorepo",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 33",
+      "weight": 1.0
+    },
+    {
+      "source": "t003_env_vars",
+      "target": "t001_monorepo",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 65",
+      "weight": 1.0
+    },
+    {
+      "source": "t004_vercel_setup",
+      "target": "t001_monorepo",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 77",
+      "weight": 1.0
+    },
+    {
+      "source": "t005_neon_postgres",
+      "target": "t004_vercel_setup",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 101",
+      "weight": 1.0
+    },
+    {
+      "source": "t006_drizzle_orm",
+      "target": "t005_neon_postgres",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 123",
+      "weight": 1.0
+    },
+    {
+      "source": "t007_better_auth",
+      "target": "t006_drizzle_orm",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 143",
+      "weight": 1.0
+    },
+    {
+      "source": "t008_ui_library",
+      "target": "t001_monorepo",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 160",
+      "weight": 1.0
+    },
+    {
+      "source": "t009_sse_spike",
+      "target": "t001_monorepo",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 188",
+      "weight": 1.0
+    },
+    {
+      "source": "t009_sse_spike",
+      "target": "t004_vercel_setup",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 188",
+      "weight": 1.0
+    },
+    {
+      "source": "t010_rbac_roles",
+      "target": "t007_better_auth",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 213",
+      "weight": 1.0
+    },
+    {
+      "source": "t011_seed_script",
+      "target": "t010_rbac_roles",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 231",
+      "weight": 1.0
+    },
+    {
+      "source": "t085_sentry",
+      "target": "t004_vercel_setup",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 274",
+      "weight": 1.0
+    },
+    {
+      "source": "t094_testing_infra",
+      "target": "t001_monorepo",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 295",
+      "weight": 1.0
+    },
+    {
+      "source": "t095_cicd",
+      "target": "t094_testing_infra",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 323",
+      "weight": 1.0
+    },
+    {
+      "source": "t095_cicd",
+      "target": "t002_code_quality",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 323",
+      "weight": 1.0
+    },
+    {
+      "source": "t097_api_conventions",
+      "target": "t001_monorepo",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 344",
+      "weight": 1.0
+    },
+    {
+      "source": "t098_realtime_sse",
+      "target": "t009_sse_spike",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 372",
+      "weight": 1.0
+    },
+    {
+      "source": "t099_i18n",
+      "target": "t001_monorepo",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 394",
+      "weight": 1.0
+    },
+    {
+      "source": "t103_design_system",
+      "target": "t008_ui_library",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 417",
+      "weight": 1.0
+    },
+    {
+      "source": "t104_wireframes",
+      "target": "t103_design_system",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 460",
+      "weight": 1.0
+    },
+    {
+      "source": "t098_realtime_sse",
+      "target": "concept_realtime_sse_abstraction",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 368",
+      "weight": 1.0
+    },
+    {
+      "source": "t010_rbac_roles",
+      "target": "concept_rbac",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 209",
+      "weight": 1.0
+    },
+    {
+      "source": "t066_payouts_table",
+      "target": "concept_payment_method_enum",
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 135",
+      "weight": 1.0
+    },
+    {
+      "source": "t077_offline_policy",
+      "target": "t033_tickets_table",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-00-foundation.md",
+      "source_location": "line 255",
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": []
+}

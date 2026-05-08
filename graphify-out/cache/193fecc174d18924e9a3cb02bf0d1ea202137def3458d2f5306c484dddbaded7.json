@@ -1,0 +1,76 @@
+{
+  "nodes": [
+    {
+      "id": "apps_web_src_hooks_use_sse_ts",
+      "label": "use-sse.ts",
+      "file_type": "code",
+      "source_file": "apps/web/src/hooks/use-sse.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "use_sse_usesse",
+      "label": "useSSE()",
+      "file_type": "code",
+      "source_file": "apps/web/src/hooks/use-sse.ts",
+      "source_location": "L27"
+    }
+  ],
+  "edges": [
+    {
+      "source": "apps_web_src_hooks_use_sse_ts",
+      "target": "react",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/hooks/use-sse.ts",
+      "source_location": "L14",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_hooks_use_sse_ts",
+      "target": "use_sse_usesse",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/hooks/use-sse.ts",
+      "source_location": "L27",
+      "weight": 1.0
+    }
+  ],
+  "raw_calls": [
+    {
+      "caller_nid": "use_sse_usesse",
+      "callee": "useRef",
+      "source_file": "apps/web/src/hooks/use-sse.ts",
+      "source_location": "L29"
+    },
+    {
+      "caller_nid": "use_sse_usesse",
+      "callee": "useRef",
+      "source_file": "apps/web/src/hooks/use-sse.ts",
+      "source_location": "L32"
+    },
+    {
+      "caller_nid": "use_sse_usesse",
+      "callee": "useRef",
+      "source_file": "apps/web/src/hooks/use-sse.ts",
+      "source_location": "L33"
+    },
+    {
+      "caller_nid": "use_sse_usesse",
+      "callee": "useRef",
+      "source_file": "apps/web/src/hooks/use-sse.ts",
+      "source_location": "L34"
+    },
+    {
+      "caller_nid": "use_sse_usesse",
+      "callee": "useLayoutEffect",
+      "source_file": "apps/web/src/hooks/use-sse.ts",
+      "source_location": "L36"
+    },
+    {
+      "caller_nid": "use_sse_usesse",
+      "callee": "useEffect",
+      "source_file": "apps/web/src/hooks/use-sse.ts",
+      "source_location": "L42"
+    }
+  ]
+}

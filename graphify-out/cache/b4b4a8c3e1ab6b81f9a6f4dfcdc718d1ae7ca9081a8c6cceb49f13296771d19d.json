@@ -1,0 +1,282 @@
+{
+  "nodes": [
+    {
+      "id": "standards_doc",
+      "label": "Engineering Standards",
+      "file_type": "document",
+      "source_file": "docs/standards.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "standards_money_storage",
+      "label": "Integer Peso Money Storage",
+      "file_type": "document",
+      "source_file": "docs/standards.md",
+      "source_location": "Money storage",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "standards_bankers_rounding",
+      "label": "Bankers Rounding (round half-even)",
+      "file_type": "document",
+      "source_file": "docs/standards.md",
+      "source_location": "Financial rounding",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "standards_soft_delete",
+      "label": "Soft-Delete Policy",
+      "file_type": "document",
+      "source_file": "docs/standards.md",
+      "source_location": "Soft-delete policy",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "standards_error_handling",
+      "label": "Error Handling Conventions",
+      "file_type": "document",
+      "source_file": "docs/standards.md",
+      "source_location": "Error handling",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "standards_accessibility",
+      "label": "Accessibility Baseline (WCAG AA)",
+      "file_type": "document",
+      "source_file": "docs/standards.md",
+      "source_location": "Accessibility baseline",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "standards_performance_targets",
+      "label": "Performance Targets",
+      "file_type": "document",
+      "source_file": "docs/standards.md",
+      "source_location": "Performance targets",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "standards_mobile_first",
+      "label": "Mobile-First Policy",
+      "file_type": "document",
+      "source_file": "docs/standards.md",
+      "source_location": "Mobile-first policy",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "standards_testing_policy",
+      "label": "Testing Policy",
+      "file_type": "document",
+      "source_file": "docs/standards.md",
+      "source_location": "Testing policy",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "standards_cop_currency",
+      "label": "COP Currency Format ($12.500)",
+      "file_type": "document",
+      "source_file": "docs/standards.md",
+      "source_location": "Currency",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "standards_doc",
+      "target": "standards_money_storage",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/standards.md",
+      "source_location": "Money storage",
+      "weight": 1.0
+    },
+    {
+      "source": "standards_doc",
+      "target": "standards_bankers_rounding",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/standards.md",
+      "source_location": "Financial rounding",
+      "weight": 1.0
+    },
+    {
+      "source": "standards_doc",
+      "target": "standards_soft_delete",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/standards.md",
+      "source_location": "Soft-delete policy",
+      "weight": 1.0
+    },
+    {
+      "source": "standards_doc",
+      "target": "standards_error_handling",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/standards.md",
+      "source_location": "Error handling",
+      "weight": 1.0
+    },
+    {
+      "source": "standards_doc",
+      "target": "standards_accessibility",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/standards.md",
+      "source_location": "Accessibility baseline",
+      "weight": 1.0
+    },
+    {
+      "source": "standards_doc",
+      "target": "standards_performance_targets",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/standards.md",
+      "source_location": "Performance targets",
+      "weight": 1.0
+    },
+    {
+      "source": "standards_doc",
+      "target": "standards_mobile_first",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/standards.md",
+      "source_location": "Mobile-first policy",
+      "weight": 1.0
+    },
+    {
+      "source": "standards_doc",
+      "target": "standards_testing_policy",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/standards.md",
+      "source_location": "Testing policy",
+      "weight": 1.0
+    },
+    {
+      "source": "standards_doc",
+      "target": "standards_cop_currency",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/standards.md",
+      "source_location": "Currency",
+      "weight": 1.0
+    },
+    {
+      "source": "standards_money_storage",
+      "target": "standards_cop_currency",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/standards.md",
+      "source_location": "Money storage",
+      "weight": 1.0
+    },
+    {
+      "source": "standards_bankers_rounding",
+      "target": "business_idea_commission",
+      "relation": "applies_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/standards.md",
+      "source_location": "Financial rounding",
+      "weight": 1.0
+    },
+    {
+      "source": "standards_testing_policy",
+      "target": "testing_readme_doc",
+      "relation": "elaborated_by",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/standards.md",
+      "source_location": "Testing policy",
+      "weight": 1.0
+    },
+    {
+      "source": "standards_performance_targets",
+      "target": "performance_results_doc",
+      "relation": "measured_by",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "docs/standards.md",
+      "source_location": null,
+      "weight": 0.9
+    },
+    {
+      "source": "standards_mobile_first",
+      "target": "screens_stylist",
+      "relation": "rationale_for",
+      "confidence": "INFERRED",
+      "confidence_score": 0.87,
+      "source_file": "docs/standards.md",
+      "source_location": "Mobile-first policy",
+      "weight": 0.87
+    },
+    {
+      "source": "standards_mobile_first",
+      "target": "screens_clothier",
+      "relation": "rationale_for",
+      "confidence": "INFERRED",
+      "confidence_score": 0.87,
+      "source_file": "docs/standards.md",
+      "source_location": "Mobile-first policy",
+      "weight": 0.87
+    }
+  ],
+  "hyperedges": [
+    {
+      "id": "he_financial_integrity_triangle",
+      "label": "Financial Integrity: Money Storage + Bankers Rounding + Idempotency jointly ensure correct payroll",
+      "nodes": [
+        "standards_money_storage",
+        "standards_bankers_rounding",
+        "standards_api_idempotency",
+        "business_idea_payroll_settlement"
+      ],
+      "relation": "jointly_ensure_financial_integrity",
+      "confidence": "INFERRED",
+      "confidence_score": 0.88,
+      "source_file": "docs/standards.md"
+    }
+  ]
+}

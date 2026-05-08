@@ -1,0 +1,59 @@
+{
+  "nodes": [
+    {
+      "id": "packages_db_src_migrate_ts",
+      "label": "migrate.ts",
+      "file_type": "code",
+      "source_file": "packages/db/src/migrate.ts",
+      "source_location": "L1"
+    }
+  ],
+  "edges": [
+    {
+      "source": "packages_db_src_migrate_ts",
+      "target": "serverless",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/db/src/migrate.ts",
+      "source_location": "L9",
+      "weight": 1.0
+    },
+    {
+      "source": "packages_db_src_migrate_ts",
+      "target": "neon_http",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/db/src/migrate.ts",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "packages_db_src_migrate_ts",
+      "target": "migrator",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/db/src/migrate.ts",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "packages_db_src_migrate_ts",
+      "target": "path",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/db/src/migrate.ts",
+      "source_location": "L12",
+      "weight": 1.0
+    },
+    {
+      "source": "packages_db_src_migrate_ts",
+      "target": "url",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/db/src/migrate.ts",
+      "source_location": "L13",
+      "weight": 1.0
+    }
+  ],
+  "raw_calls": []
+}

@@ -1,0 +1,164 @@
+{
+  "nodes": [
+    {
+      "id": "qa_review",
+      "label": "Senior QA Review",
+      "file_type": "document",
+      "source_file": "docs/research/senior_qa.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "qa_q1_test_plans",
+      "label": "QA Q1: No Test Plans (Critical)",
+      "file_type": "document",
+      "source_file": "docs/research/senior_qa.md",
+      "source_location": "\u00a7Q1",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "qa_q2_e2e_financial",
+      "label": "QA Q2: No E2E Scenarios for Financial Flows (Critical)",
+      "file_type": "document",
+      "source_file": "docs/research/senior_qa.md",
+      "source_location": "\u00a7Q2",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "qa_q5_race_conditions",
+      "label": "QA Q5: Race Condition Scenarios Undocumented (High)",
+      "file_type": "document",
+      "source_file": "docs/research/senior_qa.md",
+      "source_location": "\u00a7Q5",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "qa_q7_uat",
+      "label": "QA Q7: No UAT Plan (High)",
+      "file_type": "document",
+      "source_file": "docs/research/senior_qa.md",
+      "source_location": "\u00a7Q7",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "qa_q8_security_testing",
+      "label": "QA Q8: No Security Testing Plan (High)",
+      "file_type": "document",
+      "source_file": "docs/research/senior_qa.md",
+      "source_location": "\u00a7Q8",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "qa_rbac_matrix",
+      "label": "QA RBAC Permission Matrix (role x action)",
+      "file_type": "document",
+      "source_file": "docs/research/senior_qa.md",
+      "source_location": "\u00a7Q12",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "qa_review",
+      "target": "qa_q1_test_plans",
+      "relation": "contains_finding",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/research/senior_qa.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "qa_review",
+      "target": "qa_q2_e2e_financial",
+      "relation": "contains_finding",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/research/senior_qa.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "qa_review",
+      "target": "qa_q5_race_conditions",
+      "relation": "contains_finding",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/research/senior_qa.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "qa_review",
+      "target": "qa_q7_uat",
+      "relation": "contains_finding",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/research/senior_qa.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "qa_review",
+      "target": "qa_q8_security_testing",
+      "relation": "contains_finding",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/research/senior_qa.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "qa_review",
+      "target": "qa_rbac_matrix",
+      "relation": "contains_section",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/research/senior_qa.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "qa_q5_race_conditions",
+      "target": "po_risk_register",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.82,
+      "source_file": "docs/research/senior_qa.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "qa_q7_uat",
+      "target": "golive_checklist",
+      "relation": "informs",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "docs/research/senior_qa.md",
+      "source_location": null,
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": []
+}

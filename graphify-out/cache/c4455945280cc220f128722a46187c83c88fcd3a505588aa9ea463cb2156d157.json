@@ -1,0 +1,206 @@
+{
+  "nodes": [
+    {
+      "id": "saas_commercialization",
+      "label": "SaaS Commercialization Audit",
+      "file_type": "document",
+      "source_file": "docs/research/saas-commercialization.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "saas_gaps_multitenancy",
+      "label": "SaaS Gap: Multi-tenancy (organization_id missing)",
+      "file_type": "document",
+      "source_file": "docs/research/saas-commercialization.md",
+      "source_location": "\u00a73.1",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "saas_gaps_billing",
+      "label": "SaaS Gap: Billing and Subscription (Stripe, DIAN)",
+      "file_type": "document",
+      "source_file": "docs/research/saas-commercialization.md",
+      "source_location": "\u00a73.2",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "saas_gaps_onboarding",
+      "label": "SaaS Gap: Self-Serve Onboarding",
+      "file_type": "document",
+      "source_file": "docs/research/saas-commercialization.md",
+      "source_location": "\u00a73.3",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "saas_pricing",
+      "label": "SaaS Pricing Strategy (per-location, COP)",
+      "file_type": "document",
+      "source_file": "docs/research/saas-commercialization.md",
+      "source_location": "\u00a74",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "saas_icp",
+      "label": "Ideal Customer Profile (Colombian salons 4-20 staff)",
+      "file_type": "document",
+      "source_file": "docs/research/saas-commercialization.md",
+      "source_location": "\u00a75",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "saas_gtm",
+      "label": "Go-to-Market Strategy (design partners, short-form content, accountant referrals)",
+      "file_type": "document",
+      "source_file": "docs/research/saas-commercialization.md",
+      "source_location": "\u00a76",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "saas_wedge",
+      "label": "SaaS Wedge: Payroll-Aware Operations for Mixed-Model Teams",
+      "file_type": "document",
+      "source_file": "docs/research/saas-commercialization.md",
+      "source_location": "\u00a72",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "saas_roadmap",
+      "label": "SaaS Phased Roadmap (Foundation to Design Partners to Public Launch to Scale)",
+      "file_type": "document",
+      "source_file": "docs/research/saas-commercialization.md",
+      "source_location": "\u00a77",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "saas_commercialization",
+      "target": "saas_gaps_multitenancy",
+      "relation": "identifies_gap",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/research/saas-commercialization.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "saas_commercialization",
+      "target": "saas_gaps_billing",
+      "relation": "identifies_gap",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/research/saas-commercialization.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "saas_commercialization",
+      "target": "saas_gaps_onboarding",
+      "relation": "identifies_gap",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/research/saas-commercialization.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "saas_commercialization",
+      "target": "saas_pricing",
+      "relation": "contains_section",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/research/saas-commercialization.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "saas_commercialization",
+      "target": "saas_icp",
+      "relation": "contains_section",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/research/saas-commercialization.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "saas_commercialization",
+      "target": "saas_gtm",
+      "relation": "contains_section",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/research/saas-commercialization.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "saas_commercialization",
+      "target": "saas_wedge",
+      "relation": "contains_section",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/research/saas-commercialization.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "saas_commercialization",
+      "target": "saas_roadmap",
+      "relation": "contains_section",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/research/saas-commercialization.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "saas_commercialization",
+      "target": "progress_doc",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/research/saas-commercialization.md",
+      "source_location": "\u00a7Appendix",
+      "weight": 1.0
+    },
+    {
+      "source": "saas_commercialization",
+      "target": "business_doc",
+      "relation": "extends_analysis_of",
+      "confidence": "INFERRED",
+      "confidence_score": 0.88,
+      "source_file": "docs/research/saas-commercialization.md",
+      "source_location": "\u00a7Appendix",
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": []
+}

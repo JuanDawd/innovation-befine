@@ -1,0 +1,73 @@
+{
+  "nodes": [
+    {
+      "id": "apps_web_src_app_sse_test_page_tsx",
+      "label": "page.tsx",
+      "file_type": "code",
+      "source_file": "apps/web/src/app/sse-test/page.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "page_ssetestpage",
+      "label": "SSETestPage()",
+      "file_type": "code",
+      "source_file": "apps/web/src/app/sse-test/page.tsx",
+      "source_location": "L15"
+    }
+  ],
+  "edges": [
+    {
+      "source": "apps_web_src_app_sse_test_page_tsx",
+      "target": "react",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/sse-test/page.tsx",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_app_sse_test_page_tsx",
+      "target": "use_sse",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/sse-test/page.tsx",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_app_sse_test_page_tsx",
+      "target": "page_ssetestpage",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/sse-test/page.tsx",
+      "source_location": "L15",
+      "weight": 1.0
+    }
+  ],
+  "raw_calls": [
+    {
+      "caller_nid": "page_ssetestpage",
+      "callee": "useState",
+      "source_file": "apps/web/src/app/sse-test/page.tsx",
+      "source_location": "L16"
+    },
+    {
+      "caller_nid": "page_ssetestpage",
+      "callee": "useState",
+      "source_file": "apps/web/src/app/sse-test/page.tsx",
+      "source_location": "L17"
+    },
+    {
+      "caller_nid": "page_ssetestpage",
+      "callee": "useSSE",
+      "source_file": "apps/web/src/app/sse-test/page.tsx",
+      "source_location": "L19"
+    },
+    {
+      "caller_nid": "page_ssetestpage",
+      "callee": "map",
+      "source_file": "apps/web/src/app/sse-test/page.tsx",
+      "source_location": "L43"
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "nodes": [
+    {
+      "id": "apps_web_src_lib_auth_client_ts",
+      "label": "auth-client.ts",
+      "file_type": "code",
+      "source_file": "apps/web/src/lib/auth-client.ts",
+      "source_location": "L1"
+    }
+  ],
+  "edges": [
+    {
+      "source": "apps_web_src_lib_auth_client_ts",
+      "target": "react",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/lib/auth-client.ts",
+      "source_location": "L14",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_lib_auth_client_ts",
+      "target": "plugins",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/lib/auth-client.ts",
+      "source_location": "L15",
+      "weight": 1.0
+    }
+  ],
+  "raw_calls": []
+}

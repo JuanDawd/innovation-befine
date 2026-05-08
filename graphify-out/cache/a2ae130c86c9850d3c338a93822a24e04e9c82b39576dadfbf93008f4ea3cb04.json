@@ -1,0 +1,214 @@
+{
+  "nodes": [
+    {
+      "id": "screens_inventory_doc",
+      "label": "Screens Inventory",
+      "file_type": "document",
+      "source_file": "docs/mockups/screens-inventory.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "screens_cashier_admin",
+      "label": "Cashier/Admin Screens (desktop-first)",
+      "file_type": "document",
+      "source_file": "docs/mockups/screens-inventory.md",
+      "source_location": "Cashier / Admin",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "screens_admin_only",
+      "label": "Admin-Only Screens",
+      "file_type": "document",
+      "source_file": "docs/mockups/screens-inventory.md",
+      "source_location": "Admin-only",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "screens_secretary",
+      "label": "Secretary Screens",
+      "file_type": "document",
+      "source_file": "docs/mockups/screens-inventory.md",
+      "source_location": "Secretary",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "screens_stylist",
+      "label": "Stylist Screens (mobile-first)",
+      "file_type": "document",
+      "source_file": "docs/mockups/screens-inventory.md",
+      "source_location": "Stylist",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "screens_clothier",
+      "label": "Clothier Screens (mobile-first)",
+      "file_type": "document",
+      "source_file": "docs/mockups/screens-inventory.md",
+      "source_location": "Clothier",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "screens_auth",
+      "label": "Auth Screens (login, reset password)",
+      "file_type": "document",
+      "source_file": "docs/mockups/screens-inventory.md",
+      "source_location": "Shared / Auth",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "screens_inventory_doc",
+      "target": "screens_cashier_admin",
+      "relation": "catalogs",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/mockups/screens-inventory.md",
+      "source_location": "Cashier / Admin",
+      "weight": 1.0
+    },
+    {
+      "source": "screens_inventory_doc",
+      "target": "screens_admin_only",
+      "relation": "catalogs",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/mockups/screens-inventory.md",
+      "source_location": "Admin-only",
+      "weight": 1.0
+    },
+    {
+      "source": "screens_inventory_doc",
+      "target": "screens_secretary",
+      "relation": "catalogs",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/mockups/screens-inventory.md",
+      "source_location": "Secretary",
+      "weight": 1.0
+    },
+    {
+      "source": "screens_inventory_doc",
+      "target": "screens_stylist",
+      "relation": "catalogs",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/mockups/screens-inventory.md",
+      "source_location": "Stylist",
+      "weight": 1.0
+    },
+    {
+      "source": "screens_inventory_doc",
+      "target": "screens_clothier",
+      "relation": "catalogs",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/mockups/screens-inventory.md",
+      "source_location": "Clothier",
+      "weight": 1.0
+    },
+    {
+      "source": "screens_inventory_doc",
+      "target": "screens_auth",
+      "relation": "catalogs",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/mockups/screens-inventory.md",
+      "source_location": "Shared / Auth",
+      "weight": 1.0
+    },
+    {
+      "source": "screens_cashier_admin",
+      "target": "wireframes_cashier_dashboard",
+      "relation": "corresponds_to_wireframe",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "docs/mockups/screens-inventory.md",
+      "source_location": null,
+      "weight": 0.9
+    },
+    {
+      "source": "screens_admin_only",
+      "target": "wireframes_admin_home",
+      "relation": "corresponds_to_wireframe",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "docs/mockups/screens-inventory.md",
+      "source_location": null,
+      "weight": 0.9
+    },
+    {
+      "source": "screens_auth",
+      "target": "wireframes_login",
+      "relation": "corresponds_to_wireframe",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "docs/mockups/screens-inventory.md",
+      "source_location": null,
+      "weight": 0.9
+    },
+    {
+      "source": "screens_stylist",
+      "target": "business_idea_role_stylist",
+      "relation": "serves_role",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/mockups/screens-inventory.md",
+      "source_location": "Stylist",
+      "weight": 1.0
+    },
+    {
+      "source": "screens_clothier",
+      "target": "business_idea_role_clothier",
+      "relation": "serves_role",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/mockups/screens-inventory.md",
+      "source_location": "Clothier",
+      "weight": 1.0
+    },
+    {
+      "source": "screens_secretary",
+      "target": "business_idea_role_secretary",
+      "relation": "serves_role",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/mockups/screens-inventory.md",
+      "source_location": "Secretary",
+      "weight": 1.0
+    },
+    {
+      "source": "screens_cashier_admin",
+      "target": "business_idea_role_admin",
+      "relation": "serves_role",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/mockups/screens-inventory.md",
+      "source_location": "Cashier / Admin",
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": []
+}

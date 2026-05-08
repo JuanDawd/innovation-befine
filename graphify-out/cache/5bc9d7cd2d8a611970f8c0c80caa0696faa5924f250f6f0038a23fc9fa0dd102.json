@@ -1,0 +1,13 @@
+{
+  "nodes": [
+    {
+      "id": "apps_web_src_i18n_config_ts",
+      "label": "config.ts",
+      "file_type": "code",
+      "source_file": "apps/web/src/i18n/config.ts",
+      "source_location": "L1"
+    }
+  ],
+  "edges": [],
+  "raw_calls": []
+}

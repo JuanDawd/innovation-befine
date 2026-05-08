@@ -1,0 +1,41 @@
+{
+  "nodes": [
+    {
+      "id": "apps_web_src_i18n_request_ts",
+      "label": "request.ts",
+      "file_type": "code",
+      "source_file": "apps/web/src/i18n/request.ts",
+      "source_location": "L1"
+    }
+  ],
+  "edges": [
+    {
+      "source": "apps_web_src_i18n_request_ts",
+      "target": "server",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/i18n/request.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_i18n_request_ts",
+      "target": "headers",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/i18n/request.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_i18n_request_ts",
+      "target": "apps_web_src_i18n_config",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/i18n/request.ts",
+      "source_location": "L3",
+      "weight": 1.0
+    }
+  ],
+  "raw_calls": []
+}

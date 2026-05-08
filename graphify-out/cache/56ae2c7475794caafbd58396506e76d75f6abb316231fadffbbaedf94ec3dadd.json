@@ -1,0 +1,58 @@
+{
+  "nodes": [
+    {
+      "id": "training_stylist_doc",
+      "label": "Training Guide \u2014 Stylist",
+      "file_type": "document",
+      "source_file": "docs/training/stylist.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "training_stylist_doc",
+      "target": "business_idea_role_stylist",
+      "relation": "trains_users_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/training/stylist.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "training_stylist_doc",
+      "target": "business_idea_ticket_lifecycle",
+      "relation": "explains",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/training/stylist.md",
+      "source_location": "Registrar un servicio",
+      "weight": 1.0
+    },
+    {
+      "source": "training_stylist_doc",
+      "target": "business_idea_commission",
+      "relation": "explains",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/training/stylist.md",
+      "source_location": "Ver tus ganancias",
+      "weight": 1.0
+    },
+    {
+      "source": "training_stylist_doc",
+      "target": "screens_stylist",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "docs/training/stylist.md",
+      "source_location": null,
+      "weight": 0.85
+    }
+  ],
+  "hyperedges": []
+}

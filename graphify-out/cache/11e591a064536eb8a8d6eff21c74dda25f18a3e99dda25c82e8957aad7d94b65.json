@@ -1,0 +1,1075 @@
+{
+  "nodes": [
+    {
+      "id": "apps_web_src_app_protected_admin_catalog_actions_services_ts",
+      "label": "services.ts",
+      "file_type": "code",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "services_getadminsession",
+      "label": "getAdminSession()",
+      "file_type": "code",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L51"
+    },
+    {
+      "id": "services_getauthsession",
+      "label": "getAuthSession()",
+      "file_type": "code",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L58"
+    },
+    {
+      "id": "services_writeauditlog",
+      "label": "writeAuditLog()",
+      "file_type": "code",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L63"
+    },
+    {
+      "id": "services_listactiveservices",
+      "label": "listActiveServices()",
+      "file_type": "code",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L90"
+    },
+    {
+      "id": "services_listallservices",
+      "label": "listAllServices()",
+      "file_type": "code",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L115"
+    },
+    {
+      "id": "services_createservice",
+      "label": "createService()",
+      "file_type": "code",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L138"
+    },
+    {
+      "id": "services_editservice",
+      "label": "editService()",
+      "file_type": "code",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L192"
+    },
+    {
+      "id": "services_deactivateservice",
+      "label": "deactivateService()",
+      "file_type": "code",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L247"
+    },
+    {
+      "id": "services_restoreservice",
+      "label": "restoreService()",
+      "file_type": "code",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L280"
+    },
+    {
+      "id": "services_addvariant",
+      "label": "addVariant()",
+      "file_type": "code",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L308"
+    },
+    {
+      "id": "services_editvariant",
+      "label": "editVariant()",
+      "file_type": "code",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L363"
+    },
+    {
+      "id": "services_restorevariant",
+      "label": "restoreVariant()",
+      "file_type": "code",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L425"
+    },
+    {
+      "id": "services_deactivatevariant",
+      "label": "deactivateVariant()",
+      "file_type": "code",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L460"
+    }
+  ],
+  "edges": [
+    {
+      "source": "apps_web_src_app_protected_admin_catalog_actions_services_ts",
+      "target": "headers",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_app_protected_admin_catalog_actions_services_ts",
+      "target": "cache",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L12",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_app_protected_admin_catalog_actions_services_ts",
+      "target": "drizzle_orm",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L13",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_app_protected_admin_catalog_actions_services_ts",
+      "target": "auth",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L14",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_app_protected_admin_catalog_actions_services_ts",
+      "target": "db",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L15",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_app_protected_admin_catalog_actions_services_ts",
+      "target": "schema",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L16",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_app_protected_admin_catalog_actions_services_ts",
+      "target": "types",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L17",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_app_protected_admin_catalog_actions_services_ts",
+      "target": "action_result",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L23",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_app_protected_admin_catalog_actions_services_ts",
+      "target": "middleware_helpers",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L24",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_app_protected_admin_catalog_actions_services_ts",
+      "target": "services_getadminsession",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L51",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_app_protected_admin_catalog_actions_services_ts",
+      "target": "services_getauthsession",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L58",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_app_protected_admin_catalog_actions_services_ts",
+      "target": "services_writeauditlog",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L63",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_app_protected_admin_catalog_actions_services_ts",
+      "target": "services_listactiveservices",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L90",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_app_protected_admin_catalog_actions_services_ts",
+      "target": "services_listallservices",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L115",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_app_protected_admin_catalog_actions_services_ts",
+      "target": "services_createservice",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L138",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_app_protected_admin_catalog_actions_services_ts",
+      "target": "services_editservice",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L192",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_app_protected_admin_catalog_actions_services_ts",
+      "target": "services_deactivateservice",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L247",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_app_protected_admin_catalog_actions_services_ts",
+      "target": "services_restoreservice",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L280",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_app_protected_admin_catalog_actions_services_ts",
+      "target": "services_addvariant",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L308",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_app_protected_admin_catalog_actions_services_ts",
+      "target": "services_editvariant",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L363",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_app_protected_admin_catalog_actions_services_ts",
+      "target": "services_restorevariant",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L425",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_app_protected_admin_catalog_actions_services_ts",
+      "target": "services_deactivatevariant",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L460",
+      "weight": 1.0
+    },
+    {
+      "source": "services_listactiveservices",
+      "target": "services_getauthsession",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L93",
+      "weight": 1.0
+    },
+    {
+      "source": "services_createservice",
+      "target": "services_getadminsession",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L139",
+      "weight": 1.0
+    },
+    {
+      "source": "services_createservice",
+      "target": "services_writeauditlog",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L178",
+      "weight": 1.0
+    },
+    {
+      "source": "services_editservice",
+      "target": "services_getadminsession",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L196",
+      "weight": 1.0
+    },
+    {
+      "source": "services_editservice",
+      "target": "services_writeauditlog",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L232",
+      "weight": 1.0
+    },
+    {
+      "source": "services_deactivateservice",
+      "target": "services_getadminsession",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L248",
+      "weight": 1.0
+    },
+    {
+      "source": "services_deactivateservice",
+      "target": "services_writeauditlog",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L265",
+      "weight": 1.0
+    },
+    {
+      "source": "services_restoreservice",
+      "target": "services_getadminsession",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L281",
+      "weight": 1.0
+    },
+    {
+      "source": "services_restoreservice",
+      "target": "services_writeauditlog",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L294",
+      "weight": 1.0
+    },
+    {
+      "source": "services_addvariant",
+      "target": "services_getadminsession",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L312",
+      "weight": 1.0
+    },
+    {
+      "source": "services_addvariant",
+      "target": "services_writeauditlog",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L349",
+      "weight": 1.0
+    },
+    {
+      "source": "services_editvariant",
+      "target": "services_getadminsession",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L367",
+      "weight": 1.0
+    },
+    {
+      "source": "services_editvariant",
+      "target": "services_writeauditlog",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L406",
+      "weight": 1.0
+    },
+    {
+      "source": "services_restorevariant",
+      "target": "services_getadminsession",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L426",
+      "weight": 1.0
+    },
+    {
+      "source": "services_restorevariant",
+      "target": "services_writeauditlog",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L445",
+      "weight": 1.0
+    },
+    {
+      "source": "services_deactivatevariant",
+      "target": "services_getadminsession",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L461",
+      "weight": 1.0
+    },
+    {
+      "source": "services_deactivatevariant",
+      "target": "services_writeauditlog",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L480",
+      "weight": 1.0
+    }
+  ],
+  "raw_calls": [
+    {
+      "caller_nid": "services_getadminsession",
+      "callee": "getSession",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L52"
+    },
+    {
+      "caller_nid": "services_getadminsession",
+      "callee": "headers",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L52"
+    },
+    {
+      "caller_nid": "services_getadminsession",
+      "callee": "hasRole",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L54"
+    },
+    {
+      "caller_nid": "services_getauthsession",
+      "callee": "getSession",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L59"
+    },
+    {
+      "caller_nid": "services_getauthsession",
+      "callee": "headers",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L59"
+    },
+    {
+      "caller_nid": "services_writeauditlog",
+      "callee": "values",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L74"
+    },
+    {
+      "caller_nid": "services_writeauditlog",
+      "callee": "insert",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L74"
+    },
+    {
+      "caller_nid": "services_listactiveservices",
+      "callee": "getDb",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L97"
+    },
+    {
+      "caller_nid": "services_listactiveservices",
+      "callee": "findMany",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L98"
+    },
+    {
+      "caller_nid": "services_listactiveservices",
+      "callee": "eq",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L99"
+    },
+    {
+      "caller_nid": "services_listactiveservices",
+      "callee": "eq",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L102"
+    },
+    {
+      "caller_nid": "services_listallservices",
+      "callee": "getSession",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L116"
+    },
+    {
+      "caller_nid": "services_listallservices",
+      "callee": "headers",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L116"
+    },
+    {
+      "caller_nid": "services_listallservices",
+      "callee": "hasRole",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L119"
+    },
+    {
+      "caller_nid": "services_listallservices",
+      "callee": "getDb",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L123"
+    },
+    {
+      "caller_nid": "services_listallservices",
+      "callee": "findMany",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L124"
+    },
+    {
+      "caller_nid": "services_createservice",
+      "callee": "getSession",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L141"
+    },
+    {
+      "caller_nid": "services_createservice",
+      "callee": "headers",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L141"
+    },
+    {
+      "caller_nid": "services_createservice",
+      "callee": "safeParse",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L146"
+    },
+    {
+      "caller_nid": "services_createservice",
+      "callee": "map",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L153"
+    },
+    {
+      "caller_nid": "services_createservice",
+      "callee": "getDb",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L161"
+    },
+    {
+      "caller_nid": "services_createservice",
+      "callee": "returning",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L164"
+    },
+    {
+      "caller_nid": "services_createservice",
+      "callee": "values",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L164"
+    },
+    {
+      "caller_nid": "services_createservice",
+      "callee": "insert",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L164"
+    },
+    {
+      "caller_nid": "services_createservice",
+      "callee": "values",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L169"
+    },
+    {
+      "caller_nid": "services_createservice",
+      "callee": "insert",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L169"
+    },
+    {
+      "caller_nid": "services_createservice",
+      "callee": "map",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L170"
+    },
+    {
+      "caller_nid": "services_createservice",
+      "callee": "revalidatePath",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L186"
+    },
+    {
+      "caller_nid": "services_editservice",
+      "callee": "getSession",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L198"
+    },
+    {
+      "caller_nid": "services_editservice",
+      "callee": "headers",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L198"
+    },
+    {
+      "caller_nid": "services_editservice",
+      "callee": "safeParse",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L203"
+    },
+    {
+      "caller_nid": "services_editservice",
+      "callee": "map",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L210"
+    },
+    {
+      "caller_nid": "services_editservice",
+      "callee": "getDb",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L218"
+    },
+    {
+      "caller_nid": "services_editservice",
+      "callee": "findFirst",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L219"
+    },
+    {
+      "caller_nid": "services_editservice",
+      "callee": "eq",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L219"
+    },
+    {
+      "caller_nid": "services_editservice",
+      "callee": "where",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L223"
+    },
+    {
+      "caller_nid": "services_editservice",
+      "callee": "set",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L223"
+    },
+    {
+      "caller_nid": "services_editservice",
+      "callee": "update",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L223"
+    },
+    {
+      "caller_nid": "services_editservice",
+      "callee": "eq",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L230"
+    },
+    {
+      "caller_nid": "services_editservice",
+      "callee": "revalidatePath",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L241"
+    },
+    {
+      "caller_nid": "services_deactivateservice",
+      "callee": "getSession",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L250"
+    },
+    {
+      "caller_nid": "services_deactivateservice",
+      "callee": "headers",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L250"
+    },
+    {
+      "caller_nid": "services_deactivateservice",
+      "callee": "getDb",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L255"
+    },
+    {
+      "caller_nid": "services_deactivateservice",
+      "callee": "findFirst",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L256"
+    },
+    {
+      "caller_nid": "services_deactivateservice",
+      "callee": "eq",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L256"
+    },
+    {
+      "caller_nid": "services_deactivateservice",
+      "callee": "where",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L260"
+    },
+    {
+      "caller_nid": "services_deactivateservice",
+      "callee": "set",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L260"
+    },
+    {
+      "caller_nid": "services_deactivateservice",
+      "callee": "update",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L260"
+    },
+    {
+      "caller_nid": "services_deactivateservice",
+      "callee": "eq",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L263"
+    },
+    {
+      "caller_nid": "services_deactivateservice",
+      "callee": "revalidatePath",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L274"
+    },
+    {
+      "caller_nid": "services_restoreservice",
+      "callee": "getSession",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L283"
+    },
+    {
+      "caller_nid": "services_restoreservice",
+      "callee": "headers",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L283"
+    },
+    {
+      "caller_nid": "services_restoreservice",
+      "callee": "getDb",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L288"
+    },
+    {
+      "caller_nid": "services_restoreservice",
+      "callee": "where",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L289"
+    },
+    {
+      "caller_nid": "services_restoreservice",
+      "callee": "set",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L289"
+    },
+    {
+      "caller_nid": "services_restoreservice",
+      "callee": "update",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L289"
+    },
+    {
+      "caller_nid": "services_restoreservice",
+      "callee": "eq",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L292"
+    },
+    {
+      "caller_nid": "services_restoreservice",
+      "callee": "revalidatePath",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L302"
+    },
+    {
+      "caller_nid": "services_addvariant",
+      "callee": "getSession",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L314"
+    },
+    {
+      "caller_nid": "services_addvariant",
+      "callee": "headers",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L314"
+    },
+    {
+      "caller_nid": "services_addvariant",
+      "callee": "safeParse",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L319"
+    },
+    {
+      "caller_nid": "services_addvariant",
+      "callee": "map",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L326"
+    },
+    {
+      "caller_nid": "services_addvariant",
+      "callee": "getDb",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L334"
+    },
+    {
+      "caller_nid": "services_addvariant",
+      "callee": "findFirst",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L335"
+    },
+    {
+      "caller_nid": "services_addvariant",
+      "callee": "eq",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L335"
+    },
+    {
+      "caller_nid": "services_addvariant",
+      "callee": "returning",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L339"
+    },
+    {
+      "caller_nid": "services_addvariant",
+      "callee": "values",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L339"
+    },
+    {
+      "caller_nid": "services_addvariant",
+      "callee": "insert",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L339"
+    },
+    {
+      "caller_nid": "services_addvariant",
+      "callee": "toFixed",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L345"
+    },
+    {
+      "caller_nid": "services_addvariant",
+      "callee": "revalidatePath",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L357"
+    },
+    {
+      "caller_nid": "services_editvariant",
+      "callee": "getSession",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L369"
+    },
+    {
+      "caller_nid": "services_editvariant",
+      "callee": "headers",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L369"
+    },
+    {
+      "caller_nid": "services_editvariant",
+      "callee": "safeParse",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L374"
+    },
+    {
+      "caller_nid": "services_editvariant",
+      "callee": "map",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L381"
+    },
+    {
+      "caller_nid": "services_editvariant",
+      "callee": "getDb",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L389"
+    },
+    {
+      "caller_nid": "services_editvariant",
+      "callee": "findFirst",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L390"
+    },
+    {
+      "caller_nid": "services_editvariant",
+      "callee": "eq",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L391"
+    },
+    {
+      "caller_nid": "services_editvariant",
+      "callee": "where",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L396"
+    },
+    {
+      "caller_nid": "services_editvariant",
+      "callee": "set",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L396"
+    },
+    {
+      "caller_nid": "services_editvariant",
+      "callee": "update",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L396"
+    },
+    {
+      "caller_nid": "services_editvariant",
+      "callee": "toFixed",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L401"
+    },
+    {
+      "caller_nid": "services_editvariant",
+      "callee": "eq",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L404"
+    },
+    {
+      "caller_nid": "services_editvariant",
+      "callee": "revalidatePath",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L419"
+    },
+    {
+      "caller_nid": "services_restorevariant",
+      "callee": "getSession",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L428"
+    },
+    {
+      "caller_nid": "services_restorevariant",
+      "callee": "headers",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L428"
+    },
+    {
+      "caller_nid": "services_restorevariant",
+      "callee": "getDb",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L433"
+    },
+    {
+      "caller_nid": "services_restorevariant",
+      "callee": "findFirst",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L434"
+    },
+    {
+      "caller_nid": "services_restorevariant",
+      "callee": "eq",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L435"
+    },
+    {
+      "caller_nid": "services_restorevariant",
+      "callee": "where",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L440"
+    },
+    {
+      "caller_nid": "services_restorevariant",
+      "callee": "set",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L440"
+    },
+    {
+      "caller_nid": "services_restorevariant",
+      "callee": "update",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L440"
+    },
+    {
+      "caller_nid": "services_restorevariant",
+      "callee": "eq",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L443"
+    },
+    {
+      "caller_nid": "services_restorevariant",
+      "callee": "revalidatePath",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L454"
+    },
+    {
+      "caller_nid": "services_deactivatevariant",
+      "callee": "getSession",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L463"
+    },
+    {
+      "caller_nid": "services_deactivatevariant",
+      "callee": "headers",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L463"
+    },
+    {
+      "caller_nid": "services_deactivatevariant",
+      "callee": "getDb",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L468"
+    },
+    {
+      "caller_nid": "services_deactivatevariant",
+      "callee": "findFirst",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L469"
+    },
+    {
+      "caller_nid": "services_deactivatevariant",
+      "callee": "eq",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L470"
+    },
+    {
+      "caller_nid": "services_deactivatevariant",
+      "callee": "where",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L475"
+    },
+    {
+      "caller_nid": "services_deactivatevariant",
+      "callee": "set",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L475"
+    },
+    {
+      "caller_nid": "services_deactivatevariant",
+      "callee": "update",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L475"
+    },
+    {
+      "caller_nid": "services_deactivatevariant",
+      "callee": "eq",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L478"
+    },
+    {
+      "caller_nid": "services_deactivatevariant",
+      "callee": "revalidatePath",
+      "source_file": "apps/web/src/app/(protected)/admin/catalog/actions/services.ts",
+      "source_location": "L489"
+    }
+  ]
+}

@@ -1,0 +1,82 @@
+{
+  "nodes": [
+    {
+      "id": "apps_web_src_app_protected_cashier_clients_page_tsx",
+      "label": "page.tsx",
+      "file_type": "code",
+      "source_file": "apps/web/src/app/(protected)/cashier/clients/page.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "page_clientdata",
+      "label": "ClientData()",
+      "file_type": "code",
+      "source_file": "apps/web/src/app/(protected)/cashier/clients/page.tsx",
+      "source_location": "L11"
+    }
+  ],
+  "edges": [
+    {
+      "source": "apps_web_src_app_protected_cashier_clients_page_tsx",
+      "target": "react",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/cashier/clients/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_app_protected_cashier_clients_page_tsx",
+      "target": "server",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/cashier/clients/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_app_protected_cashier_clients_page_tsx",
+      "target": "loading_skeleton",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/cashier/clients/page.tsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_app_protected_cashier_clients_page_tsx",
+      "target": "client_list",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/cashier/clients/page.tsx",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_app_protected_cashier_clients_page_tsx",
+      "target": "actions",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/cashier/clients/page.tsx",
+      "source_location": "L9",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_app_protected_cashier_clients_page_tsx",
+      "target": "page_clientdata",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/cashier/clients/page.tsx",
+      "source_location": "L11",
+      "weight": 1.0
+    }
+  ],
+  "raw_calls": [
+    {
+      "caller_nid": "page_clientdata",
+      "callee": "listClients",
+      "source_file": "apps/web/src/app/(protected)/cashier/clients/page.tsx",
+      "source_location": "L12"
+    }
+  ]
+}

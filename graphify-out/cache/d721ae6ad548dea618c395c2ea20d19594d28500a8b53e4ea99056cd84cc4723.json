@@ -1,0 +1,30 @@
+{
+  "nodes": [
+    {
+      "id": "apps_web_src_app_api_sse_test_route_ts",
+      "label": "route.ts",
+      "file_type": "code",
+      "source_file": "apps/web/src/app/api/sse/test/route.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "route_get",
+      "label": "GET()",
+      "file_type": "code",
+      "source_file": "apps/web/src/app/api/sse/test/route.ts",
+      "source_location": "L17"
+    }
+  ],
+  "edges": [
+    {
+      "source": "apps_web_src_app_api_sse_test_route_ts",
+      "target": "route_get",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/api/sse/test/route.ts",
+      "source_location": "L17",
+      "weight": 1.0
+    }
+  ],
+  "raw_calls": []
+}

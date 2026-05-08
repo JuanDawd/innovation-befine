@@ -1,0 +1,101 @@
+{
+  "nodes": [
+    {
+      "id": "apps_web_src_lib_email_ts",
+      "label": "email.ts",
+      "file_type": "code",
+      "source_file": "apps/web/src/lib/email.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "email_getresend",
+      "label": "getResend()",
+      "file_type": "code",
+      "source_file": "apps/web/src/lib/email.ts",
+      "source_location": "L16"
+    },
+    {
+      "id": "email_sendemail",
+      "label": "sendEmail()",
+      "file_type": "code",
+      "source_file": "apps/web/src/lib/email.ts",
+      "source_location": "L35"
+    }
+  ],
+  "edges": [
+    {
+      "source": "apps_web_src_lib_email_ts",
+      "target": "resend",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/lib/email.ts",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_lib_email_ts",
+      "target": "react",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/lib/email.ts",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_lib_email_ts",
+      "target": "apps_web_src_lib_logger",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/lib/email.ts",
+      "source_location": "L12",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_lib_email_ts",
+      "target": "email_getresend",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/lib/email.ts",
+      "source_location": "L16",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_lib_email_ts",
+      "target": "email_sendemail",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/lib/email.ts",
+      "source_location": "L35",
+      "weight": 1.0
+    },
+    {
+      "source": "email_sendemail",
+      "target": "email_getresend",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/lib/email.ts",
+      "source_location": "L38",
+      "weight": 1.0
+    }
+  ],
+  "raw_calls": [
+    {
+      "caller_nid": "email_sendemail",
+      "callee": "send",
+      "source_file": "apps/web/src/lib/email.ts",
+      "source_location": "L39"
+    },
+    {
+      "caller_nid": "email_sendemail",
+      "callee": "error",
+      "source_file": "apps/web/src/lib/email.ts",
+      "source_location": "L41"
+    },
+    {
+      "caller_nid": "email_sendemail",
+      "callee": "error",
+      "source_file": "apps/web/src/lib/email.ts",
+      "source_location": "L46"
+    }
+  ]
+}

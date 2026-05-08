@@ -1,0 +1,296 @@
+{
+  "nodes": [
+    {
+      "id": "apps_web_src_components_notification_bell_tsx",
+      "label": "notification-bell.tsx",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/notification-bell.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "notification_bell_groupnotifications",
+      "label": "groupNotifications()",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/notification-bell.tsx",
+      "source_location": "L40"
+    },
+    {
+      "id": "notification_bell_handleclick",
+      "label": "handleClick()",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/notification-bell.tsx",
+      "source_location": "L126"
+    },
+    {
+      "id": "notification_bell_handlekey",
+      "label": "handleKey()",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/notification-bell.tsx",
+      "source_location": "L143"
+    },
+    {
+      "id": "notification_bell_handletoggle",
+      "label": "handleToggle()",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/notification-bell.tsx",
+      "source_location": "L151"
+    },
+    {
+      "id": "notification_bell_handlemarkread",
+      "label": "handleMarkRead()",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/notification-bell.tsx",
+      "source_location": "L158"
+    },
+    {
+      "id": "notification_bell_handlemarkallread",
+      "label": "handleMarkAllRead()",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/notification-bell.tsx",
+      "source_location": "L165"
+    },
+    {
+      "id": "notification_bell_handleshowarchived",
+      "label": "handleShowArchived()",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/notification-bell.tsx",
+      "source_location": "L172"
+    },
+    {
+      "id": "notification_bell_handleaction",
+      "label": "handleAction()",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/notification-bell.tsx",
+      "source_location": "L286"
+    }
+  ],
+  "edges": [
+    {
+      "source": "apps_web_src_components_notification_bell_tsx",
+      "target": "react",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/notification-bell.tsx",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_notification_bell_tsx",
+      "target": "next_intl",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/notification-bell.tsx",
+      "source_location": "L12",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_notification_bell_tsx",
+      "target": "link",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/notification-bell.tsx",
+      "source_location": "L13",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_notification_bell_tsx",
+      "target": "lucide_react",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/notification-bell.tsx",
+      "source_location": "L14",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_notification_bell_tsx",
+      "target": "utils",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/notification-bell.tsx",
+      "source_location": "L15",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_notification_bell_tsx",
+      "target": "client",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/notification-bell.tsx",
+      "source_location": "L16",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_notification_bell_tsx",
+      "target": "actions",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/notification-bell.tsx",
+      "source_location": "L17",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_notification_bell_tsx",
+      "target": "notification_bell_groupnotifications",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/notification-bell.tsx",
+      "source_location": "L40",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_notification_bell_tsx",
+      "target": "notification_bell_handleclick",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/notification-bell.tsx",
+      "source_location": "L126",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_notification_bell_tsx",
+      "target": "notification_bell_handlekey",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/notification-bell.tsx",
+      "source_location": "L143",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_notification_bell_tsx",
+      "target": "notification_bell_handletoggle",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/notification-bell.tsx",
+      "source_location": "L151",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_notification_bell_tsx",
+      "target": "notification_bell_handlemarkread",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/notification-bell.tsx",
+      "source_location": "L158",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_notification_bell_tsx",
+      "target": "notification_bell_handlemarkallread",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/notification-bell.tsx",
+      "source_location": "L165",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_notification_bell_tsx",
+      "target": "notification_bell_handleshowarchived",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/notification-bell.tsx",
+      "source_location": "L172",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_notification_bell_tsx",
+      "target": "notification_bell_handleaction",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/notification-bell.tsx",
+      "source_location": "L286",
+      "weight": 1.0
+    }
+  ],
+  "raw_calls": [
+    {
+      "caller_nid": "notification_bell_groupnotifications",
+      "callee": "find",
+      "source_file": "apps/web/src/components/notification-bell.tsx",
+      "source_location": "L44"
+    },
+    {
+      "caller_nid": "notification_bell_groupnotifications",
+      "callee": "push",
+      "source_file": "apps/web/src/components/notification-bell.tsx",
+      "source_location": "L53"
+    },
+    {
+      "caller_nid": "notification_bell_groupnotifications",
+      "callee": "push",
+      "source_file": "apps/web/src/components/notification-bell.tsx",
+      "source_location": "L60"
+    },
+    {
+      "caller_nid": "notification_bell_handleclick",
+      "callee": "contains",
+      "source_file": "apps/web/src/components/notification-bell.tsx",
+      "source_location": "L129"
+    },
+    {
+      "caller_nid": "notification_bell_handleclick",
+      "callee": "contains",
+      "source_file": "apps/web/src/components/notification-bell.tsx",
+      "source_location": "L131"
+    },
+    {
+      "caller_nid": "notification_bell_handleclick",
+      "callee": "setOpen",
+      "source_file": "apps/web/src/components/notification-bell.tsx",
+      "source_location": "L133"
+    },
+    {
+      "caller_nid": "notification_bell_handlekey",
+      "callee": "setOpen",
+      "source_file": "apps/web/src/components/notification-bell.tsx",
+      "source_location": "L144"
+    },
+    {
+      "caller_nid": "notification_bell_handletoggle",
+      "callee": "refresh",
+      "source_file": "apps/web/src/components/notification-bell.tsx",
+      "source_location": "L152"
+    },
+    {
+      "caller_nid": "notification_bell_handletoggle",
+      "callee": "setOpen",
+      "source_file": "apps/web/src/components/notification-bell.tsx",
+      "source_location": "L153"
+    },
+    {
+      "caller_nid": "notification_bell_handlemarkread",
+      "callee": "startTransition",
+      "source_file": "apps/web/src/components/notification-bell.tsx",
+      "source_location": "L159"
+    },
+    {
+      "caller_nid": "notification_bell_handlemarkallread",
+      "callee": "startTransition",
+      "source_file": "apps/web/src/components/notification-bell.tsx",
+      "source_location": "L166"
+    },
+    {
+      "caller_nid": "notification_bell_handleshowarchived",
+      "callee": "setShowArchived",
+      "source_file": "apps/web/src/components/notification-bell.tsx",
+      "source_location": "L173"
+    },
+    {
+      "caller_nid": "notification_bell_handleshowarchived",
+      "callee": "startTransition",
+      "source_file": "apps/web/src/components/notification-bell.tsx",
+      "source_location": "L174"
+    },
+    {
+      "caller_nid": "notification_bell_handleaction",
+      "callee": "onMarkRead",
+      "source_file": "apps/web/src/components/notification-bell.tsx",
+      "source_location": "L287"
+    },
+    {
+      "caller_nid": "notification_bell_handleaction",
+      "callee": "onClose",
+      "source_file": "apps/web/src/components/notification-bell.tsx",
+      "source_location": "L288"
+    }
+  ]
+}

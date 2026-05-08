@@ -1,0 +1,13 @@
+{
+  "nodes": [
+    {
+      "id": "apps_web_src_app_protected_cashier_tickets_history_page_tsx",
+      "label": "page.tsx",
+      "file_type": "code",
+      "source_file": "apps/web/src/app/(protected)/cashier/tickets/history/page.tsx",
+      "source_location": "L1"
+    }
+  ],
+  "edges": [],
+  "raw_calls": []
+}

@@ -1,0 +1,148 @@
+{
+  "nodes": [
+    {
+      "id": "apps_web_src_app_protected_admin_employees_actions_list_employees_ts",
+      "label": "list-employees.ts",
+      "file_type": "code",
+      "source_file": "apps/web/src/app/(protected)/admin/employees/actions/list-employees.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "list_employees_listemployees",
+      "label": "listEmployees()",
+      "file_type": "code",
+      "source_file": "apps/web/src/app/(protected)/admin/employees/actions/list-employees.ts",
+      "source_location": "L33"
+    }
+  ],
+  "edges": [
+    {
+      "source": "apps_web_src_app_protected_admin_employees_actions_list_employees_ts",
+      "target": "headers",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/admin/employees/actions/list-employees.ts",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_app_protected_admin_employees_actions_list_employees_ts",
+      "target": "drizzle_orm",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/admin/employees/actions/list-employees.ts",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_app_protected_admin_employees_actions_list_employees_ts",
+      "target": "auth",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/admin/employees/actions/list-employees.ts",
+      "source_location": "L12",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_app_protected_admin_employees_actions_list_employees_ts",
+      "target": "db",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/admin/employees/actions/list-employees.ts",
+      "source_location": "L13",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_app_protected_admin_employees_actions_list_employees_ts",
+      "target": "schema",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/admin/employees/actions/list-employees.ts",
+      "source_location": "L14",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_app_protected_admin_employees_actions_list_employees_ts",
+      "target": "action_result",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/admin/employees/actions/list-employees.ts",
+      "source_location": "L15",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_app_protected_admin_employees_actions_list_employees_ts",
+      "target": "middleware_helpers",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/admin/employees/actions/list-employees.ts",
+      "source_location": "L16",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_app_protected_admin_employees_actions_list_employees_ts",
+      "target": "list_employees_listemployees",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/(protected)/admin/employees/actions/list-employees.ts",
+      "source_location": "L33",
+      "weight": 1.0
+    }
+  ],
+  "raw_calls": [
+    {
+      "caller_nid": "list_employees_listemployees",
+      "callee": "getSession",
+      "source_file": "apps/web/src/app/(protected)/admin/employees/actions/list-employees.ts",
+      "source_location": "L34"
+    },
+    {
+      "caller_nid": "list_employees_listemployees",
+      "callee": "headers",
+      "source_file": "apps/web/src/app/(protected)/admin/employees/actions/list-employees.ts",
+      "source_location": "L34"
+    },
+    {
+      "caller_nid": "list_employees_listemployees",
+      "callee": "hasRole",
+      "source_file": "apps/web/src/app/(protected)/admin/employees/actions/list-employees.ts",
+      "source_location": "L38"
+    },
+    {
+      "caller_nid": "list_employees_listemployees",
+      "callee": "getDb",
+      "source_file": "apps/web/src/app/(protected)/admin/employees/actions/list-employees.ts",
+      "source_location": "L42"
+    },
+    {
+      "caller_nid": "list_employees_listemployees",
+      "callee": "orderBy",
+      "source_file": "apps/web/src/app/(protected)/admin/employees/actions/list-employees.ts",
+      "source_location": "L43"
+    },
+    {
+      "caller_nid": "list_employees_listemployees",
+      "callee": "innerJoin",
+      "source_file": "apps/web/src/app/(protected)/admin/employees/actions/list-employees.ts",
+      "source_location": "L43"
+    },
+    {
+      "caller_nid": "list_employees_listemployees",
+      "callee": "from",
+      "source_file": "apps/web/src/app/(protected)/admin/employees/actions/list-employees.ts",
+      "source_location": "L43"
+    },
+    {
+      "caller_nid": "list_employees_listemployees",
+      "callee": "select",
+      "source_file": "apps/web/src/app/(protected)/admin/employees/actions/list-employees.ts",
+      "source_location": "L43"
+    },
+    {
+      "caller_nid": "list_employees_listemployees",
+      "callee": "eq",
+      "source_file": "apps/web/src/app/(protected)/admin/employees/actions/list-employees.ts",
+      "source_location": "L59"
+    }
+  ]
+}

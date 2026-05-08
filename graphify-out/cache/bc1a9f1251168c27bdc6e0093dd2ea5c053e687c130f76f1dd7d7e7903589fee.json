@@ -1,0 +1,146 @@
+{
+  "nodes": [
+    {
+      "id": "apps_web_src_components_ui_table_tsx",
+      "label": "table.tsx",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/ui/table.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "table_table",
+      "label": "Table()",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/ui/table.tsx",
+      "source_location": "L7"
+    },
+    {
+      "id": "table_tableheader",
+      "label": "TableHeader()",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/ui/table.tsx",
+      "source_location": "L19"
+    },
+    {
+      "id": "table_tablebody",
+      "label": "TableBody()",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/ui/table.tsx",
+      "source_location": "L23"
+    },
+    {
+      "id": "table_tablefooter",
+      "label": "TableFooter()",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/ui/table.tsx",
+      "source_location": "L33"
+    },
+    {
+      "id": "table_cn",
+      "label": "cn()",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/ui/table.tsx",
+      "source_location": "L47"
+    },
+    {
+      "id": "table_tablecaption",
+      "label": "TableCaption()",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/ui/table.tsx",
+      "source_location": "L79"
+    }
+  ],
+  "edges": [
+    {
+      "source": "apps_web_src_components_ui_table_tsx",
+      "target": "react",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/ui/table.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_ui_table_tsx",
+      "target": "utils",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/ui/table.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_ui_table_tsx",
+      "target": "table_table",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/ui/table.tsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_ui_table_tsx",
+      "target": "table_tableheader",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/ui/table.tsx",
+      "source_location": "L19",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_ui_table_tsx",
+      "target": "table_tablebody",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/ui/table.tsx",
+      "source_location": "L23",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_ui_table_tsx",
+      "target": "table_tablefooter",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/ui/table.tsx",
+      "source_location": "L33",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_ui_table_tsx",
+      "target": "table_cn",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/ui/table.tsx",
+      "source_location": "L47",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_ui_table_tsx",
+      "target": "table_cn",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/ui/table.tsx",
+      "source_location": "L60",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_ui_table_tsx",
+      "target": "table_cn",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/ui/table.tsx",
+      "source_location": "L73",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_ui_table_tsx",
+      "target": "table_tablecaption",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/ui/table.tsx",
+      "source_location": "L79",
+      "weight": 1.0
+    }
+  ],
+  "raw_calls": []
+}

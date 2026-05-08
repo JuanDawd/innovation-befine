@@ -1,0 +1,28 @@
+{
+  "nodes": [
+    {
+      "id": "asset_apple_touch_icon",
+      "label": "Apple touch icon PNG 180\u00d7180 \u2014 Befine icon for iOS home screen",
+      "file_type": "image",
+      "source_file": "docs/assets/apple-touch-icon.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "asset_apple_touch_icon",
+      "target": "asset_favicon_192",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "docs/assets/apple-touch-icon.png",
+      "source_location": null,
+      "weight": 0.85
+    }
+  ],
+  "hyperedges": []
+}

@@ -1,0 +1,195 @@
+{
+  "nodes": [
+    {
+      "id": "golive_checklist",
+      "label": "Go-Live Checklist",
+      "file_type": "document",
+      "source_file": "docs/training/go-live-checklist.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "golive_env_infra",
+      "label": "Go-Live: Environment and Infrastructure Checks",
+      "file_type": "document",
+      "source_file": "docs/training/go-live-checklist.md",
+      "source_location": "\u00a71",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "golive_security",
+      "label": "Go-Live: Security Verification",
+      "file_type": "document",
+      "source_file": "docs/training/go-live-checklist.md",
+      "source_location": "\u00a72",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "golive_staff_accounts",
+      "label": "Go-Live: Staff Accounts Setup",
+      "file_type": "document",
+      "source_file": "docs/training/go-live-checklist.md",
+      "source_location": "\u00a73",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "golive_smoke_test",
+      "label": "Go-Live: Smoke Test on Production",
+      "file_type": "document",
+      "source_file": "docs/training/go-live-checklist.md",
+      "source_location": "\u00a75",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "golive_monitoring",
+      "label": "Go-Live: Monitoring and Alerts",
+      "file_type": "document",
+      "source_file": "docs/training/go-live-checklist.md",
+      "source_location": "\u00a76",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "golive_rollback_plan",
+      "label": "Go-Live: Rollback Plan",
+      "file_type": "document",
+      "source_file": "docs/training/go-live-checklist.md",
+      "source_location": "\u00a78",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "golive_decision",
+      "label": "Go-Live: Go/No-Go Decision Criteria",
+      "file_type": "document",
+      "source_file": "docs/training/go-live-checklist.md",
+      "source_location": "\u00a79",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "golive_checklist",
+      "target": "golive_env_infra",
+      "relation": "contains_section",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/training/go-live-checklist.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "golive_checklist",
+      "target": "golive_security",
+      "relation": "contains_section",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/training/go-live-checklist.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "golive_checklist",
+      "target": "golive_staff_accounts",
+      "relation": "contains_section",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/training/go-live-checklist.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "golive_checklist",
+      "target": "golive_smoke_test",
+      "relation": "contains_section",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/training/go-live-checklist.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "golive_checklist",
+      "target": "golive_monitoring",
+      "relation": "contains_section",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/training/go-live-checklist.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "golive_checklist",
+      "target": "golive_rollback_plan",
+      "relation": "contains_section",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/training/go-live-checklist.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "golive_checklist",
+      "target": "golive_decision",
+      "relation": "contains_section",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/training/go-live-checklist.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "golive_checklist",
+      "target": "training_readme",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/training/go-live-checklist.md",
+      "source_location": "\u00a77",
+      "weight": 1.0
+    },
+    {
+      "source": "golive_rollback_plan",
+      "target": "backup_policy",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/training/go-live-checklist.md",
+      "source_location": "\u00a78",
+      "weight": 1.0
+    },
+    {
+      "source": "golive_checklist",
+      "target": "backup_policy",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/training/go-live-checklist.md",
+      "source_location": "\u00a78",
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": []
+}

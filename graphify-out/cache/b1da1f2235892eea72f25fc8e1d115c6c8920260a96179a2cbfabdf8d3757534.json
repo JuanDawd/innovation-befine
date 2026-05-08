@@ -1,0 +1,183 @@
+{
+  "nodes": [
+    {
+      "id": "testing_readme_doc",
+      "label": "Testing Strategy",
+      "file_type": "document",
+      "source_file": "docs/testing/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "testing_readme_philosophy",
+      "label": "Testing Philosophy (unit + E2E + manual)",
+      "file_type": "document",
+      "source_file": "docs/testing/README.md",
+      "source_location": "Testing philosophy",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "testing_readme_regression_policy",
+      "label": "Regression Policy",
+      "file_type": "document",
+      "source_file": "docs/testing/README.md",
+      "source_location": "Regression policy",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "testing_readme_fixtures",
+      "label": "Test Fixtures and Data",
+      "file_type": "document",
+      "source_file": "docs/testing/README.md",
+      "source_location": "Test data management",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "testing_readme_coverage",
+      "label": "Coverage Requirements (80% financial queries)",
+      "file_type": "document",
+      "source_file": "docs/testing/README.md",
+      "source_location": "Coverage requirements",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "testing_readme_integration",
+      "label": "Cross-Module Integration Tests",
+      "file_type": "document",
+      "source_file": "docs/testing/README.md",
+      "source_location": "Integration tests for cross-module flows",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "testing_readme_doc",
+      "target": "testing_readme_philosophy",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/testing/README.md",
+      "source_location": "Testing philosophy",
+      "weight": 1.0
+    },
+    {
+      "source": "testing_readme_doc",
+      "target": "testing_readme_regression_policy",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/testing/README.md",
+      "source_location": "Regression policy",
+      "weight": 1.0
+    },
+    {
+      "source": "testing_readme_doc",
+      "target": "testing_readme_fixtures",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/testing/README.md",
+      "source_location": "Test data management",
+      "weight": 1.0
+    },
+    {
+      "source": "testing_readme_doc",
+      "target": "testing_readme_coverage",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/testing/README.md",
+      "source_location": "Coverage requirements",
+      "weight": 1.0
+    },
+    {
+      "source": "testing_readme_doc",
+      "target": "testing_readme_integration",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/testing/README.md",
+      "source_location": "Integration tests",
+      "weight": 1.0
+    },
+    {
+      "source": "testing_readme_doc",
+      "target": "phase4a_test_plan_doc",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/testing/README.md",
+      "source_location": "Test plan index",
+      "weight": 1.0
+    },
+    {
+      "source": "testing_readme_doc",
+      "target": "phase7_test_plan_doc",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/testing/README.md",
+      "source_location": "Test plan index",
+      "weight": 1.0
+    },
+    {
+      "source": "testing_readme_doc",
+      "target": "security_test_plan_doc",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/testing/README.md",
+      "source_location": "Test plan index",
+      "weight": 1.0
+    },
+    {
+      "source": "testing_readme_doc",
+      "target": "rbac_matrix_doc",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/testing/README.md",
+      "source_location": "Test plan index",
+      "weight": 1.0
+    },
+    {
+      "source": "testing_readme_doc",
+      "target": "concurrency_test_plan_doc",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/testing/README.md",
+      "source_location": "Test plan index",
+      "weight": 1.0
+    },
+    {
+      "source": "testing_readme_coverage",
+      "target": "standards_testing_policy",
+      "relation": "elaborates",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/testing/README.md",
+      "source_location": "Coverage requirements",
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": []
+}

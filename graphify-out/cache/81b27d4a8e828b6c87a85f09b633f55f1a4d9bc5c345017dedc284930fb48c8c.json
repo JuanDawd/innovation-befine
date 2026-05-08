@@ -1,0 +1,132 @@
+{
+  "nodes": [
+    {
+      "id": "apps_web_src_lib_db_index_ts",
+      "label": "index.ts",
+      "file_type": "code",
+      "source_file": "apps/web/src/lib/db/index.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "index_getdatabaseurl",
+      "label": "getDatabaseUrl()",
+      "file_type": "code",
+      "source_file": "apps/web/src/lib/db/index.ts",
+      "source_location": "L3"
+    },
+    {
+      "id": "index_getdb",
+      "label": "getDb()",
+      "file_type": "code",
+      "source_file": "apps/web/src/lib/db/index.ts",
+      "source_location": "L15"
+    },
+    {
+      "id": "index_healthcheck",
+      "label": "healthCheck()",
+      "file_type": "code",
+      "source_file": "apps/web/src/lib/db/index.ts",
+      "source_location": "L22"
+    }
+  ],
+  "edges": [
+    {
+      "source": "apps_web_src_lib_db_index_ts",
+      "target": "db",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/lib/db/index.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_lib_db_index_ts",
+      "target": "index_getdatabaseurl",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/lib/db/index.ts",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_lib_db_index_ts",
+      "target": "index_getdb",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/lib/db/index.ts",
+      "source_location": "L15",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_lib_db_index_ts",
+      "target": "index_healthcheck",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/lib/db/index.ts",
+      "source_location": "L22",
+      "weight": 1.0
+    },
+    {
+      "source": "index_getdb",
+      "target": "index_getdatabaseurl",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/lib/db/index.ts",
+      "source_location": "L17",
+      "weight": 1.0
+    },
+    {
+      "source": "index_healthcheck",
+      "target": "index_getdb",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/lib/db/index.ts",
+      "source_location": "L25",
+      "weight": 1.0
+    }
+  ],
+  "raw_calls": [
+    {
+      "caller_nid": "index_getdb",
+      "callee": "createDb",
+      "source_file": "apps/web/src/lib/db/index.ts",
+      "source_location": "L17"
+    },
+    {
+      "caller_nid": "index_healthcheck",
+      "callee": "now",
+      "source_file": "apps/web/src/lib/db/index.ts",
+      "source_location": "L23"
+    },
+    {
+      "caller_nid": "index_healthcheck",
+      "callee": "execute",
+      "source_file": "apps/web/src/lib/db/index.ts",
+      "source_location": "L26"
+    },
+    {
+      "caller_nid": "index_healthcheck",
+      "callee": "round",
+      "source_file": "apps/web/src/lib/db/index.ts",
+      "source_location": "L27"
+    },
+    {
+      "caller_nid": "index_healthcheck",
+      "callee": "now",
+      "source_file": "apps/web/src/lib/db/index.ts",
+      "source_location": "L27"
+    },
+    {
+      "caller_nid": "index_healthcheck",
+      "callee": "round",
+      "source_file": "apps/web/src/lib/db/index.ts",
+      "source_location": "L29"
+    },
+    {
+      "caller_nid": "index_healthcheck",
+      "callee": "now",
+      "source_file": "apps/web/src/lib/db/index.ts",
+      "source_location": "L29"
+    }
+  ]
+}

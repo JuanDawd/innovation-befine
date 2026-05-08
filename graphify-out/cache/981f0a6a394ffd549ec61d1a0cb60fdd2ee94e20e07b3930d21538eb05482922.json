@@ -1,0 +1,61 @@
+{
+  "nodes": [
+    {
+      "id": "apps_web_src_app_api_realtime_channel_route_ts",
+      "label": "route.ts",
+      "file_type": "code",
+      "source_file": "apps/web/src/app/api/realtime/[channel]/route.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "route_get",
+      "label": "GET()",
+      "file_type": "code",
+      "source_file": "apps/web/src/app/api/realtime/[channel]/route.ts",
+      "source_location": "L14"
+    }
+  ],
+  "edges": [
+    {
+      "source": "apps_web_src_app_api_realtime_channel_route_ts",
+      "target": "server",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/api/realtime/[channel]/route.ts",
+      "source_location": "L9",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_app_api_realtime_channel_route_ts",
+      "target": "types",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/api/realtime/[channel]/route.ts",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_app_api_realtime_channel_route_ts",
+      "target": "route_get",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/api/realtime/[channel]/route.ts",
+      "source_location": "L14",
+      "weight": 1.0
+    }
+  ],
+  "raw_calls": [
+    {
+      "caller_nid": "route_get",
+      "callee": "includes",
+      "source_file": "apps/web/src/app/api/realtime/[channel]/route.ts",
+      "source_location": "L17"
+    },
+    {
+      "caller_nid": "route_get",
+      "callee": "createSSEHandler",
+      "source_file": "apps/web/src/app/api/realtime/[channel]/route.ts",
+      "source_location": "L21"
+    }
+  ]
+}

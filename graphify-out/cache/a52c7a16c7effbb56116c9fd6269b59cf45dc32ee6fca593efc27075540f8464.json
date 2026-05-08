@@ -1,0 +1,442 @@
+{
+  "nodes": [
+    {
+      "id": "phase04a_tickets",
+      "label": "Phase 4A \u2014 Tickets and checkout",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-04a-tickets-checkout.md",
+      "source_location": "line 1",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t033_tickets_table",
+      "label": "T033 \u2014 Tickets table migration (+ checkout_sessions)",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-04a-tickets-checkout.md",
+      "source_location": "line 9",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t034_ticket_items_table",
+      "label": "T034 \u2014 Ticket items table migration",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-04a-tickets-checkout.md",
+      "source_location": "line 38",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t035_ticket_creation",
+      "label": "T035 \u2014 Ticket creation (stylist/secretary/cashier)",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-04a-tickets-checkout.md",
+      "source_location": "line 54",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t036_cashier_dashboard",
+      "label": "T036 \u2014 Cashier dashboard with live updates",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-04a-tickets-checkout.md",
+      "source_location": "line 83",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t037_ticket_transitions",
+      "label": "T037 \u2014 Ticket status transitions and permissions",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-04a-tickets-checkout.md",
+      "source_location": "line 109",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t038_checkout_flow",
+      "label": "T038 \u2014 Checkout flow (cashier) \u2014 batch checkout",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-04a-tickets-checkout.md",
+      "source_location": "line 131",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t039_split_payment",
+      "label": "T039 \u2014 Split payment at checkout",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-04a-tickets-checkout.md",
+      "source_location": "line 173",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t040_price_override",
+      "label": "T040 \u2014 Price override at checkout (cashier)",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-04a-tickets-checkout.md",
+      "source_location": "line 195",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t041_edit_approval",
+      "label": "T041 \u2014 Edit approval flow (secretary/stylist \u2192 cashier)",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-04a-tickets-checkout.md",
+      "source_location": "line 211",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t042_ticket_reopen",
+      "label": "T042 \u2014 Ticket reopen and earnings recompute flag",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-04a-tickets-checkout.md",
+      "source_location": "line 232",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t048_notifications",
+      "label": "T048 \u2014 In-app notification system (MVP)",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-04a-tickets-checkout.md",
+      "source_location": "line 250",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t092_ticket_history",
+      "label": "T092 \u2014 Closed ticket history view (admin/cashier)",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-04a-tickets-checkout.md",
+      "source_location": "line 278",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t093_admin_home",
+      "label": "T093 \u2014 Admin home / day-at-a-glance screen",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-04a-tickets-checkout.md",
+      "source_location": "line 297",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_ticket_lifecycle",
+      "label": "Ticket lifecycle (logged\u2192awaiting_payment\u2192closed/reopened/paid_offline)",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-04a-tickets-checkout.md",
+      "source_location": "line 9",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "phase04a_tickets",
+      "target": "t033_tickets_table",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-04a-tickets-checkout.md",
+      "source_location": "line 9",
+      "weight": 1.0
+    },
+    {
+      "source": "phase04a_tickets",
+      "target": "t036_cashier_dashboard",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-04a-tickets-checkout.md",
+      "source_location": "line 83",
+      "weight": 1.0
+    },
+    {
+      "source": "phase04a_tickets",
+      "target": "t038_checkout_flow",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-04a-tickets-checkout.md",
+      "source_location": "line 131",
+      "weight": 1.0
+    },
+    {
+      "source": "phase04a_tickets",
+      "target": "t048_notifications",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-04a-tickets-checkout.md",
+      "source_location": "line 250",
+      "weight": 1.0
+    },
+    {
+      "source": "t033_tickets_table",
+      "target": "t019_business_day",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-04a-tickets-checkout.md",
+      "source_location": "line 12",
+      "weight": 1.0
+    },
+    {
+      "source": "t033_tickets_table",
+      "target": "t029_clients_table",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-04a-tickets-checkout.md",
+      "source_location": "line 12",
+      "weight": 1.0
+    },
+    {
+      "source": "t034_ticket_items_table",
+      "target": "t033_tickets_table",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-04a-tickets-checkout.md",
+      "source_location": "line 41",
+      "weight": 1.0
+    },
+    {
+      "source": "t034_ticket_items_table",
+      "target": "t023_services_table",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-04a-tickets-checkout.md",
+      "source_location": "line 41",
+      "weight": 1.0
+    },
+    {
+      "source": "t035_ticket_creation",
+      "target": "t034_ticket_items_table",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-04a-tickets-checkout.md",
+      "source_location": "line 57",
+      "weight": 1.0
+    },
+    {
+      "source": "t035_ticket_creation",
+      "target": "t031_guest_flow",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-04a-tickets-checkout.md",
+      "source_location": "line 57",
+      "weight": 1.0
+    },
+    {
+      "source": "t035_ticket_creation",
+      "target": "t028_catalog_read",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-04a-tickets-checkout.md",
+      "source_location": "line 57",
+      "weight": 1.0
+    },
+    {
+      "source": "t035_ticket_creation",
+      "target": "concept_realtime_sse_abstraction",
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-04a-tickets-checkout.md",
+      "source_location": "line 77",
+      "weight": 1.0
+    },
+    {
+      "source": "t036_cashier_dashboard",
+      "target": "t035_ticket_creation",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-04a-tickets-checkout.md",
+      "source_location": "line 86",
+      "weight": 1.0
+    },
+    {
+      "source": "t036_cashier_dashboard",
+      "target": "t098_realtime_sse",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-04a-tickets-checkout.md",
+      "source_location": "line 86",
+      "weight": 1.0
+    },
+    {
+      "source": "t037_ticket_transitions",
+      "target": "t035_ticket_creation",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-04a-tickets-checkout.md",
+      "source_location": "line 112",
+      "weight": 1.0
+    },
+    {
+      "source": "t037_ticket_transitions",
+      "target": "concept_ticket_lifecycle",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-04a-tickets-checkout.md",
+      "source_location": "line 109",
+      "weight": 1.0
+    },
+    {
+      "source": "t038_checkout_flow",
+      "target": "t037_ticket_transitions",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-04a-tickets-checkout.md",
+      "source_location": "line 134",
+      "weight": 1.0
+    },
+    {
+      "source": "t039_split_payment",
+      "target": "t038_checkout_flow",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-04a-tickets-checkout.md",
+      "source_location": "line 176",
+      "weight": 1.0
+    },
+    {
+      "source": "t039_split_payment",
+      "target": "concept_payment_method_enum",
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-04a-tickets-checkout.md",
+      "source_location": "line 183",
+      "weight": 1.0
+    },
+    {
+      "source": "t040_price_override",
+      "target": "t038_checkout_flow",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-04a-tickets-checkout.md",
+      "source_location": "line 198",
+      "weight": 1.0
+    },
+    {
+      "source": "t041_edit_approval",
+      "target": "t035_ticket_creation",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-04a-tickets-checkout.md",
+      "source_location": "line 214",
+      "weight": 1.0
+    },
+    {
+      "source": "t041_edit_approval",
+      "target": "t048_notifications",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-04a-tickets-checkout.md",
+      "source_location": "line 214",
+      "weight": 1.0
+    },
+    {
+      "source": "t042_ticket_reopen",
+      "target": "t038_checkout_flow",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-04a-tickets-checkout.md",
+      "source_location": "line 235",
+      "weight": 1.0
+    },
+    {
+      "source": "t048_notifications",
+      "target": "t098_realtime_sse",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-04a-tickets-checkout.md",
+      "source_location": "line 253",
+      "weight": 1.0
+    },
+    {
+      "source": "t092_ticket_history",
+      "target": "t038_checkout_flow",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-04a-tickets-checkout.md",
+      "source_location": "line 281",
+      "weight": 1.0
+    },
+    {
+      "source": "t093_admin_home",
+      "target": "t036_cashier_dashboard",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-04a-tickets-checkout.md",
+      "source_location": "line 300",
+      "weight": 1.0
+    },
+    {
+      "source": "t093_admin_home",
+      "target": "t038_checkout_flow",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-04a-tickets-checkout.md",
+      "source_location": "line 300",
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": []
+}

@@ -1,0 +1,34 @@
+{
+  "nodes": [
+    {
+      "id": "asset_befine_icon_svg",
+      "label": "Befine icon SVG \u2014 512\u00d7512 abstract 'I' letterform mark, pink #E9408E on black circle",
+      "file_type": "image",
+      "source_file": "docs/assets/befine-icon.svg",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [],
+  "hyperedges": [
+    {
+      "id": "hyperedge_brand_assets_pwa",
+      "label": "Brand assets (SVG icon, PNG favicons, touch icon) collectively constitute PWA/browser identity",
+      "nodes": [
+        "asset_befine_icon_svg",
+        "asset_favicon_192",
+        "asset_favicon_512",
+        "asset_apple_touch_icon",
+        "t082_pwa_manifest",
+        "t105_brand_assets"
+      ],
+      "relation": "constitutes_brand_identity_system",
+      "confidence": "INFERRED",
+      "confidence_score": 0.88,
+      "source_file": "docs/assets/befine-icon.svg"
+    }
+  ]
+}

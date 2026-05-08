@@ -1,0 +1,208 @@
+{
+  "nodes": [
+    {
+      "id": "apps_web_src_components_login_form_tsx",
+      "label": "login-form.tsx",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/login-form.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "login_form_onsubmit",
+      "label": "onSubmit()",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/login-form.tsx",
+      "source_location": "L30"
+    }
+  ],
+  "edges": [
+    {
+      "source": "apps_web_src_components_login_form_tsx",
+      "target": "react",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/login-form.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_login_form_tsx",
+      "target": "react_hook_form",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/login-form.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_login_form_tsx",
+      "target": "zod",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/login-form.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_login_form_tsx",
+      "target": "next_intl",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/login-form.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_login_form_tsx",
+      "target": "navigation",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/login-form.tsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_login_form_tsx",
+      "target": "link",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/login-form.tsx",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_login_form_tsx",
+      "target": "lucide_react",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/login-form.tsx",
+      "source_location": "L9",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_login_form_tsx",
+      "target": "types",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/login-form.tsx",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_login_form_tsx",
+      "target": "types",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/login-form.tsx",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_login_form_tsx",
+      "target": "button",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/login-form.tsx",
+      "source_location": "L12",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_login_form_tsx",
+      "target": "input",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/login-form.tsx",
+      "source_location": "L13",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_login_form_tsx",
+      "target": "auth_client",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/login-form.tsx",
+      "source_location": "L14",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_login_form_tsx",
+      "target": "middleware_helpers",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/login-form.tsx",
+      "source_location": "L15",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_login_form_tsx",
+      "target": "login_form_onsubmit",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/login-form.tsx",
+      "source_location": "L30",
+      "weight": 1.0
+    }
+  ],
+  "raw_calls": [
+    {
+      "caller_nid": "login_form_onsubmit",
+      "callee": "setServerError",
+      "source_file": "apps/web/src/components/login-form.tsx",
+      "source_location": "L31"
+    },
+    {
+      "caller_nid": "login_form_onsubmit",
+      "callee": "email",
+      "source_file": "apps/web/src/components/login-form.tsx",
+      "source_location": "L33"
+    },
+    {
+      "caller_nid": "login_form_onsubmit",
+      "callee": "setServerError",
+      "source_file": "apps/web/src/components/login-form.tsx",
+      "source_location": "L41"
+    },
+    {
+      "caller_nid": "login_form_onsubmit",
+      "callee": "t",
+      "source_file": "apps/web/src/components/login-form.tsx",
+      "source_location": "L41"
+    },
+    {
+      "caller_nid": "login_form_onsubmit",
+      "callee": "setServerError",
+      "source_file": "apps/web/src/components/login-form.tsx",
+      "source_location": "L43"
+    },
+    {
+      "caller_nid": "login_form_onsubmit",
+      "callee": "t",
+      "source_file": "apps/web/src/components/login-form.tsx",
+      "source_location": "L43"
+    },
+    {
+      "caller_nid": "login_form_onsubmit",
+      "callee": "setServerError",
+      "source_file": "apps/web/src/components/login-form.tsx",
+      "source_location": "L45"
+    },
+    {
+      "caller_nid": "login_form_onsubmit",
+      "callee": "t",
+      "source_file": "apps/web/src/components/login-form.tsx",
+      "source_location": "L45"
+    },
+    {
+      "caller_nid": "login_form_onsubmit",
+      "callee": "push",
+      "source_file": "apps/web/src/components/login-form.tsx",
+      "source_location": "L52"
+    },
+    {
+      "caller_nid": "login_form_onsubmit",
+      "callee": "refresh",
+      "source_file": "apps/web/src/components/login-form.tsx",
+      "source_location": "L53"
+    }
+  ]
+}

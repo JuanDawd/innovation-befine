@@ -1,0 +1,216 @@
+{
+  "nodes": [
+    {
+      "id": "phase08_analytics",
+      "label": "Phase 8 \u2014 Analytics",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-08-analytics.md",
+      "source_location": "line 1",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t071_analytics_queries",
+      "label": "T071 \u2014 Analytics data queries",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-08-analytics.md",
+      "source_location": "line 7",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t072_daily_revenue",
+      "label": "T072 \u2014 Daily revenue dashboard",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-08-analytics.md",
+      "source_location": "line 28",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t073_weekly_monthly_revenue",
+      "label": "T073 \u2014 Weekly and monthly revenue dashboards",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-08-analytics.md",
+      "source_location": "line 53",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t074_employee_performance",
+      "label": "T074 \u2014 Per-employee performance views",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-08-analytics.md",
+      "source_location": "line 75",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t075_analytics_indexes",
+      "label": "T075 \u2014 Analytics database indexes",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-08-analytics.md",
+      "source_location": "line 96",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t101_analytics_seed",
+      "label": "T101 \u2014 Analytics seed script (6 months realistic data)",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-08-analytics.md",
+      "source_location": "line 114",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t076_csv_export",
+      "label": "T076 \u2014 CSV export (stretch)",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-08-analytics.md",
+      "source_location": "line 133",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t107_performance_testing",
+      "label": "T107 \u2014 Performance testing",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-08-analytics.md",
+      "source_location": "line 151",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "phase08_analytics",
+      "target": "t071_analytics_queries",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-08-analytics.md",
+      "source_location": "line 7",
+      "weight": 1.0
+    },
+    {
+      "source": "t071_analytics_queries",
+      "target": "t038_checkout_flow",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-08-analytics.md",
+      "source_location": "line 10",
+      "weight": 1.0
+    },
+    {
+      "source": "t071_analytics_queries",
+      "target": "t066_payouts_table",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-08-analytics.md",
+      "source_location": "line 10",
+      "weight": 1.0
+    },
+    {
+      "source": "t072_daily_revenue",
+      "target": "t071_analytics_queries",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-08-analytics.md",
+      "source_location": "line 31",
+      "weight": 1.0
+    },
+    {
+      "source": "t073_weekly_monthly_revenue",
+      "target": "t071_analytics_queries",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-08-analytics.md",
+      "source_location": "line 56",
+      "weight": 1.0
+    },
+    {
+      "source": "t074_employee_performance",
+      "target": "t071_analytics_queries",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-08-analytics.md",
+      "source_location": "line 78",
+      "weight": 1.0
+    },
+    {
+      "source": "t075_analytics_indexes",
+      "target": "t071_analytics_queries",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-08-analytics.md",
+      "source_location": "line 99",
+      "weight": 1.0
+    },
+    {
+      "source": "t101_analytics_seed",
+      "target": "t071_analytics_queries",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-08-analytics.md",
+      "source_location": "line 117",
+      "weight": 1.0
+    },
+    {
+      "source": "t076_csv_export",
+      "target": "t071_analytics_queries",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-08-analytics.md",
+      "source_location": "line 136",
+      "weight": 1.0
+    },
+    {
+      "source": "t107_performance_testing",
+      "target": "t101_analytics_seed",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-08-analytics.md",
+      "source_location": "line 154",
+      "weight": 1.0
+    },
+    {
+      "source": "t072_daily_revenue",
+      "target": "t093_admin_home",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.65,
+      "source_file": "docs/Business/tasks/phase-08-analytics.md",
+      "source_location": null,
+      "weight": 0.65
+    }
+  ],
+  "hyperedges": []
+}

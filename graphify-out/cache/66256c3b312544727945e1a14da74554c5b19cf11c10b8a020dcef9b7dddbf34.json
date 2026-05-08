@@ -1,0 +1,142 @@
+{
+  "nodes": [
+    {
+      "id": "phase4a_test_plan_doc",
+      "label": "Phase 4A Test Plan \u2014 Checkout and Tickets",
+      "file_type": "document",
+      "source_file": "docs/testing/phase-04a-test-plan.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "phase4a_test_happy_path",
+      "label": "TS-4A-001: Full Ticket Lifecycle Happy Path",
+      "file_type": "document",
+      "source_file": "docs/testing/phase-04a-test-plan.md",
+      "source_location": "TS-4A-001",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "phase4a_test_financial_accuracy",
+      "label": "Financial Accuracy Tests (commission, split, rounding)",
+      "file_type": "document",
+      "source_file": "docs/testing/phase-04a-test-plan.md",
+      "source_location": "4. Financial accuracy",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "phase4a_test_concurrent",
+      "label": "Concurrent Checkout Tests",
+      "file_type": "document",
+      "source_file": "docs/testing/phase-04a-test-plan.md",
+      "source_location": "5. Concurrent access",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "phase4a_test_idempotency",
+      "label": "Idempotency Key Tests (TS-4A-023)",
+      "file_type": "document",
+      "source_file": "docs/testing/phase-04a-test-plan.md",
+      "source_location": "TS-4A-023",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "phase4a_test_plan_doc",
+      "target": "phase4a_test_happy_path",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/testing/phase-04a-test-plan.md",
+      "source_location": "TS-4A-001",
+      "weight": 1.0
+    },
+    {
+      "source": "phase4a_test_plan_doc",
+      "target": "phase4a_test_financial_accuracy",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/testing/phase-04a-test-plan.md",
+      "source_location": "4. Financial accuracy",
+      "weight": 1.0
+    },
+    {
+      "source": "phase4a_test_plan_doc",
+      "target": "phase4a_test_concurrent",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/testing/phase-04a-test-plan.md",
+      "source_location": "5. Concurrent access",
+      "weight": 1.0
+    },
+    {
+      "source": "phase4a_test_plan_doc",
+      "target": "phase4a_test_idempotency",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/testing/phase-04a-test-plan.md",
+      "source_location": "TS-4A-023",
+      "weight": 1.0
+    },
+    {
+      "source": "phase4a_test_plan_doc",
+      "target": "project_plan_phase4a",
+      "relation": "tests",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/testing/phase-04a-test-plan.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "phase4a_test_financial_accuracy",
+      "target": "standards_bankers_rounding",
+      "relation": "verifies",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/testing/phase-04a-test-plan.md",
+      "source_location": "TS-4A-033",
+      "weight": 1.0
+    },
+    {
+      "source": "phase4a_test_concurrent",
+      "target": "concurrency_rc01",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/testing/phase-04a-test-plan.md",
+      "source_location": "5. Concurrent access",
+      "weight": 1.0
+    },
+    {
+      "source": "phase4a_test_idempotency",
+      "target": "standards_api_idempotency",
+      "relation": "verifies",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/testing/phase-04a-test-plan.md",
+      "source_location": "TS-4A-023",
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": []
+}

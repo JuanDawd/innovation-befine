@@ -1,0 +1,245 @@
+{
+  "nodes": [
+    {
+      "id": "swe_review",
+      "label": "Senior Software Engineer Review",
+      "file_type": "document",
+      "source_file": "docs/research/senior_software_engineer.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "swe_f1_testing",
+      "label": "SWE F1: Missing Testing Infrastructure (Critical)",
+      "file_type": "document",
+      "source_file": "docs/research/senior_software_engineer.md",
+      "source_location": "\u00a7F1",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "swe_f2_cicd",
+      "label": "SWE F2: Missing CI/CD Pipeline (Critical)",
+      "file_type": "document",
+      "source_file": "docs/research/senior_software_engineer.md",
+      "source_location": "\u00a7F2",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "swe_f3_money_format",
+      "label": "SWE F3: Money Storage Format Undecided (Critical)",
+      "file_type": "document",
+      "source_file": "docs/research/senior_software_engineer.md",
+      "source_location": "\u00a7F3",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "swe_f6_realtime_abstraction",
+      "label": "SWE F6: No Real-time Abstraction Layer (High)",
+      "file_type": "document",
+      "source_file": "docs/research/senior_software_engineer.md",
+      "source_location": "\u00a7F6",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "swe_f7_sentry_early",
+      "label": "SWE F7: Move Sentry to Phase 0 (High)",
+      "file_type": "document",
+      "source_file": "docs/research/senior_software_engineer.md",
+      "source_location": "\u00a7F7",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "swe_tech_stack_review",
+      "label": "SWE Tech Stack Review (shadcn/ui, TanStack Query, Zustand, RHF, date-fns)",
+      "file_type": "document",
+      "source_file": "docs/research/senior_software_engineer.md",
+      "source_location": "\u00a7Tech stack review",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "swe_baseui_risk",
+      "label": "Base Web (baseui) High Risk, Maintenance Decline",
+      "file_type": "document",
+      "source_file": "docs/research/senior_software_engineer.md",
+      "source_location": "\u00a7Base UI",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "swe_review",
+      "target": "swe_f1_testing",
+      "relation": "contains_finding",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/research/senior_software_engineer.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "swe_review",
+      "target": "swe_f2_cicd",
+      "relation": "contains_finding",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/research/senior_software_engineer.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "swe_review",
+      "target": "swe_f3_money_format",
+      "relation": "contains_finding",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/research/senior_software_engineer.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "swe_review",
+      "target": "swe_f6_realtime_abstraction",
+      "relation": "contains_finding",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/research/senior_software_engineer.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "swe_review",
+      "target": "swe_f7_sentry_early",
+      "relation": "contains_finding",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/research/senior_software_engineer.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "swe_review",
+      "target": "swe_tech_stack_review",
+      "relation": "contains_section",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/research/senior_software_engineer.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "swe_tech_stack_review",
+      "target": "swe_baseui_risk",
+      "relation": "contains_finding",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/research/senior_software_engineer.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "swe_baseui_risk",
+      "target": "ui_baseui_failed",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.92,
+      "source_file": "docs/research/senior_software_engineer.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "swe_f6_realtime_abstraction",
+      "target": "realtime_migration_postmvp",
+      "relation": "motivates",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "docs/research/senior_software_engineer.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "swe_tech_stack_review",
+      "target": "frontend_tanstack_query",
+      "relation": "recommends",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/research/senior_software_engineer.md",
+      "source_location": "\u00a7Missing from stack",
+      "weight": 1.0
+    },
+    {
+      "source": "swe_tech_stack_review",
+      "target": "frontend_zustand",
+      "relation": "recommends",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/research/senior_software_engineer.md",
+      "source_location": "\u00a7Missing from stack",
+      "weight": 1.0
+    },
+    {
+      "source": "swe_tech_stack_review",
+      "target": "frontend_rhf_zod",
+      "relation": "recommends",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/research/senior_software_engineer.md",
+      "source_location": "\u00a7Missing form handling",
+      "weight": 1.0
+    },
+    {
+      "source": "swe_tech_stack_review",
+      "target": "frontend_datefns",
+      "relation": "recommends",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/research/senior_software_engineer.md",
+      "source_location": "\u00a7Missing date/time library",
+      "weight": 1.0
+    },
+    {
+      "source": "swe_f1_testing",
+      "target": "progress_phase_0a",
+      "relation": "resulted_in_task_in",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "docs/research/senior_software_engineer.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "swe_f2_cicd",
+      "target": "progress_phase_0a",
+      "relation": "resulted_in_task_in",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "docs/research/senior_software_engineer.md",
+      "source_location": null,
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": []
+}

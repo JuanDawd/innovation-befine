@@ -1,0 +1,163 @@
+{
+  "nodes": [
+    {
+      "id": "phase04b_cloth_batches",
+      "label": "Phase 4B \u2014 Cloth batches",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-04b-cloth-batches.md",
+      "source_location": "line 1",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t044_cloth_batches_table",
+      "label": "T044 \u2014 Cloth batches table migration",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-04b-cloth-batches.md",
+      "source_location": "line 9",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t045_batch_creation_ui",
+      "label": "T045 \u2014 Cloth batch creation UI (secretary/admin)",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-04b-cloth-batches.md",
+      "source_location": "line 36",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t046_clothier_batch_view",
+      "label": "T046 \u2014 Clothier batch view and piece completion",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-04b-cloth-batches.md",
+      "source_location": "line 54",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t047_piece_approval",
+      "label": "T047 \u2014 Piece approval flow (secretary/admin)",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-04b-cloth-batches.md",
+      "source_location": "line 78",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_batch_piece_lifecycle",
+      "label": "Batch piece lifecycle (pending\u2192done_pending_approval\u2192approved)",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-04b-cloth-batches.md",
+      "source_location": "line 9",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "phase04b_cloth_batches",
+      "target": "t044_cloth_batches_table",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-04b-cloth-batches.md",
+      "source_location": "line 9",
+      "weight": 1.0
+    },
+    {
+      "source": "t044_cloth_batches_table",
+      "target": "t019_business_day",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-04b-cloth-batches.md",
+      "source_location": "line 12",
+      "weight": 1.0
+    },
+    {
+      "source": "t044_cloth_batches_table",
+      "target": "t026_cloth_pieces_table",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-04b-cloth-batches.md",
+      "source_location": "line 12",
+      "weight": 1.0
+    },
+    {
+      "source": "t045_batch_creation_ui",
+      "target": "t044_cloth_batches_table",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-04b-cloth-batches.md",
+      "source_location": "line 39",
+      "weight": 1.0
+    },
+    {
+      "source": "t045_batch_creation_ui",
+      "target": "t028_catalog_read",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-04b-cloth-batches.md",
+      "source_location": "line 39",
+      "weight": 1.0
+    },
+    {
+      "source": "t045_batch_creation_ui",
+      "target": "t048_notifications",
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-04b-cloth-batches.md",
+      "source_location": "line 47",
+      "weight": 1.0
+    },
+    {
+      "source": "t046_clothier_batch_view",
+      "target": "t045_batch_creation_ui",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-04b-cloth-batches.md",
+      "source_location": "line 57",
+      "weight": 1.0
+    },
+    {
+      "source": "t047_piece_approval",
+      "target": "t046_clothier_batch_view",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-04b-cloth-batches.md",
+      "source_location": "line 81",
+      "weight": 1.0
+    },
+    {
+      "source": "t044_cloth_batches_table",
+      "target": "concept_batch_piece_lifecycle",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-04b-cloth-batches.md",
+      "source_location": "line 9",
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": []
+}

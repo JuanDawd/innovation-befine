@@ -1,0 +1,512 @@
+{
+  "nodes": [
+    {
+      "id": "project_plan_innovation_befine",
+      "label": "Project Plan \u2014 Innovation Befine",
+      "file_type": "document",
+      "source_file": "docs/project-plan.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "project_plan_phase0",
+      "label": "Phase 0 \u2014 Foundation",
+      "file_type": "document",
+      "source_file": "docs/project-plan.md",
+      "source_location": "Phase 0",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "project_plan_phase1",
+      "label": "Phase 1 \u2014 Identity, Employees, Business Day",
+      "file_type": "document",
+      "source_file": "docs/project-plan.md",
+      "source_location": "Phase 1",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "project_plan_phase2",
+      "label": "Phase 2 \u2014 Catalog and Pricing",
+      "file_type": "document",
+      "source_file": "docs/project-plan.md",
+      "source_location": "Phase 2",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "project_plan_phase3",
+      "label": "Phase 3 \u2014 Client Records",
+      "file_type": "document",
+      "source_file": "docs/project-plan.md",
+      "source_location": "Phase 3",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "project_plan_phase4a",
+      "label": "Phase 4A \u2014 Tickets and Checkout",
+      "file_type": "document",
+      "source_file": "docs/project-plan.md",
+      "source_location": "Phase 4A",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "project_plan_phase4b",
+      "label": "Phase 4B \u2014 Cloth Batches",
+      "file_type": "document",
+      "source_file": "docs/project-plan.md",
+      "source_location": "Phase 4B",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "project_plan_phase5",
+      "label": "Phase 5 \u2014 Appointments",
+      "file_type": "document",
+      "source_file": "docs/project-plan.md",
+      "source_location": "Phase 5",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "project_plan_phase6",
+      "label": "Phase 6 \u2014 Large Cloth Orders",
+      "file_type": "document",
+      "source_file": "docs/project-plan.md",
+      "source_location": "Phase 6",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "project_plan_phase7",
+      "label": "Phase 7 \u2014 Payroll Settlement and Audit",
+      "file_type": "document",
+      "source_file": "docs/project-plan.md",
+      "source_location": "Phase 7",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "project_plan_phase8",
+      "label": "Phase 8 \u2014 Analytics",
+      "file_type": "document",
+      "source_file": "docs/project-plan.md",
+      "source_location": "Phase 8",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "project_plan_phase9",
+      "label": "Phase 9 \u2014 Offline/Sync Hardening",
+      "file_type": "document",
+      "source_file": "docs/project-plan.md",
+      "source_location": "Phase 9",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "project_plan_phase10",
+      "label": "Phase 10 \u2014 Polish and Rollout",
+      "file_type": "document",
+      "source_file": "docs/project-plan.md",
+      "source_location": "Phase 10",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "project_plan_mvp_slice",
+      "label": "MVP Vertical Slice",
+      "file_type": "document",
+      "source_file": "docs/project-plan.md",
+      "source_location": "Suggested MVP vertical slice",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "project_plan_resolved_decisions",
+      "label": "Resolved Decisions",
+      "file_type": "document",
+      "source_file": "docs/project-plan.md",
+      "source_location": "Resolved decisions",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "project_plan_innovation_befine",
+      "target": "project_plan_phase0",
+      "relation": "contains_phase",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/project-plan.md",
+      "source_location": "Phase 0",
+      "weight": 1.0
+    },
+    {
+      "source": "project_plan_innovation_befine",
+      "target": "project_plan_phase1",
+      "relation": "contains_phase",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/project-plan.md",
+      "source_location": "Phase 1",
+      "weight": 1.0
+    },
+    {
+      "source": "project_plan_innovation_befine",
+      "target": "project_plan_phase2",
+      "relation": "contains_phase",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/project-plan.md",
+      "source_location": "Phase 2",
+      "weight": 1.0
+    },
+    {
+      "source": "project_plan_innovation_befine",
+      "target": "project_plan_phase3",
+      "relation": "contains_phase",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/project-plan.md",
+      "source_location": "Phase 3",
+      "weight": 1.0
+    },
+    {
+      "source": "project_plan_innovation_befine",
+      "target": "project_plan_phase4a",
+      "relation": "contains_phase",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/project-plan.md",
+      "source_location": "Phase 4A",
+      "weight": 1.0
+    },
+    {
+      "source": "project_plan_innovation_befine",
+      "target": "project_plan_phase4b",
+      "relation": "contains_phase",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/project-plan.md",
+      "source_location": "Phase 4B",
+      "weight": 1.0
+    },
+    {
+      "source": "project_plan_innovation_befine",
+      "target": "project_plan_phase5",
+      "relation": "contains_phase",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/project-plan.md",
+      "source_location": "Phase 5",
+      "weight": 1.0
+    },
+    {
+      "source": "project_plan_innovation_befine",
+      "target": "project_plan_phase6",
+      "relation": "contains_phase",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/project-plan.md",
+      "source_location": "Phase 6",
+      "weight": 1.0
+    },
+    {
+      "source": "project_plan_innovation_befine",
+      "target": "project_plan_phase7",
+      "relation": "contains_phase",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/project-plan.md",
+      "source_location": "Phase 7",
+      "weight": 1.0
+    },
+    {
+      "source": "project_plan_innovation_befine",
+      "target": "project_plan_phase8",
+      "relation": "contains_phase",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/project-plan.md",
+      "source_location": "Phase 8",
+      "weight": 1.0
+    },
+    {
+      "source": "project_plan_innovation_befine",
+      "target": "project_plan_phase9",
+      "relation": "contains_phase",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/project-plan.md",
+      "source_location": "Phase 9",
+      "weight": 1.0
+    },
+    {
+      "source": "project_plan_innovation_befine",
+      "target": "project_plan_phase10",
+      "relation": "contains_phase",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/project-plan.md",
+      "source_location": "Phase 10",
+      "weight": 1.0
+    },
+    {
+      "source": "project_plan_phase0",
+      "target": "project_plan_phase1",
+      "relation": "phase_dependency",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/project-plan.md",
+      "source_location": "Dependency graph",
+      "weight": 1.0
+    },
+    {
+      "source": "project_plan_phase1",
+      "target": "project_plan_phase2",
+      "relation": "phase_dependency",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/project-plan.md",
+      "source_location": "Dependency graph",
+      "weight": 1.0
+    },
+    {
+      "source": "project_plan_phase2",
+      "target": "project_plan_phase3",
+      "relation": "phase_dependency",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/project-plan.md",
+      "source_location": "Dependency graph",
+      "weight": 1.0
+    },
+    {
+      "source": "project_plan_phase3",
+      "target": "project_plan_phase4a",
+      "relation": "phase_dependency",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/project-plan.md",
+      "source_location": "Dependency graph",
+      "weight": 1.0
+    },
+    {
+      "source": "project_plan_phase4a",
+      "target": "project_plan_phase4b",
+      "relation": "phase_dependency",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/project-plan.md",
+      "source_location": "Dependency graph",
+      "weight": 1.0
+    },
+    {
+      "source": "project_plan_phase4a",
+      "target": "project_plan_phase5",
+      "relation": "phase_dependency",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/project-plan.md",
+      "source_location": "Dependency graph",
+      "weight": 1.0
+    },
+    {
+      "source": "project_plan_phase4b",
+      "target": "project_plan_phase6",
+      "relation": "phase_dependency",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/project-plan.md",
+      "source_location": "Dependency graph",
+      "weight": 1.0
+    },
+    {
+      "source": "project_plan_phase4a",
+      "target": "project_plan_phase7",
+      "relation": "phase_dependency",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/project-plan.md",
+      "source_location": "Dependency graph",
+      "weight": 1.0
+    },
+    {
+      "source": "project_plan_phase4b",
+      "target": "project_plan_phase7",
+      "relation": "phase_dependency",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/project-plan.md",
+      "source_location": "Dependency graph",
+      "weight": 1.0
+    },
+    {
+      "source": "project_plan_phase7",
+      "target": "project_plan_phase8",
+      "relation": "phase_dependency",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/project-plan.md",
+      "source_location": "Dependency graph",
+      "weight": 1.0
+    },
+    {
+      "source": "project_plan_phase4a",
+      "target": "project_plan_phase9",
+      "relation": "phase_dependency",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/project-plan.md",
+      "source_location": "Dependency graph",
+      "weight": 1.0
+    },
+    {
+      "source": "project_plan_phase8",
+      "target": "project_plan_phase10",
+      "relation": "phase_dependency",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/project-plan.md",
+      "source_location": "Dependency graph",
+      "weight": 1.0
+    },
+    {
+      "source": "project_plan_phase9",
+      "target": "project_plan_phase10",
+      "relation": "phase_dependency",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/project-plan.md",
+      "source_location": "Dependency graph",
+      "weight": 1.0
+    },
+    {
+      "source": "project_plan_phase0",
+      "target": "standards_api_doc",
+      "relation": "produces",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/project-plan.md",
+      "source_location": "Phase 0 API conventions",
+      "weight": 1.0
+    },
+    {
+      "source": "project_plan_phase0",
+      "target": "design_system_doc",
+      "relation": "produces",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/project-plan.md",
+      "source_location": "Phase 0 Design system",
+      "weight": 1.0
+    },
+    {
+      "source": "project_plan_phase0",
+      "target": "wireframes_doc",
+      "relation": "produces",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/project-plan.md",
+      "source_location": "Phase 0 Key screen wireframes",
+      "weight": 1.0
+    },
+    {
+      "source": "project_plan_phase4a",
+      "target": "business_idea_ticket_lifecycle",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/project-plan.md",
+      "source_location": "Phase 4A \u2014 Ticket lifecycle",
+      "weight": 1.0
+    },
+    {
+      "source": "project_plan_phase7",
+      "target": "business_idea_payroll_settlement",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/project-plan.md",
+      "source_location": "Phase 7",
+      "weight": 1.0
+    },
+    {
+      "source": "project_plan_phase8",
+      "target": "tech_feasibility_analytics_approach",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/project-plan.md",
+      "source_location": "Phase 8",
+      "weight": 1.0
+    },
+    {
+      "source": "project_plan_phase9",
+      "target": "tech_feasibility_offline_pwa",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/project-plan.md",
+      "source_location": "Phase 9",
+      "weight": 1.0
+    },
+    {
+      "source": "project_plan_phase0",
+      "target": "project_plan_phase9",
+      "relation": "lays_foundation_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/project-plan.md",
+      "source_location": "Phase 9 intro",
+      "weight": 1.0
+    },
+    {
+      "source": "project_plan_phase4a",
+      "target": "standards_api_idempotency",
+      "relation": "requires",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/project-plan.md",
+      "source_location": "Phase 4A idempotency_key",
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": []
+}

@@ -1,0 +1,144 @@
+{
+  "nodes": [
+    {
+      "id": "postgres_providers_research",
+      "label": "PostgreSQL Providers Research (Neon vs Supabase vs RDS)",
+      "file_type": "document",
+      "source_file": "docs/research/postgres-providers.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "postgres_neon",
+      "label": "Neon (serverless Postgres, chosen)",
+      "file_type": "document",
+      "source_file": "docs/research/postgres-providers.md",
+      "source_location": "\u00a7Neon",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "postgres_supabase",
+      "label": "Supabase (BaaS platform, not chosen)",
+      "file_type": "document",
+      "source_file": "docs/research/postgres-providers.md",
+      "source_location": "\u00a7Supabase",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "postgres_rds",
+      "label": "AWS RDS (enterprise Postgres, not chosen)",
+      "file_type": "document",
+      "source_file": "docs/research/postgres-providers.md",
+      "source_location": "\u00a7AWS RDS",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "postgres_rationale_neon_chosen",
+      "label": "Rationale: Neon chosen (Vercel-native, free tier, branching, usage-based)",
+      "file_type": "document",
+      "source_file": "docs/research/postgres-providers.md",
+      "source_location": "\u00a7Recommendation",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "postgres_storage_estimate",
+      "label": "Neon Storage Capacity Estimate (28 MB per 6 months, fits free tier)",
+      "file_type": "document",
+      "source_file": "docs/research/postgres-providers.md",
+      "source_location": "\u00a7Storage capacity estimate",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "postgres_cold_start",
+      "label": "Neon Cold Start Mitigation (loading state on Open Day)",
+      "file_type": "document",
+      "source_file": "docs/research/postgres-providers.md",
+      "source_location": "\u00a7Cold start mitigation",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "postgres_providers_research",
+      "target": "postgres_neon",
+      "relation": "evaluates",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/research/postgres-providers.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "postgres_providers_research",
+      "target": "postgres_supabase",
+      "relation": "evaluates",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/research/postgres-providers.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "postgres_providers_research",
+      "target": "postgres_rds",
+      "relation": "evaluates",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/research/postgres-providers.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "postgres_rationale_neon_chosen",
+      "target": "postgres_neon",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/research/postgres-providers.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "postgres_storage_estimate",
+      "target": "postgres_neon",
+      "relation": "validates_suitability_of",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "docs/research/postgres-providers.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "postgres_cold_start",
+      "target": "postgres_neon",
+      "relation": "mitigates_issue_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/research/postgres-providers.md",
+      "source_location": null,
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": []
+}

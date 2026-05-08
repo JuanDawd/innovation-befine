@@ -1,0 +1,118 @@
+{
+  "nodes": [
+    {
+      "id": "apps_web_src_components_day_at_a_glance_tsx",
+      "label": "day-at-a-glance.tsx",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/day-at-a-glance.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "day_at_a_glance_statcard",
+      "label": "StatCard()",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/day-at-a-glance.tsx",
+      "source_location": "L36"
+    },
+    {
+      "id": "day_at_a_glance_isdayopen",
+      "label": "isDayOpen()",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/day-at-a-glance.tsx",
+      "source_location": "L135"
+    }
+  ],
+  "edges": [
+    {
+      "source": "apps_web_src_components_day_at_a_glance_tsx",
+      "target": "link",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/day-at-a-glance.tsx",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_day_at_a_glance_tsx",
+      "target": "next_intl",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/day-at-a-glance.tsx",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_day_at_a_glance_tsx",
+      "target": "react",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/day-at-a-glance.tsx",
+      "source_location": "L12",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_day_at_a_glance_tsx",
+      "target": "lucide_react",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/day-at-a-glance.tsx",
+      "source_location": "L13",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_day_at_a_glance_tsx",
+      "target": "client",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/day-at-a-glance.tsx",
+      "source_location": "L21",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_day_at_a_glance_tsx",
+      "target": "button_variants",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/day-at-a-glance.tsx",
+      "source_location": "L22",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_day_at_a_glance_tsx",
+      "target": "utils",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/day-at-a-glance.tsx",
+      "source_location": "L23",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_day_at_a_glance_tsx",
+      "target": "actions",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/day-at-a-glance.tsx",
+      "source_location": "L24",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_day_at_a_glance_tsx",
+      "target": "day_at_a_glance_statcard",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/day-at-a-glance.tsx",
+      "source_location": "L36",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_day_at_a_glance_tsx",
+      "target": "day_at_a_glance_isdayopen",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/day-at-a-glance.tsx",
+      "source_location": "L135",
+      "weight": 1.0
+    }
+  ],
+  "raw_calls": []
+}

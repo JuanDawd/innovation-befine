@@ -1,0 +1,161 @@
+{
+  "nodes": [
+    {
+      "id": "apps_web_src_components_pending_edit_requests_tsx",
+      "label": "pending-edit-requests.tsx",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/pending-edit-requests.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "pending_edit_requests_formatdate",
+      "label": "formatDate()",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/pending-edit-requests.tsx",
+      "source_location": "L21"
+    },
+    {
+      "id": "pending_edit_requests_handleresolve",
+      "label": "handleResolve()",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/pending-edit-requests.tsx",
+      "source_location": "L48"
+    }
+  ],
+  "edges": [
+    {
+      "source": "apps_web_src_components_pending_edit_requests_tsx",
+      "target": "react",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/pending-edit-requests.tsx",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_pending_edit_requests_tsx",
+      "target": "next_intl",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/pending-edit-requests.tsx",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_pending_edit_requests_tsx",
+      "target": "lucide_react",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/pending-edit-requests.tsx",
+      "source_location": "L12",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_pending_edit_requests_tsx",
+      "target": "client",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/pending-edit-requests.tsx",
+      "source_location": "L13",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_pending_edit_requests_tsx",
+      "target": "actions",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/pending-edit-requests.tsx",
+      "source_location": "L14",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_pending_edit_requests_tsx",
+      "target": "button",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/pending-edit-requests.tsx",
+      "source_location": "L19",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_pending_edit_requests_tsx",
+      "target": "pending_edit_requests_formatdate",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/pending-edit-requests.tsx",
+      "source_location": "L21",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_pending_edit_requests_tsx",
+      "target": "pending_edit_requests_handleresolve",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/pending-edit-requests.tsx",
+      "source_location": "L48",
+      "weight": 1.0
+    }
+  ],
+  "raw_calls": [
+    {
+      "caller_nid": "pending_edit_requests_formatdate",
+      "callee": "toLocaleTimeString",
+      "source_file": "apps/web/src/components/pending-edit-requests.tsx",
+      "source_location": "L22"
+    },
+    {
+      "caller_nid": "pending_edit_requests_handleresolve",
+      "callee": "setResolving",
+      "source_file": "apps/web/src/components/pending-edit-requests.tsx",
+      "source_location": "L49"
+    },
+    {
+      "caller_nid": "pending_edit_requests_handleresolve",
+      "callee": "setError",
+      "source_file": "apps/web/src/components/pending-edit-requests.tsx",
+      "source_location": "L50"
+    },
+    {
+      "caller_nid": "pending_edit_requests_handleresolve",
+      "callee": "resolveEditRequest",
+      "source_file": "apps/web/src/components/pending-edit-requests.tsx",
+      "source_location": "L51"
+    },
+    {
+      "caller_nid": "pending_edit_requests_handleresolve",
+      "callee": "setResolving",
+      "source_file": "apps/web/src/components/pending-edit-requests.tsx",
+      "source_location": "L52"
+    },
+    {
+      "caller_nid": "pending_edit_requests_handleresolve",
+      "callee": "setError",
+      "source_file": "apps/web/src/components/pending-edit-requests.tsx",
+      "source_location": "L54"
+    },
+    {
+      "caller_nid": "pending_edit_requests_handleresolve",
+      "callee": "t",
+      "source_file": "apps/web/src/components/pending-edit-requests.tsx",
+      "source_location": "L54"
+    },
+    {
+      "caller_nid": "pending_edit_requests_handleresolve",
+      "callee": "t",
+      "source_file": "apps/web/src/components/pending-edit-requests.tsx",
+      "source_location": "L57"
+    },
+    {
+      "caller_nid": "pending_edit_requests_handleresolve",
+      "callee": "t",
+      "source_file": "apps/web/src/components/pending-edit-requests.tsx",
+      "source_location": "L57"
+    },
+    {
+      "caller_nid": "pending_edit_requests_handleresolve",
+      "callee": "setRequests",
+      "source_file": "apps/web/src/components/pending-edit-requests.tsx",
+      "source_location": "L59"
+    }
+  ]
+}

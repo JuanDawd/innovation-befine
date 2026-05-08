@@ -1,0 +1,408 @@
+{
+  "nodes": [
+    {
+      "id": "business_idea_doc",
+      "label": "Business Idea \u2014 Innovation Befine",
+      "file_type": "document",
+      "source_file": "docs/business-idea.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "business_idea_role_admin",
+      "label": "Role: Cashier/Admin",
+      "file_type": "document",
+      "source_file": "docs/business-idea.md",
+      "source_location": "Cashier (admin)",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "business_idea_role_stylist",
+      "label": "Role: Stylist",
+      "file_type": "document",
+      "source_file": "docs/business-idea.md",
+      "source_location": "Stylists",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "business_idea_role_clothier",
+      "label": "Role: Clothier",
+      "file_type": "document",
+      "source_file": "docs/business-idea.md",
+      "source_location": "Clothiers",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "business_idea_role_secretary",
+      "label": "Role: Secretary",
+      "file_type": "document",
+      "source_file": "docs/business-idea.md",
+      "source_location": "Secretary",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "business_idea_ticket_model",
+      "label": "Ticket Model",
+      "file_type": "document",
+      "source_file": "docs/business-idea.md",
+      "source_location": "Ticket model",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "business_idea_ticket_lifecycle",
+      "label": "Ticket Lifecycle: logged to awaiting_payment to closed",
+      "file_type": "document",
+      "source_file": "docs/business-idea.md",
+      "source_location": "Ticket lifecycle",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "business_idea_client_model",
+      "label": "Client Model: saved vs guest",
+      "file_type": "document",
+      "source_file": "docs/business-idea.md",
+      "source_location": "Client / customer model",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "business_idea_business_day",
+      "label": "Business Day (open/close concept)",
+      "file_type": "document",
+      "source_file": "docs/business-idea.md",
+      "source_location": "Business day",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "business_idea_commission",
+      "label": "Commission Pay Model (stylist)",
+      "file_type": "document",
+      "source_file": "docs/business-idea.md",
+      "source_location": "Stylists \u2014 Pay model",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "business_idea_piece_rate",
+      "label": "Piece-Rate Pay Model (clothier)",
+      "file_type": "document",
+      "source_file": "docs/business-idea.md",
+      "source_location": "Clothiers \u2014 Pay model",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "business_idea_daily_rate",
+      "label": "Daily-Rate Pay Model (secretary)",
+      "file_type": "document",
+      "source_file": "docs/business-idea.md",
+      "source_location": "Secretary \u2014 Pay model",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "business_idea_cloth_batches",
+      "label": "Cloth Batches and Large Orders",
+      "file_type": "document",
+      "source_file": "docs/business-idea.md",
+      "source_location": "Cloth batches and large orders",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "business_idea_payroll_settlement",
+      "label": "Payroll Settlement Workflow",
+      "file_type": "document",
+      "source_file": "docs/business-idea.md",
+      "source_location": "Payroll settlement",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "business_idea_success_criteria",
+      "label": "Success Criteria",
+      "file_type": "document",
+      "source_file": "docs/business-idea.md",
+      "source_location": "Success criteria",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "business_idea_doc",
+      "target": "business_idea_role_admin",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/business-idea.md",
+      "source_location": "Cashier (admin)",
+      "weight": 1.0
+    },
+    {
+      "source": "business_idea_doc",
+      "target": "business_idea_role_stylist",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/business-idea.md",
+      "source_location": "Stylists",
+      "weight": 1.0
+    },
+    {
+      "source": "business_idea_doc",
+      "target": "business_idea_role_clothier",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/business-idea.md",
+      "source_location": "Clothiers",
+      "weight": 1.0
+    },
+    {
+      "source": "business_idea_doc",
+      "target": "business_idea_role_secretary",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/business-idea.md",
+      "source_location": "Secretary",
+      "weight": 1.0
+    },
+    {
+      "source": "business_idea_doc",
+      "target": "business_idea_ticket_model",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/business-idea.md",
+      "source_location": "Ticket model",
+      "weight": 1.0
+    },
+    {
+      "source": "business_idea_doc",
+      "target": "business_idea_client_model",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/business-idea.md",
+      "source_location": "Client customer model",
+      "weight": 1.0
+    },
+    {
+      "source": "business_idea_doc",
+      "target": "business_idea_business_day",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/business-idea.md",
+      "source_location": "Business day",
+      "weight": 1.0
+    },
+    {
+      "source": "business_idea_doc",
+      "target": "business_idea_cloth_batches",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/business-idea.md",
+      "source_location": "Cloth batches and large orders",
+      "weight": 1.0
+    },
+    {
+      "source": "business_idea_doc",
+      "target": "business_idea_payroll_settlement",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/business-idea.md",
+      "source_location": "Payroll settlement",
+      "weight": 1.0
+    },
+    {
+      "source": "business_idea_doc",
+      "target": "business_idea_success_criteria",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/business-idea.md",
+      "source_location": "Success criteria",
+      "weight": 1.0
+    },
+    {
+      "source": "business_idea_ticket_model",
+      "target": "business_idea_ticket_lifecycle",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/business-idea.md",
+      "source_location": "Ticket lifecycle",
+      "weight": 1.0
+    },
+    {
+      "source": "business_idea_role_stylist",
+      "target": "business_idea_commission",
+      "relation": "uses_pay_model",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/business-idea.md",
+      "source_location": "Stylists \u2014 Pay model",
+      "weight": 1.0
+    },
+    {
+      "source": "business_idea_role_clothier",
+      "target": "business_idea_piece_rate",
+      "relation": "uses_pay_model",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/business-idea.md",
+      "source_location": "Clothiers \u2014 Pay model",
+      "weight": 1.0
+    },
+    {
+      "source": "business_idea_role_secretary",
+      "target": "business_idea_daily_rate",
+      "relation": "uses_pay_model",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/business-idea.md",
+      "source_location": "Secretary \u2014 Pay model",
+      "weight": 1.0
+    },
+    {
+      "source": "business_idea_role_admin",
+      "target": "business_idea_business_day",
+      "relation": "manages",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/business-idea.md",
+      "source_location": "Cashier (admin)",
+      "weight": 1.0
+    },
+    {
+      "source": "business_idea_role_admin",
+      "target": "business_idea_ticket_lifecycle",
+      "relation": "controls_checkout",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/business-idea.md",
+      "source_location": "Cashier (admin)",
+      "weight": 1.0
+    },
+    {
+      "source": "business_idea_role_admin",
+      "target": "business_idea_payroll_settlement",
+      "relation": "performs",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/business-idea.md",
+      "source_location": "Cashier (admin)",
+      "weight": 1.0
+    },
+    {
+      "source": "business_idea_role_secretary",
+      "target": "business_idea_cloth_batches",
+      "relation": "manages",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/business-idea.md",
+      "source_location": "Secretary",
+      "weight": 1.0
+    },
+    {
+      "source": "business_idea_role_clothier",
+      "target": "business_idea_cloth_batches",
+      "relation": "works_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/business-idea.md",
+      "source_location": "Clothiers",
+      "weight": 1.0
+    },
+    {
+      "source": "business_idea_commission",
+      "target": "standards_bankers_rounding",
+      "relation": "requires",
+      "confidence": "INFERRED",
+      "confidence_score": 0.88,
+      "source_file": "docs/business-idea.md",
+      "source_location": null,
+      "weight": 0.88
+    },
+    {
+      "source": "business_idea_piece_rate",
+      "target": "standards_money_storage",
+      "relation": "stored_using",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "docs/business-idea.md",
+      "source_location": null,
+      "weight": 0.85
+    },
+    {
+      "source": "business_idea_daily_rate",
+      "target": "standards_money_storage",
+      "relation": "stored_using",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "docs/business-idea.md",
+      "source_location": null,
+      "weight": 0.85
+    }
+  ],
+  "hyperedges": [
+    {
+      "id": "he_ticket_lifecycle_actors",
+      "label": "Ticket Lifecycle governed by Stylist, Admin, Secretary roles with distinct permissions at each status",
+      "nodes": [
+        "business_idea_ticket_lifecycle",
+        "business_idea_role_stylist",
+        "business_idea_role_admin",
+        "business_idea_role_secretary",
+        "rbac_matrix_tickets"
+      ],
+      "relation": "jointly_govern_ticket_flow",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/business-idea.md"
+    }
+  ]
+}

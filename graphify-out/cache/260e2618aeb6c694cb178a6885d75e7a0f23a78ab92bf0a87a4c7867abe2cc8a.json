@@ -1,0 +1,127 @@
+{
+  "nodes": [
+    {
+      "id": "apps_web_src_components_error_boundary_tsx",
+      "label": "error-boundary.tsx",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/error-boundary.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "error_boundary_errorboundary",
+      "label": "ErrorBoundary",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/error-boundary.tsx",
+      "source_location": "L24"
+    },
+    {
+      "id": "error_boundary_errorboundary_getderivedstatefromerror",
+      "label": ".getDerivedStateFromError()",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/error-boundary.tsx",
+      "source_location": "L27"
+    },
+    {
+      "id": "error_boundary_errorboundary_componentdidcatch",
+      "label": ".componentDidCatch()",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/error-boundary.tsx",
+      "source_location": "L31"
+    },
+    {
+      "id": "error_boundary_errorboundary_render",
+      "label": ".render()",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/error-boundary.tsx",
+      "source_location": "L40"
+    }
+  ],
+  "edges": [
+    {
+      "source": "apps_web_src_components_error_boundary_tsx",
+      "target": "nextjs",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/error-boundary.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_error_boundary_tsx",
+      "target": "react",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/error-boundary.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_error_boundary_tsx",
+      "target": "lucide_react",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/error-boundary.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_error_boundary_tsx",
+      "target": "button",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/error-boundary.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_error_boundary_tsx",
+      "target": "error_boundary_errorboundary",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/error-boundary.tsx",
+      "source_location": "L24",
+      "weight": 1.0
+    },
+    {
+      "source": "error_boundary_errorboundary",
+      "target": "error_boundary_errorboundary_getderivedstatefromerror",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/error-boundary.tsx",
+      "source_location": "L27",
+      "weight": 1.0
+    },
+    {
+      "source": "error_boundary_errorboundary",
+      "target": "error_boundary_errorboundary_componentdidcatch",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/error-boundary.tsx",
+      "source_location": "L31",
+      "weight": 1.0
+    },
+    {
+      "source": "error_boundary_errorboundary",
+      "target": "error_boundary_errorboundary_render",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/error-boundary.tsx",
+      "source_location": "L40",
+      "weight": 1.0
+    }
+  ],
+  "raw_calls": [
+    {
+      "caller_nid": "error_boundary_errorboundary_componentdidcatch",
+      "callee": "captureException",
+      "source_file": "apps/web/src/components/error-boundary.tsx",
+      "source_location": "L32"
+    },
+    {
+      "caller_nid": "error_boundary_errorboundary_componentdidcatch",
+      "callee": "setState",
+      "source_file": "apps/web/src/components/error-boundary.tsx",
+      "source_location": "L35"
+    }
+  ]
+}

@@ -1,0 +1,154 @@
+{
+  "nodes": [
+    {
+      "id": "data_privacy_research",
+      "label": "Data Privacy and Compliance Research (Colombia)",
+      "file_type": "document",
+      "source_file": "docs/research/data-privacy-compliance.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "privacy_ley1581",
+      "label": "Ley 1581 de 2012 (Colombian Data Protection Law)",
+      "file_type": "document",
+      "source_file": "docs/research/data-privacy-compliance.md",
+      "source_location": "\u00a7Applicable law",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "privacy_pii_inventory",
+      "label": "PII Inventory (clients, employees, auth data)",
+      "file_type": "document",
+      "source_file": "docs/research/data-privacy-compliance.md",
+      "source_location": "\u00a7PII inventory",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "privacy_anonymization",
+      "label": "Data Anonymization Strategy (over hard deletion)",
+      "file_type": "document",
+      "source_file": "docs/research/data-privacy-compliance.md",
+      "source_location": "\u00a7Right to deletion",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "privacy_retention_policy",
+      "label": "Data Retention Policy (financial 10 years, employees employment plus 3 years)",
+      "file_type": "document",
+      "source_file": "docs/research/data-privacy-compliance.md",
+      "source_location": "\u00a7Data retention policy",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "privacy_cross_border",
+      "label": "Cross-Border Data Transfer (Neon US vs EU regions)",
+      "file_type": "document",
+      "source_file": "docs/research/data-privacy-compliance.md",
+      "source_location": "\u00a7Cross-border data transfer",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "privacy_sic_registration",
+      "label": "SIC (RNBD) Database Registration Required",
+      "file_type": "document",
+      "source_file": "docs/research/data-privacy-compliance.md",
+      "source_location": "\u00a7SIC registration",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "data_privacy_research",
+      "target": "privacy_ley1581",
+      "relation": "contains_section",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/research/data-privacy-compliance.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "data_privacy_research",
+      "target": "privacy_pii_inventory",
+      "relation": "contains_section",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/research/data-privacy-compliance.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "data_privacy_research",
+      "target": "privacy_anonymization",
+      "relation": "contains_section",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/research/data-privacy-compliance.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "data_privacy_research",
+      "target": "privacy_retention_policy",
+      "relation": "contains_section",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/research/data-privacy-compliance.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "data_privacy_research",
+      "target": "privacy_cross_border",
+      "relation": "contains_section",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/research/data-privacy-compliance.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "data_privacy_research",
+      "target": "privacy_sic_registration",
+      "relation": "contains_section",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/research/data-privacy-compliance.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "privacy_cross_border",
+      "target": "postgres_neon",
+      "relation": "concerns",
+      "confidence": "INFERRED",
+      "confidence_score": 0.88,
+      "source_file": "docs/research/data-privacy-compliance.md",
+      "source_location": null,
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": []
+}

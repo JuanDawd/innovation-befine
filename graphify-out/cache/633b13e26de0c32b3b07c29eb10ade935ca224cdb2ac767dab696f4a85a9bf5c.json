@@ -1,0 +1,258 @@
+{
+  "nodes": [
+    {
+      "id": "design_system_doc",
+      "label": "Design System \u2014 Innovation Befine",
+      "file_type": "document",
+      "source_file": "docs/design-system.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "design_system_tokens",
+      "label": "Design Tokens (colours, typography, spacing)",
+      "file_type": "document",
+      "source_file": "docs/design-system.md",
+      "source_location": "Design tokens",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "design_system_status_colours",
+      "label": "Status Colour Mapping",
+      "file_type": "document",
+      "source_file": "docs/design-system.md",
+      "source_location": "Status colour mapping",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "design_system_components",
+      "label": "UI Component Patterns",
+      "file_type": "document",
+      "source_file": "docs/design-system.md",
+      "source_location": "Component patterns",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "design_system_empty_state",
+      "label": "EmptyState Component",
+      "file_type": "document",
+      "source_file": "docs/design-system.md",
+      "source_location": "EmptyState",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "design_system_confirmation_dialog",
+      "label": "ConfirmationDialog Component",
+      "file_type": "document",
+      "source_file": "docs/design-system.md",
+      "source_location": "ConfirmationDialog",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "design_system_status_badge",
+      "label": "StatusBadge Component",
+      "file_type": "document",
+      "source_file": "docs/design-system.md",
+      "source_location": "StatusBadge",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "design_system_loading_skeleton",
+      "label": "LoadingSkeleton Component",
+      "file_type": "document",
+      "source_file": "docs/design-system.md",
+      "source_location": "LoadingSkeleton",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "design_system_data_table",
+      "label": "DataTable Component",
+      "file_type": "document",
+      "source_file": "docs/design-system.md",
+      "source_location": "DataTable",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "design_system_realtime_animations",
+      "label": "Real-Time Update Animations",
+      "file_type": "document",
+      "source_file": "docs/design-system.md",
+      "source_location": "Real-time update animations",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "design_system_lucide_icons",
+      "label": "Lucide Icons Library",
+      "file_type": "document",
+      "source_file": "docs/design-system.md",
+      "source_location": "Icon library",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "design_system_doc",
+      "target": "design_system_tokens",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/design-system.md",
+      "source_location": "Design tokens",
+      "weight": 1.0
+    },
+    {
+      "source": "design_system_doc",
+      "target": "design_system_status_colours",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/design-system.md",
+      "source_location": "Status colour mapping",
+      "weight": 1.0
+    },
+    {
+      "source": "design_system_doc",
+      "target": "design_system_components",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/design-system.md",
+      "source_location": "Component patterns",
+      "weight": 1.0
+    },
+    {
+      "source": "design_system_doc",
+      "target": "design_system_lucide_icons",
+      "relation": "specifies",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/design-system.md",
+      "source_location": "Icon library",
+      "weight": 1.0
+    },
+    {
+      "source": "design_system_doc",
+      "target": "design_system_realtime_animations",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/design-system.md",
+      "source_location": "Real-time update animations",
+      "weight": 1.0
+    },
+    {
+      "source": "design_system_components",
+      "target": "design_system_empty_state",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/design-system.md",
+      "source_location": "EmptyState",
+      "weight": 1.0
+    },
+    {
+      "source": "design_system_components",
+      "target": "design_system_confirmation_dialog",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/design-system.md",
+      "source_location": "ConfirmationDialog",
+      "weight": 1.0
+    },
+    {
+      "source": "design_system_components",
+      "target": "design_system_status_badge",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/design-system.md",
+      "source_location": "StatusBadge",
+      "weight": 1.0
+    },
+    {
+      "source": "design_system_components",
+      "target": "design_system_loading_skeleton",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/design-system.md",
+      "source_location": "LoadingSkeleton",
+      "weight": 1.0
+    },
+    {
+      "source": "design_system_components",
+      "target": "design_system_data_table",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/design-system.md",
+      "source_location": "DataTable",
+      "weight": 1.0
+    },
+    {
+      "source": "design_system_status_colours",
+      "target": "business_idea_ticket_lifecycle",
+      "relation": "maps_statuses_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/design-system.md",
+      "source_location": "Status colour mapping",
+      "weight": 1.0
+    },
+    {
+      "source": "design_system_status_badge",
+      "target": "design_system_status_colours",
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/design-system.md",
+      "source_location": "StatusBadge",
+      "weight": 1.0
+    },
+    {
+      "source": "design_system_confirmation_dialog",
+      "target": "business_idea_payroll_settlement",
+      "relation": "used_in",
+      "confidence": "INFERRED",
+      "confidence_score": 0.82,
+      "source_file": "docs/design-system.md",
+      "source_location": null,
+      "weight": 0.82
+    }
+  ],
+  "hyperedges": []
+}

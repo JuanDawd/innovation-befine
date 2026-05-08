@@ -1,0 +1,308 @@
+{
+  "nodes": [
+    {
+      "id": "phase05_appointments",
+      "label": "Phase 5 \u2014 Appointments",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-05-appointments.md",
+      "source_location": "line 1",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t032b_noshow_increment",
+      "label": "T032b \u2014 No-show count increment logic",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-05-appointments.md",
+      "source_location": "line 9",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t049_appointments_table",
+      "label": "T049 \u2014 Appointments table migration",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-05-appointments.md",
+      "source_location": "line 29",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t050_appointment_booking",
+      "label": "T050 \u2014 Appointment booking UI (secretary/cashier)",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-05-appointments.md",
+      "source_location": "line 53",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t051_double_booking_prevention",
+      "label": "T051 \u2014 Double-booking prevention",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-05-appointments.md",
+      "source_location": "line 76",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t052_appointment_calendar",
+      "label": "T052 \u2014 Appointment list and calendar view",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-05-appointments.md",
+      "source_location": "line 89",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t053_appointment_status",
+      "label": "T053 \u2014 Appointment status management",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-05-appointments.md",
+      "source_location": "line 110",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t055_confirmation_email",
+      "label": "T055 \u2014 Appointment confirmation email template",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-05-appointments.md",
+      "source_location": "line 131",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t056_send_confirmation",
+      "label": "T056 \u2014 Send confirmation email action",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-05-appointments.md",
+      "source_location": "line 147",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t109_price_change_notify",
+      "label": "T109 \u2014 Price change notification to secretary",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-05-appointments.md",
+      "source_location": "line 167",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_appointment_lifecycle",
+      "label": "Appointment lifecycle (booked\u2192confirmed\u2192completed|cancelled|rescheduled|no_show)",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-05-appointments.md",
+      "source_location": "line 29",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "phase05_appointments",
+      "target": "t049_appointments_table",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-05-appointments.md",
+      "source_location": "line 29",
+      "weight": 1.0
+    },
+    {
+      "source": "t032b_noshow_increment",
+      "target": "t032_noshow_display",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-05-appointments.md",
+      "source_location": "line 12",
+      "weight": 1.0
+    },
+    {
+      "source": "t032b_noshow_increment",
+      "target": "t053_appointment_status",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-05-appointments.md",
+      "source_location": "line 12",
+      "weight": 1.0
+    },
+    {
+      "source": "t049_appointments_table",
+      "target": "t029_clients_table",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-05-appointments.md",
+      "source_location": "line 32",
+      "weight": 1.0
+    },
+    {
+      "source": "t049_appointments_table",
+      "target": "t012_employees_table",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-05-appointments.md",
+      "source_location": "line 32",
+      "weight": 1.0
+    },
+    {
+      "source": "t050_appointment_booking",
+      "target": "t049_appointments_table",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-05-appointments.md",
+      "source_location": "line 56",
+      "weight": 1.0
+    },
+    {
+      "source": "t050_appointment_booking",
+      "target": "t030_client_crud",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-05-appointments.md",
+      "source_location": "line 56",
+      "weight": 1.0
+    },
+    {
+      "source": "t050_appointment_booking",
+      "target": "t048_notifications",
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-05-appointments.md",
+      "source_location": "line 65",
+      "weight": 1.0
+    },
+    {
+      "source": "t051_double_booking_prevention",
+      "target": "t050_appointment_booking",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-05-appointments.md",
+      "source_location": "line 79",
+      "weight": 1.0
+    },
+    {
+      "source": "t052_appointment_calendar",
+      "target": "t050_appointment_booking",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-05-appointments.md",
+      "source_location": "line 92",
+      "weight": 1.0
+    },
+    {
+      "source": "t053_appointment_status",
+      "target": "t050_appointment_booking",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-05-appointments.md",
+      "source_location": "line 113",
+      "weight": 1.0
+    },
+    {
+      "source": "t055_confirmation_email",
+      "target": "t054_resend_email",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-05-appointments.md",
+      "source_location": "line 134",
+      "weight": 1.0
+    },
+    {
+      "source": "t056_send_confirmation",
+      "target": "t055_confirmation_email",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-05-appointments.md",
+      "source_location": "line 150",
+      "weight": 1.0
+    },
+    {
+      "source": "t056_send_confirmation",
+      "target": "t053_appointment_status",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-05-appointments.md",
+      "source_location": "line 150",
+      "weight": 1.0
+    },
+    {
+      "source": "t109_price_change_notify",
+      "target": "t025_catalog_audit_log",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-05-appointments.md",
+      "source_location": "line 170",
+      "weight": 1.0
+    },
+    {
+      "source": "t109_price_change_notify",
+      "target": "t049_appointments_table",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-05-appointments.md",
+      "source_location": "line 170",
+      "weight": 1.0
+    },
+    {
+      "source": "t109_price_change_notify",
+      "target": "t048_notifications",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-05-appointments.md",
+      "source_location": "line 170",
+      "weight": 1.0
+    },
+    {
+      "source": "t049_appointments_table",
+      "target": "concept_appointment_lifecycle",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-05-appointments.md",
+      "source_location": "line 29",
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": []
+}

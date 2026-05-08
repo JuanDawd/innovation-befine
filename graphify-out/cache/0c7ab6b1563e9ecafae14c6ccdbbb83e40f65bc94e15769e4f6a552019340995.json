@@ -1,0 +1,92 @@
+{
+  "nodes": [
+    {
+      "id": "apps_web_src_components_ui_status_badge_tsx",
+      "label": "status-badge.tsx",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/ui/status-badge.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "status_badge_resolvestatuscategory",
+      "label": "resolveStatusCategory()",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/ui/status-badge.tsx",
+      "source_location": "L51"
+    },
+    {
+      "id": "status_badge_statusbadge",
+      "label": "StatusBadge()",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/ui/status-badge.tsx",
+      "source_location": "L67"
+    }
+  ],
+  "edges": [
+    {
+      "source": "apps_web_src_components_ui_status_badge_tsx",
+      "target": "class_variance_authority",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/ui/status-badge.tsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_ui_status_badge_tsx",
+      "target": "utils",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/ui/status-badge.tsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_ui_status_badge_tsx",
+      "target": "status_badge_resolvestatuscategory",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/ui/status-badge.tsx",
+      "source_location": "L51",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_ui_status_badge_tsx",
+      "target": "status_badge_statusbadge",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/ui/status-badge.tsx",
+      "source_location": "L67",
+      "weight": 1.0
+    },
+    {
+      "source": "status_badge_statusbadge",
+      "target": "status_badge_resolvestatuscategory",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/ui/status-badge.tsx",
+      "source_location": "L68",
+      "weight": 1.0
+    }
+  ],
+  "raw_calls": [
+    {
+      "caller_nid": "status_badge_resolvestatuscategory",
+      "callee": "includes",
+      "source_file": "apps/web/src/components/ui/status-badge.tsx",
+      "source_location": "L56"
+    },
+    {
+      "caller_nid": "status_badge_statusbadge",
+      "callee": "replace",
+      "source_file": "apps/web/src/components/ui/status-badge.tsx",
+      "source_location": "L69"
+    },
+    {
+      "caller_nid": "status_badge_statusbadge",
+      "callee": "statusBadgeVariants",
+      "source_file": "apps/web/src/components/ui/status-badge.tsx",
+      "source_location": "L72"
+    }
+  ]
+}

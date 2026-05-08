@@ -1,0 +1,38 @@
+{
+  "nodes": [
+    {
+      "id": "endpoint_inventory_doc",
+      "label": "Endpoint Inventory \u2014 Server Actions and API Routes",
+      "file_type": "document",
+      "source_file": "docs/testing/endpoint-inventory.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "endpoint_inventory_doc",
+      "target": "standards_api_doc",
+      "relation": "documents_implementation_of",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/testing/endpoint-inventory.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "endpoint_inventory_doc",
+      "target": "rbac_matrix_doc",
+      "relation": "implements_constraints_from",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/testing/endpoint-inventory.md",
+      "source_location": null,
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": []
+}

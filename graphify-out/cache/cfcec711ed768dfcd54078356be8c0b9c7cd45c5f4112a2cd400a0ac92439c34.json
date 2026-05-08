@@ -1,0 +1,59 @@
+{
+  "nodes": [
+    {
+      "id": "packages_db_src_schema_tickets_ts",
+      "label": "tickets.ts",
+      "file_type": "code",
+      "source_file": "packages/db/src/schema/tickets.ts",
+      "source_location": "L1"
+    }
+  ],
+  "edges": [
+    {
+      "source": "packages_db_src_schema_tickets_ts",
+      "target": "pg_core",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/db/src/schema/tickets.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "packages_db_src_schema_tickets_ts",
+      "target": "drizzle_orm",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/db/src/schema/tickets.ts",
+      "source_location": "L12",
+      "weight": 1.0
+    },
+    {
+      "source": "packages_db_src_schema_tickets_ts",
+      "target": "packages_db_src_schema_employees",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/db/src/schema/tickets.ts",
+      "source_location": "L13",
+      "weight": 1.0
+    },
+    {
+      "source": "packages_db_src_schema_tickets_ts",
+      "target": "packages_db_src_schema_business_days",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/db/src/schema/tickets.ts",
+      "source_location": "L14",
+      "weight": 1.0
+    },
+    {
+      "source": "packages_db_src_schema_tickets_ts",
+      "target": "packages_db_src_schema_clients",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/db/src/schema/tickets.ts",
+      "source_location": "L15",
+      "weight": 1.0
+    }
+  ],
+  "raw_calls": []
+}

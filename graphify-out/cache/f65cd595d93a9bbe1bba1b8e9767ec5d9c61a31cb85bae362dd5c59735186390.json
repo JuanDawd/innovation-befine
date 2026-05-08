@@ -1,0 +1,43 @@
+{
+  "nodes": [
+    {
+      "id": "apps_web_src_instrumentation_ts",
+      "label": "instrumentation.ts",
+      "file_type": "code",
+      "source_file": "apps/web/src/instrumentation.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "instrumentation_register",
+      "label": "register()",
+      "file_type": "code",
+      "source_file": "apps/web/src/instrumentation.ts",
+      "source_location": "L1"
+    }
+  ],
+  "edges": [
+    {
+      "source": "apps_web_src_instrumentation_ts",
+      "target": "instrumentation_register",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/instrumentation.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    }
+  ],
+  "raw_calls": [
+    {
+      "caller_nid": "instrumentation_register",
+      "callee": "import",
+      "source_file": "apps/web/src/instrumentation.ts",
+      "source_location": "L3"
+    },
+    {
+      "caller_nid": "instrumentation_register",
+      "callee": "import",
+      "source_file": "apps/web/src/instrumentation.ts",
+      "source_location": "L7"
+    }
+  ]
+}

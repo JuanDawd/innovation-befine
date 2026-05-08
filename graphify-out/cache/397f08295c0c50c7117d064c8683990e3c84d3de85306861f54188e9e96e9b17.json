@@ -1,0 +1,32 @@
+{
+  "nodes": [
+    {
+      "id": "packages_db_src_schema_notifications_ts",
+      "label": "notifications.ts",
+      "file_type": "code",
+      "source_file": "packages/db/src/schema/notifications.ts",
+      "source_location": "L1"
+    }
+  ],
+  "edges": [
+    {
+      "source": "packages_db_src_schema_notifications_ts",
+      "target": "pg_core",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/db/src/schema/notifications.ts",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "packages_db_src_schema_notifications_ts",
+      "target": "packages_db_src_schema_employees",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/db/src/schema/notifications.ts",
+      "source_location": "L12",
+      "weight": 1.0
+    }
+  ],
+  "raw_calls": []
+}

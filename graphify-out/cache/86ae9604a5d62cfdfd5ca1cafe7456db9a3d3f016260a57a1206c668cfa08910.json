@@ -1,0 +1,32 @@
+{
+  "nodes": [
+    {
+      "id": "packages_db_src_schema_relations_ts",
+      "label": "relations.ts",
+      "file_type": "code",
+      "source_file": "packages/db/src/schema/relations.ts",
+      "source_location": "L1"
+    }
+  ],
+  "edges": [
+    {
+      "source": "packages_db_src_schema_relations_ts",
+      "target": "drizzle_orm",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/db/src/schema/relations.ts",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "packages_db_src_schema_relations_ts",
+      "target": "packages_db_src_schema_services",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/db/src/schema/relations.ts",
+      "source_location": "L9",
+      "weight": 1.0
+    }
+  ],
+  "raw_calls": []
+}

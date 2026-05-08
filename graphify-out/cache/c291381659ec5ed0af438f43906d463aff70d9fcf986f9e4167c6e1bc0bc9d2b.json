@@ -1,0 +1,223 @@
+{
+  "nodes": [
+    {
+      "id": "apps_web_src_i18n_formatting_ts",
+      "label": "formatting.ts",
+      "file_type": "code",
+      "source_file": "apps/web/src/i18n/formatting.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "formatting_formatmoney",
+      "label": "formatMoney()",
+      "file_type": "code",
+      "source_file": "apps/web/src/i18n/formatting.ts",
+      "source_location": "L16"
+    },
+    {
+      "id": "formatting_formatdate",
+      "label": "formatDate()",
+      "file_type": "code",
+      "source_file": "apps/web/src/i18n/formatting.ts",
+      "source_location": "L29"
+    },
+    {
+      "id": "formatting_formatdatetime",
+      "label": "formatDateTime()",
+      "file_type": "code",
+      "source_file": "apps/web/src/i18n/formatting.ts",
+      "source_location": "L39"
+    },
+    {
+      "id": "formatting_formattime",
+      "label": "formatTime()",
+      "file_type": "code",
+      "source_file": "apps/web/src/i18n/formatting.ts",
+      "source_location": "L49"
+    },
+    {
+      "id": "formatting_formatpercent",
+      "label": "formatPercent()",
+      "file_type": "code",
+      "source_file": "apps/web/src/i18n/formatting.ts",
+      "source_location": "L60"
+    },
+    {
+      "id": "formatting_formatcount",
+      "label": "formatCount()",
+      "file_type": "code",
+      "source_file": "apps/web/src/i18n/formatting.ts",
+      "source_location": "L78"
+    },
+    {
+      "id": "formatting_formatrelativetime",
+      "label": "formatRelativeTime()",
+      "file_type": "code",
+      "source_file": "apps/web/src/i18n/formatting.ts",
+      "source_location": "L86"
+    }
+  ],
+  "edges": [
+    {
+      "source": "apps_web_src_i18n_formatting_ts",
+      "target": "date_fns",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/i18n/formatting.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_i18n_formatting_ts",
+      "target": "locale",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/i18n/formatting.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_i18n_formatting_ts",
+      "target": "date_fns_tz",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/i18n/formatting.ts",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_i18n_formatting_ts",
+      "target": "apps_web_src_i18n_config",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/i18n/formatting.ts",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_i18n_formatting_ts",
+      "target": "formatting_formatmoney",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/i18n/formatting.ts",
+      "source_location": "L16",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_i18n_formatting_ts",
+      "target": "formatting_formatdate",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/i18n/formatting.ts",
+      "source_location": "L29",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_i18n_formatting_ts",
+      "target": "formatting_formatdatetime",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/i18n/formatting.ts",
+      "source_location": "L39",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_i18n_formatting_ts",
+      "target": "formatting_formattime",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/i18n/formatting.ts",
+      "source_location": "L49",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_i18n_formatting_ts",
+      "target": "formatting_formatpercent",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/i18n/formatting.ts",
+      "source_location": "L60",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_i18n_formatting_ts",
+      "target": "formatting_formatcount",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/i18n/formatting.ts",
+      "source_location": "L78",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_i18n_formatting_ts",
+      "target": "formatting_formatrelativetime",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/i18n/formatting.ts",
+      "source_location": "L86",
+      "weight": 1.0
+    }
+  ],
+  "raw_calls": [
+    {
+      "caller_nid": "formatting_formatmoney",
+      "callee": "format",
+      "source_file": "apps/web/src/i18n/formatting.ts",
+      "source_location": "L17"
+    },
+    {
+      "caller_nid": "formatting_formatdate",
+      "callee": "toZonedTime",
+      "source_file": "apps/web/src/i18n/formatting.ts",
+      "source_location": "L31"
+    },
+    {
+      "caller_nid": "formatting_formatdate",
+      "callee": "format",
+      "source_file": "apps/web/src/i18n/formatting.ts",
+      "source_location": "L33"
+    },
+    {
+      "caller_nid": "formatting_formatdatetime",
+      "callee": "toZonedTime",
+      "source_file": "apps/web/src/i18n/formatting.ts",
+      "source_location": "L41"
+    },
+    {
+      "caller_nid": "formatting_formatdatetime",
+      "callee": "format",
+      "source_file": "apps/web/src/i18n/formatting.ts",
+      "source_location": "L43"
+    },
+    {
+      "caller_nid": "formatting_formattime",
+      "callee": "toZonedTime",
+      "source_file": "apps/web/src/i18n/formatting.ts",
+      "source_location": "L51"
+    },
+    {
+      "caller_nid": "formatting_formattime",
+      "callee": "format",
+      "source_file": "apps/web/src/i18n/formatting.ts",
+      "source_location": "L53"
+    },
+    {
+      "caller_nid": "formatting_formatpercent",
+      "callee": "format",
+      "source_file": "apps/web/src/i18n/formatting.ts",
+      "source_location": "L65"
+    },
+    {
+      "caller_nid": "formatting_formatcount",
+      "callee": "format",
+      "source_file": "apps/web/src/i18n/formatting.ts",
+      "source_location": "L79"
+    },
+    {
+      "caller_nid": "formatting_formatrelativetime",
+      "callee": "formatDistanceToNow",
+      "source_file": "apps/web/src/i18n/formatting.ts",
+      "source_location": "L88"
+    }
+  ]
+}

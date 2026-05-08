@@ -1,0 +1,185 @@
+{
+  "nodes": [
+    {
+      "id": "security_test_plan_doc",
+      "label": "Security Test Plan",
+      "file_type": "document",
+      "source_file": "docs/testing/security-test-plan.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "security_test_rbac_negative",
+      "label": "RBAC Negative Tests",
+      "file_type": "document",
+      "source_file": "docs/testing/security-test-plan.md",
+      "source_location": "1. RBAC negative tests",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "security_test_input_validation",
+      "label": "Input Validation Security Tests",
+      "file_type": "document",
+      "source_file": "docs/testing/security-test-plan.md",
+      "source_location": "2. Input validation",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "security_test_session",
+      "label": "Session Security Tests",
+      "file_type": "document",
+      "source_file": "docs/testing/security-test-plan.md",
+      "source_location": "3. Session security",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "security_test_data_exposure",
+      "label": "Data Exposure Tests",
+      "file_type": "document",
+      "source_file": "docs/testing/security-test-plan.md",
+      "source_location": "4. Data exposure verification",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "security_test_csp",
+      "label": "CSP Header Tests",
+      "file_type": "document",
+      "source_file": "docs/testing/security-test-plan.md",
+      "source_location": "7. Content Security Policy",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "security_test_pii_scrubbing",
+      "label": "PII Scrubbing in Sentry Tests",
+      "file_type": "document",
+      "source_file": "docs/testing/security-test-plan.md",
+      "source_location": "8. PII protection",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "security_test_prelaunch_checklist",
+      "label": "Pre-Launch Security Checklist",
+      "file_type": "document",
+      "source_file": "docs/testing/security-test-plan.md",
+      "source_location": "10. Pre-launch security checklist",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "security_test_plan_doc",
+      "target": "security_test_rbac_negative",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/testing/security-test-plan.md",
+      "source_location": "1. RBAC negative tests",
+      "weight": 1.0
+    },
+    {
+      "source": "security_test_plan_doc",
+      "target": "security_test_input_validation",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/testing/security-test-plan.md",
+      "source_location": "2. Input validation",
+      "weight": 1.0
+    },
+    {
+      "source": "security_test_plan_doc",
+      "target": "security_test_session",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/testing/security-test-plan.md",
+      "source_location": "3. Session security",
+      "weight": 1.0
+    },
+    {
+      "source": "security_test_plan_doc",
+      "target": "security_test_data_exposure",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/testing/security-test-plan.md",
+      "source_location": "4. Data exposure",
+      "weight": 1.0
+    },
+    {
+      "source": "security_test_plan_doc",
+      "target": "security_test_pii_scrubbing",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/testing/security-test-plan.md",
+      "source_location": "8. PII protection",
+      "weight": 1.0
+    },
+    {
+      "source": "security_test_plan_doc",
+      "target": "security_test_prelaunch_checklist",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/testing/security-test-plan.md",
+      "source_location": "10. Pre-launch checklist",
+      "weight": 1.0
+    },
+    {
+      "source": "security_test_rbac_negative",
+      "target": "rbac_matrix_doc",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/testing/security-test-plan.md",
+      "source_location": "1. RBAC negative tests",
+      "weight": 1.0
+    },
+    {
+      "source": "security_test_session",
+      "target": "issues_c05",
+      "relation": "detects",
+      "confidence": "INFERRED",
+      "confidence_score": 0.88,
+      "source_file": "docs/testing/security-test-plan.md",
+      "source_location": "3. Session invalidation on deactivation",
+      "weight": 0.88
+    },
+    {
+      "source": "security_test_data_exposure",
+      "target": "issues_c06",
+      "relation": "detects",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "docs/testing/security-test-plan.md",
+      "source_location": null,
+      "weight": 0.85
+    }
+  ],
+  "hyperedges": []
+}

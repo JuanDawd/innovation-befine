@@ -1,0 +1,112 @@
+{
+  "nodes": [
+    {
+      "id": "training_readme",
+      "label": "Training Guides README (BeFine)",
+      "file_type": "document",
+      "source_file": "docs/training/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "training_role_cashier_admin",
+      "label": "Training Role: Cashier/Admin",
+      "file_type": "document",
+      "source_file": "docs/training/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "training_role_stylist",
+      "label": "Training Role: Stylist",
+      "file_type": "document",
+      "source_file": "docs/training/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "training_role_clothier",
+      "label": "Training Role: Clothier",
+      "file_type": "document",
+      "source_file": "docs/training/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "training_role_secretary",
+      "label": "Training Role: Secretary",
+      "file_type": "document",
+      "source_file": "docs/training/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "training_readme",
+      "target": "cashier_admin_guide",
+      "relation": "links_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/training/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "training_readme",
+      "target": "training_role_cashier_admin",
+      "relation": "describes_role",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/training/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "training_readme",
+      "target": "training_role_stylist",
+      "relation": "describes_role",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/training/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "training_readme",
+      "target": "training_role_clothier",
+      "relation": "describes_role",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/training/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "training_readme",
+      "target": "training_role_secretary",
+      "relation": "describes_role",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/training/README.md",
+      "source_location": null,
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": []
+}

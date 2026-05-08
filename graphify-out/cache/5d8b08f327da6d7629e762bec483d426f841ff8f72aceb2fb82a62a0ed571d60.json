@@ -1,0 +1,297 @@
+{
+  "nodes": [
+    {
+      "id": "phase10_polish",
+      "label": "Phase 10 \u2014 Polish and rollout",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-10-polish.md",
+      "source_location": "line 1",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t083_responsive_qa",
+      "label": "T083 \u2014 Responsive QA pass",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-10-polish.md",
+      "source_location": "line 7",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t084_loading_states",
+      "label": "T084 \u2014 Loading states and optimistic UI",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-10-polish.md",
+      "source_location": "line 39",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t086_db_backup",
+      "label": "T086 \u2014 Database backup policy",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-10-polish.md",
+      "source_location": "line 63",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t087_uptime_monitoring",
+      "label": "T087 \u2014 Uptime monitoring",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-10-polish.md",
+      "source_location": "line 80",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t088_training_guide",
+      "label": "T088 \u2014 Internal training guide",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-10-polish.md",
+      "source_location": "line 99",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t102_stale_tab_detection",
+      "label": "T102 \u2014 Stale-tab version detection",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-10-polish.md",
+      "source_location": "line 125",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t100_data_migration",
+      "label": "T100 \u2014 Data migration from existing spreadsheets",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-10-polish.md",
+      "source_location": "line 145",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t106_uat",
+      "label": "T106 \u2014 User acceptance testing (UAT)",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-10-polish.md",
+      "source_location": "line 167",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t089_production_cutover",
+      "label": "T089 \u2014 Production cutover checklist",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-10-polish.md",
+      "source_location": "line 186",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "phase10_polish",
+      "target": "t083_responsive_qa",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-10-polish.md",
+      "source_location": "line 7",
+      "weight": 1.0
+    },
+    {
+      "source": "phase10_polish",
+      "target": "t089_production_cutover",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-10-polish.md",
+      "source_location": "line 186",
+      "weight": 1.0
+    },
+    {
+      "source": "t083_responsive_qa",
+      "target": "t103_design_system",
+      "relation": "depends_on",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "docs/Business/tasks/phase-10-polish.md",
+      "source_location": "line 7",
+      "weight": 0.8
+    },
+    {
+      "source": "t084_loading_states",
+      "target": "t103_design_system",
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "docs/Business/tasks/phase-10-polish.md",
+      "source_location": "line 49",
+      "weight": 0.8
+    },
+    {
+      "source": "t086_db_backup",
+      "target": "t005_neon_postgres",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-10-polish.md",
+      "source_location": "line 66",
+      "weight": 1.0
+    },
+    {
+      "source": "t087_uptime_monitoring",
+      "target": "t004_vercel_setup",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-10-polish.md",
+      "source_location": "line 83",
+      "weight": 1.0
+    },
+    {
+      "source": "t102_stale_tab_detection",
+      "target": "t004_vercel_setup",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-10-polish.md",
+      "source_location": "line 128",
+      "weight": 1.0
+    },
+    {
+      "source": "t100_data_migration",
+      "target": "t029_clients_table",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-10-polish.md",
+      "source_location": "line 148",
+      "weight": 1.0
+    },
+    {
+      "source": "t100_data_migration",
+      "target": "t030_client_crud",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-10-polish.md",
+      "source_location": "line 148",
+      "weight": 1.0
+    },
+    {
+      "source": "t106_uat",
+      "target": "t088_training_guide",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-10-polish.md",
+      "source_location": "line 170",
+      "weight": 1.0
+    },
+    {
+      "source": "t089_production_cutover",
+      "target": "t083_responsive_qa",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-10-polish.md",
+      "source_location": "line 192",
+      "weight": 1.0
+    },
+    {
+      "source": "t089_production_cutover",
+      "target": "t084_loading_states",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-10-polish.md",
+      "source_location": "line 192",
+      "weight": 1.0
+    },
+    {
+      "source": "t089_production_cutover",
+      "target": "t086_db_backup",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-10-polish.md",
+      "source_location": "line 192",
+      "weight": 1.0
+    },
+    {
+      "source": "t089_production_cutover",
+      "target": "t087_uptime_monitoring",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-10-polish.md",
+      "source_location": "line 192",
+      "weight": 1.0
+    },
+    {
+      "source": "t089_production_cutover",
+      "target": "t088_training_guide",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-10-polish.md",
+      "source_location": "line 192",
+      "weight": 1.0
+    },
+    {
+      "source": "t089_production_cutover",
+      "target": "t100_data_migration",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-10-polish.md",
+      "source_location": "line 192",
+      "weight": 1.0
+    },
+    {
+      "source": "t089_production_cutover",
+      "target": "t102_stale_tab_detection",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-10-polish.md",
+      "source_location": "line 192",
+      "weight": 1.0
+    },
+    {
+      "source": "t089_production_cutover",
+      "target": "t106_uat",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-10-polish.md",
+      "source_location": "line 192",
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": []
+}

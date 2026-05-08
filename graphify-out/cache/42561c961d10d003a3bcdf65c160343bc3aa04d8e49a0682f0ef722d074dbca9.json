@@ -1,0 +1,110 @@
+{
+  "nodes": [
+    {
+      "id": "apps_web_src_components_catalog_audit_log_tsx",
+      "label": "catalog-audit-log.tsx",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/catalog-audit-log.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "catalog_audit_log_formatdate",
+      "label": "formatDate()",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/catalog-audit-log.tsx",
+      "source_location": "L16"
+    },
+    {
+      "id": "catalog_audit_log_handletoggle",
+      "label": "handleToggle()",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/catalog-audit-log.tsx",
+      "source_location": "L54"
+    }
+  ],
+  "edges": [
+    {
+      "source": "apps_web_src_components_catalog_audit_log_tsx",
+      "target": "react",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/catalog-audit-log.tsx",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_catalog_audit_log_tsx",
+      "target": "next_intl",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/catalog-audit-log.tsx",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_catalog_audit_log_tsx",
+      "target": "lucide_react",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/catalog-audit-log.tsx",
+      "source_location": "L12",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_catalog_audit_log_tsx",
+      "target": "audit_log",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/catalog-audit-log.tsx",
+      "source_location": "L13",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_catalog_audit_log_tsx",
+      "target": "audit_log",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/catalog-audit-log.tsx",
+      "source_location": "L14",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_catalog_audit_log_tsx",
+      "target": "catalog_audit_log_formatdate",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/catalog-audit-log.tsx",
+      "source_location": "L16",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_catalog_audit_log_tsx",
+      "target": "catalog_audit_log_handletoggle",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/catalog-audit-log.tsx",
+      "source_location": "L54",
+      "weight": 1.0
+    }
+  ],
+  "raw_calls": [
+    {
+      "caller_nid": "catalog_audit_log_formatdate",
+      "callee": "format",
+      "source_file": "apps/web/src/components/catalog-audit-log.tsx",
+      "source_location": "L17"
+    },
+    {
+      "caller_nid": "catalog_audit_log_handletoggle",
+      "callee": "startTransition",
+      "source_file": "apps/web/src/components/catalog-audit-log.tsx",
+      "source_location": "L56"
+    },
+    {
+      "caller_nid": "catalog_audit_log_handletoggle",
+      "callee": "setExpanded",
+      "source_file": "apps/web/src/components/catalog-audit-log.tsx",
+      "source_location": "L65"
+    }
+  ]
+}

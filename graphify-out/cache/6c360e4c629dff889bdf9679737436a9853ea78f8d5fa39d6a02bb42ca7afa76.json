@@ -1,0 +1,23 @@
+{
+  "nodes": [
+    {
+      "id": "apps_web_src_app_apple_icon_tsx",
+      "label": "apple-icon.tsx",
+      "file_type": "code",
+      "source_file": "apps/web/src/app/apple-icon.tsx",
+      "source_location": "L1"
+    }
+  ],
+  "edges": [
+    {
+      "source": "apps_web_src_app_apple_icon_tsx",
+      "target": "og",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/app/apple-icon.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    }
+  ],
+  "raw_calls": []
+}

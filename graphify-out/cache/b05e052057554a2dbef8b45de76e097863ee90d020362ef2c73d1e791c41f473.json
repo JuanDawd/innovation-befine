@@ -1,0 +1,416 @@
+{
+  "nodes": [
+    {
+      "id": "phase07_payroll",
+      "label": "Phase 7 \u2014 Payroll settlement and audit",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-07-payroll.md",
+      "source_location": "line 1",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t020_absences_table",
+      "label": "T020 \u2014 Absences and vacation table migration",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-07-payroll.md",
+      "source_location": "line 9",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t021_absence_ui",
+      "label": "T021 \u2014 Vacation and absence management UI (admin)",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-07-payroll.md",
+      "source_location": "line 26",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t022b_deactivation_guard",
+      "label": "T022b \u2014 Deactivation guard and termination payment",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-07-payroll.md",
+      "source_location": "line 46",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t063_stylist_earnings",
+      "label": "T063 \u2014 Earnings computation: stylists",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-07-payroll.md",
+      "source_location": "line 63",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t064_clothier_earnings",
+      "label": "T064 \u2014 Earnings computation: clothiers",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-07-payroll.md",
+      "source_location": "line 84",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t065_secretary_earnings",
+      "label": "T065 \u2014 Earnings computation: secretary",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-07-payroll.md",
+      "source_location": "line 100",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t066_payouts_table",
+      "label": "T066 \u2014 Payouts table migration",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-07-payroll.md",
+      "source_location": "line 120",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t067_payout_recording",
+      "label": "T067 \u2014 Payout recording UI (admin)",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-07-payroll.md",
+      "source_location": "line 148",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t068_double_pay_prevention",
+      "label": "T068 \u2014 Double-pay prevention",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-07-payroll.md",
+      "source_location": "line 169",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t069_employee_earnings_view",
+      "label": "T069 \u2014 Employee earnings view (own earnings)",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-07-payroll.md",
+      "source_location": "line 183",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "t070_unsettled_alert",
+      "label": "T070 \u2014 Unsettled earnings alert",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-07-payroll.md",
+      "source_location": "line 201",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_earnings_computation",
+      "label": "Earnings computation (commission / piece_rate / daily_rate models)",
+      "file_type": "document",
+      "source_file": "docs/Business/tasks/phase-07-payroll.md",
+      "source_location": "line 63",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "phase07_payroll",
+      "target": "t063_stylist_earnings",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-07-payroll.md",
+      "source_location": "line 63",
+      "weight": 1.0
+    },
+    {
+      "source": "phase07_payroll",
+      "target": "t066_payouts_table",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-07-payroll.md",
+      "source_location": "line 120",
+      "weight": 1.0
+    },
+    {
+      "source": "t020_absences_table",
+      "target": "t012_employees_table",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-07-payroll.md",
+      "source_location": "line 12",
+      "weight": 1.0
+    },
+    {
+      "source": "t021_absence_ui",
+      "target": "t020_absences_table",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-07-payroll.md",
+      "source_location": "line 29",
+      "weight": 1.0
+    },
+    {
+      "source": "t022b_deactivation_guard",
+      "target": "t022a_deactivation",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-07-payroll.md",
+      "source_location": "line 49",
+      "weight": 1.0
+    },
+    {
+      "source": "t022b_deactivation_guard",
+      "target": "t067_payout_recording",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-07-payroll.md",
+      "source_location": "line 49",
+      "weight": 1.0
+    },
+    {
+      "source": "t063_stylist_earnings",
+      "target": "t038_checkout_flow",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-07-payroll.md",
+      "source_location": "line 66",
+      "weight": 1.0
+    },
+    {
+      "source": "t064_clothier_earnings",
+      "target": "t047_piece_approval",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-07-payroll.md",
+      "source_location": "line 87",
+      "weight": 1.0
+    },
+    {
+      "source": "t065_secretary_earnings",
+      "target": "t021_absence_ui",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-07-payroll.md",
+      "source_location": "line 103",
+      "weight": 1.0
+    },
+    {
+      "source": "t065_secretary_earnings",
+      "target": "t020_absences_table",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-07-payroll.md",
+      "source_location": "line 103",
+      "weight": 1.0
+    },
+    {
+      "source": "t066_payouts_table",
+      "target": "t006_drizzle_orm",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-07-payroll.md",
+      "source_location": "line 123",
+      "weight": 1.0
+    },
+    {
+      "source": "t067_payout_recording",
+      "target": "t063_stylist_earnings",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-07-payroll.md",
+      "source_location": "line 151",
+      "weight": 1.0
+    },
+    {
+      "source": "t067_payout_recording",
+      "target": "t064_clothier_earnings",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-07-payroll.md",
+      "source_location": "line 151",
+      "weight": 1.0
+    },
+    {
+      "source": "t067_payout_recording",
+      "target": "t065_secretary_earnings",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-07-payroll.md",
+      "source_location": "line 151",
+      "weight": 1.0
+    },
+    {
+      "source": "t067_payout_recording",
+      "target": "t066_payouts_table",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-07-payroll.md",
+      "source_location": "line 151",
+      "weight": 1.0
+    },
+    {
+      "source": "t068_double_pay_prevention",
+      "target": "t067_payout_recording",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-07-payroll.md",
+      "source_location": "line 172",
+      "weight": 1.0
+    },
+    {
+      "source": "t069_employee_earnings_view",
+      "target": "t063_stylist_earnings",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-07-payroll.md",
+      "source_location": "line 186",
+      "weight": 1.0
+    },
+    {
+      "source": "t069_employee_earnings_view",
+      "target": "t064_clothier_earnings",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-07-payroll.md",
+      "source_location": "line 186",
+      "weight": 1.0
+    },
+    {
+      "source": "t069_employee_earnings_view",
+      "target": "t065_secretary_earnings",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-07-payroll.md",
+      "source_location": "line 186",
+      "weight": 1.0
+    },
+    {
+      "source": "t069_employee_earnings_view",
+      "target": "t015_earnings_flag",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-07-payroll.md",
+      "source_location": "line 186",
+      "weight": 1.0
+    },
+    {
+      "source": "t070_unsettled_alert",
+      "target": "t067_payout_recording",
+      "relation": "depends_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-07-payroll.md",
+      "source_location": "line 204",
+      "weight": 1.0
+    },
+    {
+      "source": "t063_stylist_earnings",
+      "target": "concept_earnings_computation",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-07-payroll.md",
+      "source_location": "line 63",
+      "weight": 1.0
+    },
+    {
+      "source": "t064_clothier_earnings",
+      "target": "concept_earnings_computation",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-07-payroll.md",
+      "source_location": "line 84",
+      "weight": 1.0
+    },
+    {
+      "source": "t065_secretary_earnings",
+      "target": "concept_earnings_computation",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/Business/tasks/phase-07-payroll.md",
+      "source_location": "line 100",
+      "weight": 1.0
+    },
+    {
+      "source": "t068_double_pay_prevention",
+      "target": "concept_idempotency",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.7,
+      "source_file": "docs/Business/tasks/phase-07-payroll.md",
+      "source_location": null,
+      "weight": 0.7
+    }
+  ],
+  "hyperedges": [
+    {
+      "id": "hyperedge_earnings_payroll_pipeline",
+      "label": "Earnings computation \u2192 payout recording \u2192 double-pay prevention pipeline",
+      "nodes": [
+        "t063_stylist_earnings",
+        "t064_clothier_earnings",
+        "t065_secretary_earnings",
+        "t067_payout_recording",
+        "t068_double_pay_prevention"
+      ],
+      "relation": "participates_in_payroll_pipeline",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.95,
+      "source_file": "docs/Business/tasks/phase-07-payroll.md"
+    }
+  ]
+}

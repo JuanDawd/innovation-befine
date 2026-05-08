@@ -1,0 +1,130 @@
+{
+  "nodes": [
+    {
+      "id": "apps_web_src_components_log_service_form_tsx",
+      "label": "log-service-form.tsx",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/log-service-form.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "log_service_form_handlesubmit",
+      "label": "handleSubmit()",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/log-service-form.tsx",
+      "source_location": "L91"
+    }
+  ],
+  "edges": [
+    {
+      "source": "apps_web_src_components_log_service_form_tsx",
+      "target": "react",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/log-service-form.tsx",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_log_service_form_tsx",
+      "target": "next_intl",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/log-service-form.tsx",
+      "source_location": "L12",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_log_service_form_tsx",
+      "target": "navigation",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/log-service-form.tsx",
+      "source_location": "L13",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_log_service_form_tsx",
+      "target": "lucide_react",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/log-service-form.tsx",
+      "source_location": "L14",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_log_service_form_tsx",
+      "target": "button",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/log-service-form.tsx",
+      "source_location": "L15",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_log_service_form_tsx",
+      "target": "input",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/log-service-form.tsx",
+      "source_location": "L16",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_log_service_form_tsx",
+      "target": "client_search_widget",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/log-service-form.tsx",
+      "source_location": "L17",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_log_service_form_tsx",
+      "target": "actions",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/log-service-form.tsx",
+      "source_location": "L18",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_log_service_form_tsx",
+      "target": "services",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/log-service-form.tsx",
+      "source_location": "L23",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_src_components_log_service_form_tsx",
+      "target": "log_service_form_handlesubmit",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/src/components/log-service-form.tsx",
+      "source_location": "L91",
+      "weight": 1.0
+    }
+  ],
+  "raw_calls": [
+    {
+      "caller_nid": "log_service_form_handlesubmit",
+      "callee": "preventDefault",
+      "source_file": "apps/web/src/components/log-service-form.tsx",
+      "source_location": "L92"
+    },
+    {
+      "caller_nid": "log_service_form_handlesubmit",
+      "callee": "randomUUID",
+      "source_file": "apps/web/src/components/log-service-form.tsx",
+      "source_location": "L102"
+    },
+    {
+      "caller_nid": "log_service_form_handlesubmit",
+      "callee": "startSubmitTransition",
+      "source_file": "apps/web/src/components/log-service-form.tsx",
+      "source_location": "L105"
+    }
+  ]
+}
