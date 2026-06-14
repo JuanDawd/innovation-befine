@@ -20,6 +20,10 @@ const STATUS_META: Record<TaskStatus, { label: string; className: string }> = {
     className: "bg-status-progress text-status-progress-foreground",
   },
   pending: { label: "Pendiente", className: "bg-status-initial text-status-initial-foreground" },
+  moved: {
+    label: "Movido",
+    className: "bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400",
+  },
   plan: { label: "Plan", className: "bg-muted text-muted-foreground" },
 };
 

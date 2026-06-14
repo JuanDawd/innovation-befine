@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 
-export type TaskStatus = "pending" | "in-progress" | "done" | "plan";
+export type TaskStatus = "pending" | "in-progress" | "done" | "moved" | "plan";
 
 export interface RoadmapTask {
   id: string;
@@ -47,6 +47,7 @@ function parseStatus(raw: string): TaskStatus {
   if (v === "done" || v === "complete" || v === "completed") return "done";
   if (v === "in-progress" || v === "inprogress") return "in-progress";
   if (v === "pending") return "pending";
+  if (v === "moved") return "moved";
   return "plan";
 }
 
@@ -108,7 +109,7 @@ function parsePhase(phaseId: string, heading: string, body: string): RoadmapPhas
     .filter((b) => /^#{2,3}\s+(?:Task\s+|Issue ID:\s*)/m.test(b));
 
   const tasks = taskBlocks.map(parseTask).filter((t): t is RoadmapTask => t !== null);
-  const done = tasks.filter((t) => t.status === "done").length;
+  const done = tasks.filter((t) => t.status === "done" || t.status === "moved").length;
   const total = tasks.length;
   const progressPct = total === 0 ? 0 : Math.round((done / total) * 100);
 

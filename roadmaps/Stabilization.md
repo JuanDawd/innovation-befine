@@ -1420,7 +1420,7 @@
 ### Task 5.3: Annotate hardest steps in role training guides
 
 - **Dependencies:** None.
-- **Status:** Done
+- **Status:** Moved
 
 ---
 
