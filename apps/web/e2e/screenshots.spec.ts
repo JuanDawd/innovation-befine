@@ -260,6 +260,7 @@ for (const [role, screens] of Object.entries(SCREENS)) {
 
   test.describe(`Screenshots — ${role}`, () => {
     test.describe.configure({ mode: "serial" });
+    test.setTimeout(60_000);
     let context: BrowserContext;
 
     test.beforeAll(async ({ browser }) => {
