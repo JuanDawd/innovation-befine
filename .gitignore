@@ -43,3 +43,7 @@ blob-report/
 
 # Misc
 *.pem
+
+# Graphify analysis artifacts
+graphify-out/
+packages/graphify-out/
