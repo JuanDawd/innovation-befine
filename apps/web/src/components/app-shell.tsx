@@ -148,19 +148,16 @@ function UserMenu({
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
             closeOnClick={false}
             className="cursor-pointer"
-            suppressHydrationWarning
           >
-            {theme === "dark" ? (
-              <>
-                <SunIcon className="size-4" aria-hidden="true" suppressHydrationWarning />
-                <span suppressHydrationWarning>{t("nav.themeLight")}</span>
-              </>
-            ) : (
-              <>
-                <MoonIcon className="size-4" aria-hidden="true" suppressHydrationWarning />
-                <span suppressHydrationWarning>{t("nav.themeDark")}</span>
-              </>
-            )}
+            {/*
+             * Both icon+label pairs are always in the DOM; CSS dark: classes control which
+             * is visible. This makes the React tree identical on server and client, eliminating
+             * the hydration mismatch that recurs whenever the theme hook implementation changes.
+             */}
+            <MoonIcon className="size-4 dark:hidden" aria-hidden="true" />
+            <SunIcon className="size-4 hidden dark:block" aria-hidden="true" />
+            <span className="dark:hidden">{t("nav.themeDark")}</span>
+            <span className="hidden dark:inline">{t("nav.themeLight")}</span>
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />

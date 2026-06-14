@@ -1433,8 +1433,8 @@
 
 ## Phase 6: Post-Release Polish
 
-**Started:** —
-**Status:** Pending.
+**Started:** 2026-06-14
+**Status:** Complete — all tasks done.
 
 > Deferred from Phase 5. Low-urgency polish items — no blockers on active usage.
 
@@ -1479,4 +1479,4 @@
   - Open every role's landing page in a fresh browser session → zero hydration warnings in the console.
   - Run `turbo build` → zero Next.js hydration warnings in build output.
 - **Dependencies:** None.
-- **Status:** Pending
+- **Status:** Done
