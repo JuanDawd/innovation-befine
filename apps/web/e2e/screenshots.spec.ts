@@ -213,17 +213,14 @@ const ROLE_VIEWPORT: Record<string, { width: number; height: number }> = {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 async function login(page: Page, creds: RoleCreds): Promise<void> {
-  await page.goto("/login", { waitUntil: "domcontentloaded" });
-  // Fill credentials — try both email and username-style inputs
-  const emailInput = page.getByLabel(/email|correo|usuario/i).first();
-  await emailInput.fill(creds.email);
-  await page
-    .getByLabel(/contraseña|password/i)
-    .first()
-    .fill(creds.password);
+  await page.goto("/login", { waitUntil: "networkidle" });
+  // Wait for React to hydrate so onSubmit is attached (prevents native GET fallback)
+  await page.waitForSelector("#email", { state: "visible" });
+  await page.locator("#email").fill(creds.email);
+  await page.locator("#password").fill(creds.password);
   await page.getByRole("button", { name: /iniciar sesión|login|sign in/i }).click();
   // Wait for redirect away from /login
-  await page.waitForURL((url) => !url.pathname.includes("/login"), { timeout: 15_000 });
+  await page.waitForURL((url) => !url.pathname.includes("/login"), { timeout: 20_000 });
 }
 
 async function captureScreen(page: Page, screen: ScreenDef, outPath: string): Promise<void> {
@@ -262,6 +259,7 @@ for (const [role, screens] of Object.entries(SCREENS)) {
   const defaultViewport = ROLE_VIEWPORT[role] ?? DESKTOP;
 
   test.describe(`Screenshots — ${role}`, () => {
+    test.describe.configure({ mode: "serial" });
     let context: BrowserContext;
 
     test.beforeAll(async ({ browser }) => {
