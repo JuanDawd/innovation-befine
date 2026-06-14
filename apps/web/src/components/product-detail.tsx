@@ -67,7 +67,7 @@ function PieceNotes({ piece }: { piece: ProductPieceDetailRow }) {
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
       >
-        {open ? <ChevronUpIcon className="h-3 w-3" /> : <ChevronDownIcon className="h-3 w-3" />}
+        {open ? <ChevronUpIcon className="size-3" /> : <ChevronDownIcon className="size-3" />}
         {t("viewNotes")}
       </button>
       {open && (
@@ -160,7 +160,7 @@ function EditPieceDialog({ piece, onSaved }: EditDialogProps) {
         className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         aria-label={t("editPiece")}
       >
-        <PencilIcon className="h-3.5 w-3.5" />
+        <PencilIcon className="size-3.5" />
       </button>
       <DialogContent>
         <DialogHeader>
@@ -295,7 +295,7 @@ export function ProductDetail({ initialData, isEditor, backHref }: Props) {
           className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
           aria-label={t("back")}
         >
-          <ArrowLeftIcon className="h-4 w-4" />
+          <ArrowLeftIcon className="size-4" />
         </Link>
         <h1 className="text-xl font-semibold">{t("detailTitle")}</h1>
         <ProductStatusBadge status={productStatus} />

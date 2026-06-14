@@ -560,7 +560,7 @@ export function EmployeeList({ initialEmployees }: EmployeeListProps) {
               {tCommon("cancel")}
             </Button>
             <Button variant="destructive" disabled={isPending} onClick={handleTerminate}>
-              {isPending ? <Loader2Icon className="h-3.5 w-3.5 animate-spin mr-1" /> : null}
+              {isPending ? <Loader2Icon className="size-3.5 animate-spin mr-1" /> : null}
               {t("terminateConfirm")}
             </Button>
           </DialogFooter>

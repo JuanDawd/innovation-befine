@@ -20,7 +20,7 @@ export default async function SecretaryProductsPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-xl md:text-2xl font-semibold">{t("pageTitle")}</h1>
         <Link href="/secretary/products/new" className={cn(buttonVariants())}>
-          <PlusIcon className="h-4 w-4 mr-2" />
+          <PlusIcon className="size-4 mr-2" />
           {t("createProduct")}
         </Link>
       </div>

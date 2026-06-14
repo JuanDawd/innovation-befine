@@ -51,7 +51,7 @@ function PriceChangedAcknowledge({
 
   return (
     <div className="flex items-center gap-1 mt-0.5">
-      <TriangleAlertIcon className="h-3 w-3 text-amber-600 shrink-0" aria-hidden />
+      <TriangleAlertIcon className="size-3 text-amber-600 shrink-0" aria-hidden />
       <span className="text-xs text-amber-700 dark:text-amber-400">{t("priceChangedBadge")}</span>
       <Button
         size="sm"
@@ -61,7 +61,7 @@ function PriceChangedAcknowledge({
         disabled={isPending}
         aria-label={t("acknowledgeAction")}
       >
-        {isPending ? <Loader2Icon className="h-3 w-3 animate-spin" /> : t("acknowledgeAction")}
+        {isPending ? <Loader2Icon className="size-3 animate-spin" /> : t("acknowledgeAction")}
       </Button>
     </div>
   );
@@ -167,7 +167,7 @@ export function AppointmentList({ newHref }: { newHref: string }) {
         {/* Date nav */}
         <div className="flex items-center gap-2">
           <Button variant="outline" size="icon" aria-label={t("prevDay")} onClick={prev}>
-            <ChevronLeftIcon className="h-4 w-4" />
+            <ChevronLeftIcon className="size-4" />
           </Button>
           <input
             type="date"
@@ -177,7 +177,7 @@ export function AppointmentList({ newHref }: { newHref: string }) {
             aria-label={t("selectDate")}
           />
           <Button variant="outline" size="icon" aria-label={t("nextDay")} onClick={next}>
-            <ChevronRightIcon className="h-4 w-4" />
+            <ChevronRightIcon className="size-4" />
           </Button>
           {!isToday && (
             <Button variant="ghost" size="sm" onClick={() => setDate(todayBogota())}>
@@ -204,7 +204,7 @@ export function AppointmentList({ newHref }: { newHref: string }) {
 
           {/* New appointment */}
           <Button size="sm" onClick={() => router.push(newHref)}>
-            <PlusIcon className="h-4 w-4 mr-1" />
+            <PlusIcon className="size-4 mr-1" />
             {t("bookAppointment")}
           </Button>
         </div>
@@ -213,7 +213,7 @@ export function AppointmentList({ newHref }: { newHref: string }) {
       {/* Table */}
       {isLoading ? (
         <div className="flex items-center gap-2 text-sm text-muted-foreground py-8">
-          <Loader2Icon className="h-4 w-4 animate-spin" />
+          <Loader2Icon className="size-4 animate-spin" />
           {tc("loading")}
         </div>
       ) : error ? (

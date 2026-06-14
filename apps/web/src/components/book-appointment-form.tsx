@@ -148,7 +148,7 @@ export function BookAppointmentForm({ redirectPath }: { redirectPath: string }) 
   if (isLoading) {
     return (
       <div className="flex items-center gap-2 text-sm text-muted-foreground py-8">
-        <Loader2Icon className="h-4 w-4 animate-spin" />
+        <Loader2Icon className="size-4 animate-spin" />
         {tc("loading")}
       </div>
     );
@@ -220,7 +220,7 @@ export function BookAppointmentForm({ redirectPath }: { redirectPath: string }) 
       {/* Date + time */}
       <div className="flex flex-col gap-1.5">
         <label className="text-sm font-medium" htmlFor="apt-datetime">
-          <CalendarIcon className="inline h-4 w-4 mr-1 align-text-top" />
+          <CalendarIcon className="inline size-4 mr-1 align-text-top" />
           {t("date")} / {t("time")}
         </label>
         <Input
@@ -240,7 +240,7 @@ export function BookAppointmentForm({ redirectPath }: { redirectPath: string }) 
       {/* Duration */}
       <div className="flex flex-col gap-1.5">
         <label className="text-sm font-medium" htmlFor="apt-duration">
-          <ClockIcon className="inline h-4 w-4 mr-1 align-text-top" />
+          <ClockIcon className="inline size-4 mr-1 align-text-top" />
           {t("duration")}
         </label>
         <Input
@@ -263,7 +263,7 @@ export function BookAppointmentForm({ redirectPath }: { redirectPath: string }) 
 
       {/* Submit */}
       <Button onClick={handleSubmit} disabled={isPending} className="self-end">
-        {isPending && <Loader2Icon className="h-4 w-4 mr-2 animate-spin" />}
+        {isPending && <Loader2Icon className="size-4 mr-2 animate-spin" />}
         {t("submit")}
       </Button>
     </div>

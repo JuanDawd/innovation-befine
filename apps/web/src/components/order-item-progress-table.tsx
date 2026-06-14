@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { PackageSearch, PlusIcon, PencilIcon } from "lucide-react";
+import { PackageSearch, PlusIcon, PencilIcon, CheckIcon, XIcon } from "lucide-react";
 import { toast } from "sonner";
 import { ProductProgressBar } from "@/components/ui/product-progress-bar";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -440,16 +440,16 @@ function AssignmentRow({
               onClick={submitEdit}
               disabled={isPending}
             >
-              ✓
+              <CheckIcon className="size-3.5" aria-hidden="true" />
             </Button>
             <Button
               size="sm"
               variant="ghost"
-              className="h-6 px-2 text-xs"
+              className="h-6 px-2"
               onClick={cancelEdit}
               disabled={isPending}
             >
-              ✕
+              <XIcon className="size-3.5" aria-hidden="true" />
             </Button>
           </div>
         )}

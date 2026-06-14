@@ -95,9 +95,9 @@ export function AppointmentStatusActions({ appointmentId, currentStatus, onUpdat
         aria-label={t("reopenAction")}
       >
         {isPending ? (
-          <Loader2Icon className="h-3.5 w-3.5 animate-spin" />
+          <Loader2Icon className="size-3.5 animate-spin" />
         ) : (
-          <UndoIcon className="h-3.5 w-3.5" />
+          <UndoIcon className="size-3.5" />
         )}
         <span className="ml-1 hidden sm:inline">{t("reopenAction")}</span>
       </Button>
@@ -116,9 +116,9 @@ export function AppointmentStatusActions({ appointmentId, currentStatus, onUpdat
             aria-label={t("confirmAction")}
           >
             {isPending ? (
-              <Loader2Icon className="h-3.5 w-3.5 animate-spin" />
+              <Loader2Icon className="size-3.5 animate-spin" />
             ) : (
-              <CheckIcon className="h-3.5 w-3.5" />
+              <CheckIcon className="size-3.5" />
             )}
             <span className="ml-1 hidden sm:inline">{t("confirmAction")}</span>
           </Button>
@@ -131,9 +131,9 @@ export function AppointmentStatusActions({ appointmentId, currentStatus, onUpdat
           aria-label={t("completeAction")}
         >
           {isPending ? (
-            <Loader2Icon className="h-3.5 w-3.5 animate-spin" />
+            <Loader2Icon className="size-3.5 animate-spin" />
           ) : (
-            <CheckCheckIcon className="h-3.5 w-3.5" />
+            <CheckCheckIcon className="size-3.5" />
           )}
           <span className="ml-1 hidden sm:inline">{t("completeAction")}</span>
         </Button>
@@ -145,9 +145,9 @@ export function AppointmentStatusActions({ appointmentId, currentStatus, onUpdat
           aria-label={t("noShowAction")}
         >
           {isPending ? (
-            <Loader2Icon className="h-3.5 w-3.5 animate-spin" />
+            <Loader2Icon className="size-3.5 animate-spin" />
           ) : (
-            <UserXIcon className="h-3.5 w-3.5" />
+            <UserXIcon className="size-3.5" />
           )}
           <span className="ml-1 hidden sm:inline">{t("noShowAction")}</span>
         </Button>
@@ -161,7 +161,7 @@ export function AppointmentStatusActions({ appointmentId, currentStatus, onUpdat
           }}
           aria-label={t("rescheduleAction")}
         >
-          <CalendarClockIcon className="h-3.5 w-3.5" />
+          <CalendarClockIcon className="size-3.5" />
           <span className="ml-1 hidden sm:inline">{t("rescheduleAction")}</span>
         </Button>
         <Button
@@ -175,7 +175,7 @@ export function AppointmentStatusActions({ appointmentId, currentStatus, onUpdat
           aria-label={t("cancelAction")}
           className="text-destructive hover:text-destructive"
         >
-          <XIcon className="h-3.5 w-3.5" />
+          <XIcon className="size-3.5" />
           <span className="ml-1 hidden sm:inline">{t("cancelAction")}</span>
         </Button>
       </div>
@@ -196,7 +196,7 @@ export function AppointmentStatusActions({ appointmentId, currentStatus, onUpdat
             disabled={isPending}
             onClick={() => act("cancel", cancelReason.trim() || undefined)}
           >
-            {isPending ? <Loader2Icon className="h-3.5 w-3.5 animate-spin" /> : t("cancelAction")}
+            {isPending ? <Loader2Icon className="size-3.5 animate-spin" /> : t("cancelAction")}
           </Button>
         </div>
       )}
@@ -220,7 +220,7 @@ export function AppointmentStatusActions({ appointmentId, currentStatus, onUpdat
             />
             <Button size="sm" variant="outline" disabled={isPending} onClick={submitReschedule}>
               {isPending ? (
-                <Loader2Icon className="h-3.5 w-3.5 animate-spin" />
+                <Loader2Icon className="size-3.5 animate-spin" />
               ) : (
                 t("rescheduleConfirm")
               )}

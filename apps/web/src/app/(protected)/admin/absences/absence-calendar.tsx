@@ -108,11 +108,11 @@ export function AbsenceCalendar({ year, month, absences, employees }: Props) {
       {/* Month navigation */}
       <div className="flex items-center justify-between">
         <Button variant="outline" size="sm" onClick={prevMonth} disabled={isPending}>
-          <ChevronLeftIcon className="h-4 w-4" />
+          <ChevronLeftIcon className="size-4" />
         </Button>
         <h2 className="text-lg font-semibold capitalize">{monthName}</h2>
         <Button variant="outline" size="sm" onClick={nextMonth} disabled={isPending}>
-          <ChevronRightIcon className="h-4 w-4" />
+          <ChevronRightIcon className="size-4" />
         </Button>
       </div>
 
@@ -161,7 +161,7 @@ export function AbsenceCalendar({ year, month, absences, employees }: Props) {
                           handleDelete(a.id);
                         }}
                       >
-                        <Trash2Icon className="h-3 w-3" />
+                        <Trash2Icon className="size-3" />
                       </button>
                     </div>
                   ))}
@@ -198,7 +198,7 @@ export function AbsenceCalendar({ year, month, absences, employees }: Props) {
                     onClick={() => handleDelete(a.id)}
                     className="opacity-60 hover:opacity-100 ml-2"
                   >
-                    <Trash2Icon className="h-3.5 w-3.5" />
+                    <Trash2Icon className="size-3.5" />
                   </button>
                 </div>
               ))}
@@ -224,7 +224,7 @@ export function AbsenceCalendar({ year, month, absences, employees }: Props) {
               setSelectedDate(selectedDate === date ? null : date);
             }}
           >
-            <PlusIcon className="h-4 w-4 mr-1" aria-hidden="true" />
+            <PlusIcon className="size-4 mr-1" aria-hidden="true" />
             {t("logAbsence")}
           </Button>
         </div>
@@ -296,7 +296,7 @@ export function AbsenceCalendar({ year, month, absences, employees }: Props) {
             )}
             <div className="flex gap-2">
               <Button type="submit" size="sm" disabled={isPending}>
-                {isPending ? <Loader2Icon className="h-3.5 w-3.5 animate-spin mr-1" /> : null}
+                {isPending ? <Loader2Icon className="size-3.5 animate-spin mr-1" /> : null}
                 {t("save")}
               </Button>
               <Button

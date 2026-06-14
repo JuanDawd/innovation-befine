@@ -44,7 +44,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
     return (
       <div className="flex flex-col items-center justify-center gap-4 rounded-lg border border-destructive/20 bg-destructive/5 p-8 text-center">
-        <AlertTriangleIcon className="h-8 w-8 text-destructive" aria-hidden />
+        <AlertTriangleIcon className="size-8 text-destructive" aria-hidden />
         <div>
           <p className="text-sm font-medium text-destructive">Ocurrió un error inesperado</p>
           {this.state.eventId && (

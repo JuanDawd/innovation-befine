@@ -38,7 +38,7 @@ function PieceNotes({ piece }: { piece: ProductPieceRow }) {
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
       >
-        {open ? <ChevronUpIcon className="h-3 w-3" /> : <ChevronDownIcon className="h-3 w-3" />}
+        {open ? <ChevronUpIcon className="size-3" /> : <ChevronDownIcon className="size-3" />}
         {t("viewNotes")}
       </button>
       {open && (
@@ -140,7 +140,7 @@ export function ClothierWorkBoard({ employeeId }: { employeeId: string }) {
   if (isLoading && pieces.length === 0) {
     return (
       <div className="flex items-center justify-center py-16">
-        <Loader2Icon className="h-6 w-6 animate-spin text-muted-foreground" />
+        <Loader2Icon className="size-6 animate-spin text-muted-foreground" />
       </div>
     );
   }
@@ -187,9 +187,9 @@ export function ClothierWorkBoard({ employeeId }: { employeeId: string }) {
                 >
                   <div className="flex items-start gap-3 flex-1 min-w-0">
                     {isDone ? (
-                      <CheckCircle2Icon className="h-5 w-5 shrink-0 text-green-600 mt-0.5" />
+                      <CheckCircle2Icon className="size-5 shrink-0 text-green-600 mt-0.5" />
                     ) : (
-                      <CircleIcon className="h-5 w-5 shrink-0 text-muted-foreground mt-0.5" />
+                      <CircleIcon className="size-5 shrink-0 text-muted-foreground mt-0.5" />
                     )}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
@@ -218,7 +218,7 @@ export function ClothierWorkBoard({ employeeId }: { employeeId: string }) {
                         className="min-w-[80px]"
                       >
                         {pendingId === piece.id ? (
-                          <Loader2Icon className="h-4 w-4 animate-spin" />
+                          <Loader2Icon className="size-4 animate-spin" />
                         ) : (
                           t("markDone")
                         )}
@@ -248,7 +248,7 @@ export function ClothierWorkBoard({ employeeId }: { employeeId: string }) {
                 className="flex items-start justify-between gap-3 px-4 py-4 min-h-[64px]"
               >
                 <div className="flex items-start gap-3 flex-1 min-w-0">
-                  <PlusCircleIcon className="h-5 w-5 shrink-0 text-muted-foreground mt-0.5" />
+                  <PlusCircleIcon className="size-5 shrink-0 text-muted-foreground mt-0.5" />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-sm font-medium truncate">{piece.clothPieceName}</span>
@@ -269,7 +269,7 @@ export function ClothierWorkBoard({ employeeId }: { employeeId: string }) {
                     className="min-w-[80px]"
                   >
                     {pendingId === piece.id ? (
-                      <Loader2Icon className="h-4 w-4 animate-spin" />
+                      <Loader2Icon className="size-4 animate-spin" />
                     ) : (
                       t("claim")
                     )}

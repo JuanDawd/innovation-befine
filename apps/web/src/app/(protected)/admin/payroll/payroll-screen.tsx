@@ -241,7 +241,7 @@ export function PayrollScreen({ days, employees, history, initialEmployeeId }: P
           )}
           {selectedDays.size > 0 && (
             <Button size="sm" variant="outline" disabled={isPending} onClick={handlePreview}>
-              {isPending ? <Loader2Icon className="h-3.5 w-3.5 animate-spin mr-1" /> : null}
+              {isPending ? <Loader2Icon className="size-3.5 animate-spin mr-1" /> : null}
               {t("preview")} ({selectedDays.size} {t("days")})
             </Button>
           )}
@@ -388,9 +388,9 @@ export function PayrollScreen({ days, employees, history, initialEmployeeId }: P
             trigger={
               <Button size="sm" disabled={isPending}>
                 {isPending ? (
-                  <Loader2Icon className="h-3.5 w-3.5 animate-spin mr-1" />
+                  <Loader2Icon className="size-3.5 animate-spin mr-1" />
                 ) : (
-                  <CheckIcon className="h-3.5 w-3.5 mr-1" />
+                  <CheckIcon className="size-3.5 mr-1" />
                 )}
                 {t("confirm")}
               </Button>
@@ -405,7 +405,7 @@ export function PayrollScreen({ days, employees, history, initialEmployeeId }: P
 
       {success && (
         <div className="flex items-center gap-2 text-sm text-green-700 dark:text-green-400 rounded-md border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/20 px-4 py-3">
-          <CheckIcon className="h-4 w-4" />
+          <CheckIcon className="size-4" />
           {t("payoutRecorded")}
         </div>
       )}

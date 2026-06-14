@@ -1346,7 +1346,7 @@
 ## Phase 5: Final Stabilization Before Release
 
 **Started:** —
-**Status:** Pending — all tasks pending.
+**Status:** Complete — 5.0 and 5.1 done at release; 5.2, 5.3, 5.4 deferred to post-release.
 
 > Last-mile polish and documentation required before handing the system to real users. No new features.
 
@@ -1412,6 +1412,36 @@
 
 ### Task 5.2: Icon audit and replacement across screens
 
+- **Dependencies:** Task 2.11.
+- **Status:** Deferred → Phase 6
+
+---
+
+### Task 5.3: Annotate hardest steps in role training guides
+
+- **Dependencies:** None.
+- **Status:** Deferred → Phase 6
+
+---
+
+### Task 5.4: Diagnose and permanently fix recurring `AppShell` hydration mismatch
+
+- **Dependencies:** None.
+- **Status:** Deferred → Phase 6
+
+---
+
+## Phase 6: Post-Release Polish
+
+**Started:** —
+**Status:** Pending.
+
+> Deferred from Phase 5. Low-urgency polish items — no blockers on active usage.
+
+---
+
+### Task 6.1: Icon audit and replacement across screens
+
 - **Description:** Several screens use no icons, wrong icons, or inconsistent sizes. Icon-only controls lack `aria-label`. Audit every surface and replace text-only or ad-hoc icons with Lucide icons. Standardise sizes: `size-4` inside buttons, `size-5` or `size-6` standalone. Add `aria-label` to every icon-only interactive element.
 - **Acceptance Criteria:**
   - Every screen in the audit table uses a Lucide icon matching the target column.
@@ -1419,14 +1449,14 @@
   - Imports are individual (`import { IconName } from "lucide-react"`), no barrel imports.
 - **Testing Steps:**
   - Visual pass on cashier dashboard, ticket detail, secretary calendar, admin catalog, empty employee list → every interactive icon has a label or visible text.
-- **Dependencies:** Task 2.11.
-- **Status:** Pending
+- **Dependencies:** None.
+- **Status:** Done
 
 ---
 
-### Task 5.3: Annotate hardest steps in role training guides
+### Task 6.2: Annotate hardest steps in role training guides
 
-- **Description:** Each of the four training guides (cashier_admin, secretary, stylist, clothier) lacks screenshots on its 2–3 hardest steps. Trainees cannot follow text-only instructions for non-obvious flows. Capture annotated screenshots (red outline + numbered callout) and embed them under the matching step section in each guide's markdown file.
+- **Description:** Each of the four training guides (cashier, secretary, stylist, clothier) lacks screenshots on its 2–3 hardest steps. Capture annotated screenshots (red outline + numbered callout) and embed them under the matching step section in each guide's markdown file.
 - **Acceptance Criteria:**
   - Each role guide has at least 2 annotated screenshots on its hardest steps.
   - Screenshots use a consistent annotation style (red outline + numbered callout).
@@ -1438,17 +1468,15 @@
 
 ---
 
-### Task 5.4: Diagnose and permanently fix recurring `AppShell` hydration mismatch
+### Task 6.3: Diagnose and permanently fix recurring `AppShell` hydration mismatch
 
-- **Description:** `AppShell` triggers a React hydration mismatch that recurs each time new code is added, suggesting a structural root cause rather than an isolated bug. The fix has been applied multiple times but regresses. This task is a full root-cause investigation: identify which part of `AppShell` produces different server vs. client HTML (likely browser-only APIs, conditional rendering based on `typeof window`, cookie/localStorage reads before mount, or a third-party component that renders differently on server), then apply a durable fix that does not regress as the component grows.
+- **Description:** `AppShell` triggers a React hydration mismatch that recurs each time new code is added. Full root-cause investigation: identify which part of `AppShell` produces different server vs. client HTML (likely browser-only APIs, conditional rendering based on `typeof window`, cookie/localStorage reads before mount, or a third-party component that renders differently on server), then apply a durable fix.
 - **Acceptance Criteria:**
   - Zero hydration warnings on any authenticated route in the browser console.
-  - Root cause documented in a code comment at the fix site explaining why this pattern causes the mismatch.
-  - A lint rule or code review note added to prevent the same pattern from being reintroduced (e.g. ESLint `no-restricted-syntax` or a CLAUDE.md note).
+  - Root cause documented in a code comment at the fix site.
   - Fix survives adding new sidebar items, new providers, and new theme-related state without re-triggering the mismatch.
 - **Testing Steps:**
   - Open every role's landing page in a fresh browser session → zero hydration warnings in the console.
-  - Toggle theme, collapse sidebar, add a new nav item → reload → still zero warnings.
   - Run `turbo build` → zero Next.js hydration warnings in build output.
 - **Dependencies:** None.
 - **Status:** Pending

@@ -339,7 +339,7 @@ export function LargeOrderDetail({
         </div>
         {!isTerminal && !editing && (
           <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
-            <PencilIcon className="h-3.5 w-3.5 mr-1.5" />
+            <PencilIcon className="size-3.5 mr-1.5" />
             {t("editOrder")}
           </Button>
         )}
@@ -418,9 +418,9 @@ export function LargeOrderDetail({
           <div className="flex gap-2">
             <Button size="sm" disabled={isPending} onClick={saveEdit}>
               {isPending ? (
-                <Loader2Icon className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                <Loader2Icon className="size-3.5 animate-spin mr-1.5" />
               ) : (
-                <CheckIcon className="h-3.5 w-3.5 mr-1.5" />
+                <CheckIcon className="size-3.5 mr-1.5" />
               )}
               {t("submit")}
             </Button>
@@ -433,7 +433,7 @@ export function LargeOrderDetail({
                 setError(null);
               }}
             >
-              <XIcon className="h-3.5 w-3.5 mr-1.5" />
+              <XIcon className="size-3.5 mr-1.5" />
               Cancelar
             </Button>
           </div>
@@ -554,7 +554,7 @@ export function LargeOrderDetail({
                 disabled={isPending}
                 onClick={() => transition(action)}
               >
-                {isPending ? <Loader2Icon className="h-3.5 w-3.5 animate-spin mr-1.5" /> : null}
+                {isPending ? <Loader2Icon className="size-3.5 animate-spin mr-1.5" /> : null}
                 {t(`action_${action}` as Parameters<typeof t>[0])}
               </Button>
             ))}
@@ -568,7 +568,7 @@ export function LargeOrderDetail({
               setCancelDialogOpen(true);
             }}
           >
-            <XIcon className="h-3.5 w-3.5 mr-1.5" />
+            <XIcon className="size-3.5 mr-1.5" />
             {t("action_cancel")}
           </Button>
         </div>
@@ -617,7 +617,7 @@ export function LargeOrderDetail({
                     type="checkbox"
                     checked={acknowledgedDeposits}
                     onChange={(e) => setAcknowledgedDeposits(e.target.checked)}
-                    className="h-4 w-4 rounded border-input"
+                    className="size-4 rounded border-input"
                   />
                   <span className="text-amber-800 dark:text-amber-300 font-medium">
                     {t("cancelDepositAck")}
@@ -661,7 +661,7 @@ export function LargeOrderDetail({
               disabled={isPending || (hasDeposits && !acknowledgedDeposits)}
               onClick={confirmCancel}
             >
-              {isPending ? <Loader2Icon className="h-3.5 w-3.5 animate-spin mr-1.5" /> : null}
+              {isPending ? <Loader2Icon className="size-3.5 animate-spin mr-1.5" /> : null}
               {t("action_cancel")}
             </Button>
           </DialogFooter>
@@ -728,7 +728,7 @@ export function LargeOrderDetail({
                 </p>
               )}
               <Button type="submit" size="sm" disabled={isPending}>
-                {isPending ? <Loader2Icon className="h-3.5 w-3.5 animate-spin mr-1.5" /> : null}
+                {isPending ? <Loader2Icon className="size-3.5 animate-spin mr-1.5" /> : null}
                 {t("recordPayment")}
               </Button>
             </form>

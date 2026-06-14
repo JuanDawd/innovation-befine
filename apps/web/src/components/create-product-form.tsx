@@ -156,7 +156,7 @@ export function CreateProductForm({
   if (isLoading) {
     return (
       <div className="flex items-center gap-2 text-sm text-muted-foreground py-8">
-        <Loader2Icon className="h-4 w-4 animate-spin" />
+        <Loader2Icon className="size-4 animate-spin" />
         {tc("loading")}
       </div>
     );
@@ -333,7 +333,7 @@ export function CreateProductForm({
                     onClick={() => removeLine(line.key)}
                     disabled={lines.length === 1}
                   >
-                    <Trash2Icon className="h-4 w-4" />
+                    <Trash2Icon className="size-4" />
                   </Button>
                 </div>
               </div>
@@ -404,14 +404,14 @@ export function CreateProductForm({
         })}
 
         <Button type="button" variant="outline" size="sm" onClick={addLine} className="self-start">
-          <PlusIcon className="h-4 w-4 mr-1" />
+          <PlusIcon className="size-4 mr-1" />
           {t("addPiece")}
         </Button>
       </div>
 
       {/* Submit */}
       <Button onClick={handleSubmit} disabled={isPending}>
-        {isPending && <Loader2Icon className="h-4 w-4 mr-2 animate-spin" />}
+        {isPending && <Loader2Icon className="size-4 mr-2 animate-spin" />}
         {t("submit")}
       </Button>
     </div>
