@@ -1464,7 +1464,7 @@
 - **Testing Steps:**
   - Hand a guide to a staff member who has not used the system → they complete the highlighted step without asking for clarification.
 - **Dependencies:** None.
-- **Status:** Pending
+- **Status:** Deferred → ~2026-09-01 (awaiting user feedback after ~2–3 months of real usage)
 
 ---
 
