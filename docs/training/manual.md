@@ -3,6 +3,10 @@
 > **Versión:** Post-lanzamiento · **Idioma:** Español (primario)  
 > Cubre todas las pantallas del sistema agrupadas por rol.  
 > Los roles son: **Admin**, **Cajero**, **Secretaria**, **Estilista**, **Confeccionista**.
+>
+> **Capturas de pantalla:** Las imágenes se generan con el script Playwright en `apps/web/e2e/screenshots.ts`.  
+> Para regenerarlas: inicia el servidor (`pnpm dev`) y ejecuta:  
+> `PLAYWRIGHT_BASE_URL=http://localhost:3000 pnpm --filter @befine/web test:e2e --project=chromium e2e/screenshots.ts`
 
 ---
 
@@ -93,6 +97,8 @@ Accede a través del prefijo `/admin` y `/cashier`.
 
 ### 2.1 Panel del cajero (`/cashier`)
 
+![Panel del cajero](screenshots/admin/01-dashboard.png)
+
 Pantalla de inicio del Admin y del Cajero. Es el centro de operaciones del día.
 
 **Qué muestra:**
@@ -126,6 +132,8 @@ Abrir día → Registrar tickets → Marcar listos → Cobrar → Cerrar día
 
 ### 2.2 Historial de tickets (`/cashier/tickets/history`)
 
+![Historial de tickets](screenshots/admin/02-ticket-history.png)
+
 Vista de todos los tickets **cerrados** (cobrados), organizados por día laboral.
 
 **Qué muestra:**
@@ -146,6 +154,8 @@ Vista de todos los tickets **cerrados** (cobrados), organizados por día laboral
 ---
 
 ### 2.3 Citas (`/cashier/appointments`)
+
+![Citas](screenshots/admin/03-appointments.png)
 
 Calendario de citas del salón. Admin y Cajero ven todas las citas; la Secretaria las gestiona.
 
@@ -170,6 +180,8 @@ Calendario de citas del salón. Admin y Cajero ven todas las citas; la Secretari
 ---
 
 ### 2.4 Pedidos grandes (`/large-orders`)
+
+![Pedidos grandes](screenshots/admin/04-large-orders.png)
 
 Gestión de pedidos de clientes que implican múltiples piezas de confección.
 
@@ -201,6 +213,8 @@ Tres secciones:
 ---
 
 ### 2.5 Productos — confección (`/admin/products`)
+
+![Productos — confección](screenshots/admin/05-products.png)
 
 Gestión de los lotes de producción (confeccionables) creados por el negocio.
 
@@ -241,6 +255,8 @@ Cada fila muestra: estado (badge de color), empleadas asignadas, cantidad total,
 
 ### 2.6 Empleados (`/admin/employees`)
 
+![Empleados](screenshots/admin/06-employees.png)
+
 Directorio de todos los empleados registrados en el sistema.
 
 **Qué muestra:**
@@ -264,6 +280,8 @@ Directorio de todos los empleados registrados en el sistema.
 ---
 
 ### 2.7 Catálogo (`/admin/catalog`)
+
+![Catálogo](screenshots/admin/07-catalog.png)
 
 Gestión de los servicios ofrecidos y las piezas de tela disponibles. Dos pestañas:
 
@@ -305,6 +323,8 @@ Gestión de los servicios ofrecidos y las piezas de tela disponibles. Dos pesta�
 
 ### 2.8 Ausencias (`/admin/absences`)
 
+![Ausencias](screenshots/admin/08-absences.png)
+
 Registro de ausencias y vacaciones de empleados.
 
 **Qué muestra:**
@@ -325,6 +345,8 @@ Registro de ausencias y vacaciones de empleados.
 ---
 
 ### 2.9 Nómina (`/admin/payroll`)
+
+![Nómina](screenshots/admin/09-payroll.png)
 
 Liquidación de pagos a empleados.
 
@@ -358,6 +380,8 @@ Liquidación de pagos a empleados.
 ---
 
 ### 2.10 Analíticas (`/admin/analytics`)
+
+![Analíticas](screenshots/admin/10-analytics.png)
 
 Reportes de rendimiento del negocio.
 
@@ -395,6 +419,8 @@ Al hacer clic en el nombre de una empleada en la tabla, aparece el detalle:
 ---
 
 ### 2.11 Configuración (`/admin/settings`)
+
+![Configuración](screenshots/admin/11-settings.png)
 
 Ajustes de comportamiento del sistema. Solo visible para el rol **Admin**.
 
@@ -443,6 +469,8 @@ La Secretaria gestiona citas, pedidos y producción. No tiene acceso a caja (cob
 
 ### 4.1 Panel de la secretaria (`/secretary`)
 
+![Panel de la secretaria](screenshots/secretary/01-dashboard.png)
+
 Pantalla de inicio de la Secretaria.
 
 **Qué muestra:**
@@ -454,6 +482,8 @@ Pantalla de inicio de la Secretaria.
 ---
 
 ### 4.2 Pedidos grandes (`/large-orders`)
+
+![Pedidos grandes — secretaria](screenshots/secretary/04-large-orders.png)
 
 Misma pantalla que Admin §2.4. La Secretaria puede:
 
@@ -469,6 +499,8 @@ Misma pantalla que Admin §2.4. La Secretaria puede:
 
 ### 4.3 Productos — confección (`/secretary/products`)
 
+![Productos — secretaria](screenshots/secretary/03-products.png)
+
 Misma funcionalidad que Admin §2.5. La Secretaria puede:
 
 - Ver el tablero de lotes (Hoy / En progreso).
@@ -479,6 +511,8 @@ Misma funcionalidad que Admin §2.5. La Secretaria puede:
 ---
 
 ### 4.4 Citas (`/secretary/appointments`)
+
+![Citas — secretaria](screenshots/secretary/02-appointments.png)
 
 La pantalla de citas es la herramienta principal de la Secretaria.
 
@@ -504,6 +538,8 @@ La pantalla de citas es la herramienta principal de la Secretaria.
 
 ### 4.5 Mis ganancias (`/secretary/earnings`)
 
+![Mis ganancias — secretaria](screenshots/secretary/05-earnings.png)
+
 Resumen de las ganancias de la Secretaria.
 
 **Qué muestra:**
@@ -516,6 +552,8 @@ Resumen de las ganancias de la Secretaria.
 ---
 
 ### 4.6 Clientes (`/secretary/clients`)
+
+![Clientes — secretaria](screenshots/secretary/06-clients.png)
 
 Directorio de clientes registrados en el sistema.
 
@@ -544,6 +582,8 @@ La Estilista usa el sistema principalmente en su **teléfono móvil**. La interf
 ---
 
 ### 5.1 Mis tickets (`/stylist`)
+
+![Mis tickets — estilista](screenshots/stylist/01-my-tickets.png)
 
 Pantalla de inicio de la Estilista. Muestra sus tickets activos del día.
 
@@ -575,6 +615,8 @@ Pantalla de inicio de la Estilista. Muestra sus tickets activos del día.
 
 ### 5.2 Mis ganancias (`/stylist/earnings`)
 
+![Mis ganancias — estilista](screenshots/stylist/02-earnings.png)
+
 Resumen de comisiones de la Estilista.
 
 **Qué muestra:**
@@ -594,6 +636,8 @@ La Confeccionista usa el sistema en su **teléfono móvil**, con interfaz de bar
 ---
 
 ### 6.1 Mi trabajo (`/clothier`)
+
+![Mi trabajo — confeccionista](screenshots/clothier/01-my-work.png)
 
 Pantalla de inicio de la Confeccionista. Muestra su tablero de trabajo del día.
 
@@ -634,6 +678,8 @@ Si una pieza tiene color, talla, estilo o instrucciones, aparece el botón **"Ve
 ---
 
 ### 6.2 Mis ganancias (`/clothier/earnings`)
+
+![Mis ganancias — confeccionista](screenshots/clothier/02-earnings.png)
 
 Resumen de ganancias de la Confeccionista.
 
