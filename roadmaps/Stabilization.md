@@ -1413,21 +1413,21 @@
 ### Task 5.2: Icon audit and replacement across screens
 
 - **Dependencies:** Task 2.11.
-- **Status:** Deferred → Phase 6
+- **Status:** Done — completed as Task 6.1
 
 ---
 
 ### Task 5.3: Annotate hardest steps in role training guides
 
 - **Dependencies:** None.
-- **Status:** Deferred → Phase 6
+- **Status:** Pending — moved to PostMVP Phase K (target 2026-09-01 after staff feedback)
 
 ---
 
 ### Task 5.4: Diagnose and permanently fix recurring `AppShell` hydration mismatch
 
 - **Dependencies:** None.
-- **Status:** Deferred → Phase 6
+- **Status:** Done — completed as Task 6.3
 
 ---
 

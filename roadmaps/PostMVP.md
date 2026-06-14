@@ -418,3 +418,25 @@
   - Sell 2 → stock becomes 0 → further sales blocked.
   - Admin restocks + 10 → stock becomes 10 → sales resume.
 - **Dependencies:** cloth_sales table (MVP).
+- **Status:** Pending
+
+---
+
+## Phase K: Training & Documentation
+
+> Documentation improvements driven by real staff usage. Tasks in this phase are unlocked only after collecting feedback from ~2–3 months of live operation.
+
+---
+
+### Task K.1: Annotate hardest steps in role training guides
+
+- **Description:** Each of the four training guides (`cashier-admin.md`, `secretary.md`, `stylist.md`, `clothier.md`) needs annotated screenshots on its 2–3 hardest steps. Capture screenshots with a consistent annotation style (red outline + numbered callout) and embed them inline. Work is informed by real staff pain points collected after launch.
+- **Acceptance Criteria:**
+  - Each role guide has at least 2 annotated screenshots on its hardest steps.
+  - Screenshots use a consistent annotation style: red border + numbered callout bubble.
+  - Image paths are relative under `docs/training/` so guides remain portable.
+  - A staff member who has never used the system can complete the highlighted step without asking for clarification.
+- **Testing Steps:**
+  - Hand each guide to a new staff member → they complete the annotated step unassisted.
+- **Dependencies:** ~2–3 months of real staff usage feedback (earliest: 2026-09-01).
+- **Status:** Pending
