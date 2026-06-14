@@ -23,8 +23,12 @@
 import { test, type Page, type BrowserContext } from "@playwright/test";
 import { mkdir } from "fs/promises";
 import path from "path";
+import { fileURLToPath } from "url";
 
 // ─── Paths ────────────────────────────────────────────────────────────────────
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Repo root is 3 levels up from apps/web/e2e/
 const REPO_ROOT = path.resolve(__dirname, "../../../");
