@@ -3,7 +3,11 @@
  */
 
 import { Suspense } from "react";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
+import { auth } from "@/lib/auth";
+import { hasRole } from "@/lib/middleware-helpers";
 import { PageSkeleton } from "@/components/ui/loading-skeleton";
 import { ClientList } from "@/components/client-list";
 import { listClients } from "@/app/(protected)/clients/actions";
@@ -15,6 +19,9 @@ async function ClientData() {
 }
 
 export default async function SecretaryClientsPage() {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session || !hasRole(session.user, "secretary")) redirect("/secretary");
+
   const t = await getTranslations("clients");
 
   return (

@@ -39,6 +39,7 @@ export const NAV_ITEMS: Record<AppRole, NavItem[]> = {
     { key: "ticketHistory", href: "/cashier/tickets/history", icon: ReceiptIcon },
     { key: "appointments", href: "/cashier/appointments", icon: CalendarDays },
     { key: "largeOrders", href: "/large-orders", icon: ShoppingBag },
+    { key: "clients", href: "/cashier/clients", icon: Users },
   ],
   admin: [
     { key: "dashboard", href: "/cashier", icon: LayoutDashboard },
@@ -58,6 +59,7 @@ export const NAV_ITEMS: Record<AppRole, NavItem[]> = {
     { key: "largeOrders", href: "/large-orders", icon: ShoppingBag },
     { key: "products", href: "/secretary/products", icon: Layers },
     { key: "appointments", href: "/secretary/appointments", icon: CalendarDays },
+    { key: "clients", href: "/secretary/clients", icon: Users },
     { key: "myEarnings", href: "/secretary/earnings", icon: Wallet },
   ],
   stylist: [
