@@ -42,10 +42,11 @@ export type ConflictDetail = {
 
 async function requireBookingRole() {
   const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) return { ok: false as const, code: "UNAUTHORIZED" as const, userId: null };
-  if (!hasRole(session.user, "admin", "secretary"))
-    return { ok: false as const, code: "FORBIDDEN" as const, userId: null };
-  return { ok: true as const, code: null, userId: session.user.id };
+  if (!session)
+    return { ok: false as const, code: "UNAUTHORIZED" as const, userId: null, user: null };
+  if (!hasRole(session.user, "admin", "secretary", "cashier"))
+    return { ok: false as const, code: "FORBIDDEN" as const, userId: null, user: null };
+  return { ok: true as const, code: null, userId: session.user.id, user: session.user };
 }
 
 // ─── Create appointment ───────────────────────────────────────────────────────
@@ -525,6 +526,9 @@ export async function acknowledgeAppointmentPriceChange(
         message: guard.code === "UNAUTHORIZED" ? "No autenticado" : "Sin permisos",
       },
     };
+  // Price-change acknowledgement is a secretary/admin-only responsibility
+  if (guard.user && !hasRole(guard.user, "admin", "secretary"))
+    return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
 
   const rl = await checkRateLimit(rateLimits.general, guard.userId!);
   if (!rl.allowed)

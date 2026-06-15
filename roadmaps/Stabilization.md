@@ -1534,7 +1534,7 @@ Issues discovered during a full code-path audit of every role's flows. All three
   - Book a new appointment as cashier → appointment appears in the list.
   - Mark an appointment as completed as cashier → status updates.
 - **Dependencies:** None.
-- **Status:** pending
+- **Status:** Done
 
 ---
 
