@@ -125,6 +125,7 @@ function UserMenu({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
+        id="user-menu-trigger"
         aria-label={t("nav.openUserMenu")}
         className="flex min-w-0 flex-1 items-center gap-2.5 rounded-md p-1 text-left outline-none transition-colors hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-sidebar-ring"
       >
@@ -179,11 +180,18 @@ function SidebarNavItem({ item, active }: { item: NavItem; active: boolean }) {
   const t = useTranslations("nav");
   const Icon = item.icon;
   const label = t(item.key as Parameters<typeof t>[0]);
+  // Stable id prevents Base UI's useId() from generating different values on server vs client.
+  const stableId = `nav-${item.href.replace(/^\//, "").replace(/\//g, "-") || "home"}`;
 
   if (item.disabled) {
     return (
       <SidebarMenuItem>
-        <SidebarMenuButton disabled tooltip={label} className="cursor-not-allowed opacity-40">
+        <SidebarMenuButton
+          disabled
+          tooltip={label}
+          id={stableId}
+          className="cursor-not-allowed opacity-40"
+        >
           <Icon aria-hidden="true" />
           <span className="italic">{label}</span>
         </SidebarMenuButton>
@@ -197,6 +205,7 @@ function SidebarNavItem({ item, active }: { item: NavItem; active: boolean }) {
         render={<Link href={item.href} aria-current={active ? "page" : undefined} />}
         isActive={active}
         tooltip={label}
+        id={stableId}
         className="data-[active=true]:bg-transparent data-[active=true]:font-medium data-[active=true]:text-sidebar-foreground"
       >
         <span
@@ -357,6 +366,7 @@ export function AppShell({
               <SidebarMenuButton
                 onClick={() => setLogServiceOpen(true)}
                 tooltip={t("tickets.logService")}
+                id="sidebar-log-service"
               >
                 <PlusIcon aria-hidden="true" />
                 <span>{t("tickets.logService")}</span>
@@ -364,7 +374,11 @@ export function AppShell({
             </SidebarMenuItem>
             {(role === "cashier" || role === "admin") && (
               <SidebarMenuItem>
-                <SidebarMenuButton onClick={() => setSellOpen(true)} tooltip="Vender prenda">
+                <SidebarMenuButton
+                  onClick={() => setSellOpen(true)}
+                  tooltip="Vender prenda"
+                  id="sidebar-sell"
+                >
                   <ShoppingBagIcon aria-hidden="true" />
                   <span>Vender prenda</span>
                 </SidebarMenuButton>
@@ -374,6 +388,7 @@ export function AppShell({
               <SidebarMenuButton
                 onClick={() => setCheckoutOpen(true)}
                 tooltip={t("dayAtAGlance.actionCheckout")}
+                id="sidebar-checkout"
               >
                 <CreditCardIcon aria-hidden="true" />
                 <span>{t("dayAtAGlance.actionCheckout")}</span>
