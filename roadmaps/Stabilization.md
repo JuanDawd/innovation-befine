@@ -1510,3 +1510,142 @@ Issues discovered during a full code-path audit of every role's flows. All three
   - Sign in as `stylist` → navigate directly to `/cashier/clients` → 403 or redirect.
 - **Dependencies:** None.
 - **Status:** Done
+
+---
+
+### Task 5R.4: Fix cashier access to appointments actions (G1 — High)
+
+- **Description:** Cashier has `/cashier/appointments` in their nav and a role-gated page (`hasRole("cashier","admin")`), but every underlying server action gates to `admin | secretary` only. Visiting the page as cashier returns empty data or silent FORBIDDEN responses. Add `"cashier"` to the role checks in `appointments/actions.ts`.
+- **Scope:**
+  - `apps/web/src/app/(protected)/appointments/actions.ts`:
+    - `createAppointment` → allow `cashier | admin | secretary`
+    - `listAppointmentsForDate` → allow `cashier | admin | secretary`
+    - `listBookingStylists` → allow `cashier | admin | secretary`
+    - `transitionAppointment` → allow `cashier | admin | secretary`
+    - `acknowledgeAppointmentPriceChange` → keep `admin | secretary` (cashier doesn't own the notification flow)
+- **Acceptance Criteria:**
+  - Sign in as `cashier` → navigate to `/cashier/appointments` → appointment list renders with real data.
+  - Cashier can book a new appointment via `/cashier/appointments/new`.
+  - Cashier can transition an appointment status.
+  - Secretary and admin retain all existing access.
+  - `turbo typecheck && turbo test` pass.
+- **Testing Steps:**
+  - Sign in as cashier → Appointments page → list renders (not empty unless genuinely no appointments).
+  - Book a new appointment as cashier → appointment appears in the list.
+  - Mark an appointment as completed as cashier → status updates.
+- **Dependencies:** None.
+- **Status:** pending
+
+---
+
+### Task 5R.5: Fix client read access for cashier (G2 + G3 — High)
+
+- **Description:** Two separate client access gaps exist for cashier: (1) `searchClients` excludes cashier, so the client-attachment field in `LogServiceForm` fails silently when a cashier logs a ticket; (2) `listClients` excludes cashier, so `/cashier/clients` (now in their nav) returns empty or FORBIDDEN. Both fixes are a one-line role-list change each.
+- **Scope:**
+  - `apps/web/src/app/(protected)/clients/actions/index.ts`:
+    - `searchClients` → add `"cashier"` to allowed roles
+    - `listClients` → add `"cashier"` to allowed roles
+  - `createClient`, `editClient`, `archiveClient`, `unarchiveClient` remain `admin | secretary` — cashier reads but does not manage clients.
+- **Acceptance Criteria:**
+  - Sign in as `cashier` → Log service form → type a client name → autocomplete returns results.
+  - Sign in as `cashier` → `/cashier/clients` → full client list renders.
+  - Cashier cannot create, edit, or archive clients (those actions still return FORBIDDEN).
+- **Testing Steps:**
+  - Log service as cashier, search for a client by name → results appear, ticket is created with client attached.
+  - Navigate to `/cashier/clients` as cashier → list renders correctly.
+  - POST to `createClient` as cashier → `FORBIDDEN` returned.
+- **Dependencies:** None.
+- **Status:** pending
+
+---
+
+### Task 5R.6: Resolve large-orders access mismatch for cashier (G4 — Medium)
+
+- **Description:** Cashier has `/large-orders` in their nav (shared route), but all large-order server actions gate to `admin | secretary`. On visit, cashier sees an empty list because `listLargeOrders` returns FORBIDDEN. Decision: cashier should have read-only access to large orders (view list, view detail) since they handle client-facing coordination, but should not create, edit, or transition them.
+- **Scope:**
+  - `apps/web/src/app/(protected)/large-orders/actions.ts`:
+    - `listLargeOrders` → add `"cashier"`
+    - `getLargeOrder` → add `"cashier"`
+    - `getLargeOrderProductSummary` → add `"cashier"`
+    - `listClientsForOrder` → keep `admin | secretary` (cashier doesn't create orders)
+    - Mutation actions (`createLargeOrder`, `editLargeOrder`, `transitionLargeOrder`, `recordLargeOrderPayment`) → keep `admin | secretary`
+  - `apps/web/src/app/(protected)/large-orders/[id]/page.tsx` → verify cashier can view the detail page (no role gate currently, relies on middleware — add `hasRole("cashier","admin","secretary")` for defense-in-depth).
+- **Acceptance Criteria:**
+  - Sign in as `cashier` → `/large-orders` → list of orders renders.
+  - Sign in as `cashier` → click an order → detail page renders.
+  - Create/edit/pay/transition buttons are hidden or disabled for cashier on the detail page.
+  - `admin` and `secretary` retain full mutation access.
+- **Testing Steps:**
+  - Sign in as cashier → large orders list is not empty (assuming orders exist).
+  - Cashier navigates to order detail → renders without error.
+  - Cashier cannot submit a payment → action returns FORBIDDEN.
+- **Dependencies:** None.
+- **Status:** pending
+
+---
+
+### Task 5R.7: Add "Log service" sidebar shortcut for secretary (G5 — Low)
+
+- **Description:** Cashier has three sidebar footer shortcuts (Log service, Sell cloth piece, Checkout). Secretary has the same AppShell footer but receives zero shortcuts — the modal triggers are guarded by `role === "cashier" || role === "admin"`. Secretary can log tickets (action is allowed, page exists at `/secretary/tickets/new`) but has no quick-access trigger from the sidebar. Add a Log service shortcut to the secretary footer.
+- **Scope:**
+  - `apps/web/src/components/app-shell.tsx`:
+    - In `SidebarFooter`, extend the footer shortcut block to also render the "Log service" button when `role === "secretary"`.
+    - Secretary does not need Sell or Checkout (those are cashier/POS operations).
+  - The existing `LogServiceForm` modal already works for secretary — no action changes needed.
+- **Acceptance Criteria:**
+  - Sign in as `secretary` → sidebar footer shows a "Registrar servicio" (or equivalent i18n key) button.
+  - Clicking it opens the same `LogServiceForm` modal.
+  - Cashier and admin footer are unchanged.
+- **Testing Steps:**
+  - Sign in as secretary → sidebar footer button is visible → click → modal opens → submit a ticket → ticket appears in open tickets list.
+- **Dependencies:** None.
+- **Status:** pending
+
+---
+
+### Task 5R.8: Grant secretary cloth-sale permission (G6 — Low)
+
+- **Description:** Secretary can call `listClientsForSale` and `listSellableClothPieces` (used to populate the Sell modal), but `createClothSale` gates to `cashier | admin` only. In the current UX there is no Sell cloth piece button for secretary (AppShell only renders it for `role === "cashier" || role === "admin"`), so the access split is consistent — but the list actions suggest secretary was intended to have this capability. Confirm business intent and, if secretary should be able to sell, add them to `createClothSale` and the AppShell Sell button condition.
+- **Scope:**
+  - `apps/web/src/app/(protected)/cashier/actions/cloth-sales.ts` → add `"secretary"` to `createClothSale` role check.
+  - `apps/web/src/components/app-shell.tsx` → extend the "Vender prenda" button condition from `role === "cashier" || role === "admin"` to also include `role === "secretary"`.
+- **Acceptance Criteria:**
+  - Sign in as `secretary` → sidebar shows "Vender prenda" button → click → Sell modal opens → completing the sale creates a cloth sale record.
+  - Cashier and admin behavior unchanged.
+- **Testing Steps:**
+  - Sign in as secretary → sell modal → complete a sale → `cloth_sales` record created with correct data.
+  - Sign in as stylist → no sell button in UI, direct action call returns FORBIDDEN.
+- **Dependencies:** None.
+- **Status:** pending
+
+---
+
+### Task 5R.9: Birthday calendar — upcoming client birthdays for cashier, admin, and secretary
+
+- **Description:** Add a `birthday` (date) column to the `clients` table, expose it in create/edit forms, and surface a "próximos cumpleaños" widget on the cashier and secretary dashboards showing clients whose birthday falls within the next 14 days. Admin sees it via the cashier dashboard (their home is `/cashier`).
+- **Scope:**
+  - **Migration:** Add nullable `birthday date` column to `clients`. No backfill required (existing clients have no birthday). Column stores full date (YYYY-MM-DD) so year is captured for age calculation.
+  - **Schema:** `packages/db/src/schema/clients.ts` → add `birthday: date("birthday")`.
+  - **Zod schemas:** `packages/types/src/schemas/clients.ts` (or equivalent) → add optional `birthday` field to create and edit schemas.
+  - **Create/edit forms:** `apps/web/src/components/client-list.tsx` (or wherever the create/edit dialog lives) → add a date picker field labelled "Fecha de nacimiento (opcional)".
+  - **Server action:** `apps/web/src/app/(protected)/clients/actions/index.ts` → add `getUpcomingBirthdays(daysAhead = 14)` returning clients whose `birthday` month/day falls within today + `daysAhead` days (Bogota timezone), allowed for `cashier | admin | secretary`.
+  - **Widget component:** `apps/web/src/components/upcoming-birthdays.tsx` — shows a compact list: avatar initials, name, birthday date with age if year known, "hoy" badge if today. Empty state: "Ningún cumpleaños en los próximos 14 días."
+  - **Cashier dashboard:** `apps/web/src/app/(protected)/cashier/page.tsx` → add `<UpcomingBirthdays>` with Suspense after the day stats section.
+  - **Secretary dashboard:** `apps/web/src/app/(protected)/secretary/page.tsx` → same widget.
+- **Acceptance Criteria:**
+  - Migration runs without error; existing client rows have `birthday = NULL`.
+  - Create client form includes an optional birthday field; submitting saves to DB.
+  - Edit client form pre-populates birthday if set.
+  - Cashier dashboard shows the birthday widget; clients with birthdays in the next 14 days appear.
+  - Secretary dashboard shows the same widget.
+  - A client with today's birthday shows a "Hoy 🎂" or equivalent highlight (no emoji if not wanted — use a badge instead).
+  - The query correctly wraps the year boundary (e.g. querying in late December surfaces January birthdays).
+  - `stylist` and `clothier` cannot call `getUpcomingBirthdays` (FORBIDDEN).
+- **Testing Steps:**
+  - Create a client with birthday = today → cashier dashboard shows them at the top.
+  - Create a client with birthday = today + 15 days → does not appear in the widget.
+  - Create a client with birthday = Dec 30, test on Dec 28 → appears; test on Jan 2 → does not appear.
+  - Edit an existing client → add birthday → save → birthday persists.
+  - Sign in as stylist → call `getUpcomingBirthdays` → FORBIDDEN.
+- **Dependencies:** 5R.5 (cashier client read access must be open before birthday action is useful for cashier).
+- **Status:** pending
