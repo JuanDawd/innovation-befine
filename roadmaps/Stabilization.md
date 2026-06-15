@@ -1443,3 +1443,70 @@
   - Run `turbo build` → zero Next.js hydration warnings in build output.
 - **Dependencies:** None.
 - **Status:** Done
+
+---
+
+## Phase 5R — Remediation (flow audit 2026-06-15)
+
+Issues discovered during a full code-path audit of every role's flows. All three are low-severity — middleware already blocks unauthorized access — but they violate the defense-in-depth and nav-discoverability conventions established across the rest of the codebase.
+
+---
+
+### Task 5R.1: Add page-level `hasRole` guards to admin pages missing defense-in-depth
+
+- **Description:** Five admin pages rely solely on middleware for role enforcement. Every other gated page also calls `hasRole` at the page level (server component) as a second layer. This inconsistency leaves these pages one middleware-bypass away from exposure. Add the guard to each page.
+- **Scope:**
+  - `apps/web/src/app/(protected)/admin/analytics/page.tsx` → redirect to `/admin` if not `admin`
+  - `apps/web/src/app/(protected)/admin/employees/page.tsx` → same
+  - `apps/web/src/app/(protected)/admin/catalog/page.tsx` → same
+  - `apps/web/src/app/(protected)/admin/absences/page.tsx` → same
+  - `apps/web/src/app/(protected)/admin/payroll/page.tsx` → same
+- **Acceptance Criteria:**
+  - Each page calls `auth.api.getSession` + `hasRole(session.user, "admin")` at the top of its default export, redirecting to `/admin` on failure.
+  - Pattern matches the existing guard in `admin/products/page.tsx` exactly.
+  - No logic other than the role check changes.
+- **Testing Steps:**
+  - Sign in as `cashier` → navigate directly to `/admin/analytics`, `/admin/employees`, `/admin/catalog`, `/admin/absences`, `/admin/payroll` → all redirect (middleware fires first, but gate is now in place at both layers).
+  - Sign in as `admin` → all five pages render normally.
+  - `turbo typecheck && turbo lint` pass with zero errors.
+- **Dependencies:** None.
+- **Status:** pending
+
+---
+
+### Task 5R.2: Add role gate and back link to standalone `/cashier/checkout` page
+
+- **Description:** The `/cashier/checkout` route exists as both a sidebar modal (the intended UX) and a standalone full page. The standalone page has no `hasRole` check — it relies on middleware alone. It also lacks a back-navigation link. Add the role gate for consistency and a back link so the page is usable if reached directly.
+- **Acceptance Criteria:**
+  - Page calls `hasRole(session.user, "cashier", "admin")` — redirects to `/cashier` if unauthorized.
+  - A "← Volver" link to `/cashier` is present above the `CheckoutForm`.
+  - No change to `CheckoutForm` itself.
+- **Testing Steps:**
+  - Sign in as `secretary` → navigate to `/cashier/checkout` → redirected to `/cashier` or 403.
+  - Sign in as `cashier` → navigate to `/cashier/checkout` → page renders with back link.
+  - Sign in as `admin` → same result as `cashier`.
+- **Dependencies:** None.
+- **Status:** pending
+
+---
+
+### Task 5R.3: Gate and surface orphaned `/cashier/clients` and `/secretary/clients` pages in the nav
+
+- **Description:** Both client-list pages exist and are functional but are reachable only by direct URL — they are absent from the nav config and have no page-level role guard. Add role gates matching the surrounding role, then add a `clients` nav item to both `cashier` and `secretary` nav arrays in `nav-config.ts`.
+- **Scope:**
+  - `apps/web/src/app/(protected)/cashier/clients/page.tsx` → add `hasRole(session.user, "cashier", "admin")` guard
+  - `apps/web/src/app/(protected)/secretary/clients/page.tsx` → add `hasRole(session.user, "secretary")` guard
+  - `apps/web/src/components/nav-config.ts` → add `{ key: "clients", href: "/cashier/clients", icon: UsersIcon }` to the `cashier` array (also reachable by `admin` since admin has `/cashier/*` access); add `{ key: "clients", href: "/secretary/clients", icon: UsersIcon }` to the `secretary` array.
+  - `messages/es.json` + `messages/en.json` → add `"clients"` key under `nav` if not already present.
+- **Acceptance Criteria:**
+  - Both pages call `hasRole` and redirect on failure.
+  - A "Clientes" nav item appears in both the cashier sidebar and the secretary sidebar.
+  - Navigating the nav item opens the correct client list.
+  - No role other than `cashier`/`admin` can reach `/cashier/clients`; no role other than `secretary` can reach `/secretary/clients`.
+- **Testing Steps:**
+  - Sign in as `cashier` → sidebar shows "Clientes" → click → client list renders.
+  - Sign in as `admin` → sidebar shows "Clientes" → page renders.
+  - Sign in as `secretary` → sidebar shows "Clientes" → page renders.
+  - Sign in as `stylist` → navigate directly to `/cashier/clients` → 403 or redirect.
+- **Dependencies:** None.
+- **Status:** pending
