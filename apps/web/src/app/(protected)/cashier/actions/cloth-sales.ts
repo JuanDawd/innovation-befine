@@ -71,7 +71,7 @@ const createClothSaleSchema = z
 async function getCashierSession() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) return null;
-  if (!hasRole(session.user, "cashier", "admin")) return null;
+  if (!hasRole(session.user, "cashier", "admin", "secretary")) return null;
   return session;
 }
 

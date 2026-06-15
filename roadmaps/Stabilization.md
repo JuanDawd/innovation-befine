@@ -1599,7 +1599,7 @@ Issues discovered during a full code-path audit of every role's flows. All three
 - **Testing Steps:**
   - Sign in as secretary → sidebar footer button is visible → click → modal opens → submit a ticket → ticket appears in open tickets list.
 - **Dependencies:** None.
-- **Status:** pending
+- **Status:** Done
 
 ---
 
@@ -1616,7 +1616,7 @@ Issues discovered during a full code-path audit of every role's flows. All three
   - Sign in as secretary → sell modal → complete a sale → `cloth_sales` record created with correct data.
   - Sign in as stylist → no sell button in UI, direct action call returns FORBIDDEN.
 - **Dependencies:** None.
-- **Status:** pending
+- **Status:** Done
 
 ---
 

@@ -372,7 +372,7 @@ export function AppShell({
                 <span>{t("tickets.logService")}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
-            {(role === "cashier" || role === "admin") && (
+            {(role === "cashier" || role === "admin" || role === "secretary") && (
               <SidebarMenuItem>
                 <SidebarMenuButton
                   onClick={() => setSellOpen(true)}
@@ -434,7 +434,7 @@ export function AppShell({
             <LogServiceForm
               currentEmployeeId={employeeId ?? ""}
               isStylist={false}
-              redirectPath="/cashier"
+              redirectPath={role === "secretary" ? "/secretary" : "/cashier"}
               onClose={() => setLogServiceOpen(false)}
             />
           )}
