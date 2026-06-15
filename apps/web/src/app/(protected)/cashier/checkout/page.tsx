@@ -2,8 +2,10 @@
  * Cashier checkout page — T038, T039
  */
 
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
+import { ChevronLeftIcon } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { hasRole } from "@/lib/middleware-helpers";
 import { CheckoutForm } from "@/components/checkout-form";
@@ -14,6 +16,13 @@ export default async function CheckoutPage() {
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6 max-w-xl mx-auto w-full">
+      <Link
+        href="/cashier"
+        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <ChevronLeftIcon className="size-4" aria-hidden="true" />
+        Volver
+      </Link>
       <div>
         <h1 className="text-xl md:text-2xl font-semibold">Cobrar</h1>
         <p className="text-sm text-muted-foreground">
