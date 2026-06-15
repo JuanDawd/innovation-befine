@@ -1,4 +1,8 @@
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
+import { auth } from "@/lib/auth";
+import { hasRole } from "@/lib/middleware-helpers";
 import { listAbsencesForMonth, listActiveEmployeesForAbsence } from "./actions";
 import { AbsenceCalendar } from "./absence-calendar";
 
@@ -7,6 +11,9 @@ export default async function AbsencesPage({
 }: {
   searchParams: Promise<{ year?: string; month?: string }>;
 }) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session || !hasRole(session.user, "admin")) redirect("/admin");
+
   const t = await getTranslations("absences");
   const sp = await searchParams;
   const now = new Date();

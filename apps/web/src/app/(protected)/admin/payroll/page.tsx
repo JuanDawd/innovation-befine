@@ -1,4 +1,8 @@
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
+import { auth } from "@/lib/auth";
+import { hasRole } from "@/lib/middleware-helpers";
 import {
   listClosedBusinessDays,
   getUnsettledEmployees,
@@ -15,6 +19,9 @@ export default async function PayrollPage({
 }: {
   searchParams: Promise<{ employeeId?: string }>;
 }) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session || !hasRole(session.user, "admin")) redirect("/admin");
+
   const t = await getTranslations("payroll");
   const sp = await searchParams;
   const employeeId = sp.employeeId;

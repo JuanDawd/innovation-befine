@@ -1,7 +1,14 @@
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
+import { hasRole } from "@/lib/middleware-helpers";
 import { getAnalyticsSummary } from "./actions";
 import { AnalyticsDashboard } from "./analytics-dashboard";
 
 export default async function AnalyticsPage() {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session || !hasRole(session.user, "admin")) redirect("/admin");
+
   const result = await getAnalyticsSummary({ period: "day", includeInactive: false });
   const emptyMetrics = {
     revenue: 0,

@@ -6,9 +6,13 @@
  */
 
 import Link from "next/link";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { PlusIcon } from "lucide-react";
 import { Suspense } from "react";
+import { auth } from "@/lib/auth";
+import { hasRole } from "@/lib/middleware-helpers";
 import { PageSkeleton } from "@/components/ui/loading-skeleton";
 import { EmployeeList } from "@/components/employee-list";
 import { listEmployees } from "@/app/(protected)/admin/employees/actions/list-employees";
@@ -21,6 +25,9 @@ async function EmployeeData() {
 }
 
 export default async function EmployeesPage() {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session || !hasRole(session.user, "admin")) redirect("/admin");
+
   const t = await getTranslations("employees");
 
   return (
