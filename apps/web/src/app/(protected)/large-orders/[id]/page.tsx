@@ -1,7 +1,10 @@
 import { getTranslations } from "next-intl/server";
+import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeftIcon } from "lucide-react";
+import { auth } from "@/lib/auth";
+import { hasRole } from "@/lib/middleware-helpers";
 import { getLargeOrder, getLargeOrderProductSummary } from "../actions";
 import { listActiveClothPieces } from "@/app/(protected)/admin/catalog/actions/cloth-pieces";
 import {
@@ -18,6 +21,9 @@ export default async function LargeOrderDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session || !hasRole(session.user, "cashier", "admin", "secretary")) redirect("/");
+
   const { id } = await params;
 
   if (!UUID_RE.test(id)) redirect("/large-orders/new");

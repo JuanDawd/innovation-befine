@@ -1580,7 +1580,7 @@ Issues discovered during a full code-path audit of every role's flows. All three
   - Cashier navigates to order detail → renders without error.
   - Cashier cannot submit a payment → action returns FORBIDDEN.
 - **Dependencies:** None.
-- **Status:** pending
+- **Status:** Done
 
 ---
 

@@ -1,10 +1,17 @@
 import { getTranslations } from "next-intl/server";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import Link from "next/link";
 import { PlusIcon } from "lucide-react";
+import { auth } from "@/lib/auth";
+import { hasRole } from "@/lib/middleware-helpers";
 import { listLargeOrders } from "./actions";
 import { LargeOrdersTable } from "./large-orders-table";
 
 export default async function LargeOrdersPage() {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session || !hasRole(session.user, "cashier", "admin", "secretary")) redirect("/");
+
   const t = await getTranslations("largeOrders");
   const result = await listLargeOrders();
   const orders = result.success ? result.data : [];

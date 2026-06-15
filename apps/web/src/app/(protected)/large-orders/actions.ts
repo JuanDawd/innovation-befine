@@ -79,6 +79,15 @@ async function requireOrderRole() {
   return { ok: true as const, code: null, userId: session.user.id, session };
 }
 
+async function requireOrderReadRole() {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session)
+    return { ok: false as const, code: "UNAUTHORIZED" as const, userId: null, session: null };
+  if (!hasRole(session.user, "admin", "secretary", "cashier"))
+    return { ok: false as const, code: "FORBIDDEN" as const, userId: null, session: null };
+  return { ok: true as const, code: null, userId: session.user.id, session };
+}
+
 // ─── Allowed transitions ──────────────────────────────────────────────────────
 
 const ALLOWED_TRANSITIONS: Record<string, Record<string, string>> = {
@@ -635,7 +644,7 @@ export async function recordLargeOrderPayment(
 export async function listLargeOrders(
   statusFilter?: string,
 ): Promise<ActionResult<LargeOrderListRow[]>> {
-  const guard = await requireOrderRole();
+  const guard = await requireOrderReadRole();
   if (!guard.ok)
     return {
       success: false,
@@ -695,7 +704,7 @@ export async function listLargeOrders(
 // ─── Get single large order with payments + product summary (T060, T062) ─────
 
 export async function getLargeOrder(orderId: string): Promise<ActionResult<LargeOrderRow>> {
-  const guard = await requireOrderRole();
+  const guard = await requireOrderReadRole();
   if (!guard.ok)
     return {
       success: false,
@@ -798,7 +807,7 @@ export type OrderProductSummary = {
 export async function getLargeOrderProductSummary(
   orderId: string,
 ): Promise<ActionResult<OrderProductSummary[]>> {
-  const guard = await requireOrderRole();
+  const guard = await requireOrderReadRole();
   if (!guard.ok)
     return {
       success: false,
