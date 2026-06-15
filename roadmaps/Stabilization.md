@@ -1470,7 +1470,7 @@ Issues discovered during a full code-path audit of every role's flows. All three
   - Sign in as `admin` → all five pages render normally.
   - `turbo typecheck && turbo lint` pass with zero errors.
 - **Dependencies:** None.
-- **Status:** pending
+- **Status:** Done
 
 ---
 
@@ -1486,7 +1486,7 @@ Issues discovered during a full code-path audit of every role's flows. All three
   - Sign in as `cashier` → navigate to `/cashier/checkout` → page renders with back link.
   - Sign in as `admin` → same result as `cashier`.
 - **Dependencies:** None.
-- **Status:** pending
+- **Status:** Done
 
 ---
 
@@ -1509,4 +1509,4 @@ Issues discovered during a full code-path audit of every role's flows. All three
   - Sign in as `secretary` → sidebar shows "Clientes" → page renders.
   - Sign in as `stylist` → navigate directly to `/cashier/clients` → 403 or redirect.
 - **Dependencies:** None.
-- **Status:** pending
+- **Status:** Done
