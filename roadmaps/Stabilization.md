@@ -1555,7 +1555,7 @@ Issues discovered during a full code-path audit of every role's flows. All three
   - Navigate to `/cashier/clients` as cashier → list renders correctly.
   - POST to `createClient` as cashier → `FORBIDDEN` returned.
 - **Dependencies:** None.
-- **Status:** pending
+- **Status:** Done
 
 ---
 

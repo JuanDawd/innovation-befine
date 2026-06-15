@@ -51,8 +51,8 @@ export async function searchClients(query: string): Promise<ActionResult<ClientR
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session)
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
-  // Stylist needs read-only search when logging tickets (LogServiceForm); mutations stay cashier/secretary.
-  if (!hasRole(session.user, "admin", "secretary", "stylist"))
+  // Stylist and cashier need read-only search; mutations stay admin/secretary.
+  if (!hasRole(session.user, "admin", "secretary", "stylist", "cashier"))
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
 
   const db = getDb();
@@ -76,12 +76,10 @@ export async function searchClients(query: string): Promise<ActionResult<ClientR
 // ─── List all clients (T030 — full management screen) ────────────────────────
 
 export async function listClients(includeArchived = false): Promise<ActionResult<ClientRow[]>> {
-  const session = await getClientSession();
-  if (!session) {
-    const s = await auth.api.getSession({ headers: await headers() });
-    if (!s) return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
+  const s = await auth.api.getSession({ headers: await headers() });
+  if (!s) return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
+  if (!hasRole(s.user, "admin", "secretary", "cashier"))
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
-  }
 
   const db = getDb();
   const rows = await db
