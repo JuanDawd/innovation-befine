@@ -53,6 +53,7 @@ type AppShellProps = {
   role: AppRole;
   userName: string;
   employeeId: string | null;
+  showEarnings: boolean;
   initialNotifications: NotificationRow[];
   sidebarDefaultOpen?: boolean;
   children: React.ReactNode;
@@ -263,6 +264,7 @@ export function AppShell({
   role,
   userName,
   employeeId,
+  showEarnings,
   initialNotifications,
   sidebarDefaultOpen = true,
   children,
@@ -275,8 +277,8 @@ export function AppShell({
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [sellOpen, setSellOpen] = useState(false);
 
-  const navItems = NAV_ITEMS[role];
-  const grouped = resolveGroups(NAV_ITEMS[role]);
+  const navItems = NAV_ITEMS[role].filter((item) => item.key !== "myEarnings" || showEarnings);
+  const grouped = resolveGroups(navItems);
 
   const usesBottomNav = MOBILE_BOTTOM_NAV_ROLES.includes(role);
 

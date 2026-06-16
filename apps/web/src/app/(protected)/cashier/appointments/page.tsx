@@ -20,7 +20,7 @@ export default async function CashierAppointmentsPage() {
       <div>
         <h1 className="text-xl md:text-2xl font-semibold">{t("pageTitle")}</h1>
       </div>
-      <AppointmentList newHref="/cashier/appointments/new" />
+      <AppointmentList />
     </div>
   );
 }

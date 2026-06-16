@@ -2,11 +2,9 @@
  * Secretary home — T035, T041
  * Full dashboard implemented in T050, T052.
  */
-import Link from "next/link";
 import { Suspense } from "react";
 import { getTranslations } from "next-intl/server";
-import { PlusIcon } from "lucide-react";
-import { buttonVariants } from "@/components/ui/button-variants";
+import { LogServiceDialog } from "@/components/log-service-dialog";
 import {
   listMyOpenTicketItems,
   listMyEditRequests,
@@ -45,10 +43,7 @@ export default async function SecretaryHomePage() {
           <h1 className="text-xl md:text-2xl font-semibold">{t("roles.secretary")}</h1>
           <p className="text-sm text-muted-foreground">{t("home.subtitle")}</p>
         </div>
-        <Link href="/secretary/tickets/new" className={buttonVariants()}>
-          <PlusIcon className="mr-2 size-4" aria-hidden="true" />
-          {t("tickets.logService")}
-        </Link>
+        <LogServiceDialog isStylist={false} redirectPath="/secretary" />
       </div>
 
       <Suspense fallback={<MyEditRequestsSkeleton />}>

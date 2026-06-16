@@ -23,6 +23,7 @@
   "roles": {
     "cashier": "Cajero",
     "admin": "Administrador",
+    "cashier_admin": "Administrador",
     "secretary": "Secretaria",
     "stylist": "Estilista",
     "clothier": "Confeccionista"

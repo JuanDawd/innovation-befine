@@ -260,7 +260,12 @@ export async function markPieceDone(
     .select({ id: employees.id })
     .from(employees)
     .innerJoin(users, eq(employees.userId, users.id))
-    .where(and(eq(employees.isActive, true), inArray(employees.role, ["secretary", "admin"])));
+    .where(
+      and(
+        eq(employees.isActive, true),
+        inArray(employees.role, ["secretary", "admin", "cashier_admin"]),
+      ),
+    );
 
   await Promise.all(
     staffRows.map((staff) =>

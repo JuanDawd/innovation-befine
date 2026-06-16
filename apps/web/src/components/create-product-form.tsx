@@ -32,9 +32,11 @@ type PieceLine = {
 export function CreateProductForm({
   redirectPath,
   largeOrders = [],
+  onClose,
 }: {
   redirectPath: string;
   largeOrders?: LargeOrderOption[];
+  onClose?: () => void;
 }) {
   const t = useTranslations("products");
   const tc = useTranslations("common");
@@ -149,7 +151,11 @@ export function CreateProductForm({
       }
 
       showToast("success", t("submitSuccess"));
-      setTimeout(() => router.push(redirectPath), 1000);
+      if (onClose) {
+        setTimeout(() => onClose(), 1000);
+      } else {
+        setTimeout(() => router.push(redirectPath), 1000);
+      }
     });
   }
 

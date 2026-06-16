@@ -92,7 +92,10 @@ export function LargeOrdersTable({ orders }: Props) {
                   </span>
                 </td>
                 <td className="px-4 py-2">
-                  <StatusBadge status={order.status} />
+                  <StatusBadge
+                    status={order.status}
+                    label={t(`status_${order.status}` as Parameters<typeof t>[0])}
+                  />
                 </td>
                 <td className="px-4 py-2 text-muted-foreground text-xs">
                   {order.estimatedDeliveryAt

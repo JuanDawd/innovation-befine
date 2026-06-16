@@ -1,13 +1,13 @@
 import { getTranslations } from "next-intl/server";
 import { getMyEarnings } from "@/app/(protected)/admin/payroll/actions";
-import { notFound } from "next/navigation";
+import { redirect } from "next/navigation";
 
-export async function MyEarningsView() {
+export async function MyEarningsView({ roleHome }: { roleHome: string }) {
   const t = await getTranslations("payroll");
   const result = await getMyEarnings();
 
   if (!result.success) {
-    notFound();
+    redirect(roleHome);
   }
 
   const { today, thisWeek, thisMonth, payoutHistory } = result.data;

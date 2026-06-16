@@ -17,8 +17,9 @@ import {
   TriangleAlertIcon,
   CalendarDaysIcon,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { BookAppointmentForm } from "@/components/book-appointment-form";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
   listAppointmentsForDate,
@@ -112,12 +113,12 @@ const STATUS_BADGE: Record<AppointmentListRow["status"], { label: string; classN
   },
 };
 
-export function AppointmentList({ newHref }: { newHref: string }) {
+export function AppointmentList() {
   const t = useTranslations("appointments");
   const tc = useTranslations("common");
-  const router = useRouter();
 
   const [date, setDate] = useState(todayBogota);
+  const [bookOpen, setBookOpen] = useState(false);
   const [stylistFilter, setStylistFilter] = useState("");
   const [stylists, setStylists] = useState<StylistOption[]>([]);
   const [rows, setRows] = useState<AppointmentListRow[]>([]);
@@ -203,7 +204,7 @@ export function AppointmentList({ newHref }: { newHref: string }) {
           </select>
 
           {/* New appointment */}
-          <Button size="sm" onClick={() => router.push(newHref)}>
+          <Button size="sm" onClick={() => setBookOpen(true)}>
             <PlusIcon className="size-4 mr-1" />
             {t("bookAppointment")}
           </Button>
@@ -298,6 +299,15 @@ export function AppointmentList({ newHref }: { newHref: string }) {
           </table>
         </div>
       )}
+
+      <Dialog open={bookOpen} onOpenChange={setBookOpen}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{t("bookAppointment")}</DialogTitle>
+          </DialogHeader>
+          {bookOpen && <BookAppointmentForm redirectPath="" onClose={() => setBookOpen(false)} />}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

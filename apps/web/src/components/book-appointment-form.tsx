@@ -45,7 +45,13 @@ function localDatetimeToISO(local: string, timezoneOffset: string): string {
   return `${local}:00${timezoneOffset}`;
 }
 
-export function BookAppointmentForm({ redirectPath }: { redirectPath: string }) {
+export function BookAppointmentForm({
+  redirectPath,
+  onClose,
+}: {
+  redirectPath: string;
+  onClose?: () => void;
+}) {
   const t = useTranslations("appointments");
   const tc = useTranslations("common");
   const router = useRouter();
@@ -141,7 +147,11 @@ export function BookAppointmentForm({ redirectPath }: { redirectPath: string }) 
       }
 
       showToast("success", t("submitSuccess"));
-      setTimeout(() => router.push(redirectPath), 1200);
+      if (onClose) {
+        setTimeout(() => onClose(), 1200);
+      } else {
+        setTimeout(() => router.push(redirectPath), 1200);
+      }
     });
   }
 

@@ -19,5 +19,5 @@ export default async function SecretaryProductDetailPage({
   const data = await getProductDetail(db, id);
   if (!data) notFound();
 
-  return <ProductDetail initialData={data} isEditor={true} backHref="/secretary/products" />;
+  return <ProductDetail initialData={data} isEditor backHref="/secretary/products" />;
 }

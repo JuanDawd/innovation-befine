@@ -19,5 +19,5 @@ export default async function AdminProductDetailPage({
   const data = await getProductDetail(db, id);
   if (!data) notFound();
 
-  return <ProductDetail initialData={data} isEditor={true} backHref="/admin/products" />;
+  return <ProductDetail initialData={data} isEditor backHref="/admin/products" />;
 }

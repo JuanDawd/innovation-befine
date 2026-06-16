@@ -38,12 +38,13 @@ export default async function ProtectedLayout({
   // Resolve employee ID for the notification bell
   const db = getDb();
   const [emp] = await db
-    .select({ id: employees.id })
+    .select({ id: employees.id, showEarnings: employees.showEarnings })
     .from(employees)
     .where(eq(employees.userId, session.user.id))
     .limit(1);
 
   const employeeId = emp?.id ?? null;
+  const showEarnings = emp?.showEarnings ?? false;
 
   // Fetch initial notifications (best-effort — empty list on failure)
   const notifResult = employeeId ? await listNotifications() : null;
@@ -59,6 +60,7 @@ export default async function ProtectedLayout({
       role={role}
       userName={userName}
       employeeId={employeeId}
+      showEarnings={showEarnings}
       initialNotifications={initialNotifications}
       sidebarDefaultOpen={sidebarDefaultOpen}
     >

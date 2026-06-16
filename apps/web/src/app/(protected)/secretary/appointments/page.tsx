@@ -20,7 +20,7 @@ export default async function SecretaryAppointmentsPage() {
       <div>
         <h1 className="text-xl md:text-2xl font-semibold">{t("pageTitle")}</h1>
       </div>
-      <AppointmentList newHref="/secretary/appointments/new" />
+      <AppointmentList />
     </div>
   );
 }
