@@ -9,7 +9,7 @@
 
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
-import { eq, ilike, or, and } from "drizzle-orm";
+import { eq, ilike, or, and, isNotNull } from "drizzle-orm";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
@@ -26,6 +26,7 @@ export type ClientRow = {
   phone: string | null;
   email: string | null;
   notes: string | null;
+  birthday: string | null;
   noShowCount: number;
   isActive: boolean;
   createdAt: Date;
@@ -113,7 +114,7 @@ export async function createClient(rawInput: unknown): Promise<ActionResult<Clie
     };
   }
 
-  const { name, phone, email, notes } = parsed.data;
+  const { name, phone, email, notes, birthday } = parsed.data;
   const db = getDb();
 
   const [row] = await db
@@ -123,6 +124,7 @@ export async function createClient(rawInput: unknown): Promise<ActionResult<Clie
       phone: phone || null,
       email: email || null,
       notes: notes || null,
+      birthday: birthday || null,
     })
     .returning();
 
@@ -162,7 +164,7 @@ export async function editClient(
     };
   }
 
-  const { name, phone, email, notes } = parsed.data;
+  const { name, phone, email, notes, birthday } = parsed.data;
   const db = getDb();
 
   const [row] = await db
@@ -172,6 +174,7 @@ export async function editClient(
       phone: phone || null,
       email: email || null,
       notes: notes || null,
+      birthday: birthday || null,
       updatedAt: new Date(),
     })
     .where(and(eq(clients.id, clientId), eq(clients.isActive, true)))
@@ -254,4 +257,60 @@ export async function unarchiveClient(clientId: string): Promise<ActionResult<nu
   revalidatePath("/cashier/clients");
   revalidatePath("/secretary/clients");
   return { success: true, data: null };
+}
+
+// ─── Upcoming birthdays (5R.9) ────────────────────────────────────────────────
+
+export type UpcomingBirthdayRow = {
+  id: string;
+  name: string;
+  birthday: string;
+  daysUntil: number;
+};
+
+/**
+ * Returns active clients whose birthday falls within the next `daysAhead` days
+ * (Bogota timezone, cross-year aware). Allowed for cashier | admin | secretary.
+ */
+export async function getUpcomingBirthdays(
+  daysAhead = 14,
+): Promise<ActionResult<UpcomingBirthdayRow[]>> {
+  const s = await auth.api.getSession({ headers: await headers() });
+  if (!s) return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
+  if (!hasRole(s.user, "admin", "secretary", "cashier"))
+    return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
+
+  const db = getDb();
+  const rows = await db
+    .select({ id: clients.id, name: clients.name, birthday: clients.birthday })
+    .from(clients)
+    .where(and(eq(clients.isActive, true), isNotNull(clients.birthday)))
+    .orderBy(clients.name);
+
+  const todayStr = new Date().toLocaleDateString("en-CA", { timeZone: "America/Bogota" });
+  const [tyear, tmonth, tday] = todayStr.split("-").map(Number) as [number, number, number];
+  const todayMs = Date.UTC(tyear, tmonth - 1, tday);
+
+  const results: UpcomingBirthdayRow[] = [];
+
+  for (const row of rows) {
+    if (!row.birthday) continue;
+    const [, bmonth, bday] = row.birthday.split("-").map(Number) as [number, number, number];
+
+    const thisYear = Date.UTC(tyear, bmonth - 1, bday);
+    const nextYear = Date.UTC(tyear + 1, bmonth - 1, bday);
+
+    const diffThis = Math.round((thisYear - todayMs) / 86_400_000);
+    const diffNext = Math.round((nextYear - todayMs) / 86_400_000);
+
+    const daysUntil = diffThis >= 0 ? diffThis : diffNext;
+
+    if (daysUntil >= 0 && daysUntil <= daysAhead) {
+      results.push({ id: row.id, name: row.name, birthday: row.birthday, daysUntil });
+    }
+  }
+
+  results.sort((a, b) => a.daysUntil - b.daysUntil);
+
+  return { success: true, data: results };
 }

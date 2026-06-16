@@ -15,6 +15,7 @@ import { BusinessDayPanel } from "@/components/business-day-panel";
 import { listOpenTickets } from "@/app/(protected)/tickets/actions";
 import { listPendingEditRequests } from "@/app/(protected)/tickets/edit-requests/actions";
 import { getDayStats } from "@/app/(protected)/cashier/actions/day-stats";
+import { getUpcomingBirthdays } from "@/app/(protected)/clients/actions";
 import { CashierDashboard, CashierDashboardSkeleton } from "@/components/cashier-dashboard";
 import {
   PendingEditRequests,
@@ -23,11 +24,18 @@ import {
 import { DayAtAGlance } from "@/components/day-at-a-glance";
 import { PageHeader } from "@/components/page-header";
 import { Skeleton } from "@/components/ui/loading-skeleton";
+import { UpcomingBirthdays } from "@/components/upcoming-birthdays";
 
 async function EditRequestsPanel() {
   const result = await listPendingEditRequests();
   const requests = result.success ? result.data : [];
   return <PendingEditRequests initialRequests={requests} />;
+}
+
+async function BirthdaysPanel() {
+  const result = await getUpcomingBirthdays(14);
+  const birthdays = result.success ? result.data : [];
+  return <UpcomingBirthdays birthdays={birthdays} />;
 }
 
 async function StatsAndBoard() {
@@ -95,6 +103,10 @@ export default async function CashierHomePage() {
       {/* Pending edit requests — T041 */}
       <Suspense fallback={<PendingEditRequestsSkeleton />}>
         <EditRequestsPanel />
+      </Suspense>
+      {/* Upcoming birthdays — 5R.9 */}
+      <Suspense fallback={<Skeleton className="h-24 w-full" />}>
+        <BirthdaysPanel />
       </Suspense>
       {/* Day-at-a-glance stats + ticket board */}
       <Suspense fallback={<StatsAndBoardSkeleton />}>

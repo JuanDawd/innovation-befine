@@ -1648,4 +1648,4 @@ Issues discovered during a full code-path audit of every role's flows. All three
   - Edit an existing client → add birthday → save → birthday persists.
   - Sign in as stylist → call `getUpcomingBirthdays` → FORBIDDEN.
 - **Dependencies:** 5R.5 (cashier client read access must be open before birthday action is useful for cashier).
-- **Status:** pending
+- **Status:** Done

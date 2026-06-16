@@ -307,7 +307,13 @@
     "guestOption": "Guest / Walk-in",
     "guestNameLabel": "Guest name",
     "guestNamePlaceholder": "e.g. Juan Pérez",
-    "clearSelection": "Remove selection"
+    "clearSelection": "Remove selection",
+    "birthday": "Date of birth",
+    "upcomingBirthdaysTitle": "Upcoming birthdays",
+    "upcomingBirthdaysEmpty": "No birthdays in the next 14 days",
+    "birthdayToday": "Today",
+    "birthdayTomorrow": "Tomorrow",
+    "birthdayInDays": "In {days} days"
   },
   "tickets": {
     "logService": "Log service",

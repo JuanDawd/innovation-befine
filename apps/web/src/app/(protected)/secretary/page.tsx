@@ -11,7 +11,10 @@ import {
   listMyOpenTicketItems,
   listMyEditRequests,
 } from "@/app/(protected)/tickets/edit-requests/actions";
+import { getUpcomingBirthdays } from "@/app/(protected)/clients/actions";
 import { MyEditRequests, MyEditRequestsSkeleton } from "@/components/my-edit-requests";
+import { UpcomingBirthdays } from "@/components/upcoming-birthdays";
+import { Skeleton } from "@/components/ui/loading-skeleton";
 
 async function EditRequestsSection() {
   const [itemsRes, requestsRes] = await Promise.all([
@@ -24,6 +27,12 @@ async function EditRequestsSection() {
       initialRequests={requestsRes.success ? requestsRes.data : []}
     />
   );
+}
+
+async function BirthdaysPanel() {
+  const result = await getUpcomingBirthdays(14);
+  const birthdays = result.success ? result.data : [];
+  return <UpcomingBirthdays birthdays={birthdays} />;
 }
 
 export default async function SecretaryHomePage() {
@@ -44,6 +53,11 @@ export default async function SecretaryHomePage() {
 
       <Suspense fallback={<MyEditRequestsSkeleton />}>
         <EditRequestsSection />
+      </Suspense>
+
+      {/* Upcoming birthdays — 5R.9 */}
+      <Suspense fallback={<Skeleton className="h-24 w-full" />}>
+        <BirthdaysPanel />
       </Suspense>
     </div>
   );

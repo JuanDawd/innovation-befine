@@ -97,8 +97,9 @@ function ClientDialog({
             phone: config.client.phone ?? "",
             email: config.client.email ?? "",
             notes: config.client.notes ?? "",
+            birthday: config.client.birthday ?? "",
           }
-        : { name: "", phone: "", email: "", notes: "" },
+        : { name: "", phone: "", email: "", notes: "", birthday: "" },
     );
     setServerError(null);
     setOpen(true);
@@ -185,6 +186,21 @@ function ClientDialog({
                 {t("notes")} <span className="text-muted-foreground">{tc("optional")}</span>
               </label>
               <Input id="client-notes" placeholder={t("notesPlaceholder")} {...register("notes")} />
+            </div>
+
+            <div className="space-y-1.5">
+              <label htmlFor="client-birthday" className="text-sm font-medium">
+                {t("birthday")} <span className="text-muted-foreground">{tc("optional")}</span>
+              </label>
+              <Input
+                id="client-birthday"
+                type="date"
+                aria-invalid={!!errors.birthday}
+                {...register("birthday")}
+              />
+              {errors.birthday && (
+                <p className="text-sm text-destructive">{errors.birthday.message}</p>
+              )}
             </div>
           </form>
 

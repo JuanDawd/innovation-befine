@@ -307,7 +307,13 @@
     "guestOption": "Invitado / Walk-in",
     "guestNameLabel": "Nombre del invitado",
     "guestNamePlaceholder": "Ej: Juan Pérez",
-    "clearSelection": "Quitar selección"
+    "clearSelection": "Quitar selección",
+    "birthday": "Fecha de nacimiento",
+    "upcomingBirthdaysTitle": "Próximos cumpleaños",
+    "upcomingBirthdaysEmpty": "Ningún cumpleaños en los próximos 14 días",
+    "birthdayToday": "Hoy",
+    "birthdayTomorrow": "Mañana",
+    "birthdayInDays": "En {days} días"
   },
   "tickets": {
     "logService": "Registrar servicio",

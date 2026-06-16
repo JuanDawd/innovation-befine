@@ -225,6 +225,13 @@
       "when": 1778200940821,
       "tag": "0031_previous_the_renegades",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1781566055898,
+      "tag": "0032_green_the_initiative",
+      "breakpoints": true
     }
   ]
 }

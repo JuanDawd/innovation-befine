@@ -5,6 +5,11 @@ export const createClientSchema = z.object({
   phone: z.string().max(20).optional(),
   email: z.email("Email inválido").max(150).optional().or(z.literal("")),
   notes: z.string().max(500).optional(),
+  birthday: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Fecha inválida (AAAA-MM-DD)")
+    .optional()
+    .or(z.literal("")),
 });
 
 export const editClientSchema = createClientSchema;

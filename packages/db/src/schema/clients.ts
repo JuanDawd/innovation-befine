@@ -10,7 +10,7 @@
  * No unique constraint on phone/email — staff manages duplicates (per resolved decisions).
  */
 
-import { boolean, check, integer, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { boolean, check, date, integer, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
 export const clients = pgTable(
@@ -21,6 +21,8 @@ export const clients = pgTable(
     phone: text("phone"),
     email: text("email"),
     notes: text("notes"),
+    /** Date of birth stored as YYYY-MM-DD (optional, for birthday widget). */
+    birthday: date("birthday"),
     /** Number of times this client was a no-show. Incremented by T032b. */
     noShowCount: integer("no_show_count").notNull().default(0),
     isActive: boolean("is_active").notNull().default(true),
