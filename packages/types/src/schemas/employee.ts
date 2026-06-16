@@ -31,6 +31,11 @@ export const createEmployeeSchema = z
       .min(8, "La contraseña temporal debe tener al menos 8 caracteres")
       .optional()
       .or(z.literal("")),
+    birthday: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "Fecha inválida (AAAA-MM-DD)")
+      .optional()
+      .or(z.literal("")),
   })
   .refine(
     (data) => {

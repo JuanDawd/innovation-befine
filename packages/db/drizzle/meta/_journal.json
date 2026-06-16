@@ -232,6 +232,13 @@
       "when": 1781566055898,
       "tag": "0032_green_the_initiative",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1781568891729,
+      "tag": "0033_rare_terror",
+      "breakpoints": true
     }
   ]
 }

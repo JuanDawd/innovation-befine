@@ -60,6 +60,11 @@ const editSchema = z.object({
     .optional(),
   dailyRate: z.number().int().min(0).nullable().optional(),
   expectedWorkDays: z.number().int().min(1).max(7),
+  birthday: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Fecha inválida")
+    .optional()
+    .or(z.literal("")),
   version: z.number().int().min(0),
 });
 
@@ -114,6 +119,7 @@ export function EmployeeList({ initialEmployees }: EmployeeListProps) {
       stylistSubtype: emp.stylistSubtype as EditInput["stylistSubtype"],
       dailyRate: emp.dailyRate,
       expectedWorkDays: emp.expectedWorkDays,
+      birthday: emp.birthday ?? "",
       version: emp.version,
     });
     setEditOpen(true);
@@ -430,6 +436,18 @@ export function EmployeeList({ initialEmployees }: EmployeeListProps) {
                   </option>
                 ))}
               </select>
+            </div>
+
+            <div className="space-y-1.5">
+              <label htmlFor="edit-birthday" className="text-sm font-medium">
+                {t("birthday")} <span className="text-muted-foreground">{tCommon("optional")}</span>
+              </label>
+              <input
+                id="edit-birthday"
+                type="date"
+                className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
+                {...register("birthday")}
+              />
             </div>
 
             {/* T015 — earnings visibility toggle */}

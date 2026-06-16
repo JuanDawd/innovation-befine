@@ -13,7 +13,7 @@ import { eq, ilike, or, and, isNotNull } from "drizzle-orm";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import { clients } from "@befine/db/schema";
+import { clients, employees, users } from "@befine/db/schema";
 import { createClientSchema, editClientSchema } from "@befine/types";
 import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
@@ -266,11 +266,13 @@ export type UpcomingBirthdayRow = {
   name: string;
   birthday: string;
   daysUntil: number;
+  type: "client" | "employee";
 };
 
 /**
- * Returns active clients whose birthday falls within the next `daysAhead` days
- * (Bogota timezone, cross-year aware). Allowed for cashier | admin | secretary.
+ * Returns active clients AND active employees whose birthday falls within the
+ * next `daysAhead` days (Bogota timezone, cross-year aware).
+ * Allowed for cashier | admin | secretary.
  */
 export async function getUpcomingBirthdays(
   daysAhead = 14,
@@ -281,36 +283,61 @@ export async function getUpcomingBirthdays(
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
 
   const db = getDb();
-  const rows = await db
-    .select({ id: clients.id, name: clients.name, birthday: clients.birthday })
-    .from(clients)
-    .where(and(eq(clients.isActive, true), isNotNull(clients.birthday)))
-    .orderBy(clients.name);
+  const [clientRows, employeeRows] = await Promise.all([
+    db
+      .select({ id: clients.id, name: clients.name, birthday: clients.birthday })
+      .from(clients)
+      .where(and(eq(clients.isActive, true), isNotNull(clients.birthday))),
+    db
+      .select({ id: employees.id, name: users.name, birthday: employees.birthday })
+      .from(employees)
+      .innerJoin(users, eq(employees.userId, users.id))
+      .where(and(eq(employees.isActive, true), isNotNull(employees.birthday))),
+  ]);
 
   const todayStr = new Date().toLocaleDateString("en-CA", { timeZone: "America/Bogota" });
   const [tyear, tmonth, tday] = todayStr.split("-").map(Number) as [number, number, number];
   const todayMs = Date.UTC(tyear, tmonth - 1, tday);
 
-  const results: UpcomingBirthdayRow[] = [];
-
-  for (const row of rows) {
-    if (!row.birthday) continue;
-    const [, bmonth, bday] = row.birthday.split("-").map(Number) as [number, number, number];
-
+  function computeDaysUntil(birthday: string): number | null {
+    const [, bmonth, bday] = birthday.split("-").map(Number) as [number, number, number];
     const thisYear = Date.UTC(tyear, bmonth - 1, bday);
     const nextYear = Date.UTC(tyear + 1, bmonth - 1, bday);
-
     const diffThis = Math.round((thisYear - todayMs) / 86_400_000);
     const diffNext = Math.round((nextYear - todayMs) / 86_400_000);
-
     const daysUntil = diffThis >= 0 ? diffThis : diffNext;
-
-    if (daysUntil >= 0 && daysUntil <= daysAhead) {
-      results.push({ id: row.id, name: row.name, birthday: row.birthday, daysUntil });
-    }
+    return daysUntil >= 0 && daysUntil <= daysAhead ? daysUntil : null;
   }
 
-  results.sort((a, b) => a.daysUntil - b.daysUntil);
+  const results: UpcomingBirthdayRow[] = [];
+
+  for (const row of clientRows) {
+    if (!row.birthday) continue;
+    const daysUntil = computeDaysUntil(row.birthday);
+    if (daysUntil !== null)
+      results.push({
+        id: row.id,
+        name: row.name,
+        birthday: row.birthday,
+        daysUntil,
+        type: "client",
+      });
+  }
+
+  for (const row of employeeRows) {
+    if (!row.birthday) continue;
+    const daysUntil = computeDaysUntil(row.birthday);
+    if (daysUntil !== null)
+      results.push({
+        id: row.id,
+        name: row.name,
+        birthday: row.birthday,
+        daysUntil,
+        type: "employee",
+      });
+  }
+
+  results.sort((a, b) => a.daysUntil - b.daysUntil || a.name.localeCompare(b.name));
 
   return { success: true, data: results };
 }

@@ -157,6 +157,7 @@
     "dailyRate": "Daily rate (COP)",
     "dailyRatePlaceholder": "E.g. 50000",
     "expectedWorkDays": "Expected work days per week",
+    "birthday": "Date of birth",
     "temporaryPassword": "Temporary password",
     "temporaryPasswordHelp": "The employee can change it after signing in.",
     "createSuccess": "Employee created successfully",

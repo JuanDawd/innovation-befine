@@ -224,6 +224,21 @@ export function CreateEmployeeForm({ onSuccess }: CreateEmployeeFormProps) {
         </select>
       </div>
 
+      {/* Birthday */}
+      <div className="space-y-1.5">
+        <label htmlFor="emp-birthday" className="text-sm font-medium">
+          {t("birthday")}{" "}
+          <span className="text-xs font-normal text-muted-foreground">{tCommon("optional")}</span>
+        </label>
+        <Input
+          id="emp-birthday"
+          type="date"
+          aria-invalid={!!errors.birthday}
+          {...register("birthday")}
+        />
+        {errors.birthday && <p className="text-sm text-destructive">{errors.birthday.message}</p>}
+      </div>
+
       {/* Temporary password (pre-T054) */}
       <div className="space-y-1.5">
         <label htmlFor="emp-password" className="text-sm font-medium">

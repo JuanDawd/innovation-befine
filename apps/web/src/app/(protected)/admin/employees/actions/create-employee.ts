@@ -55,8 +55,16 @@ export async function createEmployee(rawInput: unknown): Promise<ActionResult<Cr
     };
   }
 
-  const { name, email, role, stylistSubtype, dailyRate, expectedWorkDays, temporaryPassword } =
-    parsed.data;
+  const {
+    name,
+    email,
+    role,
+    stylistSubtype,
+    dailyRate,
+    expectedWorkDays,
+    temporaryPassword,
+    birthday,
+  } = parsed.data;
 
   // Generate a random password if admin didn't provide one
   // (in pre-T054 flow, admin always provides one; in T054 flow, we'll generate one and email it)
@@ -92,6 +100,7 @@ export async function createEmployee(rawInput: unknown): Promise<ActionResult<Cr
       stylistSubtype: stylistSubtype ?? null,
       dailyRate: role === "secretary" ? (dailyRate ?? null) : null,
       expectedWorkDays: expectedWorkDays ?? 6,
+      birthday: birthday || null,
       showEarnings: false,
       isActive: true,
     })

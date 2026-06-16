@@ -25,6 +25,7 @@ export type EmployeeListItem = {
   dailyRate: number | null;
   expectedWorkDays: number;
   showEarnings: boolean;
+  birthday: string | null;
   isActive: boolean;
   version: number;
   hiredAt: Date;
@@ -52,6 +53,7 @@ export async function listEmployees(): Promise<ActionResult<EmployeeListItem[]>>
       dailyRate: employees.dailyRate,
       expectedWorkDays: employees.expectedWorkDays,
       showEarnings: employees.showEarnings,
+      birthday: employees.birthday,
       isActive: employees.isActive,
       version: employees.version,
       hiredAt: employees.hiredAt,

@@ -10,6 +10,7 @@
 import {
   boolean,
   check,
+  date,
   integer,
   pgEnum,
   pgTable,
@@ -48,6 +49,8 @@ export const employees = pgTable(
     expectedWorkDays: integer("expected_work_days").notNull().default(6),
     /** Whether the employee can view their own earnings in the app */
     showEarnings: boolean("show_earnings").notNull().default(false),
+    /** Date of birth stored as YYYY-MM-DD (optional, for birthday widget). */
+    birthday: date("birthday"),
     isActive: boolean("is_active").notNull().default(true),
     /** Optimistic locking — increment on every update; concurrent edits detect stale data */
     version: smallint("version").notNull().default(0),

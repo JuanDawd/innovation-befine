@@ -41,6 +41,11 @@ const editEmployeeSchema = z.object({
     .optional(),
   dailyRate: z.coerce.number().int().min(0).nullable().optional(),
   expectedWorkDays: z.coerce.number().int().min(1).max(7).default(6),
+  birthday: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Fecha inválida")
+    .optional()
+    .or(z.literal("")),
 });
 
 const editEmployeeSchemaWithVersion = editEmployeeSchema.extend({
@@ -74,7 +79,8 @@ export async function editEmployee(
     };
   }
 
-  const { name, role, stylistSubtype, dailyRate, expectedWorkDays, version } = parsed.data;
+  const { name, role, stylistSubtype, dailyRate, expectedWorkDays, version, birthday } =
+    parsed.data;
   const db = getDb();
 
   // Optimistic locking: only update if version matches; increment version
@@ -85,6 +91,7 @@ export async function editEmployee(
       stylistSubtype: stylistSubtype ?? null,
       dailyRate: role === "secretary" ? (dailyRate ?? null) : null,
       expectedWorkDays,
+      birthday: birthday || null,
       version: sql<number>`${employees.version} + 1`,
     })
     .where(and(eq(employees.id, employeeId), eq(employees.version, version)))
@@ -149,6 +156,7 @@ export async function editEmployee(
       dailyRate: employees.dailyRate,
       expectedWorkDays: employees.expectedWorkDays,
       showEarnings: employees.showEarnings,
+      birthday: employees.birthday,
       isActive: employees.isActive,
       version: employees.version,
       hiredAt: employees.hiredAt,

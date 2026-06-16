@@ -9,7 +9,7 @@
  */
 
 import { useTranslations } from "next-intl";
-import { CakeIcon } from "lucide-react";
+import { CakeIcon, UserIcon, UserRoundIcon } from "lucide-react";
 import type { UpcomingBirthdayRow } from "@/app/(protected)/clients/actions";
 
 function ClientInitials({ name }: { name: string }) {
@@ -72,19 +72,24 @@ export function UpcomingBirthdays({ birthdays }: { birthdays: UpcomingBirthdayRo
         <p className="text-sm text-muted-foreground">{t("upcomingBirthdaysEmpty")}</p>
       ) : (
         <ul className="space-y-2">
-          {birthdays.map((client) => (
+          {birthdays.map((entry) => (
             <li
-              key={client.id}
+              key={`${entry.type}-${entry.id}`}
               className="flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2"
             >
-              <ClientInitials name={client.name} />
+              <ClientInitials name={entry.name} />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium">{client.name}</p>
-                <p className="text-xs text-muted-foreground">
-                  {formatBirthdayDate(client.birthday)}
+                <p className="truncate text-sm font-medium">{entry.name}</p>
+                <p className="flex items-center gap-1 text-xs text-muted-foreground">
+                  {entry.type === "employee" ? (
+                    <UserRoundIcon className="size-3 shrink-0" aria-hidden="true" />
+                  ) : (
+                    <UserIcon className="size-3 shrink-0" aria-hidden="true" />
+                  )}
+                  {formatBirthdayDate(entry.birthday)}
                 </p>
               </div>
-              <DaysBadge daysUntil={client.daysUntil} />
+              <DaysBadge daysUntil={entry.daysUntil} />
             </li>
           ))}
         </ul>

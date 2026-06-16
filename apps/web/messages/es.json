@@ -157,6 +157,7 @@
     "dailyRate": "Tarifa diaria (COP)",
     "dailyRatePlaceholder": "Ej: 50000",
     "expectedWorkDays": "Días de trabajo esperados por semana",
+    "birthday": "Fecha de nacimiento",
     "temporaryPassword": "Contraseña temporal",
     "temporaryPasswordHelp": "El empleado podrá cambiarla después de iniciar sesión.",
     "createSuccess": "Empleado creado correctamente",
