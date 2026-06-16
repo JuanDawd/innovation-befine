@@ -37,7 +37,7 @@ coverage/
 playwright-report/
 test-results/
 blob-report/
-e2e/.auth/
+**/e2e/.auth/
 
 # TypeScript
 *.tsbuildinfo
