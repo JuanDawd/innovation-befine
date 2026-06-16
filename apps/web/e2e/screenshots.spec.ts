@@ -20,10 +20,11 @@
  * Falls back to seed defaults if vars are not set.
  */
 
-import { test, type Page, type BrowserContext } from "@playwright/test";
+import { test, type Page, type BrowserContext } from "@playwright/test"; // Page used in captureScreen
 import { mkdir } from "fs/promises";
 import path from "path";
 import { fileURLToPath } from "url";
+import { AUTH_STATE_DIR } from "./helpers/auth";
 
 // ─── Paths ────────────────────────────────────────────────────────────────────
 
@@ -33,29 +34,6 @@ const __dirname = path.dirname(__filename);
 // Repo root is 3 levels up from apps/web/e2e/
 const REPO_ROOT = path.resolve(__dirname, "../../../");
 const OUT_DIR = path.join(REPO_ROOT, "docs/training/screenshots");
-
-// ─── Credentials ─────────────────────────────────────────────────────────────
-
-type RoleCreds = { email: string; password: string };
-
-const CREDS: Record<string, RoleCreds> = {
-  admin: {
-    email: process.env.SCREENSHOT_ADMIN_EMAIL ?? "admin@befine.dev",
-    password: process.env.SCREENSHOT_ADMIN_PASSWORD ?? "Admin123!",
-  },
-  secretary: {
-    email: process.env.SCREENSHOT_SECRETARY_EMAIL ?? "secretary@befine.dev",
-    password: process.env.SCREENSHOT_SECRETARY_PASSWORD ?? "Secretary123!",
-  },
-  stylist: {
-    email: process.env.SCREENSHOT_STYLIST_EMAIL ?? "hairdresser@befine.dev",
-    password: process.env.SCREENSHOT_STYLIST_PASSWORD ?? "Stylist123!",
-  },
-  clothier: {
-    email: process.env.SCREENSHOT_CLOTHIER_EMAIL ?? "clothier@befine.dev",
-    password: process.env.SCREENSHOT_CLOTHIER_PASSWORD ?? "Clothier123!",
-  },
-};
 
 // ─── Screen manifest ──────────────────────────────────────────────────────────
 
@@ -212,19 +190,11 @@ const ROLE_VIEWPORT: Record<string, { width: number; height: number }> = {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-async function login(page: Page, creds: RoleCreds): Promise<void> {
-  await page.goto("/login", { waitUntil: "networkidle" });
-  // Wait for React to hydrate so onSubmit is attached (prevents native GET fallback)
-  await page.waitForSelector("#email", { state: "visible" });
-  await page.locator("#email").fill(creds.email);
-  await page.locator("#password").fill(creds.password);
-  await page.getByRole("button", { name: /iniciar sesión|login|sign in/i }).click();
-  // Wait for redirect away from /login
-  await page.waitForURL((url) => !url.pathname.includes("/login"), { timeout: 20_000 });
-}
-
 async function captureScreen(page: Page, screen: ScreenDef, outPath: string): Promise<void> {
-  await page.goto(screen.url, { waitUntil: "networkidle", timeout: 30_000 });
+  // Use "domcontentloaded" — SSE connections and HMR WebSockets prevent both "load" and
+  // "networkidle" from ever firing on dashboard pages. DOMContentLoaded fires as soon as
+  // HTML is parsed; waitForSelector below provides the "content is rendered" signal.
+  await page.goto(screen.url, { waitUntil: "domcontentloaded", timeout: 30_000 });
 
   if (screen.waitForSelector) {
     await page.waitForSelector(screen.waitForSelector, { timeout: 10_000 }).catch(() => {
@@ -255,7 +225,6 @@ async function captureScreen(page: Page, screen: ScreenDef, outPath: string): Pr
 // Each role describe creates a fresh browser context (isolated session).
 
 for (const [role, screens] of Object.entries(SCREENS)) {
-  const creds = CREDS[role];
   const defaultViewport = ROLE_VIEWPORT[role] ?? DESKTOP;
 
   test.describe(`Screenshots — ${role}`, () => {
@@ -264,13 +233,12 @@ for (const [role, screens] of Object.entries(SCREENS)) {
     let context: BrowserContext;
 
     test.beforeAll(async ({ browser }) => {
-      // Create a persistent context with the role's viewport
-      context = await browser.newContext({ viewport: defaultViewport });
-      const page = await context.newPage();
-
-      console.log(`\n→ Logging in as ${role} (${creds.email})`);
-      await login(page, creds);
-      await page.close();
+      // Reuse the pre-authenticated session from the setup project instead of
+      // doing a fresh login — avoids concurrent login timeouts and is faster.
+      context = await browser.newContext({
+        viewport: defaultViewport,
+        storageState: path.join(AUTH_STATE_DIR, `${role}.json`),
+      });
 
       // Ensure output directory exists
       await mkdir(path.join(OUT_DIR, role), { recursive: true });

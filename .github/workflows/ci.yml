@@ -61,10 +61,14 @@ jobs:
   # E2E needs repo secrets: DATABASE_URL, BETTER_AUTH_SECRET (≥32 chars), BETTER_AUTH_URL,
   # NEXT_PUBLIC_APP_URL, RESEND_API_KEY, RESEND_FROM_EMAIL. Build uses SKIP_ENV_VALIDATION;
   # `next start` does not — those vars must be present for the server to boot.
+  #
+  # Seed credentials can be overridden via:
+  #   E2E_ADMIN_PASSWORD, E2E_SECRETARY_PASSWORD, E2E_CLOTHIER_PASSWORD, E2E_STYLIST_PASSWORD
+  # Falls back to defaults (Admin123!, Secretary123!, etc.) if secrets are absent.
   e2e:
     name: E2E Tests
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     needs: ci
 
     steps:
@@ -124,25 +128,80 @@ jobs:
       - name: Wait for server
         run: npx wait-on http://localhost:3000 --timeout 30000
 
-      - name: Run E2E smoke tests
-        run: pnpm --filter @befine/web test:e2e
+      - name: Run E2E tests
+        run: pnpm --filter @befine/web test:e2e --project=chromium
         env:
+          PLAYWRIGHT_BASE_URL: "http://localhost:3000"
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
           BETTER_AUTH_URL: ${{ secrets.BETTER_AUTH_URL }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           RESEND_FROM_EMAIL: ${{ secrets.RESEND_FROM_EMAIL }}
           NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
-          PLAYWRIGHT_BASE_URL: "http://localhost:3000"
+          # Seed user credentials — override via GitHub Secrets if seed passwords differ
+          E2E_ADMIN_EMAIL: "admin@befine.dev"
+          E2E_ADMIN_PASSWORD: ${{ secrets.E2E_ADMIN_PASSWORD || 'Admin123!' }}
+          E2E_SECRETARY_EMAIL: "secretary@befine.dev"
+          E2E_SECRETARY_PASSWORD: ${{ secrets.E2E_SECRETARY_PASSWORD || 'Secretary123!' }}
+          E2E_STYLIST_EMAIL: "hairdresser@befine.dev"
+          E2E_STYLIST_PASSWORD: ${{ secrets.E2E_STYLIST_PASSWORD || 'Stylist123!' }}
+          E2E_CLOTHIER_EMAIL: "clothier@befine.dev"
+          E2E_CLOTHIER_PASSWORD: ${{ secrets.E2E_CLOTHIER_PASSWORD || 'Clothier123!' }}
 
-  # Post-deployment smoke tests against Vercel preview/production URL.
-  # Activated once T004 (Vercel setup) is complete.
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report/
+          retention-days: 7
+
+  # Production deployment gate — runs only on push to main after both ci and e2e pass.
+  # Requires a GitHub Environment named "production" with protection rules:
+  #   → Required reviewers: at least 1 (set in repo Settings → Environments → production)
+  #   → Wait timer: 0 min (optional delay before deploy)
+  # This gives the team a manual approval step before Vercel promotes to production.
+  #
+  # Setup:
+  #   1. In GitHub: Settings → Environments → New environment → name: "production"
+  #   2. Enable "Required reviewers" and add team members
+  #   3. Add all production secrets to the "production" environment (not just repo secrets)
+  #   4. In Vercel: disable automatic production branch deployment (Settings → Git)
+  #      so only this workflow triggers the production deploy via `vercel --prod`
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [ci, e2e]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: production
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Deploy to Vercel production
+        run: npx vercel --prod --token=${{ secrets.VERCEL_TOKEN }} --yes
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+  # Post-deployment smoke tests against the live Vercel production URL.
+  # Activated by adding VERCEL_PRODUCTION_URL to repo secrets.
   # e2e-deploy:
   #   name: Post-deploy Smoke Tests
   #   runs-on: ubuntu-latest
   #   timeout-minutes: 15
-  #   needs: ci
-  #   if: github.event_name == 'deployment_status' && github.event.deployment_status.state == 'success'
+  #   needs: deploy-production
   #
   #   steps:
   #     - uses: actions/checkout@v4
@@ -153,23 +212,7 @@ jobs:
   #         cache: pnpm
   #     - run: pnpm install --frozen-lockfile
   #     - run: pnpm --filter @befine/web exec playwright install --with-deps chromium
-  #     - name: Run smoke tests against deployment
-  #       run: pnpm --filter @befine/web test:e2e
+  #     - name: Run smoke tests against production
+  #       run: pnpm --filter @befine/web test:e2e --project=chromium e2e/smoke.spec.ts
   #       env:
-  #         PLAYWRIGHT_BASE_URL: ${{ github.event.deployment_status.target_url }}
-
-  # RBAC security tests — activated once T007 (auth) and T010 (RBAC) are complete.
-  # Negative tests from docs/testing/rbac-matrix.md verify 403 for forbidden role/action pairs.
-  # security:
-  #   name: RBAC Security Tests
-  #   runs-on: ubuntu-latest
-  #   needs: ci
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: pnpm/action-setup@v4
-  #     - uses: actions/setup-node@v4
-  #       with:
-  #         node-version: 24
-  #         cache: pnpm
-  #     - run: pnpm install --frozen-lockfile
-  #     - run: pnpm --filter @befine/web test -- --grep "rbac"
+  #         PLAYWRIGHT_BASE_URL: ${{ secrets.VERCEL_PRODUCTION_URL }}

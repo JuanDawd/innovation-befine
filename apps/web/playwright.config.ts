@@ -15,13 +15,22 @@ export default defineConfig({
     screenshot: "only-on-failure",
   },
   projects: [
+    // Setup project: logs in as each role and saves session cookies to e2e/.auth/*.json
+    // These are dependencies for all test projects so tests start pre-authenticated.
+    {
+      name: "setup",
+      testMatch: /setup\/auth\.setup\.ts/,
+    },
+
     {
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
+      dependencies: ["setup"],
     },
     {
       name: "mobile-chrome",
       use: { ...devices["Pixel 7"] },
+      dependencies: ["setup"],
     },
   ],
   webServer: process.env.PLAYWRIGHT_BASE_URL

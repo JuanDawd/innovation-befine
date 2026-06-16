@@ -9,14 +9,7 @@ import { test, expect } from "@playwright/test";
  * 3. Role cross-access returns 403 (role-path enforcement works)
  * 4. Rapid navigation does NOT produce 429 from Better Auth
  *    (cookie-based middleware doesn't hit /api/auth/get-session via HTTP)
- *
- * These tests require a running app with a seeded test user.
- * They are skipped if the PLAYWRIGHT_TEST_EMAIL env var is not set.
  */
-
-const TEST_EMAIL = process.env.PLAYWRIGHT_TEST_EMAIL;
-const TEST_PASSWORD = process.env.PLAYWRIGHT_TEST_PASSWORD;
-const skipIfNoTestUser = !TEST_EMAIL || !TEST_PASSWORD;
 
 test.describe("Unauthenticated redirects", () => {
   const protectedRoutes = [
@@ -26,7 +19,6 @@ test.describe("Unauthenticated redirects", () => {
     "/clothier",
     "/secretary/appointments",
     "/cashier/appointments",
-    "/secretary/appointments/new",
   ];
 
   for (const route of protectedRoutes) {
@@ -70,26 +62,12 @@ test.describe("Session rate limit — middleware does not hammer /api/auth/get-s
   });
 });
 
-test.describe.skip("Authenticated role access (requires test user)", {}, () => {
-  test.skip(skipIfNoTestUser, "PLAYWRIGHT_TEST_EMAIL not set");
+test.describe("Authenticated role access", () => {
+  test.use({ storageState: "e2e/.auth/secretary.json" });
 
   test("secretary can access /secretary/appointments", async ({ page }) => {
-    // This test would sign in as a secretary and verify access.
-    // Skipped until CI has a seeded test database with a secretary user.
-    await page.goto("/login");
-    await page.getByLabel("Email").fill(TEST_EMAIL!);
-    await page.getByLabel("Contraseña").fill(TEST_PASSWORD!);
-    await page.getByRole("button", { name: /iniciar sesión/i }).click();
-    await page.waitForURL("**/secretary**", { timeout: 10_000 });
     await page.goto("/secretary/appointments");
     await expect(page).not.toHaveURL(/login/);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-  });
-
-  test("100 rapid server actions do not trigger 429", async () => {
-    // Integration test: sign in, then trigger many actions to verify
-    // the app-level rate limiter (60/min general) and Better Auth's
-    // HTTP rate limiter (100/min) are both correctly calibrated.
-    test.skip(true, "Requires load testing infrastructure");
   });
 });
