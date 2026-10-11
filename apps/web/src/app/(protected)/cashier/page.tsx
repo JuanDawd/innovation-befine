@@ -48,12 +48,7 @@ async function StatsAndBoard() {
 
   return (
     <>
-      <DayAtAGlance
-        revenue={stats.revenue}
-        closedCount={stats.closedCount}
-        initialOpenCount={openTickets.length}
-        isDayOpen={stats.businessDayId !== null}
-      />
+      <DayAtAGlance initialStats={stats} initialOpenTickets={openTickets} />
       <CashierDashboard initialTickets={openTickets} />
     </>
   );

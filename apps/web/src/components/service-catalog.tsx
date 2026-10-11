@@ -7,6 +7,7 @@
  * Lists all services with variants, allows create/edit/deactivate/restore.
  */
 
+import { notifyDataChanged } from "@/lib/data-events";
 import { useState, useTransition, useEffect } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -99,6 +100,7 @@ function CreateServiceDialog({ onSuccess }: { onSuccess: (service: ServiceRow) =
       const result = await createService(data);
       if (result.success) {
         showToast("success", t("createServiceSuccess"));
+        notifyDataChanged("catalog");
         setOpen(false);
         // Build a minimal ServiceRow to satisfy the parent
         onSuccess({
@@ -317,6 +319,7 @@ function EditServiceDialog({
       const result = await editService(service.id, data);
       if (result.success) {
         showToast("success", t("editServiceSuccess"));
+        notifyDataChanged("catalog");
         setOpen(false);
         onSuccess({ name: data.name, description: data.description ?? null });
       } else {
@@ -432,6 +435,7 @@ function VariantEditRow({
       const result = await editVariant(variant.id, data);
       if (result.success) {
         showToast("success", t("editVariantSuccess"));
+        notifyDataChanged("catalog");
         onSave();
       } else {
         setServerError(result.error.message);
@@ -549,6 +553,7 @@ function AddVariantRow({
       const result = await addVariant(serviceId, data);
       if (result.success) {
         showToast("success", t("addVariantSuccess"));
+        notifyDataChanged("catalog");
         onSave();
       } else {
         setServerError(result.error.message);
@@ -694,6 +699,7 @@ function ServiceCard({
       const result = await deactivateService(localService.id);
       if (result.success) {
         showToast("success", t("deactivateSuccess"));
+        notifyDataChanged("catalog");
         setLocalService((prev) => ({ ...prev, isActive: false }));
         setServiceImpact(null);
       } else {
@@ -707,6 +713,7 @@ function ServiceCard({
       const result = await restoreService(localService.id);
       if (result.success) {
         showToast("success", t("restoreSuccess"));
+        notifyDataChanged("catalog");
         setLocalService((prev) => ({ ...prev, isActive: true }));
       } else {
         showToast("error", t("restoreError"));
@@ -719,6 +726,7 @@ function ServiceCard({
       const result = await deactivateVariant(variantId);
       if (result.success) {
         showToast("success", t("deactivateSuccess"));
+        notifyDataChanged("catalog");
         setLocalService((prev) => ({
           ...prev,
           variants: prev.variants.map((v) => (v.id === variantId ? { ...v, isActive: false } : v)),
@@ -743,6 +751,7 @@ function ServiceCard({
       const result = await restoreVariant(variantId);
       if (result.success) {
         showToast("success", t("restoreSuccess"));
+        notifyDataChanged("catalog");
         setLocalService((prev) => ({
           ...prev,
           variants: prev.variants.map((v) => (v.id === variantId ? { ...v, isActive: true } : v)),

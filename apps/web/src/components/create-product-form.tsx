@@ -1,7 +1,10 @@
 "use client";
 
 import { notifyDataChanged } from "@/lib/data-events";
-import { useState, useTransition, useEffect } from "react";
+import { useState, useTransition } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
+import { unwrap } from "@/lib/action-query";
 import { useTranslations } from "next-intl";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
@@ -43,10 +46,20 @@ export function CreateProductForm({
   const tc = useTranslations("common");
   const router = useRouter();
 
-  const [clothPieces, setClothPieces] = useState<ClothPieceOption[]>([]);
-  const [clothiers, setClothiers] = useState<ClothierOption[]>([]);
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const [isLoading, startLoadTransition] = useTransition();
+  const piecesQuery = useQuery({
+    queryKey: queryKeys.catalog.clothPieceOptions,
+    queryFn: () => unwrap(listActiveClothPieces()),
+    staleTime: 5 * 60_000,
+  });
+  const clothiersQuery = useQuery({
+    queryKey: queryKeys.staff.activeClothiers,
+    queryFn: () => unwrap(listActiveClothiers()),
+    staleTime: 5 * 60_000,
+  });
+  const clothPieces: ClothPieceOption[] = piecesQuery.data ?? [];
+  const clothiers: ClothierOption[] = clothiersQuery.data ?? [];
+  const isLoading = piecesQuery.isPending || clothiersQuery.isPending;
+  const loadError = (piecesQuery.error ?? clothiersQuery.error)?.message ?? null;
 
   const [notes, setNotes] = useState("");
   const [largeOrderId, setLargeOrderId] = useState<string>("");
@@ -66,25 +79,6 @@ export function CreateProductForm({
   const [nextKey, setNextKey] = useState(1);
   const [isPending, startSubmitTransition] = useTransition();
   const { showToast } = useToast();
-
-  useEffect(() => {
-    startLoadTransition(async () => {
-      const [piecesRes, clothiersRes] = await Promise.all([
-        listActiveClothPieces(),
-        listActiveClothiers(),
-      ]);
-      if (!piecesRes.success) {
-        setLoadError(piecesRes.error.message);
-        return;
-      }
-      if (!clothiersRes.success) {
-        setLoadError(clothiersRes.error.message);
-        return;
-      }
-      setClothPieces(piecesRes.data);
-      setClothiers(clothiersRes.data);
-    });
-  }, []);
 
   function addLine() {
     setLines((prev) => [

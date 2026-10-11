@@ -116,3 +116,48 @@ export function useRealtimeEvent(
     };
   }, [channel, event, enabled, startPolling, stopPolling]);
 }
+
+/**
+ * Subscribe to several events on one channel over a single EventSource.
+ *
+ * Unlike `useRealtimeEvent` there is no built-in polling: pair it with a
+ * data layer that already refetches on an interval (e.g. TanStack Query
+ * `refetchInterval`) and use `onEvent` to invalidate.
+ */
+export function useRealtimeChannel(
+  channel: RealtimeChannel,
+  events: readonly RealtimeEvent[],
+  onEvent: (event: RealtimeEvent, data: unknown) => void,
+  enabled = true,
+) {
+  const onEventRef = useRef(onEvent);
+  const eventsKey = events.join("|");
+
+  useEffect(() => {
+    onEventRef.current = onEvent;
+  });
+
+  useEffect(() => {
+    if (!enabled) return;
+    const es = new EventSource(`${SSE_BASE}/${channel}`);
+    const names = eventsKey.split("|") as RealtimeEvent[];
+    const handlers = names.map((name) => {
+      const handler = (e: MessageEvent) => {
+        let data: unknown = e.data;
+        try {
+          data = JSON.parse(e.data);
+        } catch {
+          // keep raw string
+        }
+        onEventRef.current(name, data);
+      };
+      es.addEventListener(name, handler as EventListener);
+      return [name, handler] as const;
+    });
+    return () => {
+      for (const [name, handler] of handlers)
+        es.removeEventListener(name, handler as EventListener);
+      es.close();
+    };
+  }, [channel, eventsKey, enabled]);
+}

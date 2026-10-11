@@ -8,22 +8,21 @@
  */
 
 import { useTranslations } from "next-intl";
-import { useState, useCallback, useTransition } from "react";
 import { TrendingUpIcon, TicketIcon, CheckCircleIcon, CalendarCheckIcon } from "lucide-react";
-import { useRealtimeEvent } from "@befine/realtime/client";
+import { useQuery } from "@tanstack/react-query";
 import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
-import { listOpenTickets } from "@/app/(protected)/tickets/actions";
-import { getDayStats } from "@/app/(protected)/cashier/actions/day-stats";
-import { useDataChanged } from "@/lib/data-events";
+import { listOpenTickets, type DashboardTicket } from "@/app/(protected)/tickets/actions";
+import { getDayStats, type DayStats } from "@/app/(protected)/cashier/actions/day-stats";
+import { queryKeys } from "@/lib/query-keys";
+import { unwrap } from "@/lib/action-query";
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 interface DayAtAGlanceProps {
-  revenue: number;
-  closedCount: number;
-  initialOpenCount: number;
-  isDayOpen: boolean;
+  initialStats: DayStats;
+  /** Same list the CashierDashboard receives — both seed `tickets.open`. */
+  initialOpenTickets: DashboardTicket[];
 }
 
 // ─── Stat card ────────────────────────────────────────────────────────────────
@@ -69,37 +68,26 @@ function StatCard({
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function DayAtAGlance({
-  revenue,
-  closedCount,
-  initialOpenCount,
-  isDayOpen,
-}: DayAtAGlanceProps) {
+export function DayAtAGlance({ initialStats, initialOpenTickets }: DayAtAGlanceProps) {
   const t = useTranslations("dayAtAGlance");
-  const [openCount, setOpenCount] = useState(initialOpenCount);
-  const [stats, setStats] = useState({ revenue, closedCount });
-  const [, startTransition] = useTransition();
 
-  const refreshCount = useCallback(() => {
-    startTransition(async () => {
-      const result = await listOpenTickets();
-      if (result.success) setOpenCount(result.data.length);
-    });
-  }, []);
+  // Shared with CashierDashboard — one cached query, one fetch.
+  const { data: openTickets = initialOpenTickets } = useQuery({
+    queryKey: queryKeys.tickets.open,
+    queryFn: () => unwrap(listOpenTickets()),
+    initialData: initialOpenTickets,
+    refetchInterval: 30_000,
+  });
+  // Revenue/closed change on checkout — invalidated with "businessDay".
+  const { data: stats = initialStats } = useQuery({
+    queryKey: queryKeys.businessDay.stats,
+    queryFn: () => unwrap(getDayStats()),
+    initialData: initialStats,
+    refetchInterval: 30_000,
+  });
 
-  const refreshAll = useCallback(() => {
-    startTransition(async () => {
-      const [openRes, statsRes] = await Promise.all([listOpenTickets(), getDayStats()]);
-      if (openRes.success) setOpenCount(openRes.data.length);
-      if (statsRes.success)
-        setStats({ revenue: statsRes.data.revenue, closedCount: statsRes.data.closedCount });
-    });
-  }, []);
-
-  useRealtimeEvent("cashier", "ticket_created", { onData: refreshCount, onPoll: refreshCount });
-  // A ticket update may be a checkout (revenue + closed count change)
-  useRealtimeEvent("cashier", "ticket_updated", { onData: refreshAll, onPoll: refreshAll });
-  useDataChanged(["tickets", "businessDay", "clothSales"], refreshAll);
+  const openCount = openTickets.length;
+  const isDayOpen = stats.businessDayId !== null;
 
   if (!isDayOpen) {
     return (

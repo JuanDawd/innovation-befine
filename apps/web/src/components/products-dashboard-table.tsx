@@ -1,7 +1,8 @@
 "use client";
 
-import { useDataChanged } from "@/lib/data-events";
-import { useState, useTransition, useEffect, useCallback } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
+import { unwrap } from "@/lib/action-query";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { type LucideIcon, Loader2Icon, PackageIcon, ClockIcon } from "lucide-react";
@@ -124,21 +125,11 @@ function DashboardSection({
 
 export function ProductsDashboardTable({ isAdmin }: { isAdmin: boolean }) {
   const t = useTranslations("products");
-  const [rows, setRows] = useState<ProductDashboardRow[]>([]);
-  const [isLoading, startLoad] = useTransition();
-
-  const load = useCallback(() => {
-    startLoad(async () => {
-      const res = await getProductsDashboardData();
-      if (res.success) setRows(res.data);
-    });
-  }, []);
-
-  useEffect(() => {
-    load();
-  }, [load]);
-
-  useDataChanged(["products"], load);
+  const { data: rows = [], isPending: isLoading } = useQuery({
+    queryKey: queryKeys.products.dashboard,
+    queryFn: () => unwrap(getProductsDashboardData()),
+    refetchInterval: 60_000,
+  });
 
   if (isLoading && rows.length === 0) {
     return (

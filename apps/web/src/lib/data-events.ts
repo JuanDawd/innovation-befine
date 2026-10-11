@@ -1,16 +1,17 @@
 "use client";
 
 /**
- * In-tab "data changed" signal.
+ * Mutation → query invalidation.
  *
  * Mutating forms/dialogs call `notifyDataChanged(...)` after a successful
- * server action; list components subscribe with `useDataChanged(...)` and
- * refetch. This keeps the screen where the user acted in sync immediately,
- * without waiting for SSE (which doesn't cross Vercel instances) or the 30 s
- * polling fallback. Other devices still rely on realtime/polling.
+ * server action. It invalidates every TanStack query whose key starts with
+ * one of the scopes (see lib/query-keys.ts), so every list on screen refetches
+ * immediately — without waiting for SSE (which doesn't cross Vercel
+ * instances) or the refetch interval. Other devices are updated by
+ * `RealtimeQueryBridge` and `refetchInterval`.
  */
 
-import { useEffect, useRef } from "react";
+import { getQueryClient } from "@/lib/query-client";
 
 export type DataScope =
   | "tickets"
@@ -20,30 +21,12 @@ export type DataScope =
   | "clothSales"
   | "businessDay"
   | "payouts"
-  | "clients";
-
-const EVENT = "befine:data-changed";
+  | "clients"
+  | "catalog"
+  | "staff";
 
 export function notifyDataChanged(...scopes: DataScope[]): void {
   if (typeof window === "undefined") return;
-  window.dispatchEvent(new CustomEvent<DataScope[]>(EVENT, { detail: scopes }));
-}
-
-export function useDataChanged(scopes: DataScope[], onChange: () => void): void {
-  const onChangeRef = useRef(onChange);
-  const key = scopes.join("|");
-
-  useEffect(() => {
-    onChangeRef.current = onChange;
-  });
-
-  useEffect(() => {
-    const wanted = new Set(key.split("|"));
-    function handler(e: Event) {
-      const changed = (e as CustomEvent<DataScope[]>).detail ?? [];
-      if (changed.some((s) => wanted.has(s))) onChangeRef.current();
-    }
-    window.addEventListener(EVENT, handler);
-    return () => window.removeEventListener(EVENT, handler);
-  }, [key]);
+  const queryClient = getQueryClient();
+  for (const scope of scopes) void queryClient.invalidateQueries({ queryKey: [scope] });
 }

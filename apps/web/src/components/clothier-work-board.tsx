@@ -1,7 +1,10 @@
 "use client";
 
-import { notifyDataChanged, useDataChanged } from "@/lib/data-events";
-import { useState, useTransition, useEffect, useCallback } from "react";
+import { notifyDataChanged } from "@/lib/data-events";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
+import { unwrap } from "@/lib/action-query";
 import { useTranslations } from "next-intl";
 import {
   CheckCircle2Icon,
@@ -92,23 +95,13 @@ function PieceStatusBadge({ status }: { status: ProductPieceRow["status"] }) {
 export function ClothierWorkBoard({ employeeId }: { employeeId: string }) {
   const t = useTranslations("clothierWork");
 
-  const [pieces, setPieces] = useState<ProductPieceRow[]>([]);
-  const [isLoading, startLoadTransition] = useTransition();
+  const { data: pieces = [], isPending: isLoading } = useQuery({
+    queryKey: queryKeys.products.clothierBoard,
+    queryFn: () => unwrap(listTodayProductPieces()),
+    refetchInterval: 30_000,
+  });
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [errorMap, setErrorMap] = useState<Record<string, string>>({});
-
-  const load = useCallback(() => {
-    startLoadTransition(async () => {
-      const res = await listTodayProductPieces();
-      if (res.success) setPieces(res.data);
-    });
-  }, []);
-
-  useEffect(() => {
-    load();
-  }, [load]);
-
-  useDataChanged(["products"], load);
 
   const myPieces = pieces.filter((p) => p.assignedToEmployeeId === employeeId);
   const available = pieces.filter((p) => p.assignedToEmployeeId === null);

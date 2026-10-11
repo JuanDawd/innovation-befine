@@ -10,6 +10,7 @@
  * - Click row → edit dialog with T014 fields + T015 earnings toggle + T022a deactivate
  */
 
+import { notifyDataChanged } from "@/lib/data-events";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -133,6 +134,7 @@ export function EmployeeList({ initialEmployees }: EmployeeListProps) {
       setEmployees((prev) => prev.map((e) => (e.id === editTarget.id ? result.data : e)));
       setEditOpen(false);
       toast.success(t("editSuccess"));
+      notifyDataChanged("staff");
     } else {
       Sentry.addBreadcrumb({ category: "ui.toast", message: result.error.message, level: "error" });
       setEditError(result.error.message);
@@ -162,6 +164,7 @@ export function EmployeeList({ initialEmployees }: EmployeeListProps) {
           ),
         );
         toast.success(t("deactivateSuccess"));
+        notifyDataChanged("staff");
         return;
       }
       // T022b: unsettled earnings → open termination dialog
@@ -212,6 +215,7 @@ export function EmployeeList({ initialEmployees }: EmployeeListProps) {
         );
         setTerminateOpen(false);
         toast.success(t("terminateSuccess"));
+        notifyDataChanged("staff");
       } else {
         Sentry.addBreadcrumb({
           category: "ui.toast",

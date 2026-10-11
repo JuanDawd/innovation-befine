@@ -7,8 +7,11 @@
  * and a "Mark ready for payment" button (T037), plus a "My requests" status section.
  */
 
-import { useDataChanged } from "@/lib/data-events";
-import { useState, useCallback, useTransition } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { notifyDataChanged } from "@/lib/data-events";
+import { queryKeys } from "@/lib/query-keys";
+import { unwrap } from "@/lib/action-query";
 import { useTranslations } from "next-intl";
 import { ClipboardListIcon, CreditCardIcon, Loader2Icon } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -52,24 +55,22 @@ export function MyEditRequests({
 }) {
   const t = useTranslations("editRequests");
   const tt = useTranslations("tickets");
-  const [items, setItems] = useState<OpenTicketItem[]>(initialItems);
-  const [requests, setRequests] = useState<MyEditRequest[]>(initialRequests);
+  const { data: items = initialItems } = useQuery({
+    queryKey: queryKeys.tickets.mine,
+    queryFn: () => unwrap(listMyOpenTicketItems()),
+    initialData: initialItems,
+    refetchInterval: 30_000,
+  });
+  const { data: requests = initialRequests } = useQuery({
+    queryKey: queryKeys.editRequests.mine,
+    queryFn: () => unwrap(listMyEditRequests()),
+    initialData: initialRequests,
+    refetchInterval: 30_000,
+  });
   const [transitioning, setTransitioning] = useState<Set<string>>(new Set());
   const [transitionErrors, setTransitionErrors] = useState<Map<string, string>>(new Map());
-  const [, startTransition] = useTransition();
 
-  const refresh = useCallback(() => {
-    startTransition(async () => {
-      const [itemsRes, requestsRes] = await Promise.all([
-        listMyOpenTicketItems(),
-        listMyEditRequests(),
-      ]);
-      if (itemsRes.success) setItems(itemsRes.data);
-      if (requestsRes.success) setRequests(requestsRes.data);
-    });
-  }, []);
-
-  useDataChanged(["tickets", "editRequests"], refresh);
+  const refresh = () => notifyDataChanged("tickets", "editRequests");
 
   async function handleMarkReady(ticketId: string) {
     setTransitioning((prev) => new Set(prev).add(ticketId));

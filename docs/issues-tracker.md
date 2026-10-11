@@ -934,7 +934,7 @@
 ### M-64 — Dialogs take 10–20 s to load; duplicate SSE connections
 
 - **Severity:** Medium
-- **Status:** Open
+- **Status:** Partially resolved (2026-10-11) — TanStack Query: one `RealtimeQueryBridge` connection per channel (cashier page 6 → 2 EventSources), dialog reference data cached 5 min, polling via `refetchInterval` only for mounted queries. Measured: Cobrar 10–20 s → ~1 s, Registrar servicio reopen instant. Remaining: reads still go through server actions (serialized); move hot reads to route handlers
 - **Affected:** Cobrar (`checkout-form.tsx`), Vender prenda, Registrar servicio; cashier dashboard realtime
 - **Description:** Source: training-manual walkthrough with agent-browser, 2026-10-11 (demo data, homelab CT 110). On a 1 ms DB, "Cobrar" took ~10–20 s and "Vender prenda" ~15 s to show content (sometimes 1 s). Network shows a queue of sequential POSTs to `/cashier`: Next.js runs server actions one at a time per client, so dialog loads wait behind dashboard polling actions. The cashier page also opens 5 parallel `EventSource` connections to `/api/realtime/cashier` (+1 notifications) — one per subscribing component.
 - **Fix:** Load dialog data via route handlers/TanStack Query (parallel GETs) instead of server actions; share one SSE connection per channel (context/provider).
@@ -974,9 +974,9 @@
 ### M-68 — Silent failures: forms do nothing on non-secure origins; unexplained logout
 
 - **Severity:** Medium
-- **Status:** Partially resolved (2026-10-11) — `lib/uuid.ts` `newUuid()` fallback replaces `crypto.randomUUID()` in client code. Still open: unexplained cookie loss
+- **Status:** Partially resolved (2026-10-11) — `lib/uuid.ts` `newUuid()` fallback replaces `crypto.randomUUID()` in client code. Cookie-loss report attributed to the test tool
 - **Affected:** `log-service-form.tsx` and any client code using `crypto.randomUUID()`; auth session
-- **Description:** Source: training-manual walkthrough with agent-browser, 2026-10-11 (demo data, homelab CT 110). (1) Over plain HTTP on a LAN IP, "Registrar ticket" does nothing — `crypto.randomUUID` is undefined outside secure contexts; the exception is swallowed (no toast, no request). Production is HTTPS, but a self-hosted/LAN deployment would break ticket creation silently. (2) The cashier browser lost all cookies and was redirected to /login ~10 min after signing in (after a garment sale), while other sessions were fine — not yet explained.
+- **Description:** Source: training-manual walkthrough with agent-browser, 2026-10-11 (demo data, homelab CT 110). (1) Over plain HTTP on a LAN IP, "Registrar ticket" does nothing — `crypto.randomUUID` is undefined outside secure contexts; the exception is swallowed (no toast, no request). Production is HTTPS, but a self-hosted/LAN deployment would break ticket creation silently. (2) ~~The cashier browser lost all cookies…~~ — almost certainly a test-tool artifact: agent-browser restarted its browser process (pages went to `about:blank` twice more during later runs), which drops cookies.
 - **Fix:** Use a UUID helper with a fallback (`crypto.getRandomValues`) and surface submit errors via toast. Investigate the cookie loss (cookie-cache refresh path).
 
 ---

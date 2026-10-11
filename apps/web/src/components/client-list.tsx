@@ -8,6 +8,7 @@
  * Used on both /cashier/clients and /secretary/clients pages.
  */
 
+import { notifyDataChanged } from "@/lib/data-events";
 import { useState, useTransition, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -111,6 +112,7 @@ function ClientDialog({
 
       if (result.success) {
         showToast("success", isEdit ? t("editSuccess") : t("createSuccess"));
+        notifyDataChanged("clients");
         setOpen(false);
         onSuccess(result.data);
       } else {
@@ -236,6 +238,7 @@ function ClientCard({
       const result = await archiveClient(localClient.id);
       if (result.success) {
         showToast("success", t("archiveSuccess"));
+        notifyDataChanged("clients");
         const updated = { ...localClient, isActive: false };
         setLocalClient(updated);
         onUpdate(updated);
@@ -250,6 +253,7 @@ function ClientCard({
       const result = await unarchiveClient(localClient.id);
       if (result.success) {
         showToast("success", t("unarchiveSuccess"));
+        notifyDataChanged("clients");
         const updated = { ...localClient, isActive: true };
         setLocalClient(updated);
         onUpdate(updated);
