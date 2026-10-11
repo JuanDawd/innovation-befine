@@ -7,6 +7,7 @@
  * On submit calls requestEdit() server action.
  */
 
+import { notifyDataChanged } from "@/lib/data-events";
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { PencilIcon } from "lucide-react";
@@ -88,6 +89,7 @@ export function RequestEditDialog({
         return;
       }
       setSuccess(true);
+      notifyDataChanged("editRequests", "tickets");
       onSuccess?.();
       setTimeout(() => setOpen(false), 1500);
     });

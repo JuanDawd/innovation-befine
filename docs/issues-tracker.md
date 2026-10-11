@@ -486,6 +486,46 @@
 
 ---
 
+### H-49 — Closing the business day silently strands unpaid tickets
+
+- **Severity:** High
+- **Status:** Partially resolved (2026-10-11) — close-day confirmation now shows the unpaid-ticket count and turns destructive. Still open: tickets from a closed day remain unreachable from Cobrar
+- **Affected:** T023 business day (`closeBusinessDay`, `business-day-panel.tsx`), T038 checkout, cashier dashboard
+- **Description:** Source: training-manual walkthrough with agent-browser, 2026-10-11 (demo data, homelab CT 110). "Cerrar día" only asks _"¿Cerrar el día?"_ — no mention of open tickets. The day was closed with 2 `logged` + 3 `awaiting_payment` tickets. Both the cashier dashboard and `getAwaitingPaymentTickets` are scoped to the current business day, so after closing those tickets disappear from every cashier screen ("Sin tickets abiertos"): the services can never be charged through the normal flow. Also, the first reload after closing still showed "Día abierto".
+- **Fix:** Block (or require explicit override + reason) closing while tickets are `logged`/`awaiting_payment`; show the count in the confirmation. Provide a way to see/charge tickets from previous days.
+
+---
+
+### H-50 — "Vender prenda": duplicate sales, no payment method, not counted as revenue
+
+- **Severity:** High
+- **Status:** Open
+- **Affected:** `sell-cloth-piece-modal.tsx`, `cashier/actions/cloth-sales.ts`, analytics
+- **Description:** Source: training-manual walkthrough with agent-browser, 2026-10-11 (demo data, homelab CT 110). (1) One intended sale was stored twice (19:38:28 and 19:39:24); the dialog gives no success toast and silently resets, and the action has no idempotency key. (2) The sale has no payment method and `cloth_sales.ticket_id` stays null, so it never goes through Cobrar or the cash drawer. (3) After two sales ($190.000) Analytics still shows _Ingresos por venta de productos $0_. (4) Every cloth-piece variant in the catalog shows "sin precio", so the cashier types the price by hand each time.
+- **Fix:** Add idempotency key + success toast; either attach the sale to a ticket/checkout or record payment method on the sale; include cloth sales in revenue analytics; configure sale prices in the catalog.
+
+---
+
+### H-51 — Lists don't refresh after mutations (risk of duplicate records)
+
+- **Severity:** High
+- **Status:** Resolved (2026-10-11) — in-tab `notifyDataChanged`/`useDataChanged` signal (`lib/data-events.ts`) + `router.refresh()` after saves; verified in browser: stylist ticket, appointment, checkout KPIs, open/close day all update without reload
+- **Affected:** Appointments ("Reservar cita"), Products ("Crear producto"), Stylist "Mis servicios de hoy" ("Registrar ticket"), cashier change-request approve, cashier dashboard after checkout
+- **Description:** Source: training-manual walkthrough with agent-browser, 2026-10-11 (demo data, homelab CT 110). After a successful mutation the dialog closes (toast shown in some cases) but the list/KPIs keep the old data until a manual reload. For stylists this means the ticket they just registered is not visible — the natural reaction is to register it again, creating a duplicate ticket. Likely introduced when standalone `/new` pages became in-context dialogs (commit `ab1ee46`, intercepting routes) — `revalidatePath` alone doesn't refresh the client tree behind the modal.
+- **Fix:** Call `router.refresh()` (or invalidate the TanStack Query key) after each successful mutation in these dialogs; add an E2E check that the created row is visible without reload.
+
+---
+
+### H-52 — Clothiers can't see unfinished pieces from previous days
+
+- **Severity:** High
+- **Status:** Open
+- **Affected:** `app/(protected)/clothier/actions.ts` `listTodayProductPieces`
+- **Description:** Found while verifying UX fixes (2026-10-11). The query filters `products.business_day_id = current day`, so every `pending` piece created on an earlier day disappears from the clothiers' phones once a new day is opened (7 such pieces in the demo DB were invisible), while the secretary still lists them under "En progreso". Large-order pieces sent to production on Monday are invisible on Tuesday.
+- **Fix:** Return pieces with `status = 'pending'` (or assigned and not approved) regardless of business day, ordered by product date; keep today's as the default group.
+
+---
+
 ## Medium-priority issues
 
 ### M-01 — No-show count never decrements
@@ -878,6 +918,86 @@
 - **Affected:** All server actions (session, employee lookup, business day, then the actual query)
 - **Description:** Source: k6 load test 2026-10-11 (8 stylists, 1 cashier, 1 secretary, 8 clothiers; homelab CT 110 on HDD). With a fixed ~155 ms per query in the test rig, even `getCurrentEmployeeId` took ~800 ms idle — roughly 4–5 sequential queries per action. On Neon (~5–20 ms/query) this is tolerable, but it adds directly to every tap.
 - **Fix:** Count queries per action (Drizzle logger), cache the employee id in the session/cookie cache, and parallelise independent lookups with `Promise.all`.
+
+---
+
+### M-63 — Server-rendered times ignore America/Bogota
+
+- **Severity:** Medium
+- **Status:** Open
+- **Affected:** `business-day-panel.tsx` (openedAt/closedAt), `closed-ticket-history.tsx` ("Hora cierre")
+- **Description:** Source: training-manual walkthrough with agent-browser, 2026-10-11 (demo data, homelab CT 110). `toLocaleTimeString("es-CO", …)` without `timeZone`. Rendered on the server (UTC on Vercel/containers) the day opened at 2:24 p. m. shows "07:24 p. m."; ticket closed at 2:35 p. m. shows "07:35 p. m." Client re-render shows the right time → also a hydration mismatch.
+- **Fix:** Use a shared formatter with `timeZone: "America/Bogota"` (date-fns-tz) everywhere times are displayed.
+
+---
+
+### M-64 — Dialogs take 10–20 s to load; duplicate SSE connections
+
+- **Severity:** Medium
+- **Status:** Open
+- **Affected:** Cobrar (`checkout-form.tsx`), Vender prenda, Registrar servicio; cashier dashboard realtime
+- **Description:** Source: training-manual walkthrough with agent-browser, 2026-10-11 (demo data, homelab CT 110). On a 1 ms DB, "Cobrar" took ~10–20 s and "Vender prenda" ~15 s to show content (sometimes 1 s). Network shows a queue of sequential POSTs to `/cashier`: Next.js runs server actions one at a time per client, so dialog loads wait behind dashboard polling actions. The cashier page also opens 5 parallel `EventSource` connections to `/api/realtime/cashier` (+1 notifications) — one per subscribing component.
+- **Fix:** Load dialog data via route handlers/TanStack Query (parallel GETs) instead of server actions; share one SSE connection per channel (context/provider).
+
+---
+
+### M-65 — Checkout pre-selects every awaiting ticket from every client
+
+- **Severity:** Medium
+- **Status:** Open
+- **Affected:** `checkout-form.tsx`
+- **Description:** Source: training-manual walkthrough with agent-browser, 2026-10-11 (demo data, homelab CT 110). Opening "Cobrar" selects all `awaiting_payment` tickets (4 different clients in the demo). A rushed cashier can charge one client for everyone's services.
+- **Fix:** Start with nothing selected (or only the ticket that was clicked), group by client, and show the client name in the confirmation.
+
+---
+
+### M-66 — Payroll: errors hidden behind the confirmation modal; day picker unwieldy
+
+- **Severity:** Medium
+- **Status:** Partially resolved (2026-10-11) — `ConfirmationDialog` now closes after confirm (errors visible; fixes every confirm dialog). Still open: day-picker chips / oldest-first guidance
+- **Affected:** `admin/payroll/payroll-screen.tsx`, `ConfirmationDialog`
+- **Description:** Source: training-manual walkthrough with agent-browser, 2026-10-11 (demo data, homelab CT 110). When `recordPayout` fails (e.g. _"Hay días anteriores sin pagar para este empleado…"_) the "¿Confirmar el pago?" dialog stays open and the error renders behind it — the admin sees nothing happen. The picker lets you select non-oldest days without warning, renders every unsettled day as a chip (166 chips), and shows the unclear label "161 / 6 máx/semana".
+- **Fix:** Close the dialog and toast the error; enforce/auto-select the oldest contiguous range; replace chips with a date-range picker.
+
+---
+
+### M-67 — Secretary sees "Cobrar" but checkout is cashier/admin-only
+
+- **Severity:** Medium
+- **Status:** Open
+- **Affected:** Sidebar quick actions, `cashier/checkout/actions.ts`
+- **Description:** Source: training-manual walkthrough with agent-browser, 2026-10-11 (demo data, homelab CT 110). The secretary sidebar shows "Cobrar", but `getAwaitingPaymentTickets`/`processCheckout` return FORBIDDEN for `secretary` (dialog shows an empty list).
+- **Fix:** Hide the button for roles without checkout permission (or grant the permission deliberately).
+
+---
+
+### M-68 — Silent failures: forms do nothing on non-secure origins; unexplained logout
+
+- **Severity:** Medium
+- **Status:** Partially resolved (2026-10-11) — `lib/uuid.ts` `newUuid()` fallback replaces `crypto.randomUUID()` in client code. Still open: unexplained cookie loss
+- **Affected:** `log-service-form.tsx` and any client code using `crypto.randomUUID()`; auth session
+- **Description:** Source: training-manual walkthrough with agent-browser, 2026-10-11 (demo data, homelab CT 110). (1) Over plain HTTP on a LAN IP, "Registrar ticket" does nothing — `crypto.randomUUID` is undefined outside secure contexts; the exception is swallowed (no toast, no request). Production is HTTPS, but a self-hosted/LAN deployment would break ticket creation silently. (2) The cashier browser lost all cookies and was redirected to /login ~10 min after signing in (after a garment sale), while other sessions were fine — not yet explained.
+- **Fix:** Use a UUID helper with a fallback (`crypto.getRandomValues`) and surface submit errors via toast. Investigate the cookie loss (cookie-cache refresh path).
+
+---
+
+### M-69 — Catalog: most service variants have 0 % commission (verify with owner)
+
+- **Severity:** Medium
+- **Status:** Open
+- **Affected:** Catalog data (prod), payroll
+- **Description:** Source: training-manual walkthrough with agent-browser, 2026-10-11 (demo data, homelab CT 110). The catalog copied from production shows 0.0 % commission on most variants (e.g. _Aminoacidos JK — Cintura $250.000 0.0%_). Payroll lines for those services pay the stylist $0.
+- **Fix:** Confirm intended commission rates with the owner and update the catalog; consider warning when saving a variant with 0 %.
+
+---
+
+### M-70 — Price adjustment ("Ajustar") UX
+
+- **Severity:** Medium
+- **Status:** Open
+- **Affected:** `checkout-form.tsx` override row
+- **Description:** Source: training-manual walkthrough with agent-browser, 2026-10-11 (demo data, homelab CT 110). After entering price and reason, "OK" stays disabled while saving (no spinner, several seconds), and when the override saves the whole Cobrar dialog closes, forcing the cashier to reopen it (another slow load, see M-64).
+- **Fix:** Show a spinner on OK and keep the dialog open with the updated total.
 
 ---
 
@@ -1663,6 +1783,36 @@
 - **Affected:** `packages/db/src/index.ts` `createTxDb`
 - **Description:** Under a burst (closing time: checkouts + mark-done + products) transactions queue behind 5 sockets per instance. Fine on Vercel with many instances; a bottleneck if self-hosted on one process.
 - **Fix:** Make `max` configurable via env; size it to Neon's connection budget.
+
+---
+
+### L-50 — Untranslated strings (raw enum keys / English)
+
+- **Severity:** Low
+- **Status:** Open
+- **Affected:** "Nueva cita" stylist select (`masseuse`, `makeup_artist`, `spa_manager`…), product detail piece status (`initial`), large-order status badge (`pending`, `in production`), admin sidebar + page title "Analytics", Analytics "Por empleado" role column (`Secretary`, `Stylist`)
+- **Description:** Source: training-manual walkthrough with agent-browser, 2026-10-11 (demo data, homelab CT 110). These bypass `next-intl` while the rest of the UI is Spanish (e.g. "Crear empleado" translates the same subtypes correctly).
+- **Fix:** Map enums through translation keys; add an i18n lint for raw enum rendering.
+
+---
+
+### L-51 — Accessibility: unlabeled controls
+
+- **Severity:** Low
+- **Status:** Open
+- **Affected:** Large-order form (quantity / unit price spinbuttons), walk-in guest icon button in log-service form, catalog "Crear servicio" price/commission (placeholder-only labels "Ej: 25000"/"Ej: 40"), absences calendar prev/next month buttons
+- **Description:** Source: training-manual walkthrough with agent-browser, 2026-10-11 (demo data, homelab CT 110). Found via accessibility snapshot — these controls expose no accessible name.
+- **Fix:** Add `<label>`/`aria-label` per CLAUDE.md accessibility baseline.
+
+---
+
+### L-52 — Mobile and small UX polish
+
+- **Severity:** Low
+- **Status:** Partially resolved (2026-10-11) — clothier "Listo" now asks for confirmation (piece + quantity) and shows success toasts; claim/done send idempotency key. Rest open
+- **Affected:** Mobile earnings pages, notifications bell, clothier "Listo", PWA manifest
+- **Description:** Source: training-manual walkthrough with agent-browser, 2026-10-11 (demo data, homelab CT 110). (1) At 390 px the floating name/bell pill overlaps the H1 ("Historial d…"). (2) The unread badge doesn't clear after opening notifications. (3) Clothier "Listo" applies immediately with no confirmation or undo. (4) `/manifest.webmanifest` is redirected to `/login` by middleware (manifest requests carry no cookies), so the PWA manifest is unreachable. (5) "Abrir día" spins ~5 s before the panel updates.
+- **Fix:** Add top padding under the pill; mark notifications read on open; add undo toast for "Listo"; exclude `manifest.webmanifest` in the middleware matcher.
 
 ---
 

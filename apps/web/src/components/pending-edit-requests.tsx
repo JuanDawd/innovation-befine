@@ -7,6 +7,7 @@
  * Refreshes on SSE ticket_updated events.
  */
 
+import { notifyDataChanged, useDataChanged } from "@/lib/data-events";
 import { useState, useCallback, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -40,6 +41,8 @@ export function PendingEditRequests({
     });
   }, []);
 
+  useDataChanged(["editRequests", "tickets"], refresh);
+
   useRealtimeEvent("cashier", "ticket_updated", {
     onData: () => refresh(),
     onPoll: refresh,
@@ -54,6 +57,7 @@ export function PendingEditRequests({
       return;
     }
     setRequests((prev) => prev.filter((r) => r.id !== id));
+    notifyDataChanged("tickets");
     toast.success(decision === "approved" ? t("approveSuccess") : t("rejectSuccess"));
   }
 

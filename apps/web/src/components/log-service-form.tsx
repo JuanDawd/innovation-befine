@@ -8,6 +8,8 @@
  * - stylist: employee pre-selected to self, selector hidden
  */
 
+import { notifyDataChanged } from "@/lib/data-events";
+import { newUuid } from "@/lib/uuid";
 import { useState, useTransition, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslations } from "next-intl";
@@ -97,13 +99,15 @@ export function LogServiceForm({
       clientType: clientSelection.type,
       clientId: clientSelection.type === "saved" ? clientSelection.client.id : undefined,
       guestName: clientSelection.type === "guest" ? clientSelection.guestName : undefined,
-      idempotencyKey: crypto.randomUUID(),
+      idempotencyKey: newUuid(),
     };
 
     startSubmitTransition(async () => {
       const result = await createTicket(input);
       if (result.success) {
         showToast("success", t("submitSuccess"));
+        notifyDataChanged("tickets");
+        router.refresh();
         if (onClose) {
           setTimeout(() => onClose(), 1200);
         } else {

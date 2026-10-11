@@ -13,6 +13,9 @@
  */
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { notifyDataChanged } from "@/lib/data-events";
+import { listOpenTickets } from "@/app/(protected)/tickets/actions";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { CalendarCheckIcon, CalendarXIcon, Loader2Icon, RotateCcwIcon } from "lucide-react";
@@ -40,6 +43,7 @@ interface BusinessDayPanelProps {
 }
 
 export function BusinessDayPanel({ currentDay, lastClosedDay }: BusinessDayPanelProps) {
+  const router = useRouter();
   const t = useTranslations("businessDay");
   const tCommon = useTranslations("common");
 
@@ -52,11 +56,26 @@ export function BusinessDayPanel({ currentDay, lastClosedDay }: BusinessDayPanel
 
   const isOpen = currentDay !== null;
 
+  // H-49: surface unpaid tickets before the cashier confirms closing the day.
+  const [closeOpen, setCloseOpen] = useState(false);
+  const [openTicketCount, setOpenTicketCount] = useState(0);
+
+  function handleCloseOpenChange(next: boolean) {
+    setCloseOpen(next);
+    if (!next) return;
+    setOpenTicketCount(0);
+    listOpenTickets().then((res) => {
+      if (res.success) setOpenTicketCount(res.data.length);
+    });
+  }
+
   function handleOpen() {
     startTransition(async () => {
       const result = await openBusinessDay();
       if (result.success) {
         toast.success(t("openSuccess"));
+        notifyDataChanged("businessDay", "tickets");
+        router.refresh();
       } else {
         toast.error(result.error.message);
       }
@@ -69,6 +88,8 @@ export function BusinessDayPanel({ currentDay, lastClosedDay }: BusinessDayPanel
       const result = await closeBusinessDay(currentDay.id);
       if (result.success) {
         toast.success(t("closeSuccess"));
+        notifyDataChanged("businessDay", "tickets");
+        router.refresh();
       } else {
         toast.error(result.error.message);
       }
@@ -85,6 +106,8 @@ export function BusinessDayPanel({ currentDay, lastClosedDay }: BusinessDayPanel
       const result = await reopenBusinessDay({ reason: reopenReason });
       if (result.success) {
         toast.success(t("reopenSuccess"));
+        notifyDataChanged("businessDay", "tickets");
+        router.refresh();
         setReopenOpen(false);
         setReopenReason("");
       } else {
@@ -166,9 +189,17 @@ export function BusinessDayPanel({ currentDay, lastClosedDay }: BusinessDayPanel
             }
             title={t("confirmClose")}
             description={t("confirmCloseDescription")}
+            warning={
+              openTicketCount > 0
+                ? t("closeOpenTicketsWarning", { count: openTicketCount })
+                : undefined
+            }
+            variant={openTicketCount > 0 ? "destructive" : "default"}
             confirmLabel={t("close")}
             cancelLabel={tCommon("cancel")}
             onConfirm={handleClose}
+            open={closeOpen}
+            onOpenChange={handleCloseOpenChange}
           />
         )}
 

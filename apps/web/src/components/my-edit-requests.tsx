@@ -7,6 +7,7 @@
  * and a "Mark ready for payment" button (T037), plus a "My requests" status section.
  */
 
+import { useDataChanged } from "@/lib/data-events";
 import { useState, useCallback, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { ClipboardListIcon, CreditCardIcon, Loader2Icon } from "lucide-react";
@@ -67,6 +68,8 @@ export function MyEditRequests({
       if (requestsRes.success) setRequests(requestsRes.data);
     });
   }, []);
+
+  useDataChanged(["tickets", "editRequests"], refresh);
 
   async function handleMarkReady(ticketId: string) {
     setTransitioning((prev) => new Set(prev).add(ticketId));

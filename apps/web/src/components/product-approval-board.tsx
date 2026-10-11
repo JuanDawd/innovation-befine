@@ -6,6 +6,7 @@
  * Secretary/admin view for approving product pieces that clothiers have marked as done.
  */
 
+import { notifyDataChanged, useDataChanged } from "@/lib/data-events";
 import { useState, useTransition, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { CheckCircle2Icon, Loader2Icon } from "lucide-react";
@@ -37,6 +38,8 @@ export function ProductApprovalBoard() {
     load();
   }, [load]);
 
+  useDataChanged(["products"], load);
+
   async function handleApprove(piece: PendingProductPieceApprovalRow) {
     setPendingId(piece.id);
     const res = await approveProductPiece(piece.id, piece.version);
@@ -47,7 +50,7 @@ export function ProductApprovalBoard() {
         [piece.id]: res.error.code === "STALE_DATA" ? t("staleError") : t("approveError"),
       }));
     } else {
-      load();
+      notifyDataChanged("products");
     }
   }
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { newUuid } from "@/lib/uuid";
 import { useState, useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -27,7 +28,7 @@ export function PayrollScreen({ days, employees, history, initialEmployeeId }: P
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   // Stable idempotency key per preview session — refreshed after each successful record
-  const idempotencyKeyRef = useRef(crypto.randomUUID());
+  const idempotencyKeyRef = useRef(newUuid());
 
   const [selectedEmployee, setSelectedEmployee] = useState(initialEmployeeId ?? "");
   // Pre-select the most-recent unsettled closed day for the chosen employee
@@ -105,7 +106,7 @@ export function PayrollScreen({ days, employees, history, initialEmployeeId }: P
       setAdjustmentReason("");
       setNotes("");
       // Rotate idempotency key so next payout gets a fresh one
-      idempotencyKeyRef.current = crypto.randomUUID();
+      idempotencyKeyRef.current = newUuid();
       router.refresh();
     });
   }

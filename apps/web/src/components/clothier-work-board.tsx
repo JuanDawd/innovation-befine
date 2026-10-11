@@ -1,5 +1,6 @@
 "use client";
 
+import { notifyDataChanged, useDataChanged } from "@/lib/data-events";
 import { useState, useTransition, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import {
@@ -11,6 +12,9 @@ import {
   ChevronUpIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import { toast } from "sonner";
+import { newUuid } from "@/lib/uuid";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ProductProgressBar } from "@/components/ui/product-progress-bar";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -104,6 +108,8 @@ export function ClothierWorkBoard({ employeeId }: { employeeId: string }) {
     load();
   }, [load]);
 
+  useDataChanged(["products"], load);
+
   const myPieces = pieces.filter((p) => p.assignedToEmployeeId === employeeId);
   const available = pieces.filter((p) => p.assignedToEmployeeId === null);
 
@@ -119,13 +125,14 @@ export function ClothierWorkBoard({ employeeId }: { employeeId: string }) {
     if (!res.success) {
       setErrorMap((m) => ({ ...m, [piece.id]: t("claimError") }));
     } else {
-      load();
+      toast.success(t("claimSuccess", { piece: piece.clothPieceName }));
+      notifyDataChanged("products");
     }
   }
 
   async function handleMarkDone(piece: ProductPieceRow) {
     setPendingId(piece.id);
-    const res = await markPieceDone(piece.id, piece.version);
+    const res = await markPieceDone(piece.id, piece.version, newUuid());
     setPendingId(null);
     if (!res.success) {
       setErrorMap((m) => ({
@@ -133,7 +140,8 @@ export function ClothierWorkBoard({ employeeId }: { employeeId: string }) {
         [piece.id]: res.error.code === "STALE_DATA" ? t("staleError") : t("markDoneError"),
       }));
     } else {
-      load();
+      toast.success(t("markDoneSuccess", { piece: piece.clothPieceName }));
+      notifyDataChanged("products");
     }
   }
 
@@ -211,18 +219,29 @@ export function ClothierWorkBoard({ employeeId }: { employeeId: string }) {
 
                   <div className="flex flex-col items-end gap-1 shrink-0">
                     {piece.status === "pending" && (
-                      <Button
-                        size="sm"
-                        onClick={() => handleMarkDone(piece)}
-                        disabled={pendingId === piece.id}
-                        className="min-w-[80px]"
-                      >
-                        {pendingId === piece.id ? (
-                          <Loader2Icon className="size-4 animate-spin" />
-                        ) : (
-                          t("markDone")
-                        )}
-                      </Button>
+                      <ConfirmationDialog
+                        trigger={
+                          <Button
+                            size="sm"
+                            disabled={pendingId === piece.id}
+                            className="min-w-[80px]"
+                          >
+                            {pendingId === piece.id ? (
+                              <Loader2Icon className="size-4 animate-spin" />
+                            ) : (
+                              t("markDone")
+                            )}
+                          </Button>
+                        }
+                        title={t("markDoneConfirmTitle", {
+                          piece: piece.clothPieceName,
+                          quantity: piece.quantity,
+                        })}
+                        description={t("markDoneConfirmDescription")}
+                        confirmLabel={t("markDone")}
+                        cancelLabel={t("cancel")}
+                        onConfirm={() => handleMarkDone(piece)}
+                      />
                     )}
                     {errorMap[piece.id] && (
                       <p className="text-xs text-destructive">{errorMap[piece.id]}</p>

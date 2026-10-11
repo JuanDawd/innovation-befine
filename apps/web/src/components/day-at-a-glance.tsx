@@ -14,6 +14,8 @@ import { useRealtimeEvent } from "@befine/realtime/client";
 import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
 import { listOpenTickets } from "@/app/(protected)/tickets/actions";
+import { getDayStats } from "@/app/(protected)/cashier/actions/day-stats";
+import { useDataChanged } from "@/lib/data-events";
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -75,6 +77,7 @@ export function DayAtAGlance({
 }: DayAtAGlanceProps) {
   const t = useTranslations("dayAtAGlance");
   const [openCount, setOpenCount] = useState(initialOpenCount);
+  const [stats, setStats] = useState({ revenue, closedCount });
   const [, startTransition] = useTransition();
 
   const refreshCount = useCallback(() => {
@@ -84,8 +87,19 @@ export function DayAtAGlance({
     });
   }, []);
 
+  const refreshAll = useCallback(() => {
+    startTransition(async () => {
+      const [openRes, statsRes] = await Promise.all([listOpenTickets(), getDayStats()]);
+      if (openRes.success) setOpenCount(openRes.data.length);
+      if (statsRes.success)
+        setStats({ revenue: statsRes.data.revenue, closedCount: statsRes.data.closedCount });
+    });
+  }, []);
+
   useRealtimeEvent("cashier", "ticket_created", { onData: refreshCount, onPoll: refreshCount });
-  useRealtimeEvent("cashier", "ticket_updated", { onData: refreshCount, onPoll: refreshCount });
+  // A ticket update may be a checkout (revenue + closed count change)
+  useRealtimeEvent("cashier", "ticket_updated", { onData: refreshAll, onPoll: refreshAll });
+  useDataChanged(["tickets", "businessDay", "clothSales"], refreshAll);
 
   if (!isDayOpen) {
     return (
@@ -104,9 +118,9 @@ export function DayAtAGlance({
         <StatCard
           icon={TrendingUpIcon}
           label={t("revenueToday")}
-          value={`$${revenue.toLocaleString("es-CO")}`}
+          value={`$${stats.revenue.toLocaleString("es-CO")}`}
           sub={t("revenueSubOpen")}
-          accent={revenue > 0}
+          accent={stats.revenue > 0}
         />
         <StatCard
           icon={TicketIcon}
@@ -117,7 +131,7 @@ export function DayAtAGlance({
         <StatCard
           icon={CheckCircleIcon}
           label={t("closedTickets")}
-          value={String(closedCount)}
+          value={String(stats.closedCount)}
           sub={t("closedTicketsSub")}
         />
       </div>

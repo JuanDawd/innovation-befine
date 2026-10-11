@@ -7,6 +7,7 @@
  * Used by secretary and admin.
  */
 
+import { useDataChanged } from "@/lib/data-events";
 import { useState, useTransition, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import {
@@ -148,6 +149,8 @@ export function AppointmentList() {
   useEffect(() => {
     load(date, stylistFilter);
   }, [date, stylistFilter, load]);
+
+  useDataChanged(["appointments"], () => load(date, stylistFilter));
 
   function prev() {
     const d = shiftDate(date, -1);

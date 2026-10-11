@@ -1,5 +1,6 @@
 "use client";
 
+import { notifyDataChanged } from "@/lib/data-events";
 import { useState, useTransition, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useToast } from "@/hooks/use-toast";
@@ -151,6 +152,8 @@ export function CreateProductForm({
       }
 
       showToast("success", t("submitSuccess"));
+      notifyDataChanged("products");
+      router.refresh();
       if (onClose) {
         setTimeout(() => onClose(), 1000);
       } else {

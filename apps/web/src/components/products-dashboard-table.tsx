@@ -1,5 +1,6 @@
 "use client";
 
+import { useDataChanged } from "@/lib/data-events";
 import { useState, useTransition, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
@@ -136,6 +137,8 @@ export function ProductsDashboardTable({ isAdmin }: { isAdmin: boolean }) {
   useEffect(() => {
     load();
   }, [load]);
+
+  useDataChanged(["products"], load);
 
   if (isLoading && rows.length === 0) {
     return (

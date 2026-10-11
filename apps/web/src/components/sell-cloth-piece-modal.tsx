@@ -1,5 +1,6 @@
 "use client";
 
+import { notifyDataChanged } from "@/lib/data-events";
 import { useState, useTransition, useEffect, useRef } from "react";
 import { Loader2Icon } from "lucide-react";
 import { toast } from "sonner";
@@ -102,6 +103,7 @@ export function SellClothPieceModal({ open, onOpenChange, ticketId }: SellClothP
         return;
       }
       toast.success(`Venta registrada — $${res.data.effectiveTotal.toLocaleString("es-CO")}`);
+      notifyDataChanged("clothSales", "tickets", "businessDay");
       reset();
       onOpenChange(false);
     });

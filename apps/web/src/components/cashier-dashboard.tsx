@@ -11,6 +11,7 @@
  * directly from the card — T037.
  */
 
+import { useDataChanged } from "@/lib/data-events";
 import {
   useState,
   useCallback,
@@ -78,6 +79,8 @@ export function CashierDashboard({ initialTickets }: { initialTickets: Dashboard
       if (result.success) setTickets(result.data);
     });
   }, []);
+
+  useDataChanged(["tickets"], refresh);
 
   useRealtimeEvent("cashier", "ticket_created", {
     onData: (data) => {

@@ -14,6 +14,7 @@
  * surface-displaying the server CONFLICT response.
  */
 
+import { notifyDataChanged } from "@/lib/data-events";
 import { useState, useTransition, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { useToast } from "@/hooks/use-toast";
@@ -147,6 +148,8 @@ export function BookAppointmentForm({
       }
 
       showToast("success", t("submitSuccess"));
+      notifyDataChanged("appointments");
+      router.refresh();
       if (onClose) {
         setTimeout(() => onClose(), 1200);
       } else {

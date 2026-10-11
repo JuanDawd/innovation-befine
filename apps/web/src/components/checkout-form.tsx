@@ -11,6 +11,8 @@
  * - Receipt summary on success
  */
 
+import { newUuid } from "@/lib/uuid";
+import { notifyDataChanged } from "@/lib/data-events";
 import { useState, useTransition, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
@@ -148,10 +150,12 @@ export function CheckoutForm({ onClose }: { onClose?: () => void } = {}) {
       const result = await processCheckout({
         ticketIds: [...selectedIds],
         payments: payments.map((p) => ({ method: p.method, amount: parseInt(p.amount, 10) })),
-        idempotencyKey: crypto.randomUUID(),
+        idempotencyKey: newUuid(),
       });
       if (result.success) {
         setSummary(result.data);
+        notifyDataChanged("tickets", "businessDay");
+        router.refresh();
       } else {
         setError(result.error.message);
       }
