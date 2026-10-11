@@ -1,68 +1,87 @@
 # Guía de uso — Estilista
 
-> Lectura rápida: ~3 minutos.
+> Lectura rápida: ~4 minutos. Antes, lee [Primeros pasos](common.md).
+
+La app de la estilista está hecha para el celular. Abajo tienes dos pestañas: **Mis tickets** y **Mis ganancias**.
 
 ---
 
 ## 1. Tu pantalla de inicio
 
-Al iniciar sesión llegas al **Panel de la estilista**. Aquí ves:
+Al entrar ves **Mis servicios de hoy**: los servicios que registraste hoy y su estado. Arriba está el botón **"Registrar servicio"**.
 
-- Tus tickets activos del día (las clientas que estás atendiendo).
-- Un botón para crear un nuevo ticket.
-- Tus ganancias del día (si el administrador activó esta opción).
+<img src="screenshots/guides/stylist/01-home.jpg" alt="Pantalla de inicio de la estilista" width="300" />
+
+La campana 🔔 te avisa cuando la secretaria te agenda una cita (ej. _"Nueva cita reservada: Corte y cepillado — 3:00 p. m."_).
+
+<img src="screenshots/guides/stylist/02-notifications.jpg" alt="Notificaciones" width="300" />
 
 ---
 
 ## 2. Registrar un servicio
 
-Cuando llega una clienta:
+Hazlo **cuando empiezas a atender** a la clienta.
 
-1. Clic en **"Nuevo ticket"** (o el administrador lo crea por ti desde caja).
-2. El sistema te asigna como empleada automáticamente.
-3. Selecciona el **servicio** y la variante de precio.
-4. Selecciona la clienta (registrada o invitada).
-5. Clic en **"Crear ticket"**.
+1. Toca **"Registrar servicio"**.
+2. Elige el **Servicio** y la **Variante**. Debajo verás el **precio** y tu **comisión**.
+3. Deja **Cantidad** en 1 (cámbiala solo si haces el mismo servicio varias veces).
+4. **Cliente:** escribe el nombre o teléfono y elige a la clienta. Si no está registrada, toca **"Invitado / Walk-in"** y escribe su nombre.
+5. Toca **"Registrar ticket"**.
 
-El ticket aparece en tu lista con estado _Registrado_.
+<img src="screenshots/guides/stylist/03-new-service.jpg" alt="Registrar servicio" width="300" />
 
----
+El servicio aparece en **Mis servicios de hoy**.
 
-## 3. Marcar como listo para pago
+<img src="screenshots/guides/stylist/04-ticket-logged.jpg" alt="Servicio registrado" width="300" />
 
-Cuando terminas el servicio y la clienta va a pagar:
-
-1. Busca el ticket en tu lista.
-2. Clic en **"Listo para pago"**.
-3. El ticket pasa al cajero para que lo cobre.
-
-> No puedes cobrar tú misma — eso es responsabilidad del cajero/administrador.
+> **Si el servicio no aparece en la lista, desliza la pantalla hacia abajo para recargar. No lo registres otra vez:** se crearía un cobro duplicado.
 
 ---
 
-## 4. Ver tus ganancias
+## 3. Marcar "Listo para cobrar"
 
-1. Ve a **Mis ganancias** en el menú inferior.
-2. Verás el resumen de comisiones por día: servicio prestado, precio, y tu porcentaje.
+Cuando terminas y la clienta va a pagar:
 
-> Si el administrador desactivó la visualización de ganancias, este menú no estará disponible.
+1. Busca el servicio en **Mis servicios de hoy**.
+2. Toca **"Listo para cobrar"**.
+3. El servicio queda como **Ya listo para cobrar** y le aparece a la cajera.
+
+<img src="screenshots/guides/stylist/07-ready-for-payment.jpg" alt="Listo para cobrar" width="300" />
+
+> Tú no cobras: eso lo hace la cajera.
 
 ---
 
-## 5. Solicitar edición de un ticket
+## 4. Corregir un servicio (solicitar cambio)
 
-Si cometiste un error en un ticket (servicio equivocado, clienta equivocada):
+Si elegiste la variante equivocada (ej. _Hombros_ en vez de _Media espalda_):
 
-1. En el ticket → clic en **"Solicitar edición"**.
-2. Escribe el motivo.
-3. El administrador revisará y aprobará o rechazará la solicitud.
+1. En el servicio, toca **"Solicitar cambio"**.
+2. En **Nueva variante** elige la correcta (se muestra su precio).
+3. Toca **"Enviar solicitud"**.
+
+<img src="screenshots/guides/stylist/05-change-request.jpg" alt="Solicitar cambio" width="300" />
+
+El servicio queda **Pendiente** y abajo aparece en **Mis solicitudes de cambio** hasta que la cajera o la administradora lo apruebe o rechace.
+
+<img src="screenshots/guides/stylist/06-pending-change.jpg" alt="Solicitud pendiente" width="300" />
+
+---
+
+## 5. Mis ganancias
+
+Pestaña **Mis ganancias**: tus comisiones de **hoy**, **esta semana** y **este mes**, y el historial de pagos que te ha hecho la administradora.
+
+<img src="screenshots/guides/stylist/08-earnings.jpg" alt="Mis ganancias" width="300" />
+
+> Las ganancias de hoy se suman cuando la cajera cobra el servicio, no cuando lo registras.
 
 ---
 
 ## Preguntas frecuentes
 
-**¿Puedo crear tickets para otra estilista?** No. Cada estilista solo crea sus propios tickets. El administrador puede crear tickets para cualquier empleada.
+**¿Puedo registrar un servicio de otra estilista?** No. Cada estilista registra solo los suyos. La cajera o la secretaria pueden registrarlo por ti.
 
-**¿Qué pasa si me equivoco de servicio?** Solicita edición del ticket. No intentes crear un ticket duplicado.
+**Me equivoqué de clienta o de servicio.** Usa **"Solicitar cambio"**. Si es otro error, avisa a la cajera; no crees un ticket nuevo.
 
-**¿Por qué no veo mis ganancias?** El administrador puede desactivar esa opción por empleada. Consúltalo con él.
+**No veo "Registrar servicio" o me sale "No hay un día laboral abierto".** La cajera todavía no ha abierto el día. Pídele que lo abra.
