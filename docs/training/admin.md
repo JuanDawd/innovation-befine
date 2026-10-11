@@ -158,10 +158,10 @@ Menú → **Configuración**. Cambia una opción y toca **"Guardar cambios"**.
 
 ## Rutina recomendada
 
-| Cuándo         | Tarea                                                                 |
-| -------------- | --------------------------------------------------------------------- |
-| Cada día       | Revisar que la cajera abra y cierre el día con **0 tickets abiertos**. |
-| Cada día       | Aprobar piezas terminadas en **Productos**.                           |
-| Cada semana    | Liquidar la **Nómina** desde el día pendiente más antiguo.            |
-| Cada mes       | Revisar **Analytics** y exportar el CSV.                              |
-| Cuando cambie  | Actualizar precios y comisiones en el **Catálogo**.                   |
+| Cuándo        | Tarea                                                                  |
+| ------------- | ---------------------------------------------------------------------- |
+| Cada día      | Revisar que la cajera abra y cierre el día con **0 tickets abiertos**. |
+| Cada día      | Aprobar piezas terminadas en **Productos**.                            |
+| Cada semana   | Liquidar la **Nómina** desde el día pendiente más antiguo.             |
+| Cada mes      | Revisar **Analytics** y exportar el CSV.                               |
+| Cuando cambie | Actualizar precios y comisiones en el **Catálogo**.                    |

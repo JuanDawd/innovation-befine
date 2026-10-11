@@ -44,13 +44,13 @@ En **Citas** ves la agenda del día elegido. Usa las flechas **‹ ›** para ca
 
 Cada cita tiene un **estado** y botones de acción:
 
-| Acción                 | Cuándo usarla                                                 |
-| ---------------------- | ------------------------------------------------------------- |
-| **Confirmar cita**     | La clienta confirmó por teléfono o WhatsApp → _Confirmada_.   |
-| **Marcar completada**  | La clienta ya fue atendida.                                   |
-| **Marcar no asistió**  | La clienta no llegó. Queda en su historial de inasistencias.  |
-| **Reagendar**          | Cambiar fecha u hora.                                         |
-| **Cancelar cita**      | La clienta canceló. Puedes escribir el motivo.                |
+| Acción                | Cuándo usarla                                                |
+| --------------------- | ------------------------------------------------------------ |
+| **Confirmar cita**    | La clienta confirmó por teléfono o WhatsApp → _Confirmada_.  |
+| **Marcar completada** | La clienta ya fue atendida.                                  |
+| **Marcar no asistió** | La clienta no llegó. Queda en su historial de inasistencias. |
+| **Reagendar**         | Cambiar fecha u hora.                                        |
+| **Cancelar cita**     | La clienta canceló. Puedes escribir el motivo.               |
 
 > Marcar la cita como completada **no** cobra el servicio. La estilista (o la cajera) debe registrar el servicio y la cajera lo cobra.
 
