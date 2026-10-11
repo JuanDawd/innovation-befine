@@ -43,6 +43,10 @@ const nextConfig: NextConfig = {
   transpilePackages: ["@befine/types", "@befine/db", "@befine/realtime"],
   env: {
     NEXT_PUBLIC_BUILD_ID: process.env.VERCEL_GIT_COMMIT_SHA ?? process.env.BUILD_ID ?? "dev",
+    // H-47: inlined into the bundled `ws` so it uses its pure-JS mask(). Bundling turns
+    // the optional `bufferutil` import into a stub without mask(), which crashed every
+    // Neon WebSocket transaction frame >= 48 bytes ("b.mask is not a function").
+    WS_NO_BUFFER_UTIL: "1",
   },
   // Required by Sentry's OpenTelemetry instrumentation.
   // pino + thread-stream must be external to avoid Turbopack mangling worker paths.

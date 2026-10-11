@@ -456,6 +456,36 @@
 
 ---
 
+### H-46 — Simultaneous staff logins from the salon WiFi get HTTP 429
+
+- **Severity:** High
+- **Status:** Resolved (2026-10-11) — `customRules["/sign-in/email"] = 30/60 s`; re-test: 18/18 simultaneous sign-ins return 200 (was 6–8/18)
+- **Affected:** T007 (`apps/web/src/lib/auth.ts` `rateLimit`), T016 login
+- **Description:** Source: k6 load test 2026-10-11 (8 stylists, 1 cashier, 1 secretary, 8 clothiers; homelab CT 110 on HDD). When all 18 staff sign in within ~1 s from one public IP (salon WiFi / NAT), 10–12 of 18 `POST /api/auth/sign-in/email` requests returned 429. Better Auth applies a built-in special rule to sign-in paths (≈3 requests / 10 s per IP) on top of the global `max: 100 / 60 s`, keyed by IP. Every staff phone shares the same IP, so opening time and shift change lock most people out. Storage is `memory`, so on Vercel the limit is also per-instance and inconsistent. The limiter's window is measured from the _last_ request (every attempt, including rejected ones, refreshes `lastRequest`), so people retrying "Iniciar sesión" every few seconds keep themselves locked out indefinitely.
+- **Fix:** Add `rateLimit.customRules["/sign-in/email"]` sized for a full team behind one IP (e.g. 30 / 60 s) and keep the global limit. Longer term, move limiter storage to a shared store and/or key sign-in by email + IP.
+
+---
+
+### H-47 — Bundled `ws` crashes with `TypeError: b.mask is not a function`
+
+- **Severity:** High (self-hosted builds; not observed in Vercel runtime errors over the last 7 days)
+- **Status:** Resolved (2026-10-11) — `WS_NO_BUFFER_UTIL: "1"` inlined via `next.config.ts` `env`; rebuilt bundle has no bufferutil branch, 0 crashes in re-test
+- **Affected:** Every `getTxDb().transaction()` call site — `createTicket`, `processCheckout`, `createProduct`, `markPieceDone`, appointments, payroll
+- **Description:** Source: k6 load test 2026-10-11 (8 stylists, 1 cashier, 1 secretary, 8 clothiers; homelab CT 110 on HDD). With `next build` (webpack), the optional `bufferutil` import inside `ws` is replaced by a stub without `mask()`. `ws` then calls `bufferUtil.mask()` for any client frame ≥ 48 bytes, throwing an uncaught exception inside the Neon WebSocket Pool. Transactions hang/fail and the process logs `⨯ uncaughtException: TypeError: b.mask is not a function`. Reproduced on a `node:24` Linux build; Vercel showed no matching errors, but the same bundle is produced, so it is latent risk.
+- **Fix:** Add `ws` (and `bufferutil`, `utf-8-validate`) to `serverExternalPackages` in `apps/web/next.config.ts` so `ws` is loaded from `node_modules` at runtime. Runtime workaround: `WS_NO_BUFFER_UTIL=1`.
+
+---
+
+### H-48 — Production DB schema drifted from repo migrations (single-open-day index missing)
+
+- **Severity:** High
+- **Status:** Open
+- **Affected:** T005/T010 migrations, T023 business day, every feature that calls `getCurrentBusinessDay()`
+- **Description:** Found while cloning the prod schema for the load test. The repo journal has 34 migrations (`0000`–`0033`); production `drizzle.__drizzle_migrations` has 31 rows and `public.__drizzle_migrations` has 29 (two migration tables exist). The partial unique index `uq_business_days_single_open` (migration `0004`) does **not** exist in production — only `business_days_pkey` and `idx_business_days_opened_at`. Nothing in the DB prevents two open business days; `getCurrentBusinessDay()` would then pick one arbitrarily (`LIMIT 1` without `ORDER BY`), splitting tickets/checkouts across days.
+- **Fix:** (1) Diff prod schema vs the `0033` snapshot (`drizzle-kit check`/`pg_dump --schema-only`), (2) verify there's at most one row with `closed_at IS NULL`, (3) re-create `uq_business_days_single_open`, (4) consolidate on one `__drizzle_migrations` table and stop using `db:push` against prod.
+
+---
+
 ## Medium-priority issues
 
 ### M-01 — No-show count never decrements
@@ -787,6 +817,67 @@
 - **Affected:** T078 (`apps/web/src/lib/idempotency.ts:40–52`, callers)
 - **Description:** The helper inserts the key + response after the mutation completes (`onConflictDoNothing`). A second concurrent request arriving before the first has stored its key finds no cached row, re-executes the mutation, and both responses race to insert — the second insert is silently skipped. The real-world effect: two `markPieceDone` calls both succeed and the response cache is the first-committer's view, while the second committer has already applied a second state transition (which the optimistic lock on the piece usually catches, but not always if other fields mutate). The T078 contract promises "Check if the key already exists → return cached response. Otherwise execute the operation and store the key + response in the same transaction" — "same transaction" is not implemented.
 - **Fix:** Wrap `checkIdempotency` + mutation + `storeIdempotency` in a single `db.transaction(async (tx) => …)`. Under Postgres READ COMMITTED the first transaction's INSERT acquires a row lock on `idempotency_keys.key`; the second transaction's INSERT blocks until the first commits, then fails the unique constraint and re-reads the cached response. Use `ON CONFLICT (key) DO UPDATE SET response_body = response_body RETURNING response_body` to atomically fetch-or-insert.
+
+---
+
+### M-57 — SSE realtime streams not closing at 25 s under load
+
+- **Severity:** Medium (needs re-test)
+- **Status:** Resolved (2026-10-11) — not reproducible; was rig slowness. Full run: 10 SSE tabs, all streams closed at 25.0–26.0 s
+- **Affected:** T009/T098 (`packages/realtime/src/server.ts`, `/api/realtime/[channel]`)
+- **Description:** Source: k6 load test 2026-10-11 (8 stylists, 1 cashier, 1 secretary, 8 clothiers; homelab CT 110 on HDD). 43–64 of the SSE requests from 10 simulated browser tabs were still open after a 40 s client timeout, although `STREAM_TIMEOUT_MS = 25_000` should close them. Observed while the test rig was also slow, so it may be a symptom of event-loop starvation, not a bug in the stream timeout.
+- **Fix:** Re-run the SSE scenario on a healthy build; if it reproduces, check that the timeout fires after the `ReadableStream` starts and that `cleanup` runs on abort.
+
+---
+
+### M-58 — Clothiers race for the same unassigned piece
+
+- **Severity:** Medium
+- **Status:** Open
+- **Affected:** T047/T048 (`apps/web/src/app/(protected)/clothier/actions.ts` `listTodayProductPieces`, `claimPiece`)
+- **Description:** Source: k6 load test 2026-10-11 (8 stylists, 1 cashier, 1 secretary, 8 clothiers; homelab CT 110 on HDD). All clothiers receive the same ordered list of unassigned pieces, so they pick from the top and collide. Optimistic locking correctly rejects the loser (`CONFLICT`), but each collision is a wasted tap and an error toast for a real person.
+- **Measured:** full run (6 min realistic + 4 min at 3× users) produced 1,094 rejected claims/stale updates; no data corruption (every done piece has an assignee).
+- **Fix:** Add a `claimNextPiece` action that uses `SELECT … FOR UPDATE SKIP LOCKED LIMIT 1`, or randomise/partition the list per clothier.
+
+---
+
+### M-59 — In-memory rate limiter: per-instance and never evicts keys
+
+- **Severity:** Medium
+- **Status:** Open
+- **Affected:** `apps/web/src/lib/rate-limit.ts` (all mutations)
+- **Description:** The `@upstash/ratelimit` instance uses an in-process `Map` as its Redis. On Vercel each function instance has its own map, so CLAUDE.md caps (30/min tickets, 5/min payouts…) are not enforced globally. The `store` map also never deletes keys, so it grows for the lifetime of a long-lived (self-hosted) process.
+- **Fix:** Use `Redis.fromEnv()` (Upstash) in production as the file's header already plans; prune empty timestamp arrays in the in-memory fallback.
+
+---
+
+### M-60 — Realtime events don't cross Vercel instances; constant SSE reconnects
+
+- **Severity:** Medium
+- **Status:** Open
+- **Affected:** `packages/realtime/src/server.ts`
+- **Description:** `publishEvent` uses an in-process `EventEmitter`. On Vercel the server action and the SSE handler usually run in different instances, so most updates arrive via the 30 s polling fallback. Each open tab also reconnects every 25 s (~40 reconnects/min for 18 devices).
+- **Fix:** Postgres `LISTEN/NOTIFY` or Upstash pub/sub, as described in the file header.
+
+---
+
+### M-61 — `createTicket` swallows errors without logging or Sentry
+
+- **Severity:** Medium
+- **Status:** Open
+- **Affected:** T035 (`apps/web/src/app/(protected)/tickets/actions/index.ts` `createTicket` bare `catch`)
+- **Description:** Any error inside the ticket transaction becomes a generic `INTERNAL_ERROR` with no log line or Sentry event. During the load test, the H-47 crash surfaced only as `INTERNAL_ERROR` for stylists.
+- **Fix:** `catch (err)` → `logger.error` + `Sentry.captureException`, keep the generic message for the user.
+
+---
+
+### M-62 — Several sequential DB round trips per server action
+
+- **Severity:** Medium (investigate)
+- **Status:** Open
+- **Affected:** All server actions (session, employee lookup, business day, then the actual query)
+- **Description:** Source: k6 load test 2026-10-11 (8 stylists, 1 cashier, 1 secretary, 8 clothiers; homelab CT 110 on HDD). With a fixed ~155 ms per query in the test rig, even `getCurrentEmployeeId` took ~800 ms idle — roughly 4–5 sequential queries per action. On Neon (~5–20 ms/query) this is tolerable, but it adds directly to every tap.
+- **Fix:** Count queries per action (Drizzle logger), cache the employee id in the session/cookie cache, and parallelise independent lookups with `Promise.all`.
 
 ---
 
@@ -1545,6 +1636,36 @@
 
 ---
 
+### L-47 — `createTicket` idempotency check is select-then-insert
+
+- **Severity:** Low
+- **Status:** Open
+- **Affected:** T035/T078 (`createTicket`)
+- **Description:** Two concurrent submissions with the same `idempotencyKey` both pass the `SELECT`, then one hits `tickets_idempotency_key_unique` and returns `INTERNAL_ERROR` instead of the existing ticket. `processCheckout` already does this correctly with `ON CONFLICT DO NOTHING`.
+- **Fix:** Use `INSERT … ON CONFLICT (idempotency_key) DO NOTHING RETURNING *`, then fetch on empty result.
+
+---
+
+### L-48 — `trustedOrigins` hard-coded to the vercel.app domain in production
+
+- **Severity:** Low
+- **Status:** Open
+- **Affected:** `apps/web/src/lib/auth.ts`
+- **Description:** Any production build served from another origin (custom domain, self-hosted) only works if `BETTER_AUTH_URL` matches it exactly.
+- **Fix:** Derive `trustedOrigins` from `BETTER_AUTH_URL` / an env list.
+
+---
+
+### L-49 — Transaction pool capped at 5 connections per instance
+
+- **Severity:** Low
+- **Status:** Open
+- **Affected:** `packages/db/src/index.ts` `createTxDb`
+- **Description:** Under a burst (closing time: checkouts + mark-done + products) transactions queue behind 5 sockets per instance. Fine on Vercel with many instances; a bottleneck if self-hosted on one process.
+- **Fix:** Make `max` configurable via env; size it to Neon's connection budget.
+
+---
+
 ## Lessons learned
 
 > This section is populated during development. Each entry documents what went wrong, the root cause, and how to prevent it in the future.
@@ -1656,3 +1777,6 @@
 | L-44     | 2026-04-25    | `/api/health` + `/api/version` moved to `PUBLIC_EXACT_PATHS`; 2 new tests reject prefix variants         | T10R-R9                      |
 | L-45     | 2026-04-25    | `checkPublicRateLimit` (IP-keyed): 60/min health, 30/min version; 429 + `retry-after` on exceedance      | T10R-R10                     |
 | L-46     | 2026-04-25    | Replaced bogus `vercel env pull -- DATABASE_URL` with sourced `.env.production` flow; neonctl alt added  | T10R-R11                     |
+| H-46     | 2026-10-11    | Better Auth `customRules["/sign-in/email"]` 30/60 s; k6 login storm 18/18 OK                             | load test (uncommitted)      |
+| H-47     | 2026-10-11    | `WS_NO_BUFFER_UTIL` inlined via next.config `env`; 0 `b.mask` crashes in k6 run                          | load test (uncommitted)      |
+| M-57     | 2026-10-11    | Not reproducible on healthy rig — SSE streams close at 25 s                                              | load test                    |

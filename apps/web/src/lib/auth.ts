@@ -95,6 +95,14 @@ export const auth = betterAuth({
      */
     max: 100,
     storage: "memory",
+    /**
+     * H-46: Better Auth's built-in sign-in rule is 3 req / 10 s per IP. All staff
+     * phones share the salon WiFi's public IP, so a shift start (18 people) got
+     * 10–12 × 429 in the load test. Size the rule for a full team behind one NAT.
+     */
+    customRules: {
+      "/sign-in/email": { window: 60, max: 30 },
+    },
   },
 
   plugins: [
