@@ -169,6 +169,7 @@ export function LineAccordion({
                 type="number"
                 min={1}
                 step={1}
+                aria-label={t("quantity")}
                 value={line.quantity}
                 onChange={(e) =>
                   onUpdate({ quantity: Math.max(1, parseInt(e.target.value, 10) || 1) })
@@ -182,6 +183,7 @@ export function LineAccordion({
                 type="number"
                 min={0}
                 step={1}
+                aria-label={t("unitPrice")}
                 value={line.unitPrice}
                 onChange={(e) => onUpdate({ unitPrice: parseInt(e.target.value, 10) || 0 })}
                 className="w-full h-8 rounded-md border border-input bg-background px-2.5 text-sm font-mono focus-visible:outline-none focus-visible:border-ring"
@@ -197,6 +199,7 @@ export function LineAccordion({
               rows={2}
               maxLength={300}
               required
+              aria-label={t("itemDescription")}
               value={line.itemDescription}
               onChange={(e) => onUpdate({ itemDescription: e.target.value })}
               placeholder={t("itemDescriptionPlaceholder")}

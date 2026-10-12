@@ -705,7 +705,8 @@
     "emptyDescription": "No hay días laborales cerrados para este período. Cierra tickets para ver los totales.",
     "csvDisabledTooltip": "Sin datos para exportar",
     "sparseData": "{daysWithData} de {totalDays} días tienen datos en este período",
-    "downloadCsv": "Descargar CSV"
+    "downloadCsv": "Descargar CSV",
+    "toggleDrillDown": "Ver detalle diario de {name}"
   },
   "absences": {
     "pageTitle": "Ausencias y vacaciones",
@@ -722,7 +723,9 @@
     "type_missed": "Falta",
     "note": "Nota",
     "save": "Guardar",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "prevMonth": "Mes anterior",
+    "nextMonth": "Mes siguiente"
   },
   "largeOrders": {
     "pageTitle": "Pedidos grandes",

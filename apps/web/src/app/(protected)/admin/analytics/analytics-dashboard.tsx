@@ -142,6 +142,8 @@ function EmployeeRow({
   emp: EarningsByEmployee;
   period: "day" | "week" | "month";
 }) {
+  const t = useTranslations("analytics");
+  const tc = useTranslations("common");
   const tRoles = useTranslations("roles");
   const [open, setOpen] = useState(false);
   const [drillDown, setDrillDown] = useState<EmployeeDrillDownResult | null>(null);
@@ -175,11 +177,23 @@ function EmployeeRow({
           {emp.totalEarnings > 0 ? formatMoney(emp.totalEarnings) : "—"}
         </td>
         <td className="px-3 py-2 text-center">
-          {open ? (
-            <ChevronUpIcon className="size-4 mx-auto text-muted-foreground" />
-          ) : (
-            <ChevronDownIcon className="size-4 mx-auto text-muted-foreground" />
-          )}
+          {/* Keyboard/screen-reader control; the row itself stays clickable for mouse users */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleDrillDown();
+            }}
+            aria-expanded={open}
+            aria-label={t("toggleDrillDown", { name: emp.employeeName })}
+            className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+          >
+            {open ? (
+              <ChevronUpIcon className="size-4" aria-hidden="true" />
+            ) : (
+              <ChevronDownIcon className="size-4" aria-hidden="true" />
+            )}
+          </button>
         </td>
       </tr>
       {open && (
@@ -187,7 +201,7 @@ function EmployeeRow({
           <td colSpan={5} className="px-3 pb-3 pt-0 bg-muted/10">
             {isPending ? (
               <div className="flex items-center gap-2 py-3 text-xs text-muted-foreground">
-                <Loader2Icon className="size-3 animate-spin" /> Cargando...
+                <Loader2Icon className="size-3 animate-spin" aria-hidden="true" /> {tc("loading")}
               </div>
             ) : drillDown && drillDown.days.length > 0 ? (
               <div className="space-y-2 pt-2">
@@ -333,7 +347,7 @@ function EmployeeTable({
                 </span>
                 <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
                   <div
-                    className="h-full bg-primary rounded-full transition-all"
+                    className="h-full bg-primary rounded-full transition-[width]"
                     style={{ width: `${(emp.totalEarnings / maxEarnings) * 100}%` }}
                   />
                 </div>

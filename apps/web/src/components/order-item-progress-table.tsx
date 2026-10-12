@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { PackageSearch, PlusIcon, PencilIcon, CheckIcon, XIcon } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import { ProductProgressBar } from "@/components/ui/product-progress-bar";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
@@ -309,6 +310,7 @@ function AssignmentRow({
   onOptimisticUpdate,
   onRevert,
 }: AssignmentRowProps) {
+  const tc = useTranslations("common");
   const [editMode, setEditMode] = useState<"report" | "approve" | null>(null);
   const [inputValue, setInputValue] = useState(0);
   const [isPending, startTransition] = useTransition();
@@ -441,6 +443,7 @@ function AssignmentRow({
               className="h-6 px-2 text-xs"
               onClick={submitEdit}
               disabled={isPending}
+              aria-label={tc("save")}
             >
               <CheckIcon className="size-3.5" aria-hidden="true" />
             </Button>
@@ -450,6 +453,7 @@ function AssignmentRow({
               className="h-6 px-2"
               onClick={cancelEdit}
               disabled={isPending}
+              aria-label={tc("cancel")}
             >
               <XIcon className="size-3.5" aria-hidden="true" />
             </Button>

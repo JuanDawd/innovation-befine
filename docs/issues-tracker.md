@@ -1839,7 +1839,7 @@
 ### L-51 — Accessibility: unlabeled controls
 
 - **Severity:** Low
-- **Status:** Open
+- **Status:** Resolved (2026-10-12) — scripted scan of every input/select/textarea and icon-only button: large-order quantity/price/description/ETA/notes, catalog price/commission/piece-rate/selling-price, absences prev/next month, guest-cancel and assignment save/cancel buttons now have accessible names; analytics drill-down row has a real `aria-expanded` button
 - **Affected:** Large-order form (quantity / unit price spinbuttons), walk-in guest icon button in log-service form, catalog "Crear servicio" price/commission (placeholder-only labels "Ej: 25000"/"Ej: 40"), absences calendar prev/next month buttons
 - **Description:** Source: training-manual walkthrough with agent-browser, 2026-10-11 (demo data, homelab CT 110). Found via accessibility snapshot — these controls expose no accessible name.
 - **Fix:** Add `<label>`/`aria-label` per CLAUDE.md accessibility baseline.
@@ -1975,3 +1975,4 @@
 | M-67     | 2026-10-12    | "Cobrar" quick action hidden for roles without checkout permission                                       | feat/design-system           |
 | M-66     | 2026-10-12    | Oldest-first range picker replaces per-day chips; clearer secretary breakdown labels                     | feat/design-system           |
 | M-63     | 2026-10-12    | `timeZone: "America/Bogota"` on all remaining locale time/date renders (11 sites)                        | feat/design-system           |
+| L-51     | 2026-10-12    | Accessible names on all flagged controls + icon buttons; keyboard drill-down in analytics                | feat/design-system           |

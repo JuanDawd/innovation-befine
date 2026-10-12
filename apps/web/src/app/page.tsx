@@ -189,7 +189,7 @@ export default async function LandingPage() {
                 </p>
                 <Link
                   href="/login"
-                  className="group inline-flex items-center justify-between w-full border px-5 py-3.5 text-sm font-medium transition-all duration-300 hover:pl-6"
+                  className="group inline-flex items-center justify-between w-full border px-5 py-3.5 text-sm font-medium transition-[padding,color,background-color,border-color] duration-300 hover:pl-6"
                   style={{
                     borderColor: "color-mix(in srgb, var(--brand-pink) 35%, transparent)",
                     color: "var(--brand-bone)",
@@ -204,7 +204,7 @@ export default async function LandingPage() {
                     style={{ color: "var(--brand-pink)" }}
                   >
                     <span
-                      className="h-px w-4 transition-all duration-300 group-hover:w-6"
+                      className="h-px w-4 transition-[width] duration-300 group-hover:w-6"
                       style={{ background: "var(--brand-pink)" }}
                       aria-hidden="true"
                     />

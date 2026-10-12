@@ -53,7 +53,7 @@ export default async function PublicRoadmapPage() {
           </div>
           <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
             <div
-              className="h-full bg-primary transition-all"
+              className="h-full bg-primary transition-[width]"
               style={{ width: `${overallPct}%` }}
               aria-hidden="true"
             />

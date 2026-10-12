@@ -139,7 +139,7 @@ export function CashierDashboard({ initialTickets }: { initialTickets: Dashboard
                 <div
                   key={ticket.id}
                   className={[
-                    "rounded-lg border bg-card p-3 shadow-xs transition-all duration-300",
+                    "rounded-lg border bg-card p-3 shadow-xs transition-[background-color,border-color,box-shadow] duration-300",
                     statusClass(ticket.status),
                     isJustCreated(ticket)
                       ? "ring-2 ring-status-success-foreground bg-status-success animate-pulse"

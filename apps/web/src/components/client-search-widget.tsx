@@ -353,8 +353,9 @@ export function ClientSearchWidget({
             setGuestMode(false);
             setGuestName("");
           }}
+          aria-label={tc("cancel")}
         >
-          <XIcon className="size-4" />
+          <XIcon className="size-4" aria-hidden="true" />
         </Button>
       </div>
     );

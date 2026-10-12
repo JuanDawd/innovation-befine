@@ -108,12 +108,24 @@ export function AbsenceCalendar({ year, month, absences, employees }: Props) {
     <div className="space-y-4">
       {/* Month navigation */}
       <div className="flex items-center justify-between">
-        <Button variant="outline" size="sm" onClick={prevMonth} disabled={isPending}>
-          <ChevronLeftIcon className="size-4" />
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={prevMonth}
+          disabled={isPending}
+          aria-label={t("prevMonth")}
+        >
+          <ChevronLeftIcon className="size-4" aria-hidden="true" />
         </Button>
         <h2 className="text-lg font-semibold capitalize">{monthName}</h2>
-        <Button variant="outline" size="sm" onClick={nextMonth} disabled={isPending}>
-          <ChevronRightIcon className="size-4" />
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={nextMonth}
+          disabled={isPending}
+          aria-label={t("nextMonth")}
+        >
+          <ChevronRightIcon className="size-4" aria-hidden="true" />
         </Button>
       </div>
 

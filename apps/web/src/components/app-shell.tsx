@@ -239,7 +239,7 @@ function SidebarNavItem({ item, active }: { item: NavItem; active: boolean }) {
         <span
           aria-hidden="true"
           className={cn(
-            "inline-flex size-1 shrink-0 rounded-full transition-all group-data-[collapsible=icon]:hidden",
+            "inline-flex size-1 shrink-0 rounded-full transition-[background-color,box-shadow] group-data-[collapsible=icon]:hidden",
             active ? "bg-primary shadow-[0_0_8px_var(--color-primary)]" : "bg-transparent",
           )}
         />

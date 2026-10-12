@@ -250,6 +250,19 @@
   --app-bottom-inset: calc(4rem + env(safe-area-inset-bottom));
 }
 
+/* Respect "reduce motion": kill animations/transitions app-wide (pulses,
+   spinners still show state via their static frame). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

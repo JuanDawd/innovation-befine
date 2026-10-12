@@ -393,6 +393,7 @@ export function LargeOrderDetail({
             <label className="text-sm font-medium">{t("estimatedDelivery")}</label>
             <input
               type="datetime-local"
+              aria-label={t("estimatedDelivery")}
               value={editEta}
               onChange={(e) => setEditEta(e.target.value)}
               className="w-full h-9 rounded-md border border-input bg-transparent px-3 text-sm focus-visible:outline-none focus-visible:border-ring"
@@ -403,6 +404,7 @@ export function LargeOrderDetail({
           <div className="space-y-1">
             <label className="text-sm font-medium">{t("notes")}</label>
             <textarea
+              aria-label={t("notes")}
               value={editNotes}
               onChange={(e) => setEditNotes(e.target.value)}
               rows={2}
@@ -890,7 +892,7 @@ export function LargeOrderDetail({
                       <div className="flex items-center gap-2">
                         <div className="flex-1 bg-muted rounded-full h-2 max-w-25">
                           <div
-                            className="bg-primary h-2 rounded-full transition-all"
+                            className="bg-primary h-2 rounded-full transition-[width]"
                             style={{ width: `${pct}%` }}
                           />
                         </div>

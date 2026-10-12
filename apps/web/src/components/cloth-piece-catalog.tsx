@@ -325,6 +325,7 @@ function AddVariantForm({
         <div className="flex-1 min-w-32 space-y-1">
           <Input
             placeholder={t("variantNamePlaceholder")}
+            aria-label={t("variantName")}
             aria-invalid={!!errors.name}
             {...register("name")}
           />
@@ -335,6 +336,7 @@ function AddVariantForm({
             type="number"
             min={0}
             placeholder={t("pieceRatePlaceholder")}
+            aria-label={t("pieceRateLabel")}
             aria-invalid={!!errors.pieceRate}
             {...register("pieceRate", { valueAsNumber: true })}
           />
@@ -347,6 +349,7 @@ function AddVariantForm({
             type="number"
             min={0}
             placeholder={t("sellingPricePlaceholder")}
+            aria-label={t("sellingPriceLabel")}
             aria-invalid={!!errors.sellingPrice}
             {...register("sellingPrice", {
               setValueAs: (v) => (v === "" || v === null ? null : Number(v)),

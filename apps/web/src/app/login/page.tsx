@@ -206,7 +206,7 @@ export default async function LoginPage() {
             }}
           >
             <span
-              className="transition-all group-hover:-translate-x-0.5 group-hover:text-brand-pink"
+              className="transition-[translate,color] group-hover:-translate-x-0.5 group-hover:text-brand-pink"
               aria-hidden="true"
             >
               ←

@@ -228,7 +228,7 @@ function ProgressBar({ pct }: { pct: number }) {
   return (
     <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
       <div
-        className="h-full bg-primary transition-all"
+        className="h-full bg-primary transition-[width]"
         style={{ width: `${pct}%` }}
         aria-hidden="true"
       />

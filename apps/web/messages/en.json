@@ -672,7 +672,8 @@
     "emptyDescription": "No closed business days for this period. Close tickets to see totals.",
     "csvDisabledTooltip": "No data to export",
     "sparseData": "{daysWithData} of {totalDays} days have data in this period",
-    "downloadCsv": "Download CSV"
+    "downloadCsv": "Download CSV",
+    "toggleDrillDown": "Show daily breakdown for {name}"
   },
   "absences": {
     "pageTitle": "Absences & Vacation",
@@ -689,7 +690,9 @@
     "type_missed": "Missed day",
     "note": "Note",
     "save": "Save",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "prevMonth": "Previous month",
+    "nextMonth": "Next month"
   },
   "largeOrders": {
     "pageTitle": "Large orders",
