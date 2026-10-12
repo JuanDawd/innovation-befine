@@ -176,6 +176,7 @@ Add a "Send confirmation email" button on appointment cards (visible when status
 ### What to do
 
 When an admin changes the price of a `service_variant` (recorded in T025 catalog audit log), find all future appointments that reference that `service_variant_id` and:
+
 1. Send an in-app notification to the secretary for each affected appointment
 2. Set `price_change_acknowledged = false` on each affected appointment
 3. Surface unacknowledged price changes visually in the appointments list/calendar

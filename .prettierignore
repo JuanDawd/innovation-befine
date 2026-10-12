@@ -5,3 +5,8 @@ dist
 coverage
 *.tsbuildinfo
 package-lock.json
+pnpm-lock.yaml
+pnpm-workspace.yaml
+apps/web/public/sw.js
+apps/web/public/workbox-*.js
+docs/mockups
