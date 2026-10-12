@@ -1849,7 +1849,7 @@
 ### L-52 — Mobile and small UX polish
 
 - **Severity:** Low
-- **Status:** Partially resolved (2026-10-11) — clothier "Listo" now asks for confirmation (piece + quantity) and shows success toasts; claim/done send idempotency key. Rest open
+- **Status:** Partially resolved — (3) 2026-10-11: clothier "Listo" asks for confirmation, toasts, idempotency key. (1) 2026-10-12: floating pill replaced by an in-flow top bar on stylist/clothier and admin/secretary mobile shells. Still open: (2), (4), (5)
 - **Affected:** Mobile earnings pages, notifications bell, clothier "Listo", PWA manifest
 - **Description:** Source: training-manual walkthrough with agent-browser, 2026-10-11 (demo data, homelab CT 110). (1) At 390 px the floating name/bell pill overlaps the H1 ("Historial d…"). (2) The unread badge doesn't clear after opening notifications. (3) Clothier "Listo" applies immediately with no confirmation or undo. (4) `/manifest.webmanifest` is redirected to `/login` by middleware (manifest requests carry no cookies), so the PWA manifest is unreachable. (5) "Abrir día" spins ~5 s before the panel updates.
 - **Fix:** Add top padding under the pill; mark notifications read on open; add undo toast for "Listo"; exclude `manifest.webmanifest` in the middleware matcher.

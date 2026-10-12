@@ -42,7 +42,7 @@ export function SyncStatus({ role }: { role: AppRole }) {
       <div
         role="status"
         aria-live="polite"
-        className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-1 rounded-xl border border-status-attention-foreground/30 bg-status-attention px-4 py-3 shadow-lg max-w-sm w-[calc(100%-2rem)]"
+        className="fixed bottom-[calc(var(--app-bottom-inset)+1rem)] left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-1 rounded-xl border border-status-attention-foreground/30 bg-status-attention px-4 py-3 shadow-lg max-w-sm w-[calc(100%-2rem)]"
       >
         <div className="flex items-center gap-2 text-status-attention-foreground">
           <WifiOffIcon className="size-4 shrink-0" aria-hidden="true" />
@@ -84,7 +84,7 @@ export function SyncStatus({ role }: { role: AppRole }) {
     <div
       role="status"
       aria-live="polite"
-      className="fixed bottom-4 right-4 z-50 flex items-center gap-2 rounded-lg border bg-background px-3 py-2 shadow text-sm"
+      className="fixed bottom-[calc(var(--app-bottom-inset)+1rem)] right-4 z-50 flex items-center gap-2 rounded-lg border bg-background px-3 py-2 shadow text-sm"
     >
       {syncing ? (
         <>

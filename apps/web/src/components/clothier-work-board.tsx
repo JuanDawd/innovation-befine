@@ -41,11 +41,15 @@ function PieceNotes({ piece }: { piece: ProductPieceRow }) {
     <div className="mt-1">
       <button
         type="button"
-        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+        className="-ml-2 flex min-h-11 items-center gap-1 rounded-md px-2 text-sm text-muted-foreground hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
       >
-        {open ? <ChevronUpIcon className="size-3" /> : <ChevronDownIcon className="size-3" />}
+        {open ? (
+          <ChevronUpIcon className="size-4" aria-hidden="true" />
+        ) : (
+          <ChevronDownIcon className="size-4" aria-hidden="true" />
+        )}
         {t("viewNotes")}
       </button>
       {open && (

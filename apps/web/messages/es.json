@@ -851,7 +851,12 @@
     "groupPeople": "Personas",
     "groupFinance": "Finanzas",
     "groupManagement": "Gestión",
-    "viewingCompany": "Empresa"
+    "viewingCompany": "Empresa",
+    "toggleSidebar": "Mostrar u ocultar menú",
+    "sidebarTitle": "Menú",
+    "sidebarDescription": "Navegación principal",
+    "skipToContent": "Saltar al contenido",
+    "mainNavigation": "Navegación principal"
   },
   "sync": {
     "offlineTitle": "Sin conexión",

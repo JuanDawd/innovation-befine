@@ -39,6 +39,8 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
+  // Lets content reach under the notch/home indicator; shells pad with env(safe-area-inset-*).
+  viewportFit: "cover",
   // Match the canvas (--background) so the browser chrome blends in.
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#f7f2ea" },
@@ -69,7 +71,13 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           <QueryProvider>
             {children}
             <SwUpdatePrompt />
-            <Toaster richColors closeButton duration={4000} position="bottom-right" />
+            <Toaster
+              richColors
+              closeButton
+              duration={4000}
+              position="bottom-right"
+              mobileOffset={{ bottom: "calc(var(--app-bottom-inset) + 16px)" }}
+            />
           </QueryProvider>
         </NextIntlClientProvider>
       </body>

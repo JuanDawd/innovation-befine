@@ -816,7 +816,12 @@
     "groupPeople": "People",
     "groupFinance": "Finance",
     "groupManagement": "Management",
-    "viewingCompany": "Viewing"
+    "viewingCompany": "Viewing",
+    "toggleSidebar": "Toggle sidebar",
+    "sidebarTitle": "Menu",
+    "sidebarDescription": "Main navigation",
+    "skipToContent": "Skip to content",
+    "mainNavigation": "Main navigation"
   },
   "sync": {
     "offlineTitle": "You're offline",

@@ -32,7 +32,7 @@ export function SwUpdatePrompt() {
     <div
       role="alert"
       aria-live="polite"
-      className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 rounded-xl border border-status-progress-foreground/30 bg-status-progress px-4 py-3 shadow-lg max-w-sm w-[calc(100%-2rem)]"
+      className="fixed bottom-[calc(var(--app-bottom-inset)+1rem)] left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 rounded-xl border border-status-progress-foreground/30 bg-status-progress px-4 py-3 shadow-lg max-w-sm w-[calc(100%-2rem)]"
     >
       <RefreshCwIcon
         className="size-4 shrink-0 text-status-progress-foreground"

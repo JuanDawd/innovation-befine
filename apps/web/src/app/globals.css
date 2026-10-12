@@ -241,9 +241,29 @@
   --info-foreground: oklch(1 0 0);
 }
 
+/* Height of the fixed mobile bottom nav (stylist/clothier shell), so fixed
+   overlays — toasts, sync/update banners — sit above it. 0 elsewhere. */
+:root {
+  --app-bottom-inset: 0px;
+}
+:root:has([data-bottom-nav]) {
+  --app-bottom-inset: calc(4rem + env(safe-area-inset-bottom));
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
+  }
+  /* No double-tap-zoom delay on controls */
+  a,
+  button,
+  input,
+  select,
+  textarea,
+  label,
+  summary,
+  [role="button"] {
+    touch-action: manipulation;
   }
   body {
     @apply bg-background text-foreground;
