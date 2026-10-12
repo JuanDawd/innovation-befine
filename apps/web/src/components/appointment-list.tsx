@@ -34,6 +34,7 @@ import {
 import { AppointmentStatusActions } from "@/components/appointment-status-actions";
 import { NativeSelect } from "@/components/ui/native-select";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { useSearchParamState } from "@/hooks/use-search-param-state";
 
 // ─── Price change acknowledge inline widget (T109) ────────────────────────────
 
@@ -95,9 +96,14 @@ export function AppointmentList() {
   const t = useTranslations("appointments");
   const tc = useTranslations("common");
 
-  const [date, setDate] = useState(todayBogota);
+  // Date and stylist live in the URL (?date=YYYY-MM-DD&stylist=<id>) — survive refresh, shareable.
+  const [date, setDate] = useSearchParamState("date", todayBogota(), (raw) =>
+    /^\d{4}-\d{2}-\d{2}$/.test(raw) ? raw : null,
+  );
   const [bookOpen, setBookOpen] = useState(false);
-  const [stylistFilter, setStylistFilter] = useState("");
+  const [stylistFilter, setStylistFilter] = useSearchParamState("stylist", "", (raw) =>
+    /^[0-9a-f-]{36}$/i.test(raw) ? raw : null,
+  );
   const { data: stylists = [] } = useQuery({
     queryKey: queryKeys.staff.bookingStylists,
     queryFn: () => unwrap(listBookingStylists()),

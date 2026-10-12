@@ -40,6 +40,7 @@ import {
 import type { EarningsByEmployee } from "@befine/db";
 import { formatCount, formatMoney } from "@/i18n";
 import { PageHeader } from "@/components/page-header";
+import { oneOf, useSearchParamState } from "@/hooks/use-search-param-state";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -351,11 +352,19 @@ function EmployeeTable({
 // ─── Main dashboard ───────────────────────────────────────────────────────────
 
 type Period = "day" | "week" | "month";
+const PERIODS = ["day", "week", "month"] as const;
 
 export function AnalyticsDashboard({ initialData }: { initialData: AnalyticsSummary }) {
   const t = useTranslations("analytics");
-  const [period, setPeriod] = useState<Period>(initialData.period);
-  const [includeInactive, setIncludeInactive] = useState(false);
+  // Period and the inactive toggle live in the URL (?period=week&inactive=1);
+  // the server page reads the same params for the first render.
+  const [period, setPeriod] = useSearchParamState<Period>("period", "day", oneOf(PERIODS));
+  const [inactiveParam, setInactiveParam] = useSearchParamState(
+    "inactive",
+    "0",
+    oneOf(["0", "1"] as const),
+  );
+  const includeInactive = inactiveParam === "1";
   const [data, setData] = useState<AnalyticsSummary>(initialData);
   const [isPending, startTransition] = useTransition();
   const [csvPending, setCsvPending] = useState(false);
@@ -390,7 +399,7 @@ export function AnalyticsDashboard({ initialData }: { initialData: AnalyticsSumm
 
   function toggleInactive() {
     const next = !includeInactive;
-    setIncludeInactive(next);
+    setInactiveParam(next ? "1" : "0");
     startTransition(async () => {
       const res = await getAnalyticsSummary({ period, includeInactive: next });
       if (res.success) setData(res.data);
