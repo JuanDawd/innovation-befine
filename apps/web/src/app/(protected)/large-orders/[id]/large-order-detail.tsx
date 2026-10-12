@@ -149,6 +149,7 @@ export function LargeOrderDetail({
   currentEmployeeId = null,
 }: Props) {
   const t = useTranslations("largeOrders");
+  const tc = useTranslations("common");
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const order = initialOrder;
@@ -437,8 +438,8 @@ export function LargeOrderDetail({
                 setError(null);
               }}
             >
-              <XIcon className="size-3.5 mr-1.5" />
-              Cancelar
+              <XIcon className="size-3.5 mr-1.5" aria-hidden="true" />
+              {tc("cancel")}
             </Button>
           </div>
         </div>
@@ -798,7 +799,7 @@ export function LargeOrderDetail({
           >
             <div className="flex items-center gap-2">
               <FactoryIcon className="size-4 text-muted-foreground" />
-              <span className="text-sm font-semibold">Producción</span>
+              <span className="text-sm font-semibold">{t("production")}</span>
             </div>
             {productionCollapsed ? (
               <ChevronDownIcon className="size-4 text-muted-foreground" />

@@ -21,11 +21,11 @@ import { signIn } from "@/lib/auth-client";
 
 const schema = z
   .object({
-    newPassword: z.string().min(8, "La contraseña debe tener al menos 8 caracteres"),
-    confirmPassword: z.string().min(1, "Confirma tu contraseña"),
+    newPassword: z.string().min(8, "validation.passwordMin"),
+    confirmPassword: z.string().min(1, "validation.confirmPasswordRequired"),
   })
   .refine((d) => d.newPassword === d.confirmPassword, {
-    message: "Las contraseñas no coinciden",
+    message: "validation.passwordsDontMatch",
     path: ["confirmPassword"],
   });
 
@@ -100,7 +100,7 @@ export function SetNewPasswordForm({ token }: SetNewPasswordFormProps) {
         />
         {errors.newPassword && (
           <p id="new-password-error" className="text-sm text-destructive" role="alert">
-            {errors.newPassword.message}
+            {t(errors.newPassword.message as Parameters<typeof t>[0])}
           </p>
         )}
       </div>
@@ -119,7 +119,7 @@ export function SetNewPasswordForm({ token }: SetNewPasswordFormProps) {
         />
         {errors.confirmPassword && (
           <p id="confirm-password-error" className="text-sm text-destructive" role="alert">
-            {errors.confirmPassword.message}
+            {t(errors.confirmPassword.message as Parameters<typeof t>[0])}
           </p>
         )}
       </div>

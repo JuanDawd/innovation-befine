@@ -157,7 +157,10 @@ function VariantRow({
             {formatMoney(variant.pieceRate)}
           </span>
           {variant.sellingPrice != null && (
-            <span className="font-mono tabular-nums text-xs font-medium" title="Precio de venta">
+            <span
+              className="font-mono tabular-nums text-xs font-medium"
+              title={t("sellingPriceTitle")}
+            >
               {formatMoney(variant.sellingPrice)}
             </span>
           )}

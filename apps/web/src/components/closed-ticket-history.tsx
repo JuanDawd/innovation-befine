@@ -68,6 +68,7 @@ export function ClosedTicketHistory({
   initialTickets,
 }: ClosedTicketHistoryProps) {
   const t = useTranslations("ticketHistory");
+  const tc = useTranslations("common");
 
   const [selectedDayId, setSelectedDayId] = useState(initialDayId);
   const [tickets, setTickets] = useState<ClosedTicketRow[]>(initialTickets);
@@ -217,7 +218,7 @@ export function ClosedTicketHistory({
           <button
             onClick={clearSearch}
             className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            aria-label="Limpiar búsqueda"
+            aria-label={tc("clearSearch")}
           >
             <XIcon className="size-4" aria-hidden="true" />
           </button>

@@ -14,6 +14,8 @@ export default function GlobalError({
     Sentry.captureException(error);
   }, [error]);
 
+  // Replaces the root layout, so it renders outside NextIntlClientProvider —
+  // copy stays in the default locale (Spanish) on purpose.
   return (
     <html lang="es">
       <body className="flex min-h-screen items-center justify-center bg-background font-sans">

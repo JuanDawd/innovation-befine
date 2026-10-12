@@ -419,11 +419,11 @@ export function AppShell({
               <SidebarMenuItem>
                 <SidebarMenuButton
                   onClick={() => setSellOpen(true)}
-                  tooltip="Vender prenda"
+                  tooltip={t("clothSale.title")}
                   id="sidebar-sell"
                 >
                   <ShoppingBagIcon aria-hidden="true" />
-                  <span>Vender prenda</span>
+                  <span>{t("clothSale.title")}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             )}

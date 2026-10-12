@@ -3,6 +3,7 @@
 import * as Sentry from "@sentry/nextjs";
 import { Component, type ReactNode } from "react";
 import { AlertTriangleIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 
 type Props = {
@@ -42,19 +43,32 @@ export class ErrorBoundary extends Component<Props, State> {
 
     if (this.props.fallback) return this.props.fallback;
 
-    return (
-      <div className="flex flex-col items-center justify-center gap-4 rounded-lg border border-destructive/20 bg-destructive/5 p-8 text-center">
-        <AlertTriangleIcon className="size-8 text-destructive" aria-hidden />
-        <div>
-          <p className="text-sm font-medium text-destructive">Ocurrió un error inesperado</p>
-          {this.state.eventId && (
-            <p className="mt-1 font-mono text-xs text-muted-foreground">ID: {this.state.eventId}</p>
-          )}
-        </div>
-        <Button variant="outline" size="sm" onClick={this.reset}>
-          Reintentar
-        </Button>
-      </div>
-    );
+    return <DefaultErrorFallback eventId={this.state.eventId} onRetry={this.reset} />;
   }
+}
+
+/** Function component so the fallback can use next-intl (class components can't use hooks). */
+function DefaultErrorFallback({
+  eventId,
+  onRetry,
+}: {
+  eventId: string | null;
+  onRetry: () => void;
+}) {
+  const t = useTranslations("errors");
+  return (
+    <div
+      role="alert"
+      className="flex flex-col items-center justify-center gap-4 rounded-lg border border-destructive/20 bg-destructive/5 p-8 text-center"
+    >
+      <AlertTriangleIcon className="size-8 text-destructive" aria-hidden />
+      <div>
+        <p className="text-sm font-medium text-destructive">{t("unexpected")}</p>
+        {eventId && <p className="mt-1 font-mono text-xs text-muted-foreground">ID: {eventId}</p>}
+      </div>
+      <Button variant="outline" size="sm" onClick={onRetry}>
+        {t("retry")}
+      </Button>
+    </div>
+  );
 }

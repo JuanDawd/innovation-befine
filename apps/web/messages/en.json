@@ -65,7 +65,14 @@
     "currentPassword": "Current password",
     "currentPasswordRequired": "Current password is required",
     "currentPasswordWrong": "Current password is incorrect",
-    "changePasswordSuccess": "Password updated successfully"
+    "changePasswordSuccess": "Password updated successfully",
+    "validation": {
+      "currentPasswordRequired": "Current password is required",
+      "passwordMin": "Password must be at least 8 characters",
+      "confirmPasswordRequired": "Confirm your password",
+      "passwordsDontMatch": "Passwords don't match",
+      "emailInvalid": "Enter a valid email address"
+    }
   },
   "status": {
     "logged": "Logged",
@@ -118,7 +125,9 @@
     "rateLimited": "Too many attempts. Try again in {minutes} minutes.",
     "forbidden": "Access denied",
     "forbiddenDescription": "You don't have permission to view this page.",
-    "goHome": "Go to my dashboard"
+    "goHome": "Go to my dashboard",
+    "unexpected": "Something went wrong",
+    "retry": "Try again"
   },
   "time": {
     "justNow": "Just now",
@@ -276,7 +285,9 @@
     "impactWarning": "{count, plural, one {# open ticket uses this entity} other {# open tickets use this entity}}",
     "discardChanges": "Discard changes?",
     "discardChangesDescription": "You have unsaved changes in this variant. Are you sure you want to close it?",
-    "discard": "Discard"
+    "discard": "Discard",
+    "sellingPriceTitle": "Selling price",
+    "removeVariant": "Remove variant"
   },
   "clients": {
     "pageTitle": "Clients",
@@ -506,7 +517,8 @@
     "editPiece": "Edit piece",
     "editPieceError": "Could not save the piece",
     "saveChanges": "Save changes",
-    "back": "Back"
+    "back": "Back",
+    "noLargeOrderLink": "Not linked"
   },
   "appointments": {
     "pageTitle": "Appointments",
@@ -572,6 +584,13 @@
       "cancelled": "Cancelled",
       "rescheduled": "Rescheduled",
       "no_show": "No-show"
+    },
+    "validation": {
+      "clientRequired": "Select a client or enter a guest name",
+      "stylistRequired": "Select a stylist",
+      "serviceSummaryRequired": "Service description is required",
+      "scheduledAtRequired": "Select a date and time",
+      "durationRange": "Between 15 and 480 minutes"
     }
   },
   "payroll": {
@@ -673,7 +692,10 @@
     "csvDisabledTooltip": "No data to export",
     "sparseData": "{daysWithData} of {totalDays} days have data in this period",
     "downloadCsv": "Download CSV",
-    "toggleDrillDown": "Show daily breakdown for {name}"
+    "toggleDrillDown": "Show daily breakdown for {name}",
+    "seriesCurrent": "Current",
+    "seriesPrior": "Previous period",
+    "noDrillDownData": "No data for this period."
   },
   "absences": {
     "pageTitle": "Absences & Vacation",
@@ -797,7 +819,8 @@
     "instructions": "Instructions",
     "instructionsPlaceholder": "E.g. Double stitch on sleeves",
     "generatedDescription": "Auto-generated description",
-    "itemsRequired": "At least one item is required"
+    "itemsRequired": "At least one item is required",
+    "production": "Production"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -846,11 +869,26 @@
   "versionBanner": {
     "message": "A new version is available.",
     "refresh": "Refresh now",
-    "dismiss": "Dismiss"
+    "dismiss": "Dismiss",
+    "swMessage": "Update available — reload to apply",
+    "swReload": "Reload",
+    "swReloadLabel": "Reload page",
+    "swClose": "Dismiss"
   },
   "settings": {
     "pageTitle": "Settings",
-    "pageSubtitle": "Business-wide system behaviour settings."
+    "pageSubtitle": "Business-wide system behaviour settings.",
+    "saved": "Settings saved",
+    "saveChanges": "Save changes",
+    "authSection": "Employee sign-in",
+    "requireEmail": "Require email",
+    "requireEmailHelp": "When on, employees must register with an email. When off, they can use a username instead.",
+    "accessSection": "Access control",
+    "cashierAdmin": "Allow the cashier to open admin pages",
+    "cashierAdminHelp": "When on, users with the <strong>cashier</strong> role can open admin sections (analytics, payroll, employees, etc.). Only relevant once the cashier and admin roles are separated.",
+    "subtypeSection": "Services by subtype",
+    "subtypeRestriction": "Restrict services by stylist subtype",
+    "subtypeRestrictionHelp": "When on, each stylist can only log services matching their subtype. When off, every service is available to every stylist."
   },
   "checkout": {
     "method": {
@@ -885,5 +923,55 @@
     "confirmTitle": "Charge {amount} to {clients}?",
     "confirmDescription": "{count, plural, one {# ticket will be closed} other {# tickets will be closed}} and the payment recorded. This cannot be undone.",
     "multiClientWarning": "This checkout covers {count} different clients: {clients}. Make sure one person is paying for all of them."
+  },
+  "clothSale": {
+    "title": "Sell garment",
+    "piece": "Garment",
+    "piecePlaceholder": "Select garment…",
+    "variant": "Variant",
+    "variantPlaceholder": "Select variant…",
+    "noPrice": "no price",
+    "quantity": "Quantity",
+    "unitPrice": "Unit price",
+    "basePrice": "(base {price})",
+    "priceRequired": "Required",
+    "total": "Total",
+    "customer": "Customer",
+    "customerType": {
+      "none": "Anonymous",
+      "client": "Saved client",
+      "guest": "Guest"
+    },
+    "clientPlaceholder": "Select client…",
+    "guestName": "Customer name",
+    "linkedToTicket": "This sale will be linked to the current ticket.",
+    "submit": "Record sale",
+    "success": "Sale recorded — {total}"
+  },
+  "orderProgress": {
+    "emptyTitle": "No production items",
+    "emptyDescription": "This order has no items yet.",
+    "assign": "Assign",
+    "clothier": "Clothier",
+    "selectPlaceholder": "Select…",
+    "quantity": "Quantity",
+    "saving": "Saving…",
+    "createAssignment": "Create assignment",
+    "assignError": "Could not assign",
+    "assignSuccess": "Assignment created",
+    "staleData": "Data is out of date, reload the page",
+    "reportError": "Could not report progress",
+    "reportSuccess": "Progress reported",
+    "approveError": "Could not approve",
+    "approveSuccess": "Quantity approved",
+    "unassigned": "Unassigned",
+    "report": "Report",
+    "approve": "Approve",
+    "colEmployee": "Employee",
+    "colAssigned": "Assigned",
+    "colCompleted": "Completed",
+    "colApproved": "Approved",
+    "colProgress": "Progress",
+    "colActions": "Actions"
   }
 }

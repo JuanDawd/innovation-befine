@@ -9,8 +9,10 @@
 
 import { useEffect, useState } from "react";
 import { RefreshCwIcon, XIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export function SwUpdatePrompt() {
+  const t = useTranslations("versionBanner");
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -38,19 +40,17 @@ export function SwUpdatePrompt() {
         className="size-4 shrink-0 text-status-progress-foreground"
         aria-hidden="true"
       />
-      <span className="flex-1 text-sm text-status-progress-foreground">
-        Actualización disponible — recarga para aplicar
-      </span>
+      <span className="flex-1 text-sm text-status-progress-foreground">{t("swMessage")}</span>
       <button
         onClick={() => window.location.reload()}
         className="rounded px-2 py-1 text-xs font-medium text-status-progress-foreground border border-status-progress-foreground/30 hover:bg-status-progress"
-        aria-label="Recargar página"
+        aria-label={t("swReloadLabel")}
       >
-        Recargar
+        {t("swReload")}
       </button>
       <button
         onClick={() => setVisible(false)}
-        aria-label="Cerrar aviso"
+        aria-label={t("swClose")}
         className="text-status-progress-foreground"
       >
         <XIcon className="size-4" aria-hidden="true" />

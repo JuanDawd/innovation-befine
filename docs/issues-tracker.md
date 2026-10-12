@@ -1041,6 +1041,16 @@
 
 ---
 
+### M-74 — Analytics charts use `hsl(var(--primary))` with oklch tokens
+
+- **Severity:** Medium
+- **Status:** Resolved (2026-10-12)
+- **Affected:** T072, T073 — `admin/analytics/analytics-dashboard.tsx` (comparison bars, drill-down sparkline, daily breakdown)
+- **Description:** Found during the 2026-10-12 a11y/i18n sweep. The theme tokens are `oklch(...)`, so `hsl(var(--primary))` is an invalid colour; Recharts SVG fills/strokes fall back to the default (black), so the "current" series renders without the brand colour and the "prior" series is invisible on the dark theme.
+- **Fix:** Use `var(--color-primary)` and `color-mix(in oklab, var(--color-muted-foreground) 40%, transparent)`.
+
+---
+
 ## Low-priority issues
 
 ### L-20 — T032 work bundled into T030/T031 commits
@@ -1876,6 +1886,8 @@
 
 ---
 
+- **2026-10-12 — Colour tokens are oklch.** Never wrap theme variables in `hsl()`/`rgb()`; use `var(--color-*)` directly or `color-mix()` for alpha. Invalid colours fail silently in SVG.
+
 ## Resolution log
 
 > When an issue is resolved, update its status above and add an entry here.
@@ -1976,3 +1988,4 @@
 | M-66     | 2026-10-12    | Oldest-first range picker replaces per-day chips; clearer secretary breakdown labels                     | feat/design-system           |
 | M-63     | 2026-10-12    | `timeZone: "America/Bogota"` on all remaining locale time/date renders (11 sites)                        | feat/design-system           |
 | L-51     | 2026-10-12    | Accessible names on all flagged controls + icon buttons; keyboard drill-down in analytics                | feat/design-system           |
+| M-74     | 2026-10-12    | Chart colours use `var(--color-primary)` / color-mix instead of hsl() over oklch tokens                  | feat/design-system           |

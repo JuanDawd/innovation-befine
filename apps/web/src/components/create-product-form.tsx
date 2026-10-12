@@ -189,7 +189,7 @@ export function CreateProductForm({
             onChange={(e) => setLargeOrderId(e.target.value)}
             selectClassName="h-9 text-sm"
           >
-            <option value="">Sin vinculación</option>
+            <option value="">{t("noLargeOrderLink")}</option>
             {largeOrders.map((o) => (
               <option key={o.id} value={o.id}>
                 {o.clientName} — {o.description.slice(0, 50)}

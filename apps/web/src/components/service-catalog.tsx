@@ -194,9 +194,9 @@ function CreateServiceDialog({ onSuccess }: { onSuccess: (service: ServiceRow) =
                           type="button"
                           onClick={() => remove(idx)}
                           className="text-muted-foreground hover:text-destructive"
-                          aria-label="Eliminar variante"
+                          aria-label={t("removeVariant")}
                         >
-                          <Trash2Icon className="size-3.5" />
+                          <Trash2Icon className="size-3.5" aria-hidden="true" />
                         </button>
                       )}
                     </div>

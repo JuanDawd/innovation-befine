@@ -5,6 +5,7 @@ import { SearchIcon, XIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useTranslations } from "next-intl";
 
 interface FilterChip {
   id: string;
@@ -22,7 +23,7 @@ interface SearchFilterProps extends React.ComponentProps<"div"> {
 }
 
 function SearchFilter({
-  placeholder = "Buscar…",
+  placeholder,
   value: controlledValue,
   onValueChange,
   filters = [],
@@ -32,6 +33,7 @@ function SearchFilter({
   className,
   ...props
 }: SearchFilterProps) {
+  const tc = useTranslations("common");
   const [internalValue, setInternalValue] = useState("");
   const [internalActiveFilters, setInternalActiveFilters] = useState<string[]>([]);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -92,11 +94,11 @@ function SearchFilter({
         />
         <Input
           type="search"
-          placeholder={placeholder}
+          placeholder={placeholder ?? tc("search")}
           value={searchValue}
           onChange={handleSearchChange}
           className="pl-8 pr-8"
-          aria-label={placeholder}
+          aria-label={placeholder ?? tc("search")}
         />
         {searchValue && (
           <Button
@@ -104,7 +106,7 @@ function SearchFilter({
             size="icon-xs"
             className="absolute right-1.5 top-1/2 -translate-y-1/2"
             onClick={handleClear}
-            aria-label="Limpiar búsqueda"
+            aria-label={tc("clearSearch")}
           >
             <XIcon />
           </Button>

@@ -88,15 +88,14 @@ export function BookAppointmentForm({
 
   const validate = useCallback(() => {
     const errors: Record<string, string> = {};
-    if (!clientSelection) errors.client = "Selecciona un cliente o ingresa un nombre de invitado";
-    if (!stylistId) errors.stylist = "Selecciona un estilista";
-    if (!serviceSummary.trim())
-      errors.serviceSummary = "La descripción del servicio es obligatoria";
-    if (!datetimeLocal) errors.scheduledAt = "Selecciona una fecha y hora";
+    if (!clientSelection) errors.client = t("validation.clientRequired");
+    if (!stylistId) errors.stylist = t("validation.stylistRequired");
+    if (!serviceSummary.trim()) errors.serviceSummary = t("validation.serviceSummaryRequired");
+    if (!datetimeLocal) errors.scheduledAt = t("validation.scheduledAtRequired");
     if (durationMinutes < 15 || durationMinutes > 480)
-      errors.durationMinutes = "Entre 15 y 480 minutos";
+      errors.durationMinutes = t("validation.durationRange");
     return errors;
-  }, [clientSelection, stylistId, serviceSummary, datetimeLocal, durationMinutes]);
+  }, [clientSelection, stylistId, serviceSummary, datetimeLocal, durationMinutes, t]);
 
   function handleSubmit() {
     const errors = validate();

@@ -109,6 +109,7 @@ function ComparisonChart({
   prior: { revenue: number; jobs: number; earnings: number };
   labels: { revenue: string; jobs: string; earnings: string };
 }) {
+  const t = useTranslations("analytics");
   const data = [
     { metric: labels.revenue, current: current.revenue, prior: prior.revenue },
     { metric: labels.jobs, current: current.jobs, prior: prior.jobs },
@@ -121,12 +122,17 @@ function ComparisonChart({
         <XAxis dataKey="metric" tick={{ fontSize: 11 }} />
         <YAxis hide />
         <Tooltip formatter={(v: unknown) => formatCount(Number(v))} labelStyle={{ fontSize: 11 }} />
-        <Bar dataKey="current" fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} name="Actual" />
+        <Bar
+          dataKey="current"
+          fill="var(--color-primary)"
+          radius={[3, 3, 0, 0]}
+          name={t("seriesCurrent")}
+        />
         <Bar
           dataKey="prior"
-          fill="hsl(var(--muted-foreground) / 0.4)"
+          fill="color-mix(in oklab, var(--color-muted-foreground) 40%, transparent)"
           radius={[3, 3, 0, 0]}
-          name="Período anterior"
+          name={t("seriesPrior")}
         />
       </BarChart>
     </ResponsiveContainer>
@@ -216,7 +222,7 @@ function EmployeeRow({
                     <Line
                       type="monotone"
                       dataKey="earnings"
-                      stroke="hsl(var(--primary))"
+                      stroke="var(--color-primary)"
                       dot={false}
                       strokeWidth={2}
                     />
@@ -237,7 +243,7 @@ function EmployeeRow({
                 </table>
               </div>
             ) : (
-              <p className="py-3 text-xs text-muted-foreground">Sin datos para este período.</p>
+              <p className="py-3 text-xs text-muted-foreground">{t("noDrillDownData")}</p>
             )}
           </td>
         </tr>
@@ -595,7 +601,7 @@ export function AnalyticsDashboard({ initialData }: { initialData: AnalyticsSumm
                   />
                   <Bar
                     dataKey="revenue"
-                    fill="hsl(var(--primary))"
+                    fill="var(--color-primary)"
                     radius={[2, 2, 0, 0]}
                     name={t("revenue")}
                   />
