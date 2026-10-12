@@ -954,7 +954,7 @@
 ### M-66 — Payroll: errors hidden behind the confirmation modal; day picker unwieldy
 
 - **Severity:** Medium
-- **Status:** Partially resolved (2026-10-11) — `ConfirmationDialog` now closes after confirm (errors visible; fixes every confirm dialog). Still open: day-picker chips / oldest-first guidance
+- **Status:** Resolved (2026-10-12) — 2026-10-11: `ConfirmationDialog` closes after confirm (errors visible). 2026-10-12: day chips replaced by a range picker that always starts at the oldest unpaid day ("Desde" fixed, "Hasta" select), so out-of-order payouts can't be built; "Pagar hasta hoy" shortcut; "161 / 6 máx/semana" split into "Días trabajados" + "Máximo pagable por semana"
 - **Affected:** `admin/payroll/payroll-screen.tsx`, `ConfirmationDialog`
 - **Description:** Source: training-manual walkthrough with agent-browser, 2026-10-11 (demo data, homelab CT 110). When `recordPayout` fails (e.g. _"Hay días anteriores sin pagar para este empleado…"_) the "¿Confirmar el pago?" dialog stays open and the error renders behind it — the admin sees nothing happen. The picker lets you select non-oldest days without warning, renders every unsettled day as a chip (166 chips), and shows the unclear label "161 / 6 máx/semana".
 - **Fix:** Close the dialog and toast the error; enforce/auto-select the oldest contiguous range; replace chips with a date-range picker.
@@ -1973,3 +1973,4 @@
 | L-50     | 2026-10-12    | StatusBadge translates via `status` ns; subtypes/roles/methods via next-intl; "Analítica"                | feat/design-system           |
 | M-65     | 2026-10-12    | Opt-in selection grouped by client; client names + multi-client warning in confirmation                  | feat/design-system           |
 | M-67     | 2026-10-12    | "Cobrar" quick action hidden for roles without checkout permission                                       | feat/design-system           |
+| M-66     | 2026-10-12    | Oldest-first range picker replaces per-day chips; clearer secretary breakdown labels                     | feat/design-system           |

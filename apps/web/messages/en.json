@@ -583,7 +583,7 @@
     "liquidate": "Settle",
     "step1": "1. Select employee",
     "step2": "2. Select business days",
-    "payTodayShortcut": "Pay today's day",
+    "payTodayShortcut": "Pay through today",
     "noTodayDay": "No closed business day for today",
     "earningsDescriptorStylist": "Pay for today's services",
     "earningsDescriptorClothier": "Pay for today's pieces",
@@ -637,7 +637,14 @@
     "gridStatus_pending": "Pending",
     "gridStatus_open": "Day open",
     "confirmPayoutTitle": "Confirm payment?",
-    "confirmPayoutDescription": "This will permanently record the payout. It cannot be undone."
+    "confirmPayoutDescription": "This will permanently record the payout. It cannot be undone.",
+    "rangeFrom": "From",
+    "rangeFromHint": "Oldest unpaid day — payouts go in order",
+    "rangeTo": "Through",
+    "rangeToPlaceholder": "Choose the last day to pay",
+    "previewDays": "Calculate earnings ({count, plural, one {# day} other {# days}})",
+    "weeklyDayCap": "Payable days per week",
+    "weeklyDayCapValue": "{count, plural, one {# day} other {# days}}"
   },
   "analytics": {
     "pageTitle": "Analytics",

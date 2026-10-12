@@ -616,7 +616,7 @@
     "liquidate": "Liquidar",
     "step1": "1. Selecciona el empleado",
     "step2": "2. Selecciona los días laborales",
-    "payTodayShortcut": "Pagar día de hoy",
+    "payTodayShortcut": "Pagar hasta hoy",
     "noTodayDay": "No hay un día laboral cerrado para hoy",
     "earningsDescriptorStylist": "Pagar por servicios del día",
     "earningsDescriptorClothier": "Pagar por piezas del día",
@@ -670,7 +670,14 @@
     "gridStatus_pending": "Pendiente",
     "gridStatus_open": "Día abierto",
     "confirmPayoutTitle": "¿Confirmar el pago?",
-    "confirmPayoutDescription": "Esta acción registrará el pago de forma permanente. No se puede deshacer."
+    "confirmPayoutDescription": "Esta acción registrará el pago de forma permanente. No se puede deshacer.",
+    "rangeFrom": "Desde",
+    "rangeFromHint": "Día más antiguo sin pagar — los pagos van en orden",
+    "rangeTo": "Hasta",
+    "rangeToPlaceholder": "Elige el último día a pagar",
+    "previewDays": "Calcular ganancias ({count, plural, one {# día} other {# días}})",
+    "weeklyDayCap": "Máximo pagable por semana",
+    "weeklyDayCapValue": "{count, plural, one {# día} other {# días}}"
   },
   "analytics": {
     "pageTitle": "Analítica",

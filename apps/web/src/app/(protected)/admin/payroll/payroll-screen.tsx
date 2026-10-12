@@ -16,7 +16,7 @@ import {
 } from "./actions";
 import type { EmployeeOption } from "../absences/actions";
 import { NativeSelect } from "@/components/ui/native-select";
-import { formatMoney } from "@/i18n";
+import { formatDate, formatMoney } from "@/i18n";
 
 type Props = {
   days: BusinessDayOption[];
@@ -33,15 +33,20 @@ export function PayrollScreen({ days, employees, history, initialEmployeeId }: P
   const idempotencyKeyRef = useRef(newUuid());
 
   const [selectedEmployee, setSelectedEmployee] = useState(initialEmployeeId ?? "");
-  // Pre-select the most-recent unsettled closed day for the chosen employee
-  // so the cashier doesn't have to hunt for it. `days` is already
-  // employee-scoped server-side; the next pick triggers a router refresh
-  // which remounts this component with fresh employee-scoped data.
-  const [selectedDays, setSelectedDays] = useState<Set<string>>(() => {
-    if (!initialEmployeeId) return new Set();
-    const latestUnsettled = [...days].reverse().find((d) => !d.isSettled);
-    return latestUnsettled ? new Set([latestUnsettled.id]) : new Set();
-  });
+  // Payouts must start at the oldest unpaid day (recordPayout rejects gaps),
+  // so the selection is a range: oldest unsettled day → chosen end day.
+  // `days` is employee-scoped server-side; picking another employee triggers a
+  // router refresh which remounts this component with fresh data.
+  const unsettledDays = days
+    .filter((d) => !d.isSettled)
+    .sort((a, b) => a.date.localeCompare(b.date));
+  const settledDays = days.filter((d) => d.isSettled);
+  const [rangeEndId, setRangeEndId] = useState(() =>
+    initialEmployeeId ? (unsettledDays.at(-1)?.id ?? "") : "",
+  );
+  const rangeEndIdx = unsettledDays.findIndex((d) => d.id === rangeEndId);
+  const selectedDayIds =
+    rangeEndIdx >= 0 ? unsettledDays.slice(0, rangeEndIdx + 1).map((d) => d.id) : [];
   const [preview, setPreview] = useState<EarningsPreview | null>(null);
   const [adjustedAmount, setAdjustedAmount] = useState("");
   const [adjustmentReason, setAdjustmentReason] = useState("");
@@ -50,25 +55,17 @@ export function PayrollScreen({ days, employees, history, initialEmployeeId }: P
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  function toggleDay(id: string) {
-    setSelectedDays((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
+  function changeRangeEnd(id: string) {
+    setRangeEndId(id);
     setPreview(null);
     setSuccess(false);
   }
 
-  function handlePreview() {
+  function handlePreview(dayIds = selectedDayIds) {
     setError(null);
     setPreview(null);
     startTransition(async () => {
-      const res = await previewEarnings(selectedEmployee, Array.from(selectedDays));
+      const res = await previewEarnings(selectedEmployee, dayIds);
       if (!res.success) {
         setError(res.error.message);
         return;
@@ -103,7 +100,7 @@ export function PayrollScreen({ days, employees, history, initialEmployeeId }: P
       }
       setSuccess(true);
       setPreview(null);
-      setSelectedDays(new Set());
+      setRangeEndId("");
       setAdjustedAmount("");
       setAdjustmentReason("");
       setNotes("");
@@ -113,8 +110,6 @@ export function PayrollScreen({ days, employees, history, initialEmployeeId }: P
     });
   }
 
-  const unsettledDays = days.filter((d) => !d.isSettled);
-  const settledDays = days.filter((d) => d.isSettled);
   const isAdjusted = preview && parseInt(adjustedAmount, 10) !== preview.computedAmount;
 
   // Today's date in business timezone (America/Bogota)
@@ -132,23 +127,18 @@ export function PayrollScreen({ days, employees, history, initialEmployeeId }: P
         ? "earningsDescriptorClothier"
         : "earningsDescriptorSecretary";
 
-  function handlePayToday() {
+  /** Shortcut: pay everything owed up to and including today. */
+  function handlePayThroughToday() {
     if (!todayUnsettledDay || !selectedEmployee) return;
-    const newSelection = new Set<string>([todayUnsettledDay.id]);
-    setSelectedDays(newSelection);
-    setPreview(null);
+    const idx = unsettledDays.findIndex((d) => d.id === todayUnsettledDay.id);
+    setRangeEndId(todayUnsettledDay.id);
     setSuccess(false);
-    // Trigger preview immediately
-    setError(null);
-    startTransition(async () => {
-      const res = await previewEarnings(selectedEmployee, [todayUnsettledDay.id]);
-      if (!res.success) {
-        setError(res.error.message);
-        return;
-      }
-      setPreview(res.data);
-      setAdjustedAmount(String(res.data.computedAmount));
-    });
+    handlePreview(unsettledDays.slice(0, idx + 1).map((d) => d.id));
+  }
+
+  /** "lun 06/04/2026" — business-day dates are plain YYYY-MM-DD strings. */
+  function dayLabel(date: string) {
+    return formatDate(`${date}T12:00:00Z`, "es", "EEE dd/MM/yyyy");
   }
 
   return (
@@ -161,7 +151,7 @@ export function PayrollScreen({ days, employees, history, initialEmployeeId }: P
           onChange={(e) => {
             const id = e.target.value;
             setSelectedEmployee(id);
-            setSelectedDays(new Set());
+            setRangeEndId("");
             setPreview(null);
             setSuccess(false);
             router.push(id ? `/admin/payroll?employeeId=${id}` : "/admin/payroll");
@@ -179,75 +169,85 @@ export function PayrollScreen({ days, employees, history, initialEmployeeId }: P
         </NativeSelect>
       </div>
 
-      {/* Step 2: Select business days */}
+      {/* Step 2: Select the pay period (oldest unpaid day → chosen end) */}
       {selectedEmployee && (
-        <div className="space-y-2">
-          <div className="flex items-center justify-between gap-2">
+        <div className="space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-sm font-semibold">{t("step2")}</h2>
-            <div className="flex items-center gap-2 mr-4">
-              {selectedEmployeeObj && (
-                <span className="text-xs text-muted-foreground">
-                  {t(earningsDescriptorKey as Parameters<typeof t>[0])}
-                </span>
-              )}
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={(): void =>
-                  setSelectedDays(
-                    new Set(selectedDays.size === days.length ? [] : days.map((d) => d.id)),
-                  )
-                }
-              >
-                {selectedDays.size === days.length ? t("deselectAllDays") : t("selectAllDays")}
-              </Button>
-            </div>
+            {selectedEmployeeObj && (
+              <span className="text-xs text-muted-foreground">
+                {t(earningsDescriptorKey as Parameters<typeof t>[0])}
+              </span>
+            )}
           </div>
-          {/* Pay today shortcut */}
-          {todayUnsettledDay ? (
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={isPending}
-              onClick={handlePayToday}
-              className="gap-1.5"
-            >
-              <ZapIcon className="size-3.5" aria-hidden="true" />
-              {t("payTodayShortcut")}
-            </Button>
-          ) : (
-            selectedEmployee && <p className="text-xs text-muted-foreground">{t("noTodayDay")}</p>
-          )}
           {unsettledDays.length === 0 ? (
             <p className="text-sm text-muted-foreground">{t("noUnsettledDays")}</p>
           ) : (
-            <div className="flex flex-wrap gap-2">
-              {unsettledDays.map((d) => (
+            <>
+              <div className="grid max-w-lg grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="space-y-1">
+                  <p className="text-sm font-medium" id="range-from-label">
+                    {t("rangeFrom")}
+                  </p>
+                  <p
+                    aria-labelledby="range-from-label"
+                    className="flex h-9 items-center rounded-lg border border-input bg-muted/40 px-2.5 font-mono text-sm tabular-nums"
+                  >
+                    {dayLabel(unsettledDays[0].date)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">{t("rangeFromHint")}</p>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm font-medium" htmlFor="range-end">
+                    {t("rangeTo")}
+                  </label>
+                  <NativeSelect
+                    id="range-end"
+                    value={rangeEndId}
+                    onChange={(e) => changeRangeEnd(e.target.value)}
+                    selectClassName="h-9 font-mono text-sm tabular-nums"
+                  >
+                    <option value="">{t("rangeToPlaceholder")}</option>
+                    {[...unsettledDays].reverse().map((d) => (
+                      <option key={d.id} value={d.id}>
+                        {dayLabel(d.date)}
+                      </option>
+                    ))}
+                  </NativeSelect>
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
                 <Button
-                  key={d.id}
-                  type="button"
-                  onClick={() => toggleDay(d.id)}
-                  className={`px-3 py-1 rounded-md border text-xs font-mono transition-colors ${
-                    selectedDays.has(d.id)
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "border-input hover:bg-muted/50"
-                  }`}
+                  size="sm"
+                  disabled={isPending || selectedDayIds.length === 0}
+                  onClick={() => handlePreview()}
                 >
-                  {d.date}
+                  {isPending ? (
+                    <Loader2Icon className="mr-1 size-3.5 animate-spin" aria-hidden="true" />
+                  ) : null}
+                  {t("previewDays", { count: selectedDayIds.length })}
                 </Button>
-              ))}
-            </div>
+                {todayUnsettledDay ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={isPending}
+                    onClick={handlePayThroughToday}
+                    className="gap-1.5"
+                  >
+                    <ZapIcon className="size-3.5" aria-hidden="true" />
+                    {t("payTodayShortcut")}
+                  </Button>
+                ) : (
+                  <p className="text-xs text-muted-foreground">{t("noTodayDay")}</p>
+                )}
+              </div>
+            </>
           )}
           {settledDays.length > 0 && (
             <p className="text-xs text-muted-foreground">
               {t("settledDaysNote", { count: settledDays.length })}
             </p>
-          )}
-          {selectedDays.size > 0 && (
-            <Button size="sm" variant="outline" disabled={isPending} onClick={handlePreview}>
-              {isPending ? <Loader2Icon className="size-3.5 animate-spin mr-1" /> : null}
-              {t("preview")} ({selectedDays.size} {t("days")})
-            </Button>
           )}
         </div>
       )}
@@ -294,9 +294,12 @@ export function PayrollScreen({ days, employees, history, initialEmployeeId }: P
             <div className="text-sm space-y-1">
               <div className="flex justify-between gap-4">
                 <span className="text-muted-foreground">{t("daysWorked")}</span>
-                <span>
-                  {preview.breakdown.daysWorked} / {preview.breakdown.expectedWorkDays}{" "}
-                  {t("perWeek")}
+                <span className="tabular-nums">{preview.breakdown.daysWorked}</span>
+              </div>
+              <div className="flex justify-between gap-4">
+                <span className="text-muted-foreground">{t("weeklyDayCap")}</span>
+                <span className="tabular-nums">
+                  {t("weeklyDayCapValue", { count: preview.breakdown.expectedWorkDays })}
                 </span>
               </div>
               <div className="flex justify-between gap-4">
