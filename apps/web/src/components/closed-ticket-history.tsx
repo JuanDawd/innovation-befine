@@ -38,6 +38,7 @@ import {
   type ClosedTicketRow,
   type ClosedTicketDetail,
 } from "@/app/(protected)/admin/tickets/history/actions";
+import { formatMoney } from "@/i18n";
 
 // ─── Payment method label ─────────────────────────────────────────────────────
 
@@ -293,7 +294,7 @@ export function ClosedTicketHistory({
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right font-mono tabular-nums">
-                    ${ticket.total.toLocaleString("es-CO")}
+                    {formatMoney(ticket.total)}
                   </td>
                   <td
                     className="px-4 py-3 text-right text-muted-foreground"
@@ -342,9 +343,7 @@ export function ClosedTicketHistory({
                     </div>
                   </div>
                   <div className="text-right shrink-0">
-                    <p className="font-mono tabular-nums text-sm">
-                      ${ticket.total.toLocaleString("es-CO")}
-                    </p>
+                    <p className="font-mono tabular-nums text-sm">{formatMoney(ticket.total)}</p>
                     <p className="text-xs text-muted-foreground" suppressHydrationWarning>
                       {ticket.closedAt
                         ? new Date(ticket.closedAt).toLocaleTimeString("es-CO", {
@@ -420,12 +419,12 @@ export function ClosedTicketHistory({
                           )}
                         </span>
                         <span className="font-mono tabular-nums shrink-0">
-                          ${(item.effectivePrice * item.quantity).toLocaleString("es-CO")}
+                          {formatMoney(item.effectivePrice * item.quantity)}
                         </span>
                       </div>
                       {item.quantity > 1 && (
                         <p className="text-xs text-muted-foreground">
-                          {item.quantity} × ${item.effectivePrice.toLocaleString("es-CO")}
+                          {item.quantity} × {formatMoney(item.effectivePrice)}
                         </p>
                       )}
                       {item.overridePrice !== null && (
@@ -433,7 +432,7 @@ export function ClosedTicketHistory({
                           <TriangleAlertIcon className="size-3.5 shrink-0 mt-0.5" />
                           <span>
                             {t("overrideNote", {
-                              original: item.unitPrice.toLocaleString("es-CO"),
+                              original: formatMoney(item.unitPrice),
                             })}
                             {item.overrideReason && (
                               <span className="text-muted-foreground">
@@ -458,9 +457,7 @@ export function ClosedTicketHistory({
                   {detail.payments.map((p, i) => (
                     <div key={i} className="px-3 py-2.5 flex justify-between">
                       <span>{methodLabel(p.method)}</span>
-                      <span className="font-mono tabular-nums">
-                        ${p.amount.toLocaleString("es-CO")}
-                      </span>
+                      <span className="font-mono tabular-nums">{formatMoney(p.amount)}</span>
                     </div>
                   ))}
                 </div>
@@ -469,9 +466,7 @@ export function ClosedTicketHistory({
               {/* Total */}
               <div className="flex justify-between items-center border-t pt-3 font-semibold">
                 <span>{t("detailTotal")}</span>
-                <span className="font-mono tabular-nums text-lg">
-                  ${detail.total.toLocaleString("es-CO")}
-                </span>
+                <span className="font-mono tabular-nums text-lg">{formatMoney(detail.total)}</span>
               </div>
 
               {/* Reopen action */}

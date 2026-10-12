@@ -28,6 +28,7 @@ import {
 } from "@/app/(protected)/tickets/actions";
 import { listActiveServices } from "@/app/(protected)/admin/catalog/actions/services";
 import { NativeSelect } from "@/components/ui/native-select";
+import { formatMoney } from "@/i18n";
 
 type ServiceVariant = {
   id: string;
@@ -209,8 +210,8 @@ export function LogServiceForm({
           </NativeSelect>
           {selectedVariant && (
             <p className="text-xs text-muted-foreground">
-              {t("price")}: ${selectedVariant.customerPrice.toLocaleString("es-CO")} ·{" "}
-              {t("commission")}: {selectedVariant.commissionPct}%
+              {t("price")}: {formatMoney(selectedVariant.customerPrice)} · {t("commission")}:{" "}
+              {selectedVariant.commissionPct}%
             </p>
           )}
         </div>

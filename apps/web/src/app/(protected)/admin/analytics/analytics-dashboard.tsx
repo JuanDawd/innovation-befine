@@ -38,12 +38,9 @@ import {
   type EmployeeDrillDownResult,
 } from "./actions";
 import type { EarningsByEmployee } from "@befine/db";
+import { formatCount, formatMoney } from "@/i18n";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function formatCOP(n: number): string {
-  return "$" + n.toLocaleString("es-CO");
-}
 
 function delta(
   current: number,
@@ -94,7 +91,7 @@ function MetricCard({
     <div className="rounded-xl border p-4 space-y-1">
       <p className="text-xs text-muted-foreground">{label}</p>
       <p className={`text-2xl font-bold ${mono ? "font-mono tabular-nums" : ""}`}>
-        {mono ? formatCOP(value) : value.toLocaleString("es-CO")}
+        {mono ? formatMoney(value) : formatCount(value)}
       </p>
       <DeltaIndicator current={value} prior={priorValue} />
     </div>
@@ -121,10 +118,7 @@ function ComparisonChart({
       <BarChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
         <XAxis dataKey="metric" tick={{ fontSize: 11 }} />
         <YAxis hide />
-        <Tooltip
-          formatter={(v: unknown) => Number(v).toLocaleString("es-CO")}
-          labelStyle={{ fontSize: 11 }}
-        />
+        <Tooltip formatter={(v: unknown) => formatCount(Number(v))} labelStyle={{ fontSize: 11 }} />
         <Bar dataKey="current" fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} name="Actual" />
         <Bar
           dataKey="prior"
@@ -173,7 +167,7 @@ function EmployeeRow({
         <td className="px-3 py-2 text-xs text-muted-foreground capitalize">{emp.role}</td>
         <td className="px-3 py-2 text-sm text-right tabular-nums">{emp.jobCount}</td>
         <td className="px-3 py-2 text-sm text-right tabular-nums font-mono">
-          {emp.totalEarnings > 0 ? formatCOP(emp.totalEarnings) : "—"}
+          {emp.totalEarnings > 0 ? formatMoney(emp.totalEarnings) : "—"}
         </td>
         <td className="px-3 py-2 text-center">
           {open ? (
@@ -197,7 +191,7 @@ function EmployeeRow({
                     <XAxis dataKey="date" hide />
                     <YAxis hide />
                     <Tooltip
-                      formatter={(v: unknown) => formatCOP(Number(v))}
+                      formatter={(v: unknown) => formatMoney(Number(v))}
                       labelStyle={{ fontSize: 10 }}
                     />
                     <Line
@@ -214,7 +208,7 @@ function EmployeeRow({
                     {drillDown.days.map((d) => (
                       <tr key={d.businessDayId} className="border-t">
                         <td className="py-0.5 text-muted-foreground">{d.date}</td>
-                        <td className="py-0.5 text-right font-mono">{formatCOP(d.earnings)}</td>
+                        <td className="py-0.5 text-right font-mono">{formatMoney(d.earnings)}</td>
                         <td className="py-0.5 text-right text-muted-foreground">
                           {d.jobs} trabajos
                         </td>
@@ -339,7 +333,7 @@ function EmployeeTable({
                   />
                 </div>
                 <span className="font-mono text-muted-foreground w-24 text-right">
-                  {formatCOP(emp.totalEarnings)}
+                  {formatMoney(emp.totalEarnings)}
                 </span>
               </div>
             ))}
@@ -567,7 +561,7 @@ export function AnalyticsDashboard({ initialData }: { initialData: AnalyticsSumm
                   />
                   <YAxis hide />
                   <Tooltip
-                    formatter={(v: unknown) => formatCOP(Number(v))}
+                    formatter={(v: unknown) => formatMoney(Number(v))}
                     labelStyle={{ fontSize: 10 }}
                   />
                   <Bar

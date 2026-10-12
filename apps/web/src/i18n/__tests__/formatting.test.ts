@@ -2,25 +2,28 @@ import { describe, it, expect } from "vitest";
 import { formatMoney, formatDate, formatPercent, formatCount } from "../formatting";
 
 describe("formatMoney", () => {
-  it("formats COP amounts in Spanish locale", () => {
-    const result = formatMoney(12500, "es");
-    expect(result).toMatch(/12[.,\s]500/);
-    expect(result).not.toMatch(/[.,]\d{1,2}$/);
+  it("formats COP amounts in Spanish locale as $12.500", () => {
+    expect(formatMoney(12500, "es")).toBe("$12.500");
+  });
+
+  it("defaults to Spanish", () => {
+    expect(formatMoney(12500)).toBe("$12.500");
   });
 
   it("formats zero", () => {
-    const result = formatMoney(0, "es");
-    expect(result).toMatch(/0/);
+    expect(formatMoney(0, "es")).toBe("$0");
   });
 
   it("formats large amounts", () => {
-    const result = formatMoney(1000000, "es");
-    expect(result).toMatch(/1[.,\s]000[.,\s]000/);
+    expect(formatMoney(1000000, "es")).toBe("$1.000.000");
+  });
+
+  it("puts the sign before the peso symbol", () => {
+    expect(formatMoney(-12500, "es")).toBe("-$12.500");
   });
 
   it("formats in English locale", () => {
-    const result = formatMoney(12500, "en");
-    expect(result).toMatch(/12[.,\s]500/);
+    expect(formatMoney(12500, "en")).toBe("$12,500");
   });
 });
 

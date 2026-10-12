@@ -27,6 +27,7 @@ import {
   type ActiveServiceVariant,
 } from "@/app/(protected)/tickets/edit-requests/actions";
 import { NativeSelect } from "@/components/ui/native-select";
+import { formatMoney } from "@/i18n";
 
 interface Props {
   ticketItemId: string;
@@ -142,7 +143,7 @@ export function RequestEditDialog({
                   <option value="">{t("variantPlaceholder")}</option>
                   {variants.map((v) => (
                     <option key={v.id} value={v.id}>
-                      {v.serviceName} — {v.name} (${v.customerPrice.toLocaleString("es-CO")})
+                      {v.serviceName} — {v.name} ({formatMoney(v.customerPrice)})
                     </option>
                   ))}
                 </NativeSelect>

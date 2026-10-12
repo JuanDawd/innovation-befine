@@ -37,6 +37,7 @@ import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
 import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
 import { revalidatePath } from "next/cache";
+import { formatMoney } from "@/i18n";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -284,7 +285,7 @@ export async function editLargeOrder(
       success: false,
       error: {
         code: "VALIDATION_ERROR",
-        message: `El precio total no puede ser menor a lo ya pagado ($${totalPaid.toLocaleString("es-CO")})`,
+        message: `El precio total no puede ser menor a lo ya pagado (${formatMoney(totalPaid)})`,
       },
     };
 
@@ -411,7 +412,7 @@ export async function transitionLargeOrder(
         success: false,
         error: {
           code: "CONFLICT",
-          message: `Este pedido tiene pagos registrados por $${totalPaid.toLocaleString("es-CO")}. Confirma que has revisado la política de reembolso antes de cancelar.`,
+          message: `Este pedido tiene pagos registrados por ${formatMoney(totalPaid)}. Confirma que has revisado la política de reembolso antes de cancelar.`,
         },
       };
 
@@ -627,7 +628,7 @@ export async function recordLargeOrderPayment(
         success: false,
         error: {
           code: "VALIDATION_ERROR",
-          message: `El monto excede el saldo pendiente ($${Number(remaining).toLocaleString("es-CO")})`,
+          message: `El monto excede el saldo pendiente (${formatMoney(Number(remaining))})`,
         },
       };
     }

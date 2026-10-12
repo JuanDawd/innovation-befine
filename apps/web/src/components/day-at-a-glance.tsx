@@ -16,6 +16,7 @@ import { listOpenTickets, type DashboardTicket } from "@/app/(protected)/tickets
 import { getDayStats, type DayStats } from "@/app/(protected)/cashier/actions/day-stats";
 import { queryKeys } from "@/lib/query-keys";
 import { unwrap } from "@/lib/action-query";
+import { formatMoney } from "@/i18n";
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -106,7 +107,7 @@ export function DayAtAGlance({ initialStats, initialOpenTickets }: DayAtAGlanceP
         <StatCard
           icon={TrendingUpIcon}
           label={t("revenueToday")}
-          value={`$${stats.revenue.toLocaleString("es-CO")}`}
+          value={formatMoney(stats.revenue)}
           sub={t("revenueSubOpen")}
           accent={stats.revenue > 0}
         />

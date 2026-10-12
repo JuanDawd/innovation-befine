@@ -17,6 +17,7 @@ import {
 } from "@/app/(protected)/cashier/actions/cloth-sales";
 import { Button } from "@/components/ui/button";
 import { NativeSelect } from "@/components/ui/native-select";
+import { formatMoney } from "@/i18n";
 
 interface SellClothPieceModalProps {
   open: boolean;
@@ -103,7 +104,7 @@ export function SellClothPieceModal({ open, onOpenChange, ticketId }: SellClothP
         toast.error(res.error.message);
         return;
       }
-      toast.success(`Venta registrada — $${res.data.effectiveTotal.toLocaleString("es-CO")}`);
+      toast.success(`Venta registrada — ${formatMoney(res.data.effectiveTotal)}`);
       notifyDataChanged("clothSales", "tickets", "businessDay");
       reset();
       onOpenChange(false);
@@ -165,7 +166,7 @@ export function SellClothPieceModal({ open, onOpenChange, ticketId }: SellClothP
                     <option key={v.id} value={v.id}>
                       {v.name}
                       {v.sellingPrice != null
-                        ? ` — $${v.sellingPrice.toLocaleString("es-CO")}`
+                        ? ` — ${formatMoney(v.sellingPrice)}`
                         : " — sin precio"}
                     </option>
                   ))}
@@ -194,7 +195,7 @@ export function SellClothPieceModal({ open, onOpenChange, ticketId }: SellClothP
                     Precio unit.{" "}
                     {basePrice != null && (
                       <span className="text-xs font-normal text-muted-foreground">
-                        (base ${basePrice.toLocaleString("es-CO")})
+                        (base {formatMoney(basePrice)})
                       </span>
                     )}
                   </label>
@@ -216,7 +217,7 @@ export function SellClothPieceModal({ open, onOpenChange, ticketId }: SellClothP
             {total != null && (
               <div className="flex items-center justify-between rounded-md bg-muted/40 px-3 py-2 text-sm">
                 <span className="text-muted-foreground">Total</span>
-                <span className="font-mono font-semibold">${total.toLocaleString("es-CO")}</span>
+                <span className="font-mono font-semibold">{formatMoney(total)}</span>
               </div>
             )}
 

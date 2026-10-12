@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { getMyEarnings } from "@/app/(protected)/admin/payroll/actions";
 import { redirect } from "next/navigation";
+import { formatMoney } from "@/i18n";
 
 export async function MyEarningsView({ roleHome }: { roleHome: string }) {
   const t = await getTranslations("payroll");
@@ -38,9 +39,7 @@ export async function MyEarningsView({ roleHome }: { roleHome: string }) {
         ).map(({ label, amount }) => (
           <div key={label} className="rounded-md border p-3 space-y-1 text-center">
             <p className="text-xs text-muted-foreground">{label}</p>
-            <p className="font-mono tabular-nums font-semibold text-sm">
-              ${amount.toLocaleString("es-CO")}
-            </p>
+            <p className="font-mono tabular-nums font-semibold text-sm">{formatMoney(amount)}</p>
           </div>
         ))}
       </div>
@@ -68,7 +67,7 @@ export async function MyEarningsView({ roleHome }: { roleHome: string }) {
                       })}
                     </td>
                     <td className="px-3 py-2 text-right font-mono tabular-nums">
-                      ${p.amount.toLocaleString("es-CO")}
+                      {formatMoney(p.amount)}
                     </td>
                     <td className="px-3 py-2 capitalize">{p.method}</td>
                   </tr>

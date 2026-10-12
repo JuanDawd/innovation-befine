@@ -9,6 +9,7 @@ import { createLargeOrder, type ClientOption } from "./actions";
 import type { ClothPieceRow } from "@/app/(protected)/admin/catalog/actions/cloth-pieces";
 import { LineAccordion, buildDescription, type OrderLine } from "./line-accordion";
 import { NativeSelect } from "@/components/ui/native-select";
+import { formatMoney } from "@/i18n";
 
 type Props = {
   clients: ClientOption[];
@@ -219,7 +220,7 @@ export function CreateLargeOrderForm({ clients, clothPieces }: Props) {
       {grandTotal > 0 && (
         <div className="flex items-center justify-between rounded-md bg-muted/50 px-3 py-2 text-sm">
           <span className="text-muted-foreground">{t("grandTotal")}</span>
-          <span className="font-mono font-semibold">${grandTotal.toLocaleString("es-CO")}</span>
+          <span className="font-mono font-semibold">{formatMoney(grandTotal)}</span>
         </div>
       )}
 

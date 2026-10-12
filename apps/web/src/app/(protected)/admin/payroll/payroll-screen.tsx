@@ -16,6 +16,7 @@ import {
 } from "./actions";
 import type { EmployeeOption } from "../absences/actions";
 import { NativeSelect } from "@/components/ui/native-select";
+import { formatMoney } from "@/i18n";
 
 type Props = {
   days: BusinessDayOption[];
@@ -269,9 +270,7 @@ export function PayrollScreen({ days, employees, history, initialEmployeeId }: P
                     <span className="text-muted-foreground">
                       {line.serviceName ?? "Servicio"} ×{line.quantity}
                     </span>
-                    <span className="font-mono tabular-nums">
-                      ${line.earnings.toLocaleString("es-CO")}
-                    </span>
+                    <span className="font-mono tabular-nums">{formatMoney(line.earnings)}</span>
                   </div>
                 ),
               )}
@@ -285,9 +284,7 @@ export function PayrollScreen({ days, employees, history, initialEmployeeId }: P
                   <span className="text-muted-foreground">
                     {line.pieceName} ×{line.quantity}
                   </span>
-                  <span className="font-mono tabular-nums">
-                    ${line.earnings.toLocaleString("es-CO")}
-                  </span>
+                  <span className="font-mono tabular-nums">{formatMoney(line.earnings)}</span>
                 </div>
               ))}
             </div>
@@ -304,9 +301,7 @@ export function PayrollScreen({ days, employees, history, initialEmployeeId }: P
               </div>
               <div className="flex justify-between gap-4">
                 <span className="text-muted-foreground">{t("dailyRate")}</span>
-                <span className="font-mono">
-                  ${preview.breakdown.dailyRate.toLocaleString("es-CO")}
-                </span>
+                <span className="font-mono">{formatMoney(preview.breakdown.dailyRate)}</span>
               </div>
             </div>
           )}
@@ -314,7 +309,7 @@ export function PayrollScreen({ days, employees, history, initialEmployeeId }: P
           <div className="border-t pt-3 flex items-center justify-between">
             <span className="text-sm font-medium">{t("computed")}</span>
             <span className="font-mono tabular-nums font-semibold">
-              ${preview.computedAmount.toLocaleString("es-CO")}
+              {formatMoney(preview.computedAmount)}
             </span>
           </div>
 
@@ -434,7 +429,7 @@ export function PayrollScreen({ days, employees, history, initialEmployeeId }: P
                   <tr key={p.id} className="hover:bg-muted/20">
                     <td className="px-3 py-2 font-medium">{p.employeeName}</td>
                     <td className="px-3 py-2 text-right font-mono tabular-nums">
-                      ${p.amount.toLocaleString("es-CO")}
+                      {formatMoney(p.amount)}
                       {p.adjustmentReason && (
                         <span
                           className="ml-1 text-xs text-status-attention-foreground"

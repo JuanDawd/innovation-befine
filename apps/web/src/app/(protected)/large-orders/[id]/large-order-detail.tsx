@@ -53,6 +53,7 @@ import {
   type ProductionUserContext,
 } from "../assignment-actions";
 import { NativeSelect } from "@/components/ui/native-select";
+import { formatMoney } from "@/i18n";
 
 const PRODUCTION_COLLAPSE_KEY = "production-section-collapsed";
 
@@ -381,9 +382,7 @@ export function LargeOrderDetail({
           {editGrandTotal > 0 && (
             <div className="flex items-center justify-between rounded-md bg-muted/50 px-3 py-2 text-sm">
               <span className="text-muted-foreground">{t("grandTotal")}</span>
-              <span className="font-mono font-semibold">
-                ${editGrandTotal.toLocaleString("es-CO")}
-              </span>
+              <span className="font-mono font-semibold">{formatMoney(editGrandTotal)}</span>
             </div>
           )}
 
@@ -477,13 +476,13 @@ export function LargeOrderDetail({
               <div className="px-4 py-3 text-center">
                 <p className="text-xs text-muted-foreground mb-1">{t("totalPrice")}</p>
                 <p className="font-mono font-semibold tabular-nums">
-                  ${order.totalPrice.toLocaleString("es-CO")}
+                  {formatMoney(order.totalPrice)}
                 </p>
               </div>
               <div className="px-4 py-3 text-center">
                 <p className="text-xs text-muted-foreground mb-1">{t("colPaid")}</p>
                 <p className="font-mono font-semibold tabular-nums text-status-success-foreground">
-                  ${order.totalPaid.toLocaleString("es-CO")}
+                  {formatMoney(order.totalPaid)}
                 </p>
               </div>
               <div className="px-4 py-3 text-center">
@@ -495,7 +494,7 @@ export function LargeOrderDetail({
                       : "text-status-success-foreground"
                   }`}
                 >
-                  ${order.balanceDue.toLocaleString("es-CO")}
+                  {formatMoney(order.balanceDue)}
                 </p>
               </div>
             </div>
@@ -610,7 +609,7 @@ export function LargeOrderDetail({
                 </p>
                 <p className="text-status-attention-foreground">
                   {t("cancelDepositAmount", {
-                    amount: `$${order.totalPaid.toLocaleString("es-CO")}`,
+                    amount: formatMoney(order.totalPaid),
                   })}
                 </p>
                 <label className="flex items-center gap-2 cursor-pointer mt-2">
@@ -764,7 +763,7 @@ export function LargeOrderDetail({
                       })}
                     </td>
                     <td className="px-4 py-2.5 text-right font-mono tabular-nums font-medium">
-                      ${p.amount.toLocaleString("es-CO")}
+                      {formatMoney(p.amount)}
                     </td>
                     <td className="px-4 py-2.5 capitalize text-sm">
                       {t(p.method as Parameters<typeof t>[0])}

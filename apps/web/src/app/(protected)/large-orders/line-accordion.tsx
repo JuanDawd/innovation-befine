@@ -5,6 +5,7 @@ import { Trash2Icon, ChevronDownIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ClothPieceRow } from "@/app/(protected)/admin/catalog/actions/cloth-pieces";
 import { NativeSelect } from "@/components/ui/native-select";
+import { formatMoney } from "@/i18n";
 
 export type OrderLine = {
   key: number;
@@ -100,7 +101,7 @@ export function LineAccordion({
         <div className="flex shrink-0 items-center gap-2 ml-2">
           {lineTotal > 0 && !open && (
             <span className="text-xs font-mono text-muted-foreground">
-              ${lineTotal.toLocaleString("es-CO")}
+              {formatMoney(lineTotal)}
             </span>
           )}
           <ChevronDownIcon
@@ -256,9 +257,7 @@ export function LineAccordion({
 
           <div className="flex items-center justify-between">
             {lineTotal > 0 && (
-              <span className="text-sm font-mono font-semibold">
-                ${lineTotal.toLocaleString("es-CO")}
-              </span>
+              <span className="text-sm font-mono font-semibold">{formatMoney(lineTotal)}</span>
             )}
             <button
               type="button"

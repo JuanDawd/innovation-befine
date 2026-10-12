@@ -53,10 +53,7 @@ import {
   deactivateClothPieceVariant,
   restoreClothPieceVariant,
 } from "@/app/(protected)/admin/catalog/actions/cloth-pieces";
-
-function formatCOP(amount: number): string {
-  return `$${amount.toLocaleString("es-CO")}`;
-}
+import { formatMoney } from "@/i18n";
 
 // ─── Variant form schema ──────────────────────────────────────────────────────
 
@@ -157,11 +154,11 @@ function VariantRow({
             className="font-mono tabular-nums text-xs text-muted-foreground"
             title="Tarifa costurera"
           >
-            {formatCOP(variant.pieceRate)}
+            {formatMoney(variant.pieceRate)}
           </span>
           {variant.sellingPrice != null && (
             <span className="font-mono tabular-nums text-xs font-medium" title="Precio de venta">
-              {formatCOP(variant.sellingPrice)}
+              {formatMoney(variant.sellingPrice)}
             </span>
           )}
           <button

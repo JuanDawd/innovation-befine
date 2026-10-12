@@ -50,12 +50,9 @@ import {
   checkVariantOpenTickets,
   checkServiceOpenTickets,
 } from "@/app/(protected)/admin/catalog/actions/services";
+import { formatMoney } from "@/i18n";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function formatCOP(amount: number): string {
-  return `$${amount.toLocaleString("es-CO")}`;
-}
 
 // ─── Create Service Dialog ────────────────────────────────────────────────────
 
@@ -869,7 +866,7 @@ function ServiceCard({
                         </div>
                         <div className="flex items-center gap-3">
                           <span className="font-mono tabular-nums text-xs">
-                            {formatCOP(v.customerPrice)}
+                            {formatMoney(v.customerPrice)}
                           </span>
                           <span className="text-xs text-muted-foreground">
                             {parseFloat(v.commissionPct).toFixed(1)}%

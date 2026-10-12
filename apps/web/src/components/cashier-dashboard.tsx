@@ -27,6 +27,7 @@ import {
 } from "@/app/(protected)/tickets/actions";
 import { Button } from "@/components/ui/button";
 import { optimisticStatusReducer } from "./cashier-dashboard-helpers";
+import { formatMoney } from "@/i18n";
 
 type TicketsByEmployee = Map<string, { employeeName: string; tickets: DashboardTicket[] }>;
 
@@ -178,7 +179,7 @@ export function CashierDashboard({ initialTickets }: { initialTickets: Dashboard
                       className="font-mono tabular-nums text-xs text-muted-foreground"
                       suppressHydrationWarning
                     >
-                      ${(ticket.unitPrice * ticket.quantity).toLocaleString("es-CO")}
+                      {formatMoney(ticket.unitPrice * ticket.quantity)}
                     </p>
                     <p className="text-xs text-muted-foreground" suppressHydrationWarning>
                       {elapsed(ticket.createdAt)}

@@ -37,6 +37,7 @@ import {
   type CheckoutSummary,
 } from "@/app/(protected)/cashier/checkout/actions";
 import { NativeSelect } from "@/components/ui/native-select";
+import { formatMoney } from "@/i18n";
 
 type PaymentLine = { method: "cash" | "card" | "transfer"; amount: string };
 
@@ -45,10 +46,6 @@ const METHOD_LABELS: Record<"cash" | "card" | "transfer", string> = {
   card: "Tarjeta",
   transfer: "Transferencia",
 };
-
-function formatCOP(n: number) {
-  return "$" + n.toLocaleString("es-CO");
-}
 
 // Override state per ticket item
 type OverrideEdit = { price: string; reason: string; saving: boolean };
@@ -197,19 +194,19 @@ export function CheckoutForm({ onClose }: { onClose?: () => void } = {}) {
                   {li.overridePrice !== null ? (
                     <span>
                       <span className="line-through text-muted-foreground mr-1">
-                        {formatCOP(li.unitPrice)}
+                        {formatMoney(li.unitPrice)}
                       </span>
-                      {formatCOP(li.overridePrice)}
+                      {formatMoney(li.overridePrice)}
                     </span>
                   ) : (
-                    formatCOP((li.overridePrice ?? li.unitPrice) * li.quantity)
+                    formatMoney((li.overridePrice ?? li.unitPrice) * li.quantity)
                   )}
                 </span>
               </div>
             ))}
             <div className="flex justify-between text-sm font-semibold border-t pt-1">
               <span>Subtotal</span>
-              <span className="font-mono tabular-nums">{formatCOP(t.total)}</span>
+              <span className="font-mono tabular-nums">{formatMoney(t.total)}</span>
             </div>
           </div>
         ))}
@@ -217,12 +214,12 @@ export function CheckoutForm({ onClose }: { onClose?: () => void } = {}) {
         <div className="rounded-lg border p-4 space-y-1">
           <div className="flex justify-between font-bold">
             <span>Total</span>
-            <span className="font-mono tabular-nums">{formatCOP(summary.grandTotal)}</span>
+            <span className="font-mono tabular-nums">{formatMoney(summary.grandTotal)}</span>
           </div>
           {summary.payments.map((p, i) => (
             <div key={i} className="flex justify-between text-sm text-muted-foreground">
               <span>{METHOD_LABELS[p.method as keyof typeof METHOD_LABELS] ?? p.method}</span>
-              <span className="font-mono tabular-nums">{formatCOP(p.amount)}</span>
+              <span className="font-mono tabular-nums">{formatMoney(p.amount)}</span>
             </div>
           ))}
         </div>
@@ -289,11 +286,11 @@ export function CheckoutForm({ onClose }: { onClose?: () => void } = {}) {
                       <div className="flex items-center gap-1 shrink-0">
                         {li.overridePrice !== null && (
                           <span className="text-xs line-through text-muted-foreground">
-                            {formatCOP(li.unitPrice)}
+                            {formatMoney(li.unitPrice)}
                           </span>
                         )}
                         <span className="font-mono tabular-nums text-xs">
-                          {formatCOP(effectivePrice * li.quantity)}
+                          {formatMoney(effectivePrice * li.quantity)}
                         </span>
                         <button
                           type="button"
@@ -369,7 +366,7 @@ export function CheckoutForm({ onClose }: { onClose?: () => void } = {}) {
                 );
               })}
             </div>
-            <span className="font-mono tabular-nums text-sm shrink-0">{formatCOP(t.total)}</span>
+            <span className="font-mono tabular-nums text-sm shrink-0">{formatMoney(t.total)}</span>
           </label>
         ))}
       </section>
@@ -377,7 +374,7 @@ export function CheckoutForm({ onClose }: { onClose?: () => void } = {}) {
       {/* Total */}
       <div className="flex justify-between rounded-lg border bg-muted/40 px-4 py-3 font-semibold">
         <span>Total a cobrar</span>
-        <span className="font-mono tabular-nums">{formatCOP(grandTotal)}</span>
+        <span className="font-mono tabular-nums">{formatMoney(grandTotal)}</span>
       </div>
 
       {/* Payments */}
@@ -430,7 +427,7 @@ export function CheckoutForm({ onClose }: { onClose?: () => void } = {}) {
         ))}
         {paymentSum !== grandTotal && grandTotal > 0 && (
           <p className="text-xs text-destructive">
-            Faltan {formatCOP(grandTotal - paymentSum)} por asignar
+            Faltan {formatMoney(grandTotal - paymentSum)} por asignar
           </p>
         )}
         <Button type="button" variant="outline" size="sm" onClick={addPaymentRow}>
@@ -454,7 +451,7 @@ export function CheckoutForm({ onClose }: { onClose?: () => void } = {}) {
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>¿Confirmar cobro de {formatCOP(grandTotal)}?</DialogTitle>
+            <DialogTitle>¿Confirmar cobro de {formatMoney(grandTotal)}?</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
             Se cerrarán {selected.length} ticket{selected.length !== 1 ? "s" : ""} y se registrará

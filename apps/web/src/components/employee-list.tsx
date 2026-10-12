@@ -42,6 +42,7 @@ import {
 } from "@/app/(protected)/admin/employees/actions/update-employee";
 import { previewEarnings } from "@/app/(protected)/admin/payroll/actions";
 import { NativeSelect } from "@/components/ui/native-select";
+import { formatMoney } from "@/i18n";
 
 const STYLIST_SUBTYPES = [
   { value: "hairdresser" },
@@ -526,9 +527,7 @@ export function EmployeeList({ initialEmployees }: EmployeeListProps) {
             {computedTermination !== null && (
               <p className="text-sm text-muted-foreground">
                 {t("terminateComputed")}:{" "}
-                <span className="font-mono font-semibold">
-                  ${computedTermination.toLocaleString("es-CO")}
-                </span>
+                <span className="font-mono font-semibold">{formatMoney(computedTermination)}</span>
               </p>
             )}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

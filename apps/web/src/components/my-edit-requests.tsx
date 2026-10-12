@@ -24,9 +24,10 @@ import {
 import { transitionToAwaitingPayment } from "@/app/(protected)/tickets/actions";
 import { RequestEditDialog } from "@/components/request-edit-dialog";
 import { Button } from "@/components/ui/button";
+import { formatMoney } from "@/i18n";
 
 function formatPrice(n: number) {
-  return `$${n.toLocaleString("es-CO")}`;
+  return formatMoney(n);
 }
 
 function formatTime(d: Date) {

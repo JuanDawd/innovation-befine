@@ -9,6 +9,7 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import type { LargeOrderListRow } from "./actions";
 import { NativeSelect } from "@/components/ui/native-select";
+import { formatMoney } from "@/i18n";
 
 type Props = { orders: LargeOrderListRow[] };
 
@@ -76,7 +77,7 @@ export function LargeOrdersTable({ orders }: Props) {
                   {order.description}
                 </td>
                 <td className="px-4 py-2 text-right font-mono tabular-nums">
-                  ${order.totalPrice.toLocaleString("es-CO")}
+                  {formatMoney(order.totalPrice)}
                 </td>
                 <td className="px-4 py-2 text-right font-mono tabular-nums">
                   <span
@@ -89,7 +90,7 @@ export function LargeOrdersTable({ orders }: Props) {
                           : ""
                     }
                   >
-                    ${order.balanceDue.toLocaleString("es-CO")}
+                    {formatMoney(order.balanceDue)}
                   </span>
                 </td>
                 <td className="px-4 py-2">
