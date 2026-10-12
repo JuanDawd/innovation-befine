@@ -1829,7 +1829,7 @@
 ### L-50 — Untranslated strings (raw enum keys / English)
 
 - **Severity:** Low
-- **Status:** Open
+- **Status:** Resolved (2026-10-12) — `StatusBadge` labels come from the `status` namespace (never the raw key); product piece and large-order detail badges, "Nueva cita" stylist subtypes, analytics role column, earnings payout method, appointment statuses all translated; "Analytics" → "Analítica"
 - **Affected:** "Nueva cita" stylist select (`masseuse`, `makeup_artist`, `spa_manager`…), product detail piece status (`initial`), large-order status badge (`pending`, `in production`), admin sidebar + page title "Analytics", Analytics "Por empleado" role column (`Secretary`, `Stylist`)
 - **Description:** Source: training-manual walkthrough with agent-browser, 2026-10-11 (demo data, homelab CT 110). These bypass `next-intl` while the rest of the UI is Spanish (e.g. "Crear empleado" translates the same subtypes correctly).
 - **Fix:** Map enums through translation keys; add an i18n lint for raw enum rendering.
@@ -1970,3 +1970,4 @@
 | H-46     | 2026-10-11    | Better Auth `customRules["/sign-in/email"]` 30/60 s; k6 login storm 18/18 OK                             | load test (uncommitted)      |
 | H-47     | 2026-10-11    | `WS_NO_BUFFER_UTIL` inlined via next.config `env`; 0 `b.mask` crashes in k6 run                          | load test (uncommitted)      |
 | M-57     | 2026-10-11    | Not reproducible on healthy rig — SSE streams close at 25 s                                              | load test                    |
+| L-50     | 2026-10-12    | StatusBadge translates via `status` ns; subtypes/roles/methods via next-intl; "Analítica"                | feat/design-system           |

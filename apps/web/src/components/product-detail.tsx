@@ -21,19 +21,6 @@ import { updateProductPieceSchema, type UpdateProductPieceInput } from "@befine/
 import type { ProductDetailRow, ProductPieceDetailRow } from "@befine/db";
 import { PageHeader } from "@/components/page-header";
 
-// ─── Piece status mapping ─────────────────────────────────────────────────────
-
-function pieceBadgeStatus(status: ProductPieceDetailRow["status"]): string {
-  switch (status) {
-    case "pending":
-      return "initial";
-    case "done_pending_approval":
-      return "attention";
-    case "approved":
-      return "success";
-  }
-}
-
 function deriveProductStatus(pieces: ProductPieceDetailRow[]): ProductStatusKey {
   if (pieces.length === 0) return "not_started";
   const approved = pieces.filter((p) => p.status === "approved").length;
@@ -349,7 +336,7 @@ export function ProductDetail({ initialData, isEditor, backHref }: Props) {
                   </span>
                 </td>
                 <td className="px-3 py-2.5">
-                  <StatusBadge status={pieceBadgeStatus(piece.status)} />
+                  <StatusBadge status={piece.status} />
                 </td>
                 {isEditor && (
                   <td className="px-3 py-2.5">

@@ -141,6 +141,7 @@ function EmployeeRow({
   emp: EarningsByEmployee;
   period: "day" | "week" | "month";
 }) {
+  const tRoles = useTranslations("roles");
   const [open, setOpen] = useState(false);
   const [drillDown, setDrillDown] = useState<EmployeeDrillDownResult | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -165,7 +166,9 @@ function EmployeeRow({
     <>
       <tr className="hover:bg-muted/40 cursor-pointer transition-colors" onClick={toggleDrillDown}>
         <td className="px-3 py-2 text-sm font-medium">{emp.employeeName}</td>
-        <td className="px-3 py-2 text-xs text-muted-foreground capitalize">{emp.role}</td>
+        <td className="px-3 py-2 text-xs text-muted-foreground">
+          {tRoles.has(emp.role) ? tRoles(emp.role) : emp.role}
+        </td>
         <td className="px-3 py-2 text-sm text-right tabular-nums">{emp.jobCount}</td>
         <td className="px-3 py-2 text-sm text-right tabular-nums font-mono">
           {emp.totalEarnings > 0 ? formatMoney(emp.totalEarnings) : "—"}

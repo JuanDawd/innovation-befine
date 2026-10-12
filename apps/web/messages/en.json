@@ -83,7 +83,8 @@
     "paid_in_full": "Paid in full",
     "completed": "Completed",
     "cancelled": "Cancelled",
-    "no_show": "No-show"
+    "no_show": "No-show",
+    "ready": "Ready"
   },
   "businessDay": {
     "open": "Open day",

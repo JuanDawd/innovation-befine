@@ -55,6 +55,7 @@ export function BookAppointmentForm({
 }) {
   const t = useTranslations("appointments");
   const tc = useTranslations("common");
+  const tSubtype = useTranslations("stylistSubtypes");
   const router = useRouter();
 
   const {
@@ -196,7 +197,9 @@ export function BookAppointmentForm({
           {stylists.map((s) => (
             <option key={s.id} value={s.id}>
               {s.name}
-              {s.stylistSubtype ? ` — ${s.stylistSubtype}` : ""}
+              {s.stylistSubtype && tSubtype.has(s.stylistSubtype)
+                ? ` — ${tSubtype(s.stylistSubtype)}`
+                : ""}
             </option>
           ))}
         </NativeSelect>

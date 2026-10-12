@@ -70,7 +70,7 @@ export async function MyEarningsView({ roleHome }: { roleHome: string }) {
                     <td className="px-3 py-2 text-right font-mono tabular-nums">
                       {formatMoney(p.amount)}
                     </td>
-                    <td className="px-3 py-2 capitalize">{p.method}</td>
+                    <td className="px-3 py-2">{t.has(p.method) ? t(p.method) : p.method}</td>
                   </tr>
                 ))}
               </tbody>

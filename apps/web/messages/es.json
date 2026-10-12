@@ -84,7 +84,8 @@
     "paid_in_full": "Pagado completo",
     "completed": "Completado",
     "cancelled": "Cancelado",
-    "no_show": "No se presentó"
+    "no_show": "No se presentó",
+    "ready": "Listo"
   },
   "businessDay": {
     "open": "Abrir día",
@@ -672,7 +673,7 @@
     "confirmPayoutDescription": "Esta acción registrará el pago de forma permanente. No se puede deshacer."
   },
   "analytics": {
-    "pageTitle": "Analytics",
+    "pageTitle": "Analítica",
     "period_day": "Hoy",
     "period_week": "Esta semana",
     "period_month": "Este mes",
@@ -837,7 +838,7 @@
     "largeOrders": "Pedidos grandes",
     "absences": "Ausencias",
     "payroll": "Nómina",
-    "analytics": "Analytics",
+    "analytics": "Analítica",
     "myEarnings": "Mis ganancias",
     "openMenu": "Abrir menú",
     "closeMenu": "Cerrar menú",
