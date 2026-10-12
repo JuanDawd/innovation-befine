@@ -281,7 +281,7 @@ export function ClientSearchWidget({
             )}
           </div>
           {client.noShowCount >= NO_SHOW_WARNING_THRESHOLD && (
-            <span className="flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 shrink-0">
+            <span className="flex items-center gap-1 rounded-full bg-status-attention px-2 py-0.5 text-xs font-medium text-status-attention-foreground shrink-0">
               <AlertTriangleIcon className="size-3" aria-hidden="true" />
               {t("noShowWarning", { count: client.noShowCount })}
             </span>
@@ -434,7 +434,7 @@ export function ClientSearchWidget({
                     )}
                   </div>
                   {client.noShowCount >= NO_SHOW_WARNING_THRESHOLD && (
-                    <span className="flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 shrink-0">
+                    <span className="flex items-center gap-1 rounded-full bg-status-attention px-2 py-0.5 text-xs font-medium text-status-attention-foreground shrink-0">
                       <AlertTriangleIcon className="size-3" aria-hidden="true" />
                       {t("noShowWarning", { count: client.noShowCount })}
                     </span>

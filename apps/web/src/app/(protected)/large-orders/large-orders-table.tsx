@@ -83,9 +83,9 @@ export function LargeOrdersTable({ orders }: Props) {
                     className={
                       order.balanceDue > 0 &&
                       (order.status === "delivered" || order.status === "ready")
-                        ? "text-amber-600 dark:text-amber-400 font-semibold"
+                        ? "text-status-attention-foreground font-semibold"
                         : order.balanceDue === 0
-                          ? "text-green-600 dark:text-green-400"
+                          ? "text-status-success-foreground"
                           : ""
                     }
                   >

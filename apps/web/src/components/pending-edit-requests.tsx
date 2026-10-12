@@ -67,7 +67,7 @@ export function PendingEditRequests({
       <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold">
         <ClipboardEditIcon className="size-4" aria-hidden="true" />
         {t("pendingRequests")}
-        <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-500 px-1.5 text-xs font-bold text-white">
+        <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-warning px-1.5 text-xs font-bold text-warning-foreground">
           {requests.length}
         </span>
       </h2>
@@ -90,7 +90,7 @@ export function PendingEditRequests({
                     {req.currentServiceName} — {req.currentVariantName}
                   </span>
                   <span className="text-muted-foreground">→</span>
-                  <span className="truncate rounded bg-amber-50 px-1.5 py-0.5 font-medium text-amber-800 dark:bg-amber-950/30 dark:text-amber-300">
+                  <span className="truncate rounded bg-status-attention px-1.5 py-0.5 font-medium text-status-attention-foreground">
                     {req.newServiceName} — {req.newVariantName}
                   </span>
                 </div>
@@ -99,7 +99,7 @@ export function PendingEditRequests({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-7 w-7 p-0 text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-950/20"
+                  className="h-7 w-7 p-0 text-status-success-foreground hover:bg-status-success"
                   aria-label={t("approve")}
                   disabled={resolving === req.id}
                   onClick={() => handleResolve(req.id, "approved")}

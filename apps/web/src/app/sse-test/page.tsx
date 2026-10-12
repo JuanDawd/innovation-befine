@@ -32,7 +32,11 @@ export default function SSETestPage() {
       <h1 className="mb-2 text-2xl font-bold">SSE Spike — T009</h1>
       <p className="mb-4 text-sm text-muted-foreground">
         Status:{" "}
-        <span className={connected ? "text-green-600" : "text-yellow-600"}>
+        <span
+          className={
+            connected ? "text-status-success-foreground" : "text-status-attention-foreground"
+          }
+        >
           {connected ? "Connected" : "Connecting…"}
         </span>
       </p>

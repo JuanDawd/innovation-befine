@@ -172,8 +172,8 @@ export function CheckoutForm({ onClose }: { onClose?: () => void } = {}) {
   if (summary) {
     return (
       <div className="space-y-6">
-        <div className="rounded-lg border bg-green-50 p-4 dark:bg-green-950/20">
-          <p className="font-semibold text-green-700 dark:text-green-400">
+        <div className="rounded-lg border bg-status-success p-4">
+          <p className="font-semibold text-status-success-foreground">
             Pago registrado correctamente
           </p>
           <p className="text-sm text-muted-foreground">

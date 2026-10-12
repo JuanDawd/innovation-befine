@@ -68,7 +68,7 @@ export function SetNewPasswordForm({ token }: SetNewPasswordFormProps) {
   if (success) {
     return (
       <div className="space-y-4 text-center">
-        <p className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700 dark:border-green-800 dark:bg-green-900/20 dark:text-green-400">
+        <p className="rounded-lg border border-status-success-foreground/30 bg-status-success px-4 py-3 text-sm text-status-success-foreground">
           {t("resetSuccess")}
         </p>
       </div>

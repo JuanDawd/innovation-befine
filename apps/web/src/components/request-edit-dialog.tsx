@@ -153,7 +153,7 @@ export function RequestEditDialog({
                 </p>
               )}
               {success && (
-                <p className="mt-1 text-xs text-green-600" role="status">
+                <p className="mt-1 text-xs text-status-success-foreground" role="status">
                   {t("requestSent")}
                 </p>
               )}

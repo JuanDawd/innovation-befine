@@ -126,9 +126,9 @@ export function BusinessDayPanel({ currentDay, lastClosedDay }: BusinessDayPanel
       {/* Status header */}
       <div className="flex items-center gap-3 mb-4">
         {isOpen ? (
-          <div className="rounded-full bg-green-100 p-2 dark:bg-green-900/30">
+          <div className="rounded-full bg-status-success p-2">
             <CalendarCheckIcon
-              className="size-5 text-green-600 dark:text-green-400"
+              className="size-5 text-status-success-foreground"
               aria-hidden="true"
             />
           </div>

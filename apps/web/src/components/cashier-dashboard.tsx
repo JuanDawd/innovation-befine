@@ -56,8 +56,9 @@ function isJustCreated(ticket: DashboardTicket): boolean {
 
 function statusClass(status: DashboardTicket["status"]): string {
   if (status === "awaiting_payment")
-    return "border-l-4 border-l-amber-400 bg-amber-50 dark:bg-amber-950/20";
-  if (status === "reopened") return "border-l-4 border-l-blue-400 bg-blue-50 dark:bg-blue-950/20";
+    return "border-l-4 border-l-status-attention-foreground bg-status-attention";
+  if (status === "reopened")
+    return "border-l-4 border-l-status-progress-foreground bg-status-progress";
   return "border-l-4 border-l-transparent";
 }
 
@@ -140,7 +141,7 @@ export function CashierDashboard({ initialTickets }: { initialTickets: Dashboard
                     "rounded-lg border bg-card p-3 shadow-xs transition-all duration-300",
                     statusClass(ticket.status),
                     isJustCreated(ticket)
-                      ? "ring-2 ring-green-400 bg-green-50 dark:bg-green-950/20 animate-pulse"
+                      ? "ring-2 ring-status-success-foreground bg-status-success animate-pulse"
                       : "",
                   ].join(" ")}
                 >
@@ -161,9 +162,9 @@ export function CashierDashboard({ initialTickets }: { initialTickets: Dashboard
                         className={[
                           "inline-block rounded-full px-2 py-0.5 text-xs font-medium",
                           ticket.status === "awaiting_payment"
-                            ? "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"
+                            ? "bg-status-attention text-status-attention-foreground"
                             : ticket.status === "reopened"
-                              ? "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300"
+                              ? "bg-status-progress text-status-progress-foreground"
                               : "bg-muted text-muted-foreground",
                         ].join(" ")}
                       >

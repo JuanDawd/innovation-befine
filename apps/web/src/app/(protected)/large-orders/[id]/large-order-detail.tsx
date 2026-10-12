@@ -482,7 +482,7 @@ export function LargeOrderDetail({
               </div>
               <div className="px-4 py-3 text-center">
                 <p className="text-xs text-muted-foreground mb-1">{t("colPaid")}</p>
-                <p className="font-mono font-semibold tabular-nums text-green-600 dark:text-green-400">
+                <p className="font-mono font-semibold tabular-nums text-status-success-foreground">
                   ${order.totalPaid.toLocaleString("es-CO")}
                 </p>
               </div>
@@ -491,8 +491,8 @@ export function LargeOrderDetail({
                 <p
                   className={`font-mono font-semibold tabular-nums ${
                     order.balanceDue > 0
-                      ? "text-amber-600 dark:text-amber-400"
-                      : "text-green-600 dark:text-green-400"
+                      ? "text-status-attention-foreground"
+                      : "text-status-success-foreground"
                   }`}
                 >
                   ${order.balanceDue.toLocaleString("es-CO")}
@@ -604,11 +604,11 @@ export function LargeOrderDetail({
 
           <div className="space-y-3 py-1">
             {hasDeposits && (
-              <div className="rounded-md border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/20 p-3 text-sm space-y-1">
-                <p className="font-semibold text-amber-800 dark:text-amber-300">
+              <div className="rounded-md border border-status-attention-foreground/30 bg-status-attention p-3 text-sm space-y-1">
+                <p className="font-semibold text-status-attention-foreground">
                   {t("cancelDepositWarning")}
                 </p>
-                <p className="text-amber-700 dark:text-amber-400">
+                <p className="text-status-attention-foreground">
                   {t("cancelDepositAmount", {
                     amount: `$${order.totalPaid.toLocaleString("es-CO")}`,
                   })}
@@ -620,7 +620,7 @@ export function LargeOrderDetail({
                     onChange={(e) => setAcknowledgedDeposits(e.target.checked)}
                     className="size-4 rounded border-input"
                   />
-                  <span className="text-amber-800 dark:text-amber-300 font-medium">
+                  <span className="text-status-attention-foreground font-medium">
                     {t("cancelDepositAck")}
                   </span>
                 </label>

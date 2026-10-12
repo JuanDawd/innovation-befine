@@ -272,7 +272,7 @@ export function ClosedTicketHistory({
                       {ticket.clientName}
                       {ticket.hasOverride && (
                         <TriangleAlertIcon
-                          className="size-3.5 text-amber-500"
+                          className="size-3.5 text-status-attention-foreground"
                           aria-label={t("hasOverride")}
                         />
                       )}
@@ -323,7 +323,7 @@ export function ClosedTicketHistory({
                     <p className="font-medium truncate flex items-center gap-1.5">
                       {ticket.clientName}
                       {ticket.hasOverride && (
-                        <TriangleAlertIcon className="size-3.5 shrink-0 text-amber-500" />
+                        <TriangleAlertIcon className="size-3.5 shrink-0 text-status-attention-foreground" />
                       )}
                     </p>
                     <p className="text-xs text-muted-foreground truncate">{ticket.employeeName}</p>
@@ -429,7 +429,7 @@ export function ClosedTicketHistory({
                         </p>
                       )}
                       {item.overridePrice !== null && (
-                        <div className="mt-1 flex items-start gap-1 text-xs text-amber-600">
+                        <div className="mt-1 flex items-start gap-1 text-xs text-status-attention-foreground">
                           <TriangleAlertIcon className="size-3.5 shrink-0 mt-0.5" />
                           <span>
                             {t("overrideNote", {

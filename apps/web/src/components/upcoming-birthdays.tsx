@@ -33,7 +33,7 @@ function DaysBadge({ daysUntil }: { daysUntil: number }) {
 
   if (daysUntil === 0)
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">
+      <span className="inline-flex items-center gap-1 rounded-full bg-status-attention px-2 py-0.5 text-xs font-semibold text-status-attention-foreground">
         <CakeIcon className="size-3" aria-hidden="true" />
         {t("birthdayToday")}
       </span>
@@ -41,7 +41,7 @@ function DaysBadge({ daysUntil }: { daysUntil: number }) {
 
   if (daysUntil === 1)
     return (
-      <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800">
+      <span className="rounded-full bg-status-progress px-2 py-0.5 text-xs font-medium text-status-progress-foreground">
         {t("birthdayTomorrow")}
       </span>
     );

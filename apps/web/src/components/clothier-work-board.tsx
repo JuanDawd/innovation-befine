@@ -188,7 +188,7 @@ export function ClothierWorkBoard({ employeeId }: { employeeId: string }) {
                 >
                   <div className="flex items-start gap-3 flex-1 min-w-0">
                     {isDone ? (
-                      <CheckCircle2Icon className="size-5 shrink-0 text-green-600 mt-0.5" />
+                      <CheckCircle2Icon className="size-5 shrink-0 text-status-success-foreground mt-0.5" />
                     ) : (
                       <CircleIcon className="size-5 shrink-0 text-muted-foreground mt-0.5" />
                     )}

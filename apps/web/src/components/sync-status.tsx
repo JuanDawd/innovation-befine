@@ -42,27 +42,27 @@ export function SyncStatus({ role }: { role: AppRole }) {
       <div
         role="status"
         aria-live="polite"
-        className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-1 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 shadow-lg dark:border-amber-700 dark:bg-amber-950/60 max-w-sm w-[calc(100%-2rem)]"
+        className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-1 rounded-xl border border-status-attention-foreground/30 bg-status-attention px-4 py-3 shadow-lg max-w-sm w-[calc(100%-2rem)]"
       >
-        <div className="flex items-center gap-2 text-amber-800 dark:text-amber-300">
+        <div className="flex items-center gap-2 text-status-attention-foreground">
           <WifiOffIcon className="size-4 shrink-0" aria-hidden="true" />
           <span className="text-sm font-medium">{t("offlineTitle")}</span>
         </div>
-        <p className="text-xs text-amber-700 dark:text-amber-400 text-center">
+        <p className="text-xs text-status-attention-foreground text-center">
           {t("offlineDescription")}
         </p>
         {(role === "cashier" || role === "admin") && (
-          <p className="text-xs text-amber-700 dark:text-amber-400 text-center font-medium">
+          <p className="text-xs text-status-attention-foreground text-center font-medium">
             {t("offlineCashierNote")}
           </p>
         )}
         {pending > 0 && (
-          <span className="rounded-full bg-amber-200 dark:bg-amber-800 px-2 py-0.5 text-xs font-mono text-amber-900 dark:text-amber-200">
+          <span className="rounded-full bg-status-attention-foreground/15 px-2 py-0.5 text-xs font-mono text-status-attention-foreground">
             {t("pendingCount", { count: pending })}
           </span>
         )}
         {failed > 0 && (
-          <span className="rounded-full bg-red-200 dark:bg-red-900 px-2 py-0.5 text-xs font-mono text-red-900 dark:text-red-200">
+          <span className="rounded-full bg-status-negative-foreground/15 px-2 py-0.5 text-xs font-mono text-status-negative-foreground">
             {t("failedCount", { count: failed })}
           </span>
         )}
@@ -70,7 +70,7 @@ export function SyncStatus({ role }: { role: AppRole }) {
           disabled
           title={t("retryWhenOnline")}
           aria-label={t("retryWhenOnline")}
-          className="mt-1 flex items-center gap-1 rounded px-2 py-1 text-xs text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-700 opacity-50 cursor-not-allowed select-none"
+          className="mt-1 flex items-center gap-1 rounded px-2 py-1 text-xs text-status-attention-foreground border border-status-attention-foreground/30 opacity-50 cursor-not-allowed select-none"
         >
           <RefreshCwIcon className="size-3" aria-hidden="true" />
           {t("retry")}

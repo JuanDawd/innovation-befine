@@ -16,9 +16,9 @@ type Props = {
 };
 
 const ABSENCE_COLORS = {
-  vacation: "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300",
-  approved_absence: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300",
-  missed: "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300",
+  vacation: "bg-status-progress text-status-progress-foreground",
+  approved_absence: "bg-status-attention text-status-attention-foreground",
+  missed: "bg-status-negative text-status-negative-foreground",
 } as const;
 
 // Generate day headers from Intl (locale-aware, Mon-Sun order for the grid)

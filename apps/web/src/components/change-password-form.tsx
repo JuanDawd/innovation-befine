@@ -63,7 +63,7 @@ export function ChangePasswordForm() {
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
       {success && (
         <p
-          className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700 dark:border-green-800 dark:bg-green-900/20 dark:text-green-400"
+          className="rounded-lg border border-status-success-foreground/30 bg-status-success px-3 py-2 text-sm text-status-success-foreground"
           role="status"
         >
           {t("changePasswordSuccess")}

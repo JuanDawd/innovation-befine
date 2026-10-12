@@ -61,9 +61,9 @@ function DeltaIndicator({ current, prior }: { current: number; prior: number }) 
     <span
       className={`inline-flex items-center gap-0.5 text-xs font-semibold ${
         dir === "up"
-          ? "text-green-600 dark:text-green-400"
+          ? "text-status-success-foreground"
           : dir === "down"
-            ? "text-red-600 dark:text-red-400"
+            ? "text-status-negative-foreground"
             : "text-muted-foreground"
       }`}
     >
@@ -466,7 +466,7 @@ export function AnalyticsDashboard({ initialData }: { initialData: AnalyticsSumm
       </div>
       {/* Sparse-data informational banner */}
       {isSparse && (
-        <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-300">
+        <div className="flex items-start gap-2 rounded-lg border border-status-attention-foreground/30 bg-status-attention px-4 py-3 text-sm text-status-attention-foreground">
           <AlertCircleIcon className="size-4 mt-0.5 shrink-0" aria-hidden="true" />
           <span>{t("sparseData", { daysWithData, totalDays })}</span>
         </div>

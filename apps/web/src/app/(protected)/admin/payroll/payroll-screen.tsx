@@ -408,7 +408,7 @@ export function PayrollScreen({ days, employees, history, initialEmployeeId }: P
       )}
 
       {success && (
-        <div className="flex items-center gap-2 text-sm text-green-700 dark:text-green-400 rounded-md border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/20 px-4 py-3">
+        <div className="flex items-center gap-2 text-sm text-status-success-foreground rounded-md border border-status-success-foreground/30 bg-status-success px-4 py-3">
           <CheckIcon className="size-4" />
           {t("payoutRecorded")}
         </div>
@@ -436,7 +436,10 @@ export function PayrollScreen({ days, employees, history, initialEmployeeId }: P
                     <td className="px-3 py-2 text-right font-mono tabular-nums">
                       ${p.amount.toLocaleString("es-CO")}
                       {p.adjustmentReason && (
-                        <span className="ml-1 text-xs text-amber-600" title={p.adjustmentReason}>
+                        <span
+                          className="ml-1 text-xs text-status-attention-foreground"
+                          title={p.adjustmentReason}
+                        >
                           *
                         </span>
                       )}

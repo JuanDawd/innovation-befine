@@ -588,7 +588,15 @@
     "rescheduleTime": "Nueva hora",
     "rescheduleConfirm": "Confirmar reagendado",
     "rescheduleSuccess": "Cita reagendada",
-    "rescheduleRequiredError": "Selecciona fecha y hora para reagendar"
+    "rescheduleRequiredError": "Selecciona fecha y hora para reagendar",
+    "status": {
+      "booked": "Reservada",
+      "confirmed": "Confirmada",
+      "completed": "Completada",
+      "cancelled": "Cancelada",
+      "rescheduled": "Reprogramada",
+      "no_show": "No asistió"
+    }
   },
   "payroll": {
     "pageTitle": "Nómina",

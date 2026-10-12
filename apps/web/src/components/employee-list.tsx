@@ -304,9 +304,7 @@ export function EmployeeList({ initialEmployees }: EmployeeListProps) {
                     status={emp.isActive ? "active" : "inactive"}
                     label={emp.isActive ? t("statusActive") : t("statusInactive")}
                     className={
-                      emp.isActive
-                        ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                        : undefined
+                      emp.isActive ? "bg-status-success text-status-success-foreground" : undefined
                     }
                   />
                   <span className="text-xs text-muted-foreground">
@@ -472,7 +470,10 @@ export function EmployeeList({ initialEmployees }: EmployeeListProps) {
                   aria-pressed={editTarget.showEarnings}
                 >
                   {editTarget.showEarnings ? (
-                    <CheckIcon className="size-4 text-green-600" aria-hidden="true" />
+                    <CheckIcon
+                      className="size-4 text-status-success-foreground"
+                      aria-hidden="true"
+                    />
                   ) : (
                     <XIcon className="size-4 text-muted-foreground" aria-hidden="true" />
                   )}

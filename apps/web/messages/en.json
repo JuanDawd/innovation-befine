@@ -555,7 +555,15 @@
     "rescheduleTime": "New time",
     "rescheduleConfirm": "Confirm reschedule",
     "rescheduleSuccess": "Appointment rescheduled",
-    "rescheduleRequiredError": "Select a date and time to reschedule"
+    "rescheduleRequiredError": "Select a date and time to reschedule",
+    "status": {
+      "booked": "Booked",
+      "confirmed": "Confirmed",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "rescheduled": "Rescheduled",
+      "no_show": "No-show"
+    }
   },
   "payroll": {
     "pageTitle": "Payroll",

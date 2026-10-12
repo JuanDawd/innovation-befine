@@ -12,7 +12,7 @@ export function UnsettledAlert({ unsettled }: Props) {
 
   if (unsettled.length === 0) {
     return (
-      <div className="flex items-center gap-2 text-sm text-green-700 dark:text-green-400 rounded-md border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/20 px-4 py-3">
+      <div className="flex items-center gap-2 text-sm text-status-success-foreground rounded-md border border-status-success-foreground/30 bg-status-success px-4 py-3">
         <CheckCircle2Icon className="size-4 shrink-0" />
         {t("allSettled")}
       </div>
@@ -20,8 +20,8 @@ export function UnsettledAlert({ unsettled }: Props) {
   }
 
   return (
-    <div className="rounded-md border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/20 px-4 py-3 space-y-2">
-      <div className="flex items-center gap-2 text-sm font-semibold text-amber-800 dark:text-amber-300">
+    <div className="rounded-md border border-status-attention-foreground/30 bg-status-attention px-4 py-3 space-y-2">
+      <div className="flex items-center gap-2 text-sm font-semibold text-status-attention-foreground">
         <AlertTriangleIcon className="size-4 shrink-0" />
         {t("unsettledAlert", { count: unsettled.length })}
       </div>
@@ -29,7 +29,7 @@ export function UnsettledAlert({ unsettled }: Props) {
         {unsettled.map((e) => (
           <li
             key={e.employeeId}
-            className="text-sm text-amber-700 dark:text-amber-400 flex items-center justify-between gap-4"
+            className="text-sm text-status-attention-foreground flex items-center justify-between gap-4"
           >
             <span>
               <span className="font-medium">{e.employeeName}</span>
