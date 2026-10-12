@@ -92,8 +92,8 @@ Perform with real staff before announcing go-live:
 | UAT sign-off received from all 4 role representatives       |        |          |
 | Business owner approves go-live                             |        |          |
 
-**Go-live date:** ******\_\_\_******  
-**Signed off by:** ******\_\_\_******
+**Go-live date:** **\*\***\_\_\_**\*\***  
+**Signed off by:** **\*\***\_\_\_**\*\***
 
 ---
 

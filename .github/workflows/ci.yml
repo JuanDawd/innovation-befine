@@ -43,10 +43,21 @@ jobs:
         env:
           SKIP_ENV_VALIDATION: "1"
 
+      - name: Format check
+        run: pnpm format:check
+
       - name: Typecheck
         run: pnpm typecheck
         env:
           SKIP_ENV_VALIDATION: "1"
+
+      - name: Migration consistency (drizzle-kit check)
+        run: pnpm --filter @befine/db exec drizzle-kit check
+
+      # Informational until the existing backlog of advisories is triaged (see issues-tracker).
+      - name: Dependency audit
+        run: pnpm audit --prod --audit-level high
+        continue-on-error: true
 
       - name: Unit tests
         run: pnpm test

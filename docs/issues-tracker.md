@@ -1001,6 +1001,46 @@
 
 ---
 
+### M-70 — `packages/db/src/queries` coverage is ~4%; the 80% threshold in CLAUDE.md is not enforced
+
+- **Severity:** Medium
+- **Status:** Open
+- **Affected:** `packages/db/src/queries/` (analytics, order-items, products), CI
+- **Description:** Source: CI pipeline review, 2026-10-12. `vitest run --coverage` on `packages/db` shows 4.2% statements / 1.4% branches for `queries/`. No `thresholds` are set in any vitest config and CI never runs coverage, so the 80% (and 100% branch for financial functions) requirement is unenforced.
+- **Fix:** Add tests for analytics/order-items/products, then add `coverage.thresholds` to `packages/db/vitest.config.ts` and run `test:coverage` in CI.
+
+---
+
+### M-71 — E2E missing checkout and payroll settlement specs
+
+- **Severity:** Medium
+- **Status:** Open
+- **Affected:** `apps/web/e2e`
+- **Description:** Source: CI pipeline review, 2026-10-12. CLAUDE.md requires checkout E2E (from Phase 4A) and payroll settlement E2E (from Phase 7). Only appointment-booking, auth-session, role-access, smoke and ticket-lifecycle exist. `@axe-core/playwright` is used only in `smoke.spec.ts`.
+- **Fix:** Add `checkout.spec.ts` and `payroll-settlement.spec.ts`; add axe checks to each flow spec. Confirm the E2E `DATABASE_URL` secret points at a dedicated seeded database.
+
+---
+
+### M-72 — `packages/realtime` has no tests; post-deploy smoke job disabled
+
+- **Severity:** Medium
+- **Status:** Open
+- **Affected:** `packages/realtime`, `.github/workflows/ci.yml`
+- **Description:** Source: CI pipeline review, 2026-10-12. The SSE package has no `test` script, so `turbo test` skips it. The `e2e-deploy` smoke job is commented out pending a `VERCEL_PRODUCTION_URL` secret.
+- **Fix:** Add vitest + unit tests for the realtime server/client; add the secret and enable `e2e-deploy`.
+
+---
+
+### M-73 — 142 dependency advisories (4 critical, 59 high) from `pnpm audit`
+
+- **Severity:** Medium
+- **Status:** Open
+- **Affected:** root / `apps/web` dependency tree (e.g. `shadcn>@modelcontextprotocol/sdk`)
+- **Description:** Source: CI pipeline review, 2026-10-12. The CI audit step is `continue-on-error` until this backlog is triaged. Many paths are dev-tool transitive deps.
+- **Fix:** Triage with `pnpm audit --prod`, upgrade/override what is reachable in production, then remove `continue-on-error`.
+
+---
+
 ## Low-priority issues
 
 ### L-20 — T032 work bundled into T030/T031 commits
