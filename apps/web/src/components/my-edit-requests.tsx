@@ -31,7 +31,11 @@ function formatPrice(n: number) {
 }
 
 function formatTime(d: Date) {
-  return new Date(d).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" });
+  return new Date(d).toLocaleTimeString("es-CO", {
+    timeZone: "America/Bogota",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 function statusClass(status: MyEditRequest["status"]) {

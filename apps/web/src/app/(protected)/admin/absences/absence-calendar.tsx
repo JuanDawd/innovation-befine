@@ -183,7 +183,10 @@ export function AbsenceCalendar({ year, month, absences, employees }: Props) {
           .map(([date, rows]) => (
             <div key={date} className="border rounded-md p-3 space-y-1">
               <p className="text-xs font-semibold text-muted-foreground">
-                {new Date(date + "T12:00:00").toLocaleDateString("es-CO", { dateStyle: "medium" })}
+                {new Date(date + "T12:00:00").toLocaleDateString("es-CO", {
+                  timeZone: "America/Bogota",
+                  dateStyle: "medium",
+                })}
               </p>
               {rows.map((a) => (
                 <div
@@ -237,6 +240,7 @@ export function AbsenceCalendar({ year, month, absences, employees }: Props) {
           <p className="text-sm font-semibold">
             {t("logAbsenceFor", {
               date: new Date(selectedDate + "T12:00:00").toLocaleDateString("es-CO", {
+                timeZone: "America/Bogota",
                 dateStyle: "medium",
               }),
             })}

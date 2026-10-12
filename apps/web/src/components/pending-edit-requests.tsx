@@ -24,7 +24,11 @@ import {
 import { Button } from "@/components/ui/button";
 
 function formatDate(d: Date) {
-  return new Date(d).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" });
+  return new Date(d).toLocaleTimeString("es-CO", {
+    timeZone: "America/Bogota",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 export function PendingEditRequests({

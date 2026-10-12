@@ -177,6 +177,7 @@ export function ClosedTicketHistory({
           {currentDay ? (
             <span className="text-sm font-medium" suppressHydrationWarning>
               {new Date(currentDay.openedAt).toLocaleDateString("es-CO", {
+                timeZone: "America/Bogota",
                 weekday: "long",
                 year: "numeric",
                 month: "long",
@@ -302,6 +303,7 @@ export function ClosedTicketHistory({
                   >
                     {ticket.closedAt
                       ? new Date(ticket.closedAt).toLocaleTimeString("es-CO", {
+                          timeZone: "America/Bogota",
                           hour: "2-digit",
                           minute: "2-digit",
                         })
@@ -347,6 +349,7 @@ export function ClosedTicketHistory({
                     <p className="text-xs text-muted-foreground" suppressHydrationWarning>
                       {ticket.closedAt
                         ? new Date(ticket.closedAt).toLocaleTimeString("es-CO", {
+                            timeZone: "America/Bogota",
                             hour: "2-digit",
                             minute: "2-digit",
                           })
@@ -395,6 +398,7 @@ export function ClosedTicketHistory({
                   <p className="font-medium">
                     {detail.closedAt
                       ? new Date(detail.closedAt).toLocaleString("es-CO", {
+                          timeZone: "America/Bogota",
                           dateStyle: "short",
                           timeStyle: "short",
                         })

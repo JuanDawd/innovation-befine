@@ -143,6 +143,7 @@ export function BusinessDayPanel({ currentDay, lastClosedDay }: BusinessDayPanel
             <p className="text-xs text-muted-foreground" suppressHydrationWarning>
               {t("openedAt", {
                 time: new Date(currentDay.openedAt).toLocaleTimeString("es-CO", {
+                  timeZone: "America/Bogota",
                   hour: "2-digit",
                   minute: "2-digit",
                 }),
@@ -153,6 +154,7 @@ export function BusinessDayPanel({ currentDay, lastClosedDay }: BusinessDayPanel
             <p className="text-xs text-muted-foreground" suppressHydrationWarning>
               {t("lastClosedAt", {
                 date: new Date(lastClosedDay.closedAt).toLocaleString("es-CO", {
+                  timeZone: "America/Bogota",
                   dateStyle: "short",
                   timeStyle: "short",
                 }),

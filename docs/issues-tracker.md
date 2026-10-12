@@ -924,7 +924,7 @@
 ### M-63 — Server-rendered times ignore America/Bogota
 
 - **Severity:** Medium
-- **Status:** Open
+- **Status:** Resolved (2026-10-12) — every remaining `toLocale*String("es-CO", …)` on a timestamp now passes `timeZone: "America/Bogota"` (business-day panel, closed-ticket history, edit requests, notifications, absences); no displayed time depends on the server timezone
 - **Affected:** `business-day-panel.tsx` (openedAt/closedAt), `closed-ticket-history.tsx` ("Hora cierre")
 - **Description:** Source: training-manual walkthrough with agent-browser, 2026-10-11 (demo data, homelab CT 110). `toLocaleTimeString("es-CO", …)` without `timeZone`. Rendered on the server (UTC on Vercel/containers) the day opened at 2:24 p. m. shows "07:24 p. m."; ticket closed at 2:35 p. m. shows "07:35 p. m." Client re-render shows the right time → also a hydration mismatch.
 - **Fix:** Use a shared formatter with `timeZone: "America/Bogota"` (date-fns-tz) everywhere times are displayed.
@@ -1974,3 +1974,4 @@
 | M-65     | 2026-10-12    | Opt-in selection grouped by client; client names + multi-client warning in confirmation                  | feat/design-system           |
 | M-67     | 2026-10-12    | "Cobrar" quick action hidden for roles without checkout permission                                       | feat/design-system           |
 | M-66     | 2026-10-12    | Oldest-first range picker replaces per-day chips; clearer secretary breakdown labels                     | feat/design-system           |
+| M-63     | 2026-10-12    | `timeZone: "America/Bogota"` on all remaining locale time/date renders (11 sites)                        | feat/design-system           |

@@ -341,7 +341,11 @@ function NotificationItem({
             : group.message}
         </p>
         <p className="mt-0.5 text-xs text-muted-foreground" suppressHydrationWarning>
-          {group.latestAt.toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })}
+          {group.latestAt.toLocaleTimeString("es-CO", {
+            timeZone: "America/Bogota",
+            hour: "2-digit",
+            minute: "2-digit",
+          })}
         </p>
       </div>
       {/* Inline action */}
