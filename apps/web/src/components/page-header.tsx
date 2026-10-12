@@ -37,7 +37,7 @@ export function PageHeader({
   className,
 }: PageHeaderProps) {
   return (
-    <header className={cn("flex flex-wrap items-end justify-between gap-x-6 gap-y-3", className)}>
+    <header className={cn("flex flex-wrap items-start justify-between gap-x-6 gap-y-3", className)}>
       <div className="flex min-w-0 items-start gap-2">
         {backHref && (
           <Link
