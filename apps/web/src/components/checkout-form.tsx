@@ -521,12 +521,12 @@ export function CheckoutForm({ onClose }: { onClose?: () => void } = {}) {
           {isPending && <Loader2Icon className="mr-2 size-4 animate-spin" aria-hidden="true" />}
           {t("submit")}
         </Button>
-        {selected.length === 0 && (
-          <p className="text-xs text-muted-foreground">{t("nothingSelected")}</p>
-        )}
         <Button variant="outline" onClick={() => (onClose ? onClose() : router.push("/cashier"))}>
           {tc("cancel")}
         </Button>
+        {selected.length === 0 && (
+          <p className="text-xs text-muted-foreground">{t("nothingSelected")}</p>
+        )}
       </div>
 
       {/* Confirmation dialog */}

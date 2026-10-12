@@ -582,7 +582,7 @@
     "since": "since",
     "liquidate": "Settle",
     "step1": "1. Select employee",
-    "step2": "2. Select business days",
+    "step2": "2. Choose the pay period",
     "payTodayShortcut": "Pay through today",
     "noTodayDay": "No closed business day for today",
     "earningsDescriptorStylist": "Pay for today's services",
