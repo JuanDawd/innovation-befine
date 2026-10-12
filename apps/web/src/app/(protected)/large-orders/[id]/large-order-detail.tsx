@@ -52,6 +52,7 @@ import {
   type ClothierOption,
   type ProductionUserContext,
 } from "../assignment-actions";
+import { NativeSelect } from "@/components/ui/native-select";
 
 const PRODUCTION_COLLAPSE_KEY = "production-section-collapsed";
 
@@ -699,16 +700,17 @@ export function LargeOrderDetail({
                   <label className="text-sm font-medium" htmlFor="method">
                     {t("paymentMethod")}
                   </label>
-                  <select
+                  <NativeSelect
                     id="method"
                     name="method"
                     defaultValue="cash"
-                    className="w-full h-9 rounded-md border border-input bg-transparent px-3 text-sm focus-visible:outline-none focus-visible:border-ring"
+                    className="w-full"
+                    selectClassName="h-9 text-sm"
                   >
                     <option value="cash">{t("cash")}</option>
                     <option value="card">{t("card")}</option>
                     <option value="transfer">{t("transfer")}</option>
-                  </select>
+                  </NativeSelect>
                 </div>
                 <div className="space-y-1">
                   <label className="text-sm font-medium" htmlFor="paidAt">

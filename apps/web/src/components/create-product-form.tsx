@@ -16,6 +16,7 @@ import {
   type ClothierOption,
 } from "@/app/(protected)/products/actions";
 import { listActiveClothPieces } from "@/app/(protected)/admin/catalog/actions/cloth-pieces";
+import { NativeSelect } from "@/components/ui/native-select";
 
 type ClothPieceVariantOption = { id: string; name: string; isActive: boolean };
 type ClothPieceOption = { id: string; name: string; variants: ClothPieceVariantOption[] };
@@ -182,11 +183,11 @@ export function CreateProductForm({
             Pedido grande vinculado{" "}
             <span className="text-muted-foreground font-normal">{tc("optional")}</span>
           </label>
-          <select
+          <NativeSelect
             id="product-order"
             value={largeOrderId}
             onChange={(e) => setLargeOrderId(e.target.value)}
-            className="h-9 rounded-md border border-input bg-transparent px-3 text-sm focus-visible:outline-none focus-visible:border-ring"
+            selectClassName="h-9 text-sm"
           >
             <option value="">Sin vinculación</option>
             {largeOrders.map((o) => (
@@ -194,7 +195,7 @@ export function CreateProductForm({
                 {o.clientName} — {o.description.slice(0, 50)}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </div>
       )}
 
@@ -233,13 +234,14 @@ export function CreateProductForm({
                       {t("pieceType")}
                     </label>
                   )}
-                  <select
+                  <NativeSelect
                     aria-label={t("pieceType")}
                     value={line.clothPieceId}
                     onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
                       updateLine(line.key, { clothPieceId: e.target.value })
                     }
-                    className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm focus-visible:outline-none focus-visible:border-ring"
+                    className="w-full"
+                    selectClassName="text-sm"
                   >
                     <option value="">{t("selectPieceType")}</option>
                     {clothPieces.map((p) => (
@@ -247,7 +249,7 @@ export function CreateProductForm({
                         {p.name}
                       </option>
                     ))}
-                  </select>
+                  </NativeSelect>
                 </div>
 
                 {/* Variant */}
@@ -257,14 +259,15 @@ export function CreateProductForm({
                       {t("variant")}
                     </label>
                   )}
-                  <select
+                  <NativeSelect
                     aria-label={t("variant")}
                     value={line.clothPieceVariantId}
                     onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
                       updateLine(line.key, { clothPieceVariantId: e.target.value })
                     }
                     disabled={!line.clothPieceId || activeVariants.length === 0}
-                    className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm focus-visible:outline-none focus-visible:border-ring disabled:opacity-50"
+                    className="w-full"
+                    selectClassName="text-sm"
                   >
                     <option value="">
                       {line.clothPieceId && activeVariants.length === 0
@@ -276,7 +279,7 @@ export function CreateProductForm({
                         {v.name}
                       </option>
                     ))}
-                  </select>
+                  </NativeSelect>
                 </div>
 
                 {/* Quantity */}
@@ -307,7 +310,7 @@ export function CreateProductForm({
                       {t("assignTo")}
                     </label>
                   )}
-                  <select
+                  <NativeSelect
                     aria-label={t("assignTo")}
                     value={line.assignedToEmployeeId ?? ""}
                     onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
@@ -315,7 +318,8 @@ export function CreateProductForm({
                         assignedToEmployeeId: e.target.value || null,
                       })
                     }
-                    className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm focus-visible:outline-none focus-visible:border-ring"
+                    className="w-full"
+                    selectClassName="text-sm"
                   >
                     <option value="">{t("unassigned")}</option>
                     {clothiers.map((c) => (
@@ -323,7 +327,7 @@ export function CreateProductForm({
                         {c.name}
                       </option>
                     ))}
-                  </select>
+                  </NativeSelect>
                 </div>
 
                 {/* Remove button */}

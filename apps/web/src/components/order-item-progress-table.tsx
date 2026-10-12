@@ -11,6 +11,7 @@ import type {
   ClothierOption,
   ProductionUserContext,
 } from "@/app/(protected)/large-orders/assignment-actions";
+import { NativeSelect } from "@/components/ui/native-select";
 
 type ActionResult = { success: boolean; error?: { message: string; code?: string } };
 
@@ -179,12 +180,13 @@ function ItemSection({
               <label className="text-xs font-medium" htmlFor={`assignee-${item.id}`}>
                 Confeccionista
               </label>
-              <select
+              <NativeSelect
                 id={`assignee-${item.id}`}
                 value={assigneeId}
                 onChange={(e) => setAssigneeId(e.target.value)}
                 required
-                className="w-full h-8 rounded-md border border-input bg-transparent px-2 text-sm focus-visible:outline-none focus-visible:border-ring"
+                className="w-full"
+                selectClassName="text-sm"
               >
                 <option value="">Seleccionar…</option>
                 {clothiers.map((c) => (
@@ -192,7 +194,7 @@ function ItemSection({
                     {c.name}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             </div>
             <div className="space-y-1">
               <label className="text-xs font-medium" htmlFor={`qty-${item.id}`}>

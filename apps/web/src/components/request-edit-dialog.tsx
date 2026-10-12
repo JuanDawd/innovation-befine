@@ -26,6 +26,7 @@ import {
   listActiveServiceVariants,
   type ActiveServiceVariant,
 } from "@/app/(protected)/tickets/edit-requests/actions";
+import { NativeSelect } from "@/components/ui/native-select";
 
 interface Props {
   ticketItemId: string;
@@ -127,14 +128,15 @@ export function RequestEditDialog({
               {loading ? (
                 <div className="h-9 rounded-md border bg-muted animate-pulse" />
               ) : (
-                <select
+                <NativeSelect
                   id="new-variant-select"
                   value={selectedVariantId}
                   onChange={(e) => {
                     setSelectedVariantId(e.target.value);
                     setError(null);
                   }}
-                  className="w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  className="w-full"
+                  selectClassName="text-sm"
                   aria-required="true"
                 >
                   <option value="">{t("variantPlaceholder")}</option>
@@ -143,7 +145,7 @@ export function RequestEditDialog({
                       {v.serviceName} — {v.name} (${v.customerPrice.toLocaleString("es-CO")})
                     </option>
                   ))}
-                </select>
+                </NativeSelect>
               )}
               {error && (
                 <p className="mt-1 text-xs text-destructive" role="alert">

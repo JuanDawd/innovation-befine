@@ -90,6 +90,7 @@
    Sidebar stays dark in both themes (brand identity anchor).
    ───────────────────────────────────────────────────────────────── */
 :root {
+  color-scheme: light;
   /* Warm ivory canvas — not cold white */
   --background: oklch(0.962 0.012 80);
   --foreground: oklch(0.15 0.005 60);
@@ -157,6 +158,7 @@
 }
 
 .dark {
+  color-scheme: dark;
   /* Pure-black canvas — editorial after-hours */
   --background: oklch(0.02 0 0);
   --foreground: oklch(0.94 0.013 80);

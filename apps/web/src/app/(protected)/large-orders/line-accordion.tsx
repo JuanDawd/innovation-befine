@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { Trash2Icon, ChevronDownIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ClothPieceRow } from "@/app/(protected)/admin/catalog/actions/cloth-pieces";
+import { NativeSelect } from "@/components/ui/native-select";
 
 export type OrderLine = {
   key: number;
@@ -119,11 +120,12 @@ export function LineAccordion({
               <label className="text-xs font-medium text-muted-foreground">
                 {t("selectPiece")}
               </label>
-              <select
+              <NativeSelect
                 aria-label={t("selectPiece")}
                 value={line.clothPieceId}
                 onChange={(e) => onUpdate({ clothPieceId: e.target.value })}
-                className="h-8 w-full rounded-md border border-input bg-background px-2.5 text-sm focus-visible:outline-none focus-visible:border-ring"
+                className="w-full"
+                selectClassName="text-sm"
               >
                 <option value="">{t("selectPiece")}</option>
                 {clothPieces.map((p) => (
@@ -131,18 +133,19 @@ export function LineAccordion({
                     {p.name}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             </div>
             <div className="space-y-1">
               <label className="text-xs font-medium text-muted-foreground">
                 {t("selectVariant")}
               </label>
-              <select
+              <NativeSelect
                 aria-label={t("selectVariant")}
                 value={line.clothPieceVariantId}
                 onChange={(e) => onUpdate({ clothPieceVariantId: e.target.value })}
                 disabled={!line.clothPieceId || activeVariants.length === 0}
-                className="h-8 w-full rounded-md border border-input bg-background px-2.5 text-sm focus-visible:outline-none focus-visible:border-ring disabled:opacity-50"
+                className="w-full"
+                selectClassName="text-sm"
               >
                 <option value="">
                   {line.clothPieceId && activeVariants.length === 0
@@ -154,7 +157,7 @@ export function LineAccordion({
                     {v.name}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             </div>
           </div>
 

@@ -36,6 +36,7 @@ import {
   setOverridePrice,
   type CheckoutSummary,
 } from "@/app/(protected)/cashier/checkout/actions";
+import { NativeSelect } from "@/components/ui/native-select";
 
 type PaymentLine = { method: "cash" | "card" | "transfer"; amount: string };
 
@@ -384,10 +385,10 @@ export function CheckoutForm({ onClose }: { onClose?: () => void } = {}) {
         <h2 className="text-sm font-semibold">Métodos de pago</h2>
         {payments.map((p, i) => (
           <div key={i} className="flex items-center gap-2">
-            <select
+            <NativeSelect
               value={p.method}
               onChange={(e) => updatePayment(i, "method", e.target.value)}
-              className="flex h-8 rounded-lg border border-input bg-background px-2.5 py-1 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+              selectClassName="text-sm"
               aria-label="Método de pago"
             >
               {Object.entries(METHOD_LABELS).map(([key, label]) => (
@@ -395,7 +396,7 @@ export function CheckoutForm({ onClose }: { onClose?: () => void } = {}) {
                   {label}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
             <Input
               type="number"
               min={1}

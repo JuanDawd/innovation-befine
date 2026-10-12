@@ -15,6 +15,7 @@ import {
   type PayoutRow,
 } from "./actions";
 import type { EmployeeOption } from "../absences/actions";
+import { NativeSelect } from "@/components/ui/native-select";
 
 type Props = {
   days: BusinessDayOption[];
@@ -154,7 +155,7 @@ export function PayrollScreen({ days, employees, history, initialEmployeeId }: P
       {/* Step 1: Select employee */}
       <div className="space-y-2">
         <h2 className="text-sm font-semibold">{t("step1")}</h2>
-        <select
+        <NativeSelect
           value={selectedEmployee}
           onChange={(e) => {
             const id = e.target.value;
@@ -164,7 +165,8 @@ export function PayrollScreen({ days, employees, history, initialEmployeeId }: P
             setSuccess(false);
             router.push(id ? `/admin/payroll?employeeId=${id}` : "/admin/payroll");
           }}
-          className="h-9 w-full max-w-xs rounded-md border border-input bg-transparent px-3 text-sm focus-visible:outline-none focus-visible:border-ring"
+          className="w-full max-w-xs"
+          selectClassName="h-9 text-sm"
           aria-label={t("selectEmployee")}
         >
           <option value="">{t("selectEmployee")}</option>
@@ -173,7 +175,7 @@ export function PayrollScreen({ days, employees, history, initialEmployeeId }: P
               {e.name} ({t(`role_${e.role}` as Parameters<typeof t>[0])})
             </option>
           ))}
-        </select>
+        </NativeSelect>
       </div>
 
       {/* Step 2: Select business days */}
@@ -335,16 +337,17 @@ export function PayrollScreen({ days, employees, history, initialEmployeeId }: P
               <label className="text-sm font-medium" htmlFor="method">
                 {t("method")}
               </label>
-              <select
+              <NativeSelect
                 id="method"
                 value={method}
                 onChange={(e) => setMethod(e.target.value as "cash" | "card" | "transfer")}
-                className="w-full h-9 rounded-md border border-input bg-transparent px-3 text-sm focus-visible:outline-none focus-visible:border-ring"
+                className="w-full"
+                selectClassName="h-9 text-sm"
               >
                 <option value="cash">{t("cash")}</option>
                 <option value="card">{t("card")}</option>
                 <option value="transfer">{t("transfer")}</option>
-              </select>
+              </NativeSelect>
             </div>
             <div className="space-y-1">
               <label className="text-sm font-medium" htmlFor="notes">

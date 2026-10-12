@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { createEmployeeSchema, type CreateEmployeeInput } from "@befine/types";
 import { createEmployee } from "@/app/(protected)/admin/employees/actions/create-employee";
 import { useState } from "react";
+import { NativeSelect } from "@/components/ui/native-select";
 
 const APP_ROLES = [
   { value: "cashier", labelKey: "cashier" },
@@ -136,9 +137,10 @@ export function CreateEmployeeForm({ onSuccess }: CreateEmployeeFormProps) {
         <label htmlFor="emp-role" className="text-sm font-medium">
           {t("role")}
         </label>
-        <select
+        <NativeSelect
           id="emp-role"
-          className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50 aria-invalid:border-destructive dark:bg-input/30"
+          className="w-full"
+          selectClassName="text-sm"
           aria-describedby={errors.role ? "emp-role-error" : undefined}
           aria-invalid={!!errors.role}
           {...register("role")}
@@ -148,7 +150,7 @@ export function CreateEmployeeForm({ onSuccess }: CreateEmployeeFormProps) {
               {tRoles(value)}
             </option>
           ))}
-        </select>
+        </NativeSelect>
         {errors.role && (
           <p id="emp-role-error" className="text-sm text-destructive">
             {errors.role.message}
@@ -162,9 +164,10 @@ export function CreateEmployeeForm({ onSuccess }: CreateEmployeeFormProps) {
           <label htmlFor="emp-subtype" className="text-sm font-medium">
             {t("stylistSubtype")}
           </label>
-          <select
+          <NativeSelect
             id="emp-subtype"
-            className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50 aria-invalid:border-destructive dark:bg-input/30"
+            className="w-full"
+            selectClassName="text-sm"
             aria-describedby={errors.stylistSubtype ? "emp-subtype-error" : undefined}
             aria-invalid={!!errors.stylistSubtype}
             {...register("stylistSubtype")}
@@ -175,7 +178,7 @@ export function CreateEmployeeForm({ onSuccess }: CreateEmployeeFormProps) {
                 {tSubtypes(value)}
               </option>
             ))}
-          </select>
+          </NativeSelect>
           {errors.stylistSubtype && (
             <p id="emp-subtype-error" className="text-sm text-destructive">
               {errors.stylistSubtype.message}
@@ -213,9 +216,10 @@ export function CreateEmployeeForm({ onSuccess }: CreateEmployeeFormProps) {
         <label htmlFor="emp-work-days" className="text-sm font-medium">
           {t("expectedWorkDays")}
         </label>
-        <select
+        <NativeSelect
           id="emp-work-days"
-          className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50 dark:bg-input/30"
+          className="w-full"
+          selectClassName="text-sm"
           {...register("expectedWorkDays", { valueAsNumber: true })}
         >
           {[1, 2, 3, 4, 5, 6, 7].map((d) => (
@@ -223,7 +227,7 @@ export function CreateEmployeeForm({ onSuccess }: CreateEmployeeFormProps) {
               {d}
             </option>
           ))}
-        </select>
+        </NativeSelect>
       </div>
 
       {/* Birthday */}

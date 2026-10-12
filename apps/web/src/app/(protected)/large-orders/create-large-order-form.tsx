@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { createLargeOrder, type ClientOption } from "./actions";
 import type { ClothPieceRow } from "@/app/(protected)/admin/catalog/actions/cloth-pieces";
 import { LineAccordion, buildDescription, type OrderLine } from "./line-accordion";
+import { NativeSelect } from "@/components/ui/native-select";
 
 type Props = {
   clients: ClientOption[];
@@ -169,11 +170,12 @@ export function CreateLargeOrderForm({ clients, clothPieces }: Props) {
         <label className="text-sm font-medium" htmlFor="clientId">
           {t("client")} <span className="text-destructive">*</span>
         </label>
-        <select
+        <NativeSelect
           id="clientId"
           name="clientId"
           required
-          className="w-full h-9 rounded-md border border-input bg-transparent px-3 text-sm focus-visible:outline-none focus-visible:border-ring"
+          className="w-full"
+          selectClassName="h-9 text-sm"
         >
           <option value="">{t("clientPlaceholder")}</option>
           {clients.map((c) => (
@@ -182,7 +184,7 @@ export function CreateLargeOrderForm({ clients, clothPieces }: Props) {
               {c.phone ? ` — ${c.phone}` : ""}
             </option>
           ))}
-        </select>
+        </NativeSelect>
         {fieldErrors.clientId && <p className="text-xs text-destructive">{fieldErrors.clientId}</p>}
       </div>
 
@@ -315,16 +317,17 @@ export function CreateLargeOrderForm({ clients, clothPieces }: Props) {
               <label className="text-sm font-medium" htmlFor="initialDepositMethod">
                 {t("depositMethod")}
               </label>
-              <select
+              <NativeSelect
                 id="initialDepositMethod"
                 name="initialDepositMethod"
                 defaultValue="cash"
-                className="w-full h-9 rounded-md border border-input bg-transparent px-3 text-sm focus-visible:outline-none focus-visible:border-ring"
+                className="w-full"
+                selectClassName="h-9 text-sm"
               >
                 <option value="cash">{t("cash")}</option>
                 <option value="card">{t("card")}</option>
                 <option value="transfer">{t("transfer")}</option>
-              </select>
+              </NativeSelect>
             </div>
           </div>
         )}

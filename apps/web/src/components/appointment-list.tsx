@@ -32,6 +32,7 @@ import {
   type AppointmentListRow,
 } from "@/app/(protected)/appointments/actions";
 import { AppointmentStatusActions } from "@/components/appointment-status-actions";
+import { NativeSelect } from "@/components/ui/native-select";
 
 // ─── Price change acknowledge inline widget (T109) ────────────────────────────
 
@@ -189,11 +190,11 @@ export function AppointmentList() {
 
         <div className="flex items-center gap-2">
           {/* Stylist filter */}
-          <select
+          <NativeSelect
             aria-label={t("filterByStylist")}
             value={stylistFilter}
             onChange={(e) => setStylistFilter(e.target.value)}
-            className="h-9 rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm focus-visible:outline-none focus-visible:border-ring"
+            selectClassName="h-9 text-sm"
           >
             <option value="">{t("allStylists")}</option>
             {stylists.map((s) => (
@@ -201,7 +202,7 @@ export function AppointmentList() {
                 {s.name}
               </option>
             ))}
-          </select>
+          </NativeSelect>
 
           {/* New appointment */}
           <Button size="sm" onClick={() => setBookOpen(true)}>

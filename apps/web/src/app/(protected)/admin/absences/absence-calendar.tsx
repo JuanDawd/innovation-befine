@@ -6,6 +6,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { ChevronLeftIcon, ChevronRightIcon, Loader2Icon, PlusIcon, Trash2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { logAbsence, deleteAbsence, type AbsenceRow, type EmployeeOption } from "./actions";
+import { NativeSelect } from "@/components/ui/native-select";
 
 type Props = {
   year: number;
@@ -246,11 +247,12 @@ export function AbsenceCalendar({ year, month, absences, employees }: Props) {
                 <label className="text-sm font-medium" htmlFor="employeeId">
                   {t("employee")} <span className="text-destructive">*</span>
                 </label>
-                <select
+                <NativeSelect
                   id="employeeId"
                   name="employeeId"
                   required
-                  className="w-full h-9 rounded-md border border-input bg-transparent px-3 text-sm focus-visible:outline-none focus-visible:border-ring"
+                  className="w-full"
+                  selectClassName="h-9 text-sm"
                 >
                   <option value="">{t("selectEmployee")}</option>
                   {employees.map((e) => (
@@ -258,22 +260,23 @@ export function AbsenceCalendar({ year, month, absences, employees }: Props) {
                       {e.name}
                     </option>
                   ))}
-                </select>
+                </NativeSelect>
               </div>
               <div className="space-y-1">
                 <label className="text-sm font-medium" htmlFor="type">
                   {t("type")} <span className="text-destructive">*</span>
                 </label>
-                <select
+                <NativeSelect
                   id="type"
                   name="type"
                   required
-                  className="w-full h-9 rounded-md border border-input bg-transparent px-3 text-sm focus-visible:outline-none focus-visible:border-ring"
+                  className="w-full"
+                  selectClassName="h-9 text-sm"
                 >
                   <option value="vacation">{t("type_vacation")}</option>
                   <option value="approved_absence">{t("type_approved_absence")}</option>
                   <option value="missed">{t("type_missed")}</option>
-                </select>
+                </NativeSelect>
               </div>
               <div className="space-y-1">
                 <label className="text-sm font-medium" htmlFor="note">

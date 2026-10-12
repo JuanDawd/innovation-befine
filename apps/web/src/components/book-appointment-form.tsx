@@ -28,6 +28,7 @@ import { Input } from "@/components/ui/input";
 import { ClientSearchWidget } from "@/components/client-search-widget";
 import { createAppointment, listBookingStylists } from "@/app/(protected)/appointments/actions";
 import type { ClientRow } from "@/app/(protected)/clients/actions";
+import { NativeSelect } from "@/components/ui/native-select";
 
 type ClientSelection =
   | { type: "saved"; client: ClientRow }
@@ -184,11 +185,12 @@ export function BookAppointmentForm({
         <label className="text-sm font-medium" htmlFor="apt-stylist">
           {t("stylist")}
         </label>
-        <select
+        <NativeSelect
           id="apt-stylist"
           value={stylistId}
           onChange={(e) => setStylistId(e.target.value)}
-          className="h-9 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm focus-visible:outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+          className="w-full"
+          selectClassName="h-9 text-sm"
         >
           <option value="">{t("stylistPlaceholder")}</option>
           {stylists.map((s) => (
@@ -197,7 +199,7 @@ export function BookAppointmentForm({
               {s.stylistSubtype ? ` — ${s.stylistSubtype}` : ""}
             </option>
           ))}
-        </select>
+        </NativeSelect>
         {fieldErrors.stylist && (
           <p className="text-xs text-destructive" role="alert">
             {fieldErrors.stylist}

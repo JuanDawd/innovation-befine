@@ -16,6 +16,7 @@ import {
   type ClientOption,
 } from "@/app/(protected)/cashier/actions/cloth-sales";
 import { Button } from "@/components/ui/button";
+import { NativeSelect } from "@/components/ui/native-select";
 
 interface SellClothPieceModalProps {
   open: boolean;
@@ -128,12 +129,13 @@ export function SellClothPieceModal({ open, onOpenChange, ticketId }: SellClothP
               <label className="text-sm font-medium" htmlFor="sell-piece">
                 Prenda <span className="text-destructive">*</span>
               </label>
-              <select
+              <NativeSelect
                 id="sell-piece"
                 value={selectedPieceId}
                 onChange={(e) => handlePieceChange(e.target.value)}
                 required
-                className="w-full h-9 rounded-md border border-input bg-transparent px-3 text-sm focus-visible:outline-none focus-visible:border-ring"
+                className="w-full"
+                selectClassName="h-9 text-sm"
               >
                 <option value="">Seleccionar prenda…</option>
                 {pieces.map((p) => (
@@ -141,7 +143,7 @@ export function SellClothPieceModal({ open, onOpenChange, ticketId }: SellClothP
                     {p.name}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             </div>
 
             {/* Variant selector */}
@@ -150,12 +152,13 @@ export function SellClothPieceModal({ open, onOpenChange, ticketId }: SellClothP
                 <label className="text-sm font-medium" htmlFor="sell-variant">
                   Variante <span className="text-destructive">*</span>
                 </label>
-                <select
+                <NativeSelect
                   id="sell-variant"
                   value={selectedVariantId}
                   onChange={(e) => handleVariantChange(e.target.value)}
                   required
-                  className="w-full h-9 rounded-md border border-input bg-transparent px-3 text-sm focus-visible:outline-none focus-visible:border-ring"
+                  className="w-full"
+                  selectClassName="h-9 text-sm"
                 >
                   <option value="">Seleccionar variante…</option>
                   {selectedPiece.variants.map((v) => (
@@ -166,7 +169,7 @@ export function SellClothPieceModal({ open, onOpenChange, ticketId }: SellClothP
                         : " — sin precio"}
                     </option>
                   ))}
-                </select>
+                </NativeSelect>
               </div>
             )}
 
@@ -246,12 +249,13 @@ export function SellClothPieceModal({ open, onOpenChange, ticketId }: SellClothP
                 </div>
 
                 {customerType === "client" && (
-                  <select
+                  <NativeSelect
                     value={clientId}
                     onChange={(e) => setClientId(e.target.value)}
                     required
                     aria-label="Cliente registrado"
-                    className="w-full h-9 rounded-md border border-input bg-transparent px-3 text-sm focus-visible:outline-none focus-visible:border-ring"
+                    className="w-full"
+                    selectClassName="h-9 text-sm"
                   >
                     <option value="">Seleccionar cliente…</option>
                     {clients.map((c) => (
@@ -260,7 +264,7 @@ export function SellClothPieceModal({ open, onOpenChange, ticketId }: SellClothP
                         {c.phone ? ` — ${c.phone}` : ""}
                       </option>
                     ))}
-                  </select>
+                  </NativeSelect>
                 )}
 
                 {customerType === "guest" && (
