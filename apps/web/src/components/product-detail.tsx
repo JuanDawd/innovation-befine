@@ -2,8 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
-import { PencilIcon, ChevronDownIcon, ChevronUpIcon, ArrowLeftIcon } from "lucide-react";
-import Link from "next/link";
+import { PencilIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -20,6 +19,7 @@ import {
 import { updateProductPiece } from "@/app/(protected)/products/actions";
 import { updateProductPieceSchema, type UpdateProductPieceInput } from "@befine/types";
 import type { ProductDetailRow, ProductPieceDetailRow } from "@befine/db";
+import { PageHeader } from "@/components/page-header";
 
 // ─── Piece status mapping ─────────────────────────────────────────────────────
 
@@ -289,17 +289,12 @@ export function ProductDetail({ initialData, isEditor, backHref }: Props) {
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6 lg:p-8">
-      <div className="flex items-center gap-3">
-        <Link
-          href={backHref}
-          className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
-          aria-label={t("back")}
-        >
-          <ArrowLeftIcon className="size-4" />
-        </Link>
-        <h1 className="text-xl font-semibold">{t("detailTitle")}</h1>
-        <ProductStatusBadge status={productStatus} />
-      </div>
+      <PageHeader
+        title={t("detailTitle")}
+        meta={<ProductStatusBadge status={productStatus} />}
+        backHref={backHref}
+        backLabel={t("back")}
+      />
 
       {data.pieces.length > 0 && <ProductProgressBar pct={progressPct} className="max-w-xs" />}
 

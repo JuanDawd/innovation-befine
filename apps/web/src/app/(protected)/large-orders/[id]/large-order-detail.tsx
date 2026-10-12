@@ -54,6 +54,7 @@ import {
 } from "../assignment-actions";
 import { NativeSelect } from "@/components/ui/native-select";
 import { formatMoney } from "@/i18n";
+import { PageHeader } from "@/components/page-header";
 
 const PRODUCTION_COLLAPSE_KEY = "production-section-collapsed";
 
@@ -334,18 +335,19 @@ export function LargeOrderDetail({
   return (
     <div className="space-y-5">
       {/* ── Header ── */}
-      <div className="flex items-start justify-between gap-4">
-        <div className="space-y-1.5">
-          <h1 className="text-xl md:text-2xl font-semibold">{order.clientName}</h1>
-          <StatusBadge status={order.status} />
-        </div>
-        {!isTerminal && !editing && (
-          <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
-            <PencilIcon className="size-3.5 mr-1.5" />
-            {t("editOrder")}
-          </Button>
-        )}
-      </div>
+      <PageHeader
+        title={order.clientName}
+        meta={<StatusBadge status={order.status} />}
+        actions={
+          !isTerminal &&
+          !editing && (
+            <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
+              <PencilIcon className="size-3.5 mr-1.5" />
+              {t("editOrder")}
+            </Button>
+          )
+        }
+      />
 
       {/* ── Edit mode ── */}
       {editing ? (

@@ -10,6 +10,7 @@ import {
   type TaskStatus,
 } from "@/lib/roadmap";
 import { cn } from "@/lib/utils";
+import { PageHeader } from "@/components/page-header";
 
 export const dynamic = "force-dynamic";
 
@@ -35,18 +36,14 @@ export default async function AdminRoadmapPage() {
 
   return (
     <div className="px-6 py-8 max-w-5xl mx-auto space-y-4">
-      <header className="space-y-2">
-        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Roadmap interno</p>
-        <h1
-          className="text-3xl font-semibold tracking-tight"
-          style={{ fontFamily: "var(--font-display)" }}
-        >
-          Estado del producto
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Una tarea = una responsabilidad. Origen: <code className="font-mono">roadmaps/</code>
-        </p>
-      </header>
+      <PageHeader
+        title="Estado del producto"
+        description={
+          <>
+            Una tarea = una responsabilidad. Origen: <code className="font-mono">roadmaps/</code>
+          </>
+        }
+      />
 
       {roadmaps.map((roadmap) => (
         <RoadmapSection key={roadmap.slug} roadmap={roadmap} />

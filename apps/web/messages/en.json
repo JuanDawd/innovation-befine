@@ -127,7 +127,13 @@
   },
   "home": {
     "title": "Innovation Befine",
-    "subtitle": "Internal operations platform"
+    "subtitle": "Internal operations platform",
+    "cashierTitle": "Today's register",
+    "cashierSubtitle": "Open tickets, checkouts and closing the day",
+    "stylistTitle": "My services",
+    "stylistSubtitle": "Log each service as soon as you finish it",
+    "secretaryTitle": "Service log",
+    "secretarySubtitle": "Log services and review your change requests"
   },
   "landing": {
     "eyebrow": "Internal platform",
@@ -339,7 +345,9 @@
     "markReadyError": "Could not update the ticket",
     "alreadyReady": "Already ready for checkout",
     "emptyTitle": "No open tickets",
-    "emptyDescription": "Logged services will appear here."
+    "emptyDescription": "Logged services will appear here.",
+    "checkoutTitle": "Checkout",
+    "checkoutSubtitle": "Select the tickets to charge and choose the payment method."
   },
   "dayAtAGlance": {
     "revenueToday": "Revenue today",
@@ -822,5 +830,9 @@
     "message": "A new version is available.",
     "refresh": "Refresh now",
     "dismiss": "Dismiss"
+  },
+  "settings": {
+    "pageTitle": "Settings",
+    "pageSubtitle": "Business-wide system behaviour settings."
   }
 }

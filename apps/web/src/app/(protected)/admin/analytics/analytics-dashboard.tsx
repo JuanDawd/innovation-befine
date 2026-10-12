@@ -39,6 +39,7 @@ import {
 } from "./actions";
 import type { EarningsByEmployee } from "@befine/db";
 import { formatCount, formatMoney } from "@/i18n";
+import { PageHeader } from "@/components/page-header";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -422,42 +423,44 @@ export function AnalyticsDashboard({ initialData }: { initialData: AnalyticsSumm
   return (
     <div className="space-y-8 print:space-y-4">
       {/* Period tabs + CSV download */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl md:text-2xl font-semibold print:text-2xl">{t("pageTitle")}</h1>
-        <div className="flex flex-wrap items-center gap-2 print:hidden">
-          <div className="flex gap-1 rounded-lg border p-1 w-fit">
-            {(["day", "week", "month"] as const).map((p) => (
-              <Button
-                key={p}
-                variant={period === p ? "default" : "ghost"}
-                size="sm"
-                onClick={() => switchPeriod(p)}
-                disabled={isPending}
-              >
-                {t(`period_${p}`)}
-              </Button>
-            ))}
-            {isPending && (
-              <Loader2Icon className="size-4 animate-spin self-center ml-1 text-muted-foreground" />
-            )}
-          </div>
+      <PageHeader
+        title={t("pageTitle")}
+        actions={
+          <div className="flex flex-wrap items-center gap-2 print:hidden">
+            <div className="flex gap-1 rounded-lg border p-1 w-fit">
+              {(["day", "week", "month"] as const).map((p) => (
+                <Button
+                  key={p}
+                  variant={period === p ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => switchPeriod(p)}
+                  disabled={isPending}
+                >
+                  {t(`period_${p}`)}
+                </Button>
+              ))}
+              {isPending && (
+                <Loader2Icon className="size-4 animate-spin self-center ml-1 text-muted-foreground" />
+              )}
+            </div>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={downloadCsv}
-            disabled={csvPending || isPending || isEmpty}
-            title={isEmpty ? t("csvDisabledTooltip") : undefined}
-          >
-            {csvPending ? (
-              <Loader2Icon className="size-4 animate-spin mr-1.5" aria-hidden="true" />
-            ) : (
-              <DownloadIcon className="size-4 mr-1.5" aria-hidden="true" />
-            )}
-            {t("downloadCsv")}
-          </Button>
-        </div>
-      </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={downloadCsv}
+              disabled={csvPending || isPending || isEmpty}
+              title={isEmpty ? t("csvDisabledTooltip") : undefined}
+            >
+              {csvPending ? (
+                <Loader2Icon className="size-4 animate-spin mr-1.5" aria-hidden="true" />
+              ) : (
+                <DownloadIcon className="size-4 mr-1.5" aria-hidden="true" />
+              )}
+              {t("downloadCsv")}
+            </Button>
+          </div>
+        }
+      />
       {/* Sparse-data informational banner */}
       {isSparse && (
         <div className="flex items-start gap-2 rounded-lg border border-status-attention-foreground/30 bg-status-attention px-4 py-3 text-sm text-status-attention-foreground">

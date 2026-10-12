@@ -9,6 +9,7 @@ import {
   listMyEditRequests,
 } from "@/app/(protected)/tickets/edit-requests/actions";
 import { MyEditRequests, MyEditRequestsSkeleton } from "@/components/my-edit-requests";
+import { PageHeader } from "@/components/page-header";
 
 async function EditRequestsSection() {
   const [itemsRes, requestsRes] = await Promise.all([
@@ -28,13 +29,11 @@ export default async function StylistHomePage() {
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6 lg:p-8">
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-xl md:text-2xl font-semibold">{t("roles.stylist")}</h1>
-          <p className="text-sm text-muted-foreground">{t("home.subtitle")}</p>
-        </div>
-        <LogServiceDialog isStylist redirectPath="/stylist" />
-      </div>
+      <PageHeader
+        title={t("home.stylistTitle")}
+        description={t("home.stylistSubtitle")}
+        actions={<LogServiceDialog isStylist redirectPath="/stylist" />}
+      />
 
       <Suspense fallback={<MyEditRequestsSkeleton />}>
         <EditRequestsSection />

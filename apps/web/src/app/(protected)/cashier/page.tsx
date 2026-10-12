@@ -82,16 +82,10 @@ export default async function CashierHomePage() {
   ]);
 
   return (
-    <div className="flex flex-col gap-8 p-6 md:p-10">
+    <div className="flex flex-col gap-6 p-4 md:p-6 lg:p-8">
       <PageHeader
-        crumbs={["Innovations", "Befine", t("roles.cashier")]}
-        title={
-          <>
-            {t("roles.cashier")}
-            <em>.</em>
-          </>
-        }
-        subtitle={t("home.subtitle")}
+        title={t("home.cashierTitle")}
+        description={t("home.cashierSubtitle")}
         actions={<BusinessDayPanel currentDay={currentDay} lastClosedDay={lastClosedDay} />}
       />
 

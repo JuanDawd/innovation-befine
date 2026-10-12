@@ -128,7 +128,13 @@
   },
   "home": {
     "title": "Innovation Befine",
-    "subtitle": "Plataforma de operaciones internas"
+    "subtitle": "Plataforma de operaciones internas",
+    "cashierTitle": "Caja de hoy",
+    "cashierSubtitle": "Tickets abiertos, cobros y cierre del día",
+    "stylistTitle": "Mis servicios",
+    "stylistSubtitle": "Registra cada servicio al terminarlo",
+    "secretaryTitle": "Registro de servicios",
+    "secretarySubtitle": "Registra servicios y revisa tus solicitudes de cambio"
   },
   "landing": {
     "eyebrow": "Plataforma interna",
@@ -341,7 +347,9 @@
     "markReadyError": "No se pudo actualizar el ticket",
     "alreadyReady": "Ya listo para cobrar",
     "emptyTitle": "Sin tickets abiertos",
-    "emptyDescription": "Los servicios registrados aparecerán aquí."
+    "emptyDescription": "Los servicios registrados aparecerán aquí.",
+    "checkoutTitle": "Cobrar",
+    "checkoutSubtitle": "Selecciona los tickets a cobrar e indica el método de pago."
   },
   "dayAtAGlance": {
     "revenueToday": "Ingresos hoy",
@@ -857,5 +865,9 @@
     "message": "Hay una nueva versión disponible.",
     "refresh": "Actualizar ahora",
     "dismiss": "Ignorar"
+  },
+  "settings": {
+    "pageTitle": "Configuración",
+    "pageSubtitle": "Ajustes de comportamiento del sistema para el negocio."
   }
 }

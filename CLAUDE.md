@@ -374,8 +374,9 @@ Apply rate limiting before business logic using `@upstash/ratelimit`:
 - Use design tokens from `globals.css` via Tailwind classes (e.g. `bg-primary`, `text-muted-foreground`)
 - Status badges: `StatusBadge` component with colour mapping from `docs/design-system.md`
 - Monetary amounts: `font-mono tabular-nums` for alignment
-- Typography: H1 `text-4xl font-bold`, H2 `text-2xl font-semibold`, H3 `text-lg font-semibold`, Body `text-sm`
-- Font: Geist (`--font-sans`)
+- Page titles: always `PageHeader` (task-based title, not the role name); H2 `text-lg font-semibold`, Body `text-sm`, minimum `text-xs`
+- Fonts: Inter Tight (`--font-sans`), Fraunces (`--font-display`, titles), JetBrains Mono (`--font-mono`, figures)
+- Selects: `NativeSelect`, never raw `<select>`; money: `formatMoney()`; colours: tokens only, no raw palette classes
 
 ### Form UX
 

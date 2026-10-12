@@ -14,6 +14,7 @@ import { hasRole } from "@/lib/middleware-helpers";
 import { getDb } from "@/lib/db";
 import { employees } from "@befine/db/schema";
 import { ClothierWorkBoard } from "@/components/clothier-work-board";
+import { PageHeader } from "@/components/page-header";
 
 export default async function ClothierHomePage() {
   const t = await getTranslations("clothierWork");
@@ -31,9 +32,7 @@ export default async function ClothierHomePage() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <div className="px-4 pt-6 pb-2">
-        <h1 className="text-xl font-semibold">{t("pageTitle")}</h1>
-      </div>
+      <PageHeader title={t("pageTitle")} className="px-4 pt-6 pb-2" />
       <ClothierWorkBoard employeeId={emp.id} />
     </div>
   );

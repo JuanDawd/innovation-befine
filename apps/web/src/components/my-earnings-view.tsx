@@ -2,9 +2,10 @@ import { getTranslations } from "next-intl/server";
 import { getMyEarnings } from "@/app/(protected)/admin/payroll/actions";
 import { redirect } from "next/navigation";
 import { formatMoney } from "@/i18n";
+import { PageHeader } from "@/components/page-header";
 
 export async function MyEarningsView({ roleHome }: { roleHome: string }) {
-  const t = await getTranslations("payroll");
+  const [t, tNav] = await Promise.all([getTranslations("payroll"), getTranslations("nav")]);
   const result = await getMyEarnings();
 
   if (!result.success) {
@@ -16,7 +17,7 @@ export async function MyEarningsView({ roleHome }: { roleHome: string }) {
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6 max-w-md mx-auto w-full">
-      <h1 className="text-4xl font-bold">{t("payoutHistory")}</h1>
+      <PageHeader title={tNav("myEarnings")} />
 
       {!hasCurrentEarnings && payoutHistory.length === 0 && (
         <p className="text-sm text-muted-foreground text-center py-4">{t("noEarnings")}</p>

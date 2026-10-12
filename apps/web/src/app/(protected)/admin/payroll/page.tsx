@@ -13,6 +13,7 @@ import { PayrollScreen } from "./payroll-screen";
 import { UnsettledAlert } from "./unsettled-alert";
 import { PayoutStatusGrid } from "./payout-status-grid";
 import { listActiveEmployeesForAbsence } from "../absences/actions";
+import { PageHeader } from "@/components/page-header";
 
 export default async function PayrollPage({
   searchParams,
@@ -43,7 +44,7 @@ export default async function PayrollPage({
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6 lg:p-8">
-      <h1 className="text-xl md:text-2xl font-semibold">{t("pageTitle")}</h1>
+      <PageHeader title={t("pageTitle")} />
       <UnsettledAlert unsettled={unsettled} />
       {employeeId && gridRows.length > 0 && <PayoutStatusGrid rows={gridRows} />}
       <PayrollScreen
