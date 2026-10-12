@@ -427,16 +427,19 @@ export function AppShell({
                 </SidebarMenuButton>
               </SidebarMenuItem>
             )}
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                onClick={() => setCheckoutOpen(true)}
-                tooltip={t("dayAtAGlance.actionCheckout")}
-                id="sidebar-checkout"
-              >
-                <CreditCardIcon aria-hidden="true" />
-                <span>{t("dayAtAGlance.actionCheckout")}</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
+            {/* Checkout is cashier/admin-only server-side (M-67) */}
+            {(role === "cashier" || role === "admin") && (
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  onClick={() => setCheckoutOpen(true)}
+                  tooltip={t("dayAtAGlance.actionCheckout")}
+                  id="sidebar-checkout"
+                >
+                  <CreditCardIcon aria-hidden="true" />
+                  <span>{t("dayAtAGlance.actionCheckout")}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )}
           </SidebarMenu>
 
           <div className="flex items-center gap-1 group-data-[collapsible=icon]:flex-col-reverse group-data-[collapsible=icon]:gap-2">
