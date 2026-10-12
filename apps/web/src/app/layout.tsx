@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import { SwUpdatePrompt } from "@/components/sw-update-prompt";
+import { QueryProvider } from "@/components/query-provider";
 import { Toaster } from "sonner";
 
 const interTight = Inter_Tight({
@@ -61,9 +62,11 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       </head>
       <body>
         <NextIntlClientProvider messages={messages}>
-          {children}
-          <SwUpdatePrompt />
-          <Toaster richColors closeButton duration={4000} position="bottom-right" />
+          <QueryProvider>
+            {children}
+            <SwUpdatePrompt />
+            <Toaster richColors closeButton duration={4000} position="bottom-right" />
+          </QueryProvider>
         </NextIntlClientProvider>
       </body>
     </html>

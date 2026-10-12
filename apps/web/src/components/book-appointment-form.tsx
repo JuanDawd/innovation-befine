@@ -14,7 +14,11 @@
  * surface-displaying the server CONFLICT response.
  */
 
-import { useState, useTransition, useEffect, useCallback } from "react";
+import { notifyDataChanged } from "@/lib/data-events";
+import { useState, useTransition, useCallback } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
+import { unwrap } from "@/lib/action-query";
 import { useTranslations } from "next-intl";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
@@ -22,11 +26,7 @@ import { CalendarIcon, Loader2Icon, ClockIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ClientSearchWidget } from "@/components/client-search-widget";
-import {
-  createAppointment,
-  listBookingStylists,
-  type StylistOption,
-} from "@/app/(protected)/appointments/actions";
+import { createAppointment, listBookingStylists } from "@/app/(protected)/appointments/actions";
 import type { ClientRow } from "@/app/(protected)/clients/actions";
 
 type ClientSelection =
@@ -56,9 +56,16 @@ export function BookAppointmentForm({
   const tc = useTranslations("common");
   const router = useRouter();
 
-  const [stylists, setStylists] = useState<StylistOption[]>([]);
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const [isLoading, startLoadTransition] = useTransition();
+  const {
+    data: stylists = [],
+    isPending: isLoading,
+    error: stylistsError,
+  } = useQuery({
+    queryKey: queryKeys.staff.bookingStylists,
+    queryFn: () => unwrap(listBookingStylists()),
+    staleTime: 5 * 60_000,
+  });
+  const loadError = stylistsError?.message ?? null;
 
   const [clientSelection, setClientSelection] = useState<ClientSelection>(null);
   const [stylistId, setStylistId] = useState("");
@@ -76,17 +83,6 @@ export function BookAppointmentForm({
   const [isPending, startSubmitTransition] = useTransition();
   const { showToast } = useToast();
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-
-  useEffect(() => {
-    startLoadTransition(async () => {
-      const res = await listBookingStylists();
-      if (!res.success) {
-        setLoadError(res.error.message);
-        return;
-      }
-      setStylists(res.data);
-    });
-  }, []);
 
   const validate = useCallback(() => {
     const errors: Record<string, string> = {};
@@ -147,6 +143,8 @@ export function BookAppointmentForm({
       }
 
       showToast("success", t("submitSuccess"));
+      notifyDataChanged("appointments");
+      router.refresh();
       if (onClose) {
         setTimeout(() => onClose(), 1200);
       } else {

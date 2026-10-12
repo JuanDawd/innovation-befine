@@ -19,6 +19,8 @@ import { NAV_ITEMS, MOBILE_BOTTOM_NAV_ROLES, type NavItem, resolveGroups } from 
 
 import { NotificationBell } from "./notification-bell";
 import { VersionBanner } from "./version-banner";
+import { RealtimeQueryBridge } from "@/components/realtime-query-bridge";
+import { getQueryClient } from "@/lib/query-client";
 import { useTheme } from "@/hooks/use-theme";
 import {
   Sidebar,
@@ -306,6 +308,8 @@ export function AppShell({
 
   async function handleLogout() {
     await signOut();
+    // Drop cached server state so the next user on a shared device starts clean.
+    getQueryClient().clear();
     router.push("/login");
     router.refresh();
   }
@@ -323,6 +327,7 @@ export function AppShell({
         </div>
 
         <VersionBanner />
+        <RealtimeQueryBridge role={role} />
 
         <main className="flex-1 overflow-y-auto pb-16">{children}</main>
 
@@ -423,6 +428,7 @@ export function AppShell({
         />
 
         <VersionBanner />
+        <RealtimeQueryBridge role={role} />
 
         <main className="flex-1 overflow-y-auto">{children}</main>
       </SidebarInset>

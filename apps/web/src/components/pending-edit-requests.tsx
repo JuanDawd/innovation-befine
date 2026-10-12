@@ -4,14 +4,18 @@
  * PendingEditRequests — T041
  *
  * Cashier panel showing pending ticket edit requests.
- * Refreshes on SSE ticket_updated events.
+ * Server state via TanStack Query (`editRequests.pending`), invalidated by
+ * realtime ticket events and saves; 30 s refetch backup.
  */
 
-import { useState, useCallback, useTransition } from "react";
+import { notifyDataChanged } from "@/lib/data-events";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
+import { unwrap } from "@/lib/action-query";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { CheckIcon, XIcon, ClipboardEditIcon } from "lucide-react";
-import { useRealtimeEvent } from "@befine/realtime/client";
 import {
   listPendingEditRequests,
   resolveEditRequest,
@@ -29,21 +33,13 @@ export function PendingEditRequests({
   initialRequests: PendingEditRequest[];
 }) {
   const t = useTranslations("editRequests");
-  const [requests, setRequests] = useState<PendingEditRequest[]>(initialRequests);
-  const [resolving, setResolving] = useState<string | null>(null);
-  const [, startTransition] = useTransition();
-
-  const refresh = useCallback(() => {
-    startTransition(async () => {
-      const result = await listPendingEditRequests();
-      if (result.success) setRequests(result.data);
-    });
-  }, []);
-
-  useRealtimeEvent("cashier", "ticket_updated", {
-    onData: () => refresh(),
-    onPoll: refresh,
+  const { data: requests = initialRequests } = useQuery({
+    queryKey: queryKeys.editRequests.pending,
+    queryFn: () => unwrap(listPendingEditRequests()),
+    initialData: initialRequests,
+    refetchInterval: 30_000,
   });
+  const [resolving, setResolving] = useState<string | null>(null);
 
   async function handleResolve(id: string, decision: "approved" | "rejected") {
     setResolving(id);
@@ -53,7 +49,7 @@ export function PendingEditRequests({
       toast.error(t("resolveError"));
       return;
     }
-    setRequests((prev) => prev.filter((r) => r.id !== id));
+    notifyDataChanged("editRequests", "tickets");
     toast.success(decision === "approved" ? t("approveSuccess") : t("rejectSuccess"));
   }
 

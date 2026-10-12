@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import React from "react";
+import React, { useState } from "react";
 import { AlertTriangleIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -44,8 +44,27 @@ function ConfirmationDialog({
 }: ConfirmationDialogProps) {
   const isDestructive = variant === "destructive";
 
+  // Works controlled (open/onOpenChange) or uncontrolled. The dialog closes
+  // after confirming so any error/toast the action produces is visible instead
+  // of being rendered behind the modal (M-66).
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = open !== undefined;
+  const actualOpen = isControlled ? open : internalOpen;
+
+  function setOpen(next: boolean) {
+    if (!isControlled) setInternalOpen(next);
+    onOpenChange?.(next);
+  }
+
+  function handleConfirm() {
+    // Run first so handlers can still read state that closing may reset.
+    const result = onConfirm();
+    setOpen(false);
+    return result;
+  }
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={actualOpen} onOpenChange={setOpen}>
       <DialogTrigger render={trigger as React.ReactElement} />
       <DialogContent className="max-w-sm" showCloseButton={false}>
         <DialogHeader>
@@ -69,7 +88,7 @@ function ConfirmationDialog({
         </DialogHeader>
         <DialogFooter>
           <DialogClose render={<Button variant="outline" />}>{cancelLabel}</DialogClose>
-          <Button variant={isDestructive ? "destructive" : "default"} onClick={onConfirm}>
+          <Button variant={isDestructive ? "destructive" : "default"} onClick={handleConfirm}>
             {confirmLabel}
           </Button>
         </DialogFooter>

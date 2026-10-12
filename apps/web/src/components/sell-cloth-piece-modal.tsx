@@ -1,6 +1,10 @@
 "use client";
 
-import { useState, useTransition, useEffect, useRef } from "react";
+import { notifyDataChanged } from "@/lib/data-events";
+import { useState, useTransition } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
+import { unwrap } from "@/lib/action-query";
 import { Loader2Icon } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -22,11 +26,22 @@ interface SellClothPieceModalProps {
 
 export function SellClothPieceModal({ open, onOpenChange, ticketId }: SellClothPieceModalProps) {
   const [isPending, startTransition] = useTransition();
-  const [isLoading, startLoadTransition] = useTransition();
-  const fetchedRef = useRef(false);
-
-  const [pieces, setPieces] = useState<SellableClothPiece[]>([]);
-  const [clients, setClients] = useState<ClientOption[]>([]);
+  // Loaded when the modal first opens, then cached (reopening is instant).
+  const piecesQuery = useQuery({
+    queryKey: queryKeys.catalog.sellableClothPieces,
+    queryFn: () => unwrap(listSellableClothPieces()),
+    staleTime: 5 * 60_000,
+    enabled: open,
+  });
+  const clientsQuery = useQuery({
+    queryKey: queryKeys.clients.options,
+    queryFn: () => unwrap(listClientsForSale()),
+    staleTime: 5 * 60_000,
+    enabled: open,
+  });
+  const pieces: SellableClothPiece[] = piecesQuery.data ?? [];
+  const clients: ClientOption[] = clientsQuery.data ?? [];
+  const isLoading = piecesQuery.isPending || clientsQuery.isPending;
 
   const [selectedPieceId, setSelectedPieceId] = useState("");
   const [selectedVariantId, setSelectedVariantId] = useState("");
@@ -35,20 +50,6 @@ export function SellClothPieceModal({ open, onOpenChange, ticketId }: SellClothP
   const [customerType, setCustomerType] = useState<"none" | "client" | "guest">("none");
   const [clientId, setClientId] = useState("");
   const [guestName, setGuestName] = useState("");
-
-  // Fetch data once when the modal opens for the first time
-  useEffect(() => {
-    if (!open || fetchedRef.current) return;
-    fetchedRef.current = true;
-    startLoadTransition(async () => {
-      const [piecesRes, clientsRes] = await Promise.all([
-        listSellableClothPieces(),
-        listClientsForSale(),
-      ]);
-      if (piecesRes.success) setPieces(piecesRes.data);
-      if (clientsRes.success) setClients(clientsRes.data);
-    });
-  }, [open]);
 
   const selectedPiece = pieces.find((p) => p.id === selectedPieceId);
   const selectedVariant = selectedPiece?.variants.find((v) => v.id === selectedVariantId);
@@ -102,6 +103,7 @@ export function SellClothPieceModal({ open, onOpenChange, ticketId }: SellClothP
         return;
       }
       toast.success(`Venta registrada — $${res.data.effectiveTotal.toLocaleString("es-CO")}`);
+      notifyDataChanged("clothSales", "tickets", "businessDay");
       reset();
       onOpenChange(false);
     });

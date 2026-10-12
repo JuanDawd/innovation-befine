@@ -101,6 +101,7 @@
     "reopenError": "Could not reopen day",
     "confirmClose": "Close the day?",
     "confirmCloseDescription": "This will close the current day. You can reopen it if needed.",
+    "closeOpenTicketsWarning": "There {count, plural, one {is # unpaid ticket} other {are # unpaid tickets}}. Charge them before closing: after closing they will no longer appear on the dashboard or in Checkout.",
     "confirmReopen": "Reopen the day?",
     "confirmReopenDescription": "Reopening a closed day requires a reason. This action is recorded in the audit log.",
     "reopenReason": "Reason for reopening",
@@ -399,6 +400,11 @@
     "view": "View"
   },
   "clothierWork": {
+    "claimSuccess": "You claimed {piece}",
+    "markDoneSuccess": "{piece} is done and pending approval",
+    "markDoneConfirmTitle": "Mark {piece} ×{quantity} as done?",
+    "markDoneConfirmDescription": "Only do this once the full quantity is finished. An admin will review it and you can't undo it.",
+    "cancel": "Cancel",
     "pageTitle": "My products",
     "myPieces": "My pieces",
     "available": "Available to claim",

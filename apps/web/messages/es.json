@@ -102,6 +102,7 @@
     "reopenError": "No se pudo reabrir el día",
     "confirmClose": "¿Cerrar el día?",
     "confirmCloseDescription": "Esta acción cerrará el día actual. Podrás reabrirlo si es necesario.",
+    "closeOpenTicketsWarning": "Hay {count, plural, one {# ticket sin cobrar} other {# tickets sin cobrar}}. Cóbralos antes de cerrar: después del cierre ya no aparecerán en el tablero ni en Cobrar.",
     "confirmReopen": "¿Reabrir el día?",
     "confirmReopenDescription": "Reabrir un día cerrado requiere un motivo. Esta acción queda registrada en el historial.",
     "reopenReason": "Motivo de reapertura",
@@ -432,6 +433,11 @@
     "statusPending": "Pendiente"
   },
   "clothierWork": {
+    "claimSuccess": "Reclamaste {piece}",
+    "markDoneSuccess": "{piece} quedó lista y pendiente de aprobación",
+    "markDoneConfirmTitle": "¿Marcar {piece} ×{quantity} como lista?",
+    "markDoneConfirmDescription": "Hazlo solo si terminaste toda la cantidad. La administradora la revisará y no podrás deshacerlo.",
+    "cancel": "Cancelar",
     "pageTitle": "Mis productos",
     "myPieces": "Mis piezas",
     "available": "Disponibles para reclamar",

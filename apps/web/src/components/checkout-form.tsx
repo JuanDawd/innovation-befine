@@ -11,7 +11,12 @@
  * - Receipt summary on success
  */
 
-import { useState, useTransition, useEffect } from "react";
+import { newUuid } from "@/lib/uuid";
+import { notifyDataChanged } from "@/lib/data-events";
+import { useState, useTransition } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
+import { unwrap } from "@/lib/action-query";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { PlusIcon, Trash2Icon, Loader2Icon, PrinterIcon } from "lucide-react";
@@ -29,7 +34,6 @@ import {
   getAwaitingPaymentTickets,
   processCheckout,
   setOverridePrice,
-  type CheckoutTicket,
   type CheckoutSummary,
 } from "@/app/(protected)/cashier/checkout/actions";
 
@@ -52,10 +56,15 @@ export function CheckoutForm({ onClose }: { onClose?: () => void } = {}) {
   const tc = useTranslations("common");
   const router = useRouter();
 
-  const [allTickets, setAllTickets] = useState<CheckoutTicket[]>([]);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const { data: allTickets = [], isPending: isLoading } = useQuery({
+    queryKey: queryKeys.tickets.awaitingPayment,
+    queryFn: () => unwrap(getAwaitingPaymentTickets()),
+    // Always confirm against fresh data when the cashier opens Cobrar.
+    staleTime: 0,
+  });
+  // Every awaiting ticket starts selected; we track the ones the cashier unticks.
+  const [deselectedIds, setDeselectedIds] = useState<Set<string>>(new Set());
   const [payments, setPayments] = useState<PaymentLine[]>([{ method: "cash", amount: "" }]);
-  const [isLoading, startLoadTransition] = useTransition();
   const [isPending, startSubmitTransition] = useTransition();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [summary, setSummary] = useState<CheckoutSummary | null>(null);
@@ -63,17 +72,8 @@ export function CheckoutForm({ onClose }: { onClose?: () => void } = {}) {
   // overrides[ticketItemId] = { price, reason, saving }
   const [overrideEdits, setOverrideEdits] = useState<Record<string, OverrideEdit>>({});
 
-  useEffect(() => {
-    startLoadTransition(async () => {
-      const res = await getAwaitingPaymentTickets();
-      if (res.success) {
-        setAllTickets(res.data);
-        setSelectedIds(new Set(res.data.map((t) => t.id)));
-      }
-    });
-  }, []);
-
-  const selected = allTickets.filter((t) => selectedIds.has(t.id));
+  const selected = allTickets.filter((t) => !deselectedIds.has(t.id));
+  const selectedIds = new Set(selected.map((t) => t.id));
   const grandTotal = selected.reduce((s, t) => s + t.total, 0);
   const paymentSum = payments.reduce((s, p) => s + (parseInt(p.amount, 10) || 0), 0);
   const paymentValid =
@@ -97,8 +97,7 @@ export function CheckoutForm({ onClose }: { onClose?: () => void } = {}) {
     });
     if (result.success) {
       // Reload tickets to reflect override
-      const res = await getAwaitingPaymentTickets();
-      if (res.success) setAllTickets(res.data);
+      notifyDataChanged("tickets");
       setOverrideEdits((prev) => {
         const next = { ...prev };
         delete next[ticketItemId];
@@ -112,7 +111,7 @@ export function CheckoutForm({ onClose }: { onClose?: () => void } = {}) {
   }
 
   function toggleTicket(id: string) {
-    setSelectedIds((prev) => {
+    setDeselectedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
@@ -148,10 +147,12 @@ export function CheckoutForm({ onClose }: { onClose?: () => void } = {}) {
       const result = await processCheckout({
         ticketIds: [...selectedIds],
         payments: payments.map((p) => ({ method: p.method, amount: parseInt(p.amount, 10) })),
-        idempotencyKey: crypto.randomUUID(),
+        idempotencyKey: newUuid(),
       });
       if (result.success) {
         setSummary(result.data);
+        notifyDataChanged("tickets", "businessDay");
+        router.refresh();
       } else {
         setError(result.error.message);
       }

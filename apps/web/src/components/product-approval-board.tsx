@@ -6,7 +6,11 @@
  * Secretary/admin view for approving product pieces that clothiers have marked as done.
  */
 
-import { useState, useTransition, useEffect, useCallback } from "react";
+import { notifyDataChanged } from "@/lib/data-events";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
+import { unwrap } from "@/lib/action-query";
 import { useTranslations } from "next-intl";
 import { CheckCircle2Icon, Loader2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -21,21 +25,13 @@ import {
 export function ProductApprovalBoard() {
   const t = useTranslations("products");
 
-  const [pieces, setPieces] = useState<PendingProductPieceApprovalRow[]>([]);
-  const [isLoading, startLoadTransition] = useTransition();
+  const { data: pieces = [], isPending: isLoading } = useQuery({
+    queryKey: queryKeys.products.approvals,
+    queryFn: () => unwrap(listPendingProductPieceApprovals()),
+    refetchInterval: 60_000,
+  });
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [errorMap, setErrorMap] = useState<Record<string, string>>({});
-
-  const load = useCallback(() => {
-    startLoadTransition(async () => {
-      const res = await listPendingProductPieceApprovals();
-      if (res.success) setPieces(res.data);
-    });
-  }, []);
-
-  useEffect(() => {
-    load();
-  }, [load]);
 
   async function handleApprove(piece: PendingProductPieceApprovalRow) {
     setPendingId(piece.id);
@@ -47,7 +43,7 @@ export function ProductApprovalBoard() {
         [piece.id]: res.error.code === "STALE_DATA" ? t("staleError") : t("approveError"),
       }));
     } else {
-      load();
+      notifyDataChanged("products");
     }
   }
 

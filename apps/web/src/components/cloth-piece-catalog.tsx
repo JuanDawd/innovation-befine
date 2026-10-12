@@ -8,6 +8,7 @@
  * Admin manages variants inline under each piece.
  */
 
+import { notifyDataChanged } from "@/lib/data-events";
 import React, { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -105,6 +106,7 @@ function VariantRow({
       const res = await editClothPieceVariant(variant.id, data);
       if (res.success) {
         showToast("success", t("editVariantSuccess"));
+        notifyDataChanged("catalog");
         onUpdated(res.data);
         setEditOpen(false);
       } else {
@@ -118,6 +120,7 @@ function VariantRow({
       const res = await deactivateClothPieceVariant(variant.id);
       if (res.success) {
         showToast("success", t("deactivateSuccess"));
+        notifyDataChanged("catalog");
         onUpdated({ ...variant, isActive: false });
       } else {
         showToast("error", t("deactivateError"));
@@ -130,6 +133,7 @@ function VariantRow({
       const res = await restoreClothPieceVariant(variant.id);
       if (res.success) {
         showToast("success", t("restoreSuccess"));
+        notifyDataChanged("catalog");
         onUpdated({ ...variant, isActive: true });
       } else {
         showToast("error", t("restoreError"));
@@ -305,6 +309,7 @@ function AddVariantForm({
       const res = await createClothPieceVariant(clothPieceId, data);
       if (res.success) {
         showToast("success", t("addVariantSuccess"));
+        notifyDataChanged("catalog");
         onCreated(res.data);
       } else {
         setServerError(res.error.message);
@@ -413,6 +418,7 @@ function PieceDialog({
         : await createClothPiece(data);
       if (result.success) {
         showToast("success", isEdit ? t("editClothPieceSuccess") : t("createClothPieceSuccess"));
+        notifyDataChanged("catalog");
         setOpen(false);
         const piece: ClothPieceRow = isEdit
           ? {
@@ -522,6 +528,7 @@ function PieceRow({
       const res = await deactivateClothPiece(localPiece.id);
       if (res.success) {
         showToast("success", t("deactivateSuccess"));
+        notifyDataChanged("catalog");
         update({ ...localPiece, isActive: false });
       } else {
         showToast("error", t("deactivateError"));
@@ -534,6 +541,7 @@ function PieceRow({
       const res = await restoreClothPiece(localPiece.id);
       if (res.success) {
         showToast("success", t("restoreSuccess"));
+        notifyDataChanged("catalog");
         update({ ...localPiece, isActive: true });
       } else {
         showToast("error", t("restoreError"));

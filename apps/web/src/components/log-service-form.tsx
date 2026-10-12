@@ -8,7 +8,12 @@
  * - stylist: employee pre-selected to self, selector hidden
  */
 
-import { useState, useTransition, useEffect } from "react";
+import { notifyDataChanged } from "@/lib/data-events";
+import { newUuid } from "@/lib/uuid";
+import { useState, useTransition } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
+import { unwrap } from "@/lib/action-query";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
@@ -46,10 +51,22 @@ export function LogServiceForm({
   const tc = useTranslations("common");
   const router = useRouter();
 
-  const [stylists, setStylists] = useState<StylistOption[]>([]);
-  const [services, setServices] = useState<Service[]>([]);
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const [isLoading, startLoadTransition] = useTransition();
+  // Cached across dialog openings — catalog and staff rarely change.
+  const servicesQuery = useQuery({
+    queryKey: queryKeys.catalog.services,
+    queryFn: () => unwrap(listActiveServices()),
+    staleTime: 5 * 60_000,
+  });
+  const stylistsQuery = useQuery({
+    queryKey: queryKeys.staff.activeStylists,
+    queryFn: () => unwrap(listActiveStylists()),
+    staleTime: 5 * 60_000,
+    enabled: !isStylist,
+  });
+  const services = (servicesQuery.data ?? []) as Service[];
+  const stylists: StylistOption[] = stylistsQuery.data ?? [];
+  const isLoading = servicesQuery.isPending || (!isStylist && stylistsQuery.isPending);
+  const loadError = (servicesQuery.error ?? stylistsQuery.error)?.message ?? null;
   const { showToast } = useToast();
 
   const [employeeId, setEmployeeId] = useState(currentEmployeeId);
@@ -63,29 +80,6 @@ export function LogServiceForm({
   const variants = selectedService?.variants ?? [];
   const selectedVariant = variants.find((v) => v.id === variantId);
 
-  // Load stylists + services on mount
-  useEffect(() => {
-    startLoadTransition(async () => {
-      const [stylistsRes, servicesRes] = await Promise.all([
-        isStylist
-          ? Promise.resolve({ success: true as const, data: [] as StylistOption[] })
-          : listActiveStylists(),
-        listActiveServices(),
-      ]);
-      if (!stylistsRes.success) {
-        setLoadError(stylistsRes.error.message);
-        return;
-      }
-      if (!servicesRes.success) {
-        setLoadError(servicesRes.error.message);
-        return;
-      }
-      setStylists(stylistsRes.data);
-      setServices(servicesRes.data as Service[]);
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!variantId || !clientSelection) return;
@@ -97,13 +91,15 @@ export function LogServiceForm({
       clientType: clientSelection.type,
       clientId: clientSelection.type === "saved" ? clientSelection.client.id : undefined,
       guestName: clientSelection.type === "guest" ? clientSelection.guestName : undefined,
-      idempotencyKey: crypto.randomUUID(),
+      idempotencyKey: newUuid(),
     };
 
     startSubmitTransition(async () => {
       const result = await createTicket(input);
       if (result.success) {
         showToast("success", t("submitSuccess"));
+        notifyDataChanged("tickets");
+        router.refresh();
         if (onClose) {
           setTimeout(() => onClose(), 1200);
         } else {

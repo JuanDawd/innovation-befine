@@ -4,24 +4,21 @@
  * CashierDashboard — T036, T037
  *
  * Displays open tickets grouped by employee.
- * Updates in real-time via SSE (ticket_created / ticket_updated events).
- * Falls back to 30-second polling.
+ * Server state via TanStack Query (`tickets.open`): realtime events and saves
+ * invalidate it (RealtimeQueryBridge / notifyDataChanged); 30 s refetch backup.
  *
  * Cashier/admin can mark logged or reopened tickets as "awaiting payment"
  * directly from the card — T037.
  */
 
-import {
-  useState,
-  useCallback,
-  useTransition,
-  useOptimistic,
-  startTransition as reactStartTransition,
-} from "react";
+import { useState, useOptimistic, startTransition as reactStartTransition } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { notifyDataChanged } from "@/lib/data-events";
+import { queryKeys } from "@/lib/query-keys";
+import { unwrap } from "@/lib/action-query";
 import { useTranslations } from "next-intl";
 import { Loader2Icon, CreditCardIcon, TicketIcon } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
-import { useRealtimeEvent } from "@befine/realtime/client";
 import {
   listOpenTickets,
   transitionToAwaitingPayment,
@@ -52,6 +49,11 @@ function elapsed(date: Date): string {
   return `${hrs}h ${mins % 60}m`;
 }
 
+/** Highlight tickets created in the last 10 s (replaces the SSE-driven flash). */
+function isJustCreated(ticket: DashboardTicket): boolean {
+  return Date.now() - new Date(ticket.createdAt).getTime() < 10_000;
+}
+
 function statusClass(status: DashboardTicket["status"]): string {
   if (status === "awaiting_payment")
     return "border-l-4 border-l-amber-400 bg-amber-50 dark:bg-amber-950/20";
@@ -62,43 +64,18 @@ function statusClass(status: DashboardTicket["status"]): string {
 export function CashierDashboard({ initialTickets }: { initialTickets: DashboardTicket[] }) {
   const ts = useTranslations("status");
   const tt = useTranslations("tickets");
-  const [tickets, setTickets] = useState<DashboardTicket[]>(initialTickets);
-  const [newIds, setNewIds] = useState<Set<string>>(new Set());
+  const { data: tickets = [] } = useQuery({
+    queryKey: queryKeys.tickets.open,
+    queryFn: () => unwrap(listOpenTickets()),
+    initialData: initialTickets,
+    refetchInterval: 30_000,
+  });
   const [transitioning, setTransitioning] = useState<Set<string>>(new Set());
   const [errors, setErrors] = useState<Map<string, string>>(new Map());
-  const [, startTransition] = useTransition();
 
   // T10R-R2 — optimistic status update; reverts naturally if the action errors
-  // because we never commit setTickets on the failure branch.
+  // because the query data is only replaced on a successful refetch.
   const [optimisticTickets, applyOptimistic] = useOptimistic(tickets, optimisticStatusReducer);
-
-  const refresh = useCallback(() => {
-    startTransition(async () => {
-      const result = await listOpenTickets();
-      if (result.success) setTickets(result.data);
-    });
-  }, []);
-
-  useRealtimeEvent("cashier", "ticket_created", {
-    onData: (data) => {
-      const { ticketId } = data as { ticketId: string };
-      setNewIds((prev) => new Set(prev).add(ticketId));
-      setTimeout(() => {
-        setNewIds((prev) => {
-          const next = new Set(prev);
-          next.delete(ticketId);
-          return next;
-        });
-      }, 2000);
-      refresh();
-    },
-    onPoll: refresh,
-  });
-
-  useRealtimeEvent("cashier", "ticket_updated", {
-    onData: () => refresh(),
-    onPoll: refresh,
-  });
 
   async function handleMarkReady(ticket: DashboardTicket) {
     setTransitioning((prev) => new Set(prev).add(ticket.id));
@@ -132,7 +109,7 @@ export function CashierDashboard({ initialTickets }: { initialTickets: Dashboard
       setErrors((prev) => new Map(prev).set(ticket.id, tt("markReadyError")));
       return;
     }
-    // On success, SSE/poll will refresh the list authoritatively.
+    notifyDataChanged("tickets");
   }
 
   const byEmployee = groupByEmployee(optimisticTickets);
@@ -162,7 +139,7 @@ export function CashierDashboard({ initialTickets }: { initialTickets: Dashboard
                   className={[
                     "rounded-lg border bg-card p-3 shadow-xs transition-all duration-300",
                     statusClass(ticket.status),
-                    newIds.has(ticket.id)
+                    isJustCreated(ticket)
                       ? "ring-2 ring-green-400 bg-green-50 dark:bg-green-950/20 animate-pulse"
                       : "",
                   ].join(" ")}

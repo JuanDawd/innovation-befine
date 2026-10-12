@@ -8,6 +8,7 @@
  * daily rate (role = secretary).
  */
 
+import { notifyDataChanged } from "@/lib/data-events";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
@@ -70,6 +71,7 @@ export function CreateEmployeeForm({ onSuccess }: CreateEmployeeFormProps) {
     const result = await createEmployee(data);
     if (result.success) {
       reset();
+      notifyDataChanged("staff");
       onSuccess?.({ name: result.data.name, email: result.data.email });
     } else {
       setServerError(result.error.message);

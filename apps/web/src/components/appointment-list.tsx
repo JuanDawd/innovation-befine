@@ -7,7 +7,11 @@
  * Used by secretary and admin.
  */
 
-import { useState, useTransition, useEffect, useCallback } from "react";
+import { useState, useTransition } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { notifyDataChanged } from "@/lib/data-events";
+import { queryKeys } from "@/lib/query-keys";
+import { unwrap } from "@/lib/action-query";
 import { useTranslations } from "next-intl";
 import {
   ChevronLeftIcon,
@@ -26,7 +30,6 @@ import {
   listBookingStylists,
   acknowledgeAppointmentPriceChange,
   type AppointmentListRow,
-  type StylistOption,
 } from "@/app/(protected)/appointments/actions";
 import { AppointmentStatusActions } from "@/components/appointment-status-actions";
 
@@ -120,34 +123,31 @@ export function AppointmentList() {
   const [date, setDate] = useState(todayBogota);
   const [bookOpen, setBookOpen] = useState(false);
   const [stylistFilter, setStylistFilter] = useState("");
-  const [stylists, setStylists] = useState<StylistOption[]>([]);
-  const [rows, setRows] = useState<AppointmentListRow[]>([]);
-  const [isLoading, startLoadTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
+  const { data: stylists = [] } = useQuery({
+    queryKey: queryKeys.staff.bookingStylists,
+    queryFn: () => unwrap(listBookingStylists()),
+    staleTime: 5 * 60_000,
+  });
+  const {
+    data: rows = [],
+    isPending: isLoading,
+    error: queryError,
+  } = useQuery({
+    queryKey: queryKeys.appointments.byDate(date, stylistFilter),
+    queryFn: () => unwrap(listAppointmentsForDate(date, stylistFilter || undefined)),
+    refetchInterval: 60_000,
+  });
+  const error = queryError?.message ?? null;
 
-  const load = useCallback((d: string, sid: string) => {
-    startLoadTransition(async () => {
-      const res = await listAppointmentsForDate(d, sid || undefined);
-      if (!res.success) {
-        setError(res.error.message);
-        return;
-      }
-      setError(null);
-      setRows(res.data);
-    });
-  }, []);
-
-  // Load stylists once on mount
-  useEffect(() => {
-    listBookingStylists().then((res) => {
-      if (res.success) setStylists(res.data);
-    });
-  }, []);
-
-  // Reload appointments when date or filter changes
-  useEffect(() => {
-    load(date, stylistFilter);
-  }, [date, stylistFilter, load]);
+  const queryClient = useQueryClient();
+  /** Instant local patch of one row, then refetch (status changes can move/hide rows). */
+  function patchRow(id: string, patch: Partial<AppointmentListRow>) {
+    queryClient.setQueryData<AppointmentListRow[]>(
+      queryKeys.appointments.byDate(date, stylistFilter),
+      (prev) => prev?.map((r) => (r.id === id ? { ...r, ...patch } : r)),
+    );
+    notifyDataChanged("appointments");
+  }
 
   function prev() {
     const d = shiftDate(date, -1);
@@ -264,13 +264,7 @@ export function AppointmentList() {
                         <PriceChangedAcknowledge
                           appointmentId={row.id}
                           t={t}
-                          onAcknowledged={() =>
-                            setRows((prev) =>
-                              prev.map((r) =>
-                                r.id === row.id ? { ...r, priceChangeAcknowledged: true } : r,
-                              ),
-                            )
-                          }
+                          onAcknowledged={() => patchRow(row.id, { priceChangeAcknowledged: true })}
                         />
                       )}
                     </td>
@@ -285,11 +279,7 @@ export function AppointmentList() {
                       <AppointmentStatusActions
                         appointmentId={row.id}
                         currentStatus={row.status}
-                        onUpdated={(newStatus) =>
-                          setRows((prev) =>
-                            prev.map((r) => (r.id === row.id ? { ...r, status: newStatus } : r)),
-                          )
-                        }
+                        onUpdated={(newStatus) => patchRow(row.id, { status: newStatus })}
                       />
                     </td>
                   </tr>

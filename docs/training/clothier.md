@@ -1,51 +1,72 @@
-# Guía de uso — Confeccionadora
+# Guía de uso — Confeccionista
 
-> Lectura rápida: ~2 minutos.
+> Lectura rápida: ~3 minutos. Antes, lee [Primeros pasos](common.md).
 
----
-
-## 1. Tu pantalla de inicio
-
-Al iniciar sesión llegas al **Panel de la confeccionadora**. Aquí ves:
-
-- Las piezas del lote de hoy que tienes asignadas o disponibles para tomar.
-- Tu progreso del día (piezas completadas).
+La app de la confeccionista está hecha para el celular. Abajo tienes dos pestañas: **Mi trabajo** y **Mis ganancias**.
 
 ---
 
-## 2. Tomar una pieza
+## 1. Mi trabajo
 
-Cuando el lote del día tiene piezas disponibles:
+Al entrar ves **Mis productos**, con dos listas:
 
-1. Verás la lista de piezas pendientes en tu panel.
-2. Clic en **"Tomar pieza"** junto a la pieza que vas a trabajar.
-3. La pieza queda asignada a ti — nadie más la puede tomar.
+- **Mis piezas:** las piezas que te asignaron o que reclamaste. Arriba ves tu avance (_"1 de 2 piezas listas"_).
+- **Disponibles para reclamar:** piezas sin dueña que cualquier confeccionista puede tomar.
 
----
+El número junto a cada pieza (ej. **×3**) es la cantidad que hay que hacer.
 
-## 3. Marcar una pieza como terminada
+<img src="screenshots/guides/clothier/01-my-work.jpg" alt="Mi trabajo" width="300" />
 
-Cuando terminas de confeccionar una pieza:
-
-1. En tu lista → busca la pieza tomada.
-2. Clic en **"Marcar como hecha"**.
-3. La pieza pasa a revisión del administrador o secretaria.
-
-> Tu ganancia se registra cuando el administrador aprueba la pieza, no cuando la marcas como hecha.
+La campana 🔔 te avisa cuando te asignan piezas nuevas (_"Tienes 1 pieza asignada en el nuevo lote"_).
 
 ---
 
-## 4. Ver tus ganancias
+## 2. Ver las instrucciones
 
-1. Ve a **Mis ganancias** en el menú inferior.
-2. Verás el desglose por pieza aprobada: tipo de pieza, variante, y tu tarifa.
+Toca **"Ver notas"** debajo de la pieza para ver la variante, el color, la talla, el estilo y las instrucciones especiales.
+
+<img src="screenshots/guides/clothier/02-piece-notes.jpg" alt="Ver notas de una pieza" width="300" />
+
+---
+
+## 3. Reclamar una pieza
+
+1. En **Disponibles para reclamar**, toca **"Reclamar"** en la pieza que vas a hacer.
+2. La pieza pasa a **Mis piezas**.
+
+<img src="screenshots/guides/clothier/03-claimed.jpg" alt="Pieza reclamada" width="300" />
+
+> Si otra compañera la reclamó un segundo antes, verás el mensaje _"Esta pieza ya fue reclamada por otro confeccionista"_. Elige otra.
+> Reclama solo lo que vas a hacer ahora, así las demás pueden tomar el resto.
+
+---
+
+## 4. Marcar una pieza como lista
+
+Cuando terminas **toda la cantidad** de la pieza:
+
+1. Toca **"Listo"**.
+2. La pieza queda tachada con la etiqueta **Pendiente aprobación**.
+3. La administradora la revisa y la aprueba. Cuando se aprueba, se suma a tus ganancias.
+
+<img src="screenshots/guides/clothier/04-mark-done.jpg" alt="Pieza lista, pendiente de aprobación" width="300" />
+
+> **"Listo" se aplica de inmediato y no pide confirmación.** Tócalo solo cuando la pieza esté realmente terminada.
+
+---
+
+## 5. Mis ganancias
+
+Pestaña **Mis ganancias**: lo ganado **hoy**, **esta semana** y **este mes** por las piezas aprobadas, y el historial de pagos.
+
+<img src="screenshots/guides/clothier/05-earnings.jpg" alt="Mis ganancias" width="300" />
 
 ---
 
 ## Preguntas frecuentes
 
-**¿Qué pasa si el lote está vacío?** Significa que no hay piezas asignadas para hoy. Consulta con el administrador o secretaria.
+**Toqué "Listo" por error.** Avisa a la administradora o a la secretaria antes de que la aprueben.
 
-**¿Por qué no aparece mi ganancia de una pieza que marqué?** La ganancia se registra cuando el administrador aprueba la pieza. Si está en "Pendiente de aprobación", aún no está confirmada.
+**No veo ninguna pieza.** Puede que aún no hayan creado productos hoy o que la cajera no haya abierto el día. Pregunta a la secretaria.
 
-**¿Puedo marcar una pieza de otra compañera?** No. Solo puedes marcar como hecha las piezas que tomaste tú.
+**¿Cuánto me pagan por pieza?** Cada tipo de pieza tiene un valor fijo definido por la administradora en el catálogo.
