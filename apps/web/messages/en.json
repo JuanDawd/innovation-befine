@@ -814,7 +814,8 @@
     "groupOperations": "Operations",
     "groupPeople": "People",
     "groupFinance": "Finance",
-    "groupManagement": "Management"
+    "groupManagement": "Management",
+    "viewingCompany": "Viewing"
   },
   "sync": {
     "offlineTitle": "You're offline",

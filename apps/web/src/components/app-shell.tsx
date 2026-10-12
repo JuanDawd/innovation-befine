@@ -73,7 +73,7 @@ function UserInitials({ name, size = "md" }: { name: string; size?: "sm" | "md" 
     <span
       className={cn(
         "flex shrink-0 items-center justify-center rounded-full bg-linear-to-br from-primary to-primary/60 font-semibold text-primary-foreground",
-        size === "sm" ? "size-7 text-[11px]" : "size-8 text-xs",
+        size === "sm" ? "size-7 text-xs" : "size-8 text-xs",
       )}
       aria-hidden="true"
       style={{ fontFamily: "var(--font-display)" }}
@@ -85,10 +85,11 @@ function UserInitials({ name, size = "md" }: { name: string; size?: "sm" | "md" 
 
 /** Sub-company identifier — Befine / DoWell / Swimwear */
 function CompanyStrip() {
+  const t = useTranslations("nav");
   return (
     <div className="mx-2 mt-1 rounded-sm border border-sidebar-border/60 bg-linear-to-b from-primary/6 to-transparent px-3 py-2.5 group-data-[collapsible=icon]:hidden">
-      <div className="text-[9px] font-medium uppercase tracking-[0.22em] text-sidebar-foreground/50">
-        Viewing
+      <div className="text-xs font-medium uppercase tracking-[0.22em] text-sidebar-foreground/60">
+        {t("viewingCompany")}
       </div>
       <div
         className="text-lg font-medium tracking-tight text-primary"
@@ -96,7 +97,7 @@ function CompanyStrip() {
       >
         Befine
       </div>
-      <div className="mt-1 flex gap-2.5 text-[10px] uppercase tracking-[0.14em] text-sidebar-foreground/30">
+      <div className="mt-1 flex gap-2.5 text-xs uppercase tracking-[0.14em] text-sidebar-foreground/50">
         <span className="cursor-not-allowed">DoWell</span>
         <span className="cursor-not-allowed">Swimwear</span>
       </div>

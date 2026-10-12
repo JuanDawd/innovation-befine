@@ -849,7 +849,8 @@
     "groupOperations": "Operaciones",
     "groupPeople": "Personas",
     "groupFinance": "Finanzas",
-    "groupManagement": "Gestión"
+    "groupManagement": "Gestión",
+    "viewingCompany": "Empresa"
   },
   "sync": {
     "offlineTitle": "Sin conexión",

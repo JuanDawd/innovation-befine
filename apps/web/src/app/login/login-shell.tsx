@@ -8,32 +8,32 @@ export function LoginShell() {
       <LoginForm />
       <style>{`
         .login-shell label {
-          font-family: 'Inter Tight', ui-sans-serif, system-ui, sans-serif;
+          font-family: var(--font-sans);
           font-size: 0.75rem;
           font-weight: 500;
           letter-spacing: 0.02em;
-          color: #b8b0a3;
+          color: var(--brand-stone);
         }
         .login-shell input {
-          background: rgba(242,236,225,0.04) !important;
-          border-color: rgba(242,236,225,0.12) !important;
-          color: #f2ece1 !important;
-          font-family: 'Inter Tight', ui-sans-serif, system-ui, sans-serif;
+          background: color-mix(in srgb, var(--brand-bone) 4%, transparent) !important;
+          border-color: color-mix(in srgb, var(--brand-bone) 12%, transparent) !important;
+          color: var(--brand-bone) !important;
+          font-family: var(--font-sans);
           font-size: 0.875rem;
           transition: border-color 0.2s;
         }
         .login-shell input:focus {
-          border-color: rgba(233,64,142,0.5) !important;
+          border-color: color-mix(in srgb, var(--brand-pink) 50%, transparent) !important;
           outline: none !important;
-          box-shadow: 0 0 0 1px rgba(233,64,142,0.2) !important;
+          box-shadow: 0 0 0 1px color-mix(in srgb, var(--brand-pink) 20%, transparent) !important;
         }
         .login-shell input::placeholder {
-          color: #4a4640;
+          color: var(--brand-taupe);
         }
         .login-shell button[type="submit"] {
-          background: #E9408E !important;
+          background: var(--brand-pink) !important;
           color: #fff !important;
-          font-family: 'Inter Tight', ui-sans-serif, system-ui, sans-serif;
+          font-family: var(--font-sans);
           font-weight: 500;
           font-size: 0.875rem;
           letter-spacing: 0.01em;
@@ -41,20 +41,20 @@ export function LoginShell() {
           transition: background 0.2s, box-shadow 0.2s;
         }
         .login-shell button[type="submit"]:hover:not(:disabled) {
-          background: #f06aa5 !important;
-          box-shadow: 0 0 24px rgba(233,64,142,0.35) !important;
+          background: var(--brand-pink-soft) !important;
+          box-shadow: 0 0 24px color-mix(in srgb, var(--brand-pink) 35%, transparent) !important;
         }
         .login-shell button[type="submit"]:disabled {
-          background: rgba(233,64,142,0.4) !important;
+          background: color-mix(in srgb, var(--brand-pink) 40%, transparent) !important;
         }
         .login-shell a {
-          color: #4a4640;
-          font-family: 'Inter Tight', ui-sans-serif, system-ui, sans-serif;
+          color: var(--brand-taupe);
+          font-family: var(--font-sans);
           font-size: 0.8125rem;
           transition: color 0.2s;
         }
         .login-shell a:hover {
-          color: #E9408E;
+          color: var(--brand-pink);
         }
       `}</style>
     </div>
