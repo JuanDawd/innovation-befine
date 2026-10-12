@@ -841,5 +841,39 @@
   "settings": {
     "pageTitle": "Settings",
     "pageSubtitle": "Business-wide system behaviour settings."
+  },
+  "checkout": {
+    "method": {
+      "cash": "Cash",
+      "card": "Card",
+      "transfer": "Transfer"
+    },
+    "successTitle": "Payment recorded",
+    "session": "Session",
+    "subtotal": "Subtotal",
+    "total": "Total",
+    "printReceipt": "Print receipt",
+    "empty": "No tickets awaiting payment.",
+    "ticketsHeading": "Tickets to charge",
+    "selectHint": "Tick the tickets of the client who is paying.",
+    "selectClient": "Select all tickets for {client}",
+    "adjust": "Adjust",
+    "adjustPrice": "New price",
+    "adjustReason": "Reason for adjustment",
+    "save": "Save",
+    "adjustError": "Could not adjust the price",
+    "totalToCharge": "Total to charge",
+    "paymentMethods": "Payment methods",
+    "paymentMethod": "Payment method",
+    "amount": "Amount",
+    "remaining": "Remaining",
+    "removeRow": "Remove payment method",
+    "unassigned": "{amount} left to assign",
+    "addMethod": "Add method",
+    "submit": "Confirm checkout",
+    "nothingSelected": "Select at least one ticket",
+    "confirmTitle": "Charge {amount} to {clients}?",
+    "confirmDescription": "{count, plural, one {# ticket will be closed} other {# tickets will be closed}} and the payment recorded. This cannot be undone.",
+    "multiClientWarning": "This checkout covers {count} different clients: {clients}. Make sure one person is paying for all of them."
   }
 }

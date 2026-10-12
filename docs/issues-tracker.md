@@ -944,7 +944,7 @@
 ### M-65 — Checkout pre-selects every awaiting ticket from every client
 
 - **Severity:** Medium
-- **Status:** Open
+- **Status:** Resolved (2026-10-12) — checkout starts with nothing selected; tickets grouped by client with a per-client "select all"; confirmation names the client(s) and warns when one payment covers several clients; price-adjust failures now toast
 - **Affected:** `checkout-form.tsx`
 - **Description:** Source: training-manual walkthrough with agent-browser, 2026-10-11 (demo data, homelab CT 110). Opening "Cobrar" selects all `awaiting_payment` tickets (4 different clients in the demo). A rushed cashier can charge one client for everyone's services.
 - **Fix:** Start with nothing selected (or only the ticket that was clicked), group by client, and show the client name in the confirmation.
@@ -964,7 +964,7 @@
 ### M-67 — Secretary sees "Cobrar" but checkout is cashier/admin-only
 
 - **Severity:** Medium
-- **Status:** Open
+- **Status:** Resolved (2026-10-12) — sidebar "Cobrar" only rendered for cashier/admin (matches server permission)
 - **Affected:** Sidebar quick actions, `cashier/checkout/actions.ts`
 - **Description:** Source: training-manual walkthrough with agent-browser, 2026-10-11 (demo data, homelab CT 110). The secretary sidebar shows "Cobrar", but `getAwaitingPaymentTickets`/`processCheckout` return FORBIDDEN for `secretary` (dialog shows an empty list).
 - **Fix:** Hide the button for roles without checkout permission (or grant the permission deliberately).
@@ -1971,3 +1971,5 @@
 | H-47     | 2026-10-11    | `WS_NO_BUFFER_UTIL` inlined via next.config `env`; 0 `b.mask` crashes in k6 run                          | load test (uncommitted)      |
 | M-57     | 2026-10-11    | Not reproducible on healthy rig — SSE streams close at 25 s                                              | load test                    |
 | L-50     | 2026-10-12    | StatusBadge translates via `status` ns; subtypes/roles/methods via next-intl; "Analítica"                | feat/design-system           |
+| M-65     | 2026-10-12    | Opt-in selection grouped by client; client names + multi-client warning in confirmation                  | feat/design-system           |
+| M-67     | 2026-10-12    | "Cobrar" quick action hidden for roles without checkout permission                                       | feat/design-system           |

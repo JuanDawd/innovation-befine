@@ -876,5 +876,39 @@
   "settings": {
     "pageTitle": "Configuración",
     "pageSubtitle": "Ajustes de comportamiento del sistema para el negocio."
+  },
+  "checkout": {
+    "method": {
+      "cash": "Efectivo",
+      "card": "Tarjeta",
+      "transfer": "Transferencia"
+    },
+    "successTitle": "Pago registrado correctamente",
+    "session": "Sesión",
+    "subtotal": "Subtotal",
+    "total": "Total",
+    "printReceipt": "Imprimir recibo",
+    "empty": "No hay tickets pendientes de pago.",
+    "ticketsHeading": "Tickets por cobrar",
+    "selectHint": "Marca los tickets del cliente que va a pagar.",
+    "selectClient": "Seleccionar todos los tickets de {client}",
+    "adjust": "Ajustar",
+    "adjustPrice": "Nuevo precio",
+    "adjustReason": "Motivo del ajuste",
+    "save": "Guardar",
+    "adjustError": "No se pudo ajustar el precio",
+    "totalToCharge": "Total a cobrar",
+    "paymentMethods": "Métodos de pago",
+    "paymentMethod": "Método de pago",
+    "amount": "Monto",
+    "remaining": "Restante",
+    "removeRow": "Eliminar método de pago",
+    "unassigned": "Faltan {amount} por asignar",
+    "addMethod": "Agregar método",
+    "submit": "Confirmar cobro",
+    "nothingSelected": "Selecciona al menos un ticket",
+    "confirmTitle": "¿Cobrar {amount} a {clients}?",
+    "confirmDescription": "{count, plural, one {Se cerrará # ticket} other {Se cerrarán # tickets}} y se registrará el pago. Esta acción no se puede deshacer.",
+    "multiClientWarning": "Este cobro incluye {count} clientes distintos: {clients}. Confirma que una sola persona paga por todos."
   }
 }
