@@ -1577,3 +1577,5 @@
 | L-51     | 2026-10-12    | Accessible names on all flagged controls + icon buttons; keyboard drill-down in analytics                | feat/design-system           |
 | M-74     | 2026-10-12    | Chart colours use `var(--color-primary)` / color-mix instead of hsl() over oklch tokens                  | feat/design-system           |
 | H-53     | 2026-10-12    | Distinct-date secretary pay + sibling-payout exclusion; Bogota dates in payroll; same-date labels        | fix/payroll-same-date-days   |
+| M-64     | 2026-10-12    | Client reads via parallel GET /api/q (allowlist over existing read fns); Cobrar dialog ~1.5 s            | fix/payroll-same-date-days   |
+| UI-audit | 2026-10-12    | Long lists paged 50 at a time (clients, ticket history); global-error localized + styled                 | fix/payroll-same-date-days   |
