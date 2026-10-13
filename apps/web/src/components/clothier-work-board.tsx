@@ -4,7 +4,6 @@ import { notifyDataChanged } from "@/lib/data-events";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
-import { unwrap } from "@/lib/action-query";
 import { useTranslations } from "next-intl";
 import {
   CheckCircle2Icon,
@@ -22,11 +21,11 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ProductProgressBar } from "@/components/ui/product-progress-bar";
 import { StatusBadge } from "@/components/ui/status-badge";
 import {
-  listTodayProductPieces,
   claimPiece,
   markPieceDone,
   type ProductPieceRow,
 } from "@/app/(protected)/clothier/actions";
+import { fetchQuery } from "@/lib/action-query";
 
 // ─── Per-piece notes (collapsible) ───────────────────────────────────────────
 
@@ -101,7 +100,7 @@ export function ClothierWorkBoard({ employeeId }: { employeeId: string }) {
 
   const { data: pieces = [], isPending: isLoading } = useQuery({
     queryKey: queryKeys.products.clothierBoard,
-    queryFn: () => unwrap(listTodayProductPieces()),
+    queryFn: () => fetchQuery("todayProductPieces"),
     refetchInterval: 30_000,
   });
   const [pendingId, setPendingId] = useState<string | null>(null);

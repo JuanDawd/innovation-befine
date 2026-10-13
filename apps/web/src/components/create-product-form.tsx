@@ -4,19 +4,14 @@ import { notifyDataChanged } from "@/lib/data-events";
 import { useState, useTransition } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
-import { unwrap } from "@/lib/action-query";
 import { useTranslations } from "next-intl";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { PlusIcon, Trash2Icon, Loader2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  listActiveClothiers,
-  createProduct,
-  type ClothierOption,
-} from "@/app/(protected)/products/actions";
-import { listActiveClothPieces } from "@/app/(protected)/admin/catalog/actions/cloth-pieces";
+import { createProduct, type ClothierOption } from "@/app/(protected)/products/actions";
 import { NativeSelect } from "@/components/ui/native-select";
+import { fetchQuery } from "@/lib/action-query";
 
 type ClothPieceVariantOption = { id: string; name: string; isActive: boolean };
 type ClothPieceOption = { id: string; name: string; variants: ClothPieceVariantOption[] };
@@ -49,12 +44,12 @@ export function CreateProductForm({
 
   const piecesQuery = useQuery({
     queryKey: queryKeys.catalog.clothPieceOptions,
-    queryFn: () => unwrap(listActiveClothPieces()),
+    queryFn: () => fetchQuery("activeClothPieces"),
     staleTime: 5 * 60_000,
   });
   const clothiersQuery = useQuery({
     queryKey: queryKeys.staff.activeClothiers,
-    queryFn: () => unwrap(listActiveClothiers()),
+    queryFn: () => fetchQuery("activeClothiers"),
     staleTime: 5 * 60_000,
   });
   const clothPieces: ClothPieceOption[] = piecesQuery.data ?? [];

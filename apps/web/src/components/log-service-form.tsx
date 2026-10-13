@@ -13,7 +13,6 @@ import { newUuid } from "@/lib/uuid";
 import { useState, useTransition } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
-import { unwrap } from "@/lib/action-query";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
@@ -21,14 +20,10 @@ import { Loader2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ClientSearchWidget, type ClientSelection } from "@/components/client-search-widget";
-import {
-  listActiveStylists,
-  createTicket,
-  type StylistOption,
-} from "@/app/(protected)/tickets/actions";
-import { listActiveServices } from "@/app/(protected)/admin/catalog/actions/services";
+import { createTicket, type StylistOption } from "@/app/(protected)/tickets/actions";
 import { NativeSelect } from "@/components/ui/native-select";
 import { formatMoney } from "@/i18n";
+import { fetchQuery } from "@/lib/action-query";
 
 type ServiceVariant = {
   id: string;
@@ -56,12 +51,12 @@ export function LogServiceForm({
   // Cached across dialog openings — catalog and staff rarely change.
   const servicesQuery = useQuery({
     queryKey: queryKeys.catalog.services,
-    queryFn: () => unwrap(listActiveServices()),
+    queryFn: () => fetchQuery("activeServices"),
     staleTime: 5 * 60_000,
   });
   const stylistsQuery = useQuery({
     queryKey: queryKeys.staff.activeStylists,
-    queryFn: () => unwrap(listActiveStylists()),
+    queryFn: () => fetchQuery("activeStylists"),
     staleTime: 5 * 60_000,
     enabled: !isStylist,
   });

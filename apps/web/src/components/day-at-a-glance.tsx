@@ -12,11 +12,11 @@ import { TrendingUpIcon, TicketIcon, CheckCircleIcon, CalendarCheckIcon } from "
 import { useQuery } from "@tanstack/react-query";
 import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
-import { listOpenTickets, type DashboardTicket } from "@/app/(protected)/tickets/actions";
-import { getDayStats, type DayStats } from "@/app/(protected)/cashier/actions/day-stats";
+import { type DashboardTicket } from "@/app/(protected)/tickets/actions";
+import { type DayStats } from "@/app/(protected)/cashier/actions/day-stats";
 import { queryKeys } from "@/lib/query-keys";
-import { unwrap } from "@/lib/action-query";
 import { formatMoney } from "@/i18n";
+import { fetchQuery } from "@/lib/action-query";
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -75,14 +75,14 @@ export function DayAtAGlance({ initialStats, initialOpenTickets }: DayAtAGlanceP
   // Shared with CashierDashboard — one cached query, one fetch.
   const { data: openTickets = initialOpenTickets } = useQuery({
     queryKey: queryKeys.tickets.open,
-    queryFn: () => unwrap(listOpenTickets()),
+    queryFn: () => fetchQuery("openTickets"),
     initialData: initialOpenTickets,
     refetchInterval: 30_000,
   });
   // Revenue/closed change on checkout — invalidated with "businessDay".
   const { data: stats = initialStats } = useQuery({
     queryKey: queryKeys.businessDay.stats,
-    queryFn: () => unwrap(getDayStats()),
+    queryFn: () => fetchQuery("dayStats"),
     initialData: initialStats,
     refetchInterval: 30_000,
   });

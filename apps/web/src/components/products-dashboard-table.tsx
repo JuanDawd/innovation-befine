@@ -2,7 +2,6 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
-import { unwrap } from "@/lib/action-query";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { type LucideIcon, Loader2Icon, PackageIcon, ClockIcon } from "lucide-react";
@@ -10,7 +9,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ProductStatusBadge, type ProductStatusKey } from "@/components/ui/product-status-badge";
 import { ProductProgressBar } from "@/components/ui/product-progress-bar";
 import type { ProductDashboardRow } from "@befine/db";
-import { getProductsDashboardData } from "@/app/(protected)/products/actions";
+import { fetchQuery } from "@/lib/action-query";
 
 function deriveProductStatus(row: ProductDashboardRow): ProductStatusKey {
   if (row.totalPieces === 0 || row.approvedPieces === 0) {
@@ -127,7 +126,7 @@ export function ProductsDashboardTable({ isAdmin }: { isAdmin: boolean }) {
   const t = useTranslations("products");
   const { data: rows = [], isPending: isLoading } = useQuery({
     queryKey: queryKeys.products.dashboard,
-    queryFn: () => unwrap(getProductsDashboardData()),
+    queryFn: () => fetchQuery("productsDashboard"),
     refetchInterval: 60_000,
   });
 

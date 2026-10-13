@@ -31,7 +31,7 @@ export const SHARED_PATHS: string[] = [];
  * prefix check (since they don't live under any role's home prefix).
  * The route handler itself enforces the per-channel role restriction.
  */
-export const AUTHENTICATED_API_PATHS = ["/api/realtime"];
+export const AUTHENTICATED_API_PATHS = ["/api/realtime", "/api/q/"];
 
 /** App paths any authenticated role may access (regardless of role prefix) */
 export const SHARED_APP_PATHS = ["/profile", "/large-orders"];

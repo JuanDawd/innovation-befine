@@ -17,7 +17,6 @@ import { notifyDataChanged } from "@/lib/data-events";
 import { useState, useTransition } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
-import { unwrap } from "@/lib/action-query";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -33,7 +32,6 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import {
-  getAwaitingPaymentTickets,
   processCheckout,
   setOverridePrice,
   type AwaitingTicket,
@@ -41,6 +39,7 @@ import {
 } from "@/app/(protected)/cashier/checkout/actions";
 import { NativeSelect } from "@/components/ui/native-select";
 import { formatMoney } from "@/i18n";
+import { fetchQuery } from "@/lib/action-query";
 
 type PaymentMethod = "cash" | "card" | "transfer";
 type PaymentLine = { method: PaymentMethod; amount: string };
@@ -70,7 +69,7 @@ export function CheckoutForm({ onClose }: { onClose?: () => void } = {}) {
 
   const { data: allTickets = [], isPending: isLoading } = useQuery({
     queryKey: queryKeys.tickets.awaitingPayment,
-    queryFn: () => unwrap(getAwaitingPaymentTickets()),
+    queryFn: () => fetchQuery("awaitingPaymentTickets"),
     // Always confirm against fresh data when the cashier opens Cobrar.
     staleTime: 0,
   });
