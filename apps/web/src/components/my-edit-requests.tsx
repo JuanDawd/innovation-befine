@@ -11,13 +11,10 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { notifyDataChanged } from "@/lib/data-events";
 import { queryKeys } from "@/lib/query-keys";
-import { unwrap } from "@/lib/action-query";
 import { useTranslations } from "next-intl";
 import { ClipboardListIcon, CreditCardIcon, Loader2Icon } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
-  listMyOpenTicketItems,
-  listMyEditRequests,
   type OpenTicketItem,
   type MyEditRequest,
 } from "@/app/(protected)/tickets/edit-requests/actions";
@@ -25,6 +22,7 @@ import { transitionToAwaitingPayment } from "@/app/(protected)/tickets/actions";
 import { RequestEditDialog } from "@/components/request-edit-dialog";
 import { Button } from "@/components/ui/button";
 import { formatMoney } from "@/i18n";
+import { fetchQuery } from "@/lib/action-query";
 
 function formatPrice(n: number) {
   return formatMoney(n);
@@ -61,13 +59,13 @@ export function MyEditRequests({
   const tt = useTranslations("tickets");
   const { data: items = initialItems } = useQuery({
     queryKey: queryKeys.tickets.mine,
-    queryFn: () => unwrap(listMyOpenTicketItems()),
+    queryFn: () => fetchQuery("myOpenTicketItems"),
     initialData: initialItems,
     refetchInterval: 30_000,
   });
   const { data: requests = initialRequests } = useQuery({
     queryKey: queryKeys.editRequests.mine,
-    queryFn: () => unwrap(listMyEditRequests()),
+    queryFn: () => fetchQuery("myEditRequests"),
     initialData: initialRequests,
     refetchInterval: 30_000,
   });

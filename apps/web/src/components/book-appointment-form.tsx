@@ -18,7 +18,6 @@ import { notifyDataChanged } from "@/lib/data-events";
 import { useState, useTransition, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
-import { unwrap } from "@/lib/action-query";
 import { useTranslations } from "next-intl";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
@@ -26,9 +25,10 @@ import { CalendarIcon, Loader2Icon, ClockIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ClientSearchWidget } from "@/components/client-search-widget";
-import { createAppointment, listBookingStylists } from "@/app/(protected)/appointments/actions";
+import { createAppointment } from "@/app/(protected)/appointments/actions";
 import type { ClientRow } from "@/app/(protected)/clients/actions";
 import { NativeSelect } from "@/components/ui/native-select";
+import { fetchQuery } from "@/lib/action-query";
 
 type ClientSelection =
   | { type: "saved"; client: ClientRow }
@@ -64,7 +64,7 @@ export function BookAppointmentForm({
     error: stylistsError,
   } = useQuery({
     queryKey: queryKeys.staff.bookingStylists,
-    queryFn: () => unwrap(listBookingStylists()),
+    queryFn: () => fetchQuery("bookingStylists"),
     staleTime: 5 * 60_000,
   });
   const loadError = stylistsError?.message ?? null;

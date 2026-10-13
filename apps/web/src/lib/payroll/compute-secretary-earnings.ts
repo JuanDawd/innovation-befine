@@ -8,12 +8,19 @@
  * MVP rule: for each ISO week in the period, count min(present_days, expected_work_days).
  * "Present" means the day exists as a closed business day and has no vacation/approved_absence record.
  * Missed days still count as present (employee was expected; absence type "missed" is not deducted).
+ *
+ * Paid per distinct calendar date: a business day closed and reopened on the
+ * same date is one day worked, and a date already covered by an earlier payout
+ * (through its sibling business day) is not paid again.
  */
 
-import { and, eq, inArray, or } from "drizzle-orm";
+import { and, eq, gte, inArray, lte, notInArray, or } from "drizzle-orm";
 import type { Database } from "@befine/db";
-import { businessDays, employees, employeeAbsences } from "@befine/db/schema";
-import { isoWeekKey } from "@/lib/dates";
+import { businessDays, employees, employeeAbsences, payoutPeriodDays } from "@befine/db/schema";
+import { businessDateOf } from "@/lib/dates";
+import { countSecretaryDays } from "./secretary-days";
+
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 export type SecretaryEarningsResult = {
   employeeId: string;
@@ -70,9 +77,7 @@ export async function computeSecretaryEarnings(
 
   // Only count closed days (days with a closedAt — open day not settled yet)
   // For MVP: all provided businessDayIds are assumed to be closed (admin selects past days)
-  const dayDateMap = new Map(
-    bdRows.map((r) => [r.id, new Date(r.openedAt).toISOString().slice(0, 10)]),
-  );
+  const dayDateMap = new Map(bdRows.map((r) => [r.id, businessDateOf(r.openedAt)]));
 
   // Fetch vacation + approved_absence records for this employee in this period
   const dateStrings = Array.from(dayDateMap.values());
@@ -89,19 +94,33 @@ export async function computeSecretaryEarnings(
 
   const excludedDates = new Set(absenceRows.map((a) => a.date));
 
-  // Count present days per ISO week, capped by expectedWorkDays
-  const weekCounts = new Map<string, number>();
-  for (const [, dateStr] of dayDateMap) {
-    if (excludedDates.has(dateStr)) continue;
-    const week = isoWeekKey(dateStr);
-    weekCounts.set(week, (weekCounts.get(week) ?? 0) + 1);
+  const openTimes = bdRows.map((r) => new Date(r.openedAt).getTime());
+  const periodStart = new Date(Math.min(...openTimes));
+  const periodEnd = new Date(Math.max(...openTimes));
+
+  // Dates already paid through a sibling business day (same date, different id)
+  const alreadyPaid = !bdRows.length
+    ? []
+    : await db
+        .select({ openedAt: businessDays.openedAt })
+        .from(payoutPeriodDays)
+        .innerJoin(businessDays, eq(payoutPeriodDays.businessDayId, businessDays.id))
+        .where(
+          and(
+            eq(payoutPeriodDays.employeeId, employeeId),
+            notInArray(payoutPeriodDays.businessDayId, businessDayIds),
+            // Only siblings can share a date: bound the scan to the period ±1 day
+            gte(businessDays.openedAt, new Date(periodStart.getTime() - DAY_MS)),
+            lte(businessDays.openedAt, new Date(periodEnd.getTime() + DAY_MS)),
+          ),
+        );
+  for (const row of alreadyPaid) {
+    const date = businessDateOf(row.openedAt);
+    if (dateStrings.includes(date)) excludedDates.add(date);
   }
 
   const expectedWorkDays = emp.expectedWorkDays;
-  let daysWorked = 0;
-  for (const count of weekCounts.values()) {
-    daysWorked += Math.min(count, expectedWorkDays);
-  }
+  const daysWorked = countSecretaryDays(dayDateMap.values(), excludedDates, expectedWorkDays);
 
   const totalEarnings = daysWorked * emp.dailyRate;
 

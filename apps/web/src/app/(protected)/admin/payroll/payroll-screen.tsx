@@ -17,6 +17,7 @@ import {
 import type { EmployeeOption } from "../absences/actions";
 import { NativeSelect } from "@/components/ui/native-select";
 import { formatDate, formatMoney } from "@/i18n";
+import { sameDateSuffixes } from "./day-labels";
 
 type Props = {
   days: BusinessDayOption[];
@@ -41,6 +42,7 @@ export function PayrollScreen({ days, employees, history, initialEmployeeId }: P
     .filter((d) => !d.isSettled)
     .sort((a, b) => a.date.localeCompare(b.date));
   const settledDays = days.filter((d) => d.isSettled);
+  const sameDate = sameDateSuffixes(unsettledDays);
   const [rangeEndId, setRangeEndId] = useState(() =>
     initialEmployeeId ? (unsettledDays.at(-1)?.id ?? "") : "",
   );
@@ -194,6 +196,7 @@ export function PayrollScreen({ days, employees, history, initialEmployeeId }: P
                     className="flex h-9 items-center rounded-lg border border-input bg-muted/40 px-2.5 font-mono text-sm tabular-nums"
                   >
                     {dayLabel(unsettledDays[0].date)}
+                    {sameDate.get(unsettledDays[0].id)}
                   </p>
                   <p className="text-xs text-muted-foreground">{t("rangeFromHint")}</p>
                 </div>
@@ -211,6 +214,7 @@ export function PayrollScreen({ days, employees, history, initialEmployeeId }: P
                     {[...unsettledDays].reverse().map((d) => (
                       <option key={d.id} value={d.id}>
                         {dayLabel(d.date)}
+                        {sameDate.get(d.id)}
                       </option>
                     ))}
                   </NativeSelect>

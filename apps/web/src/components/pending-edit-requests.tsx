@@ -12,16 +12,15 @@ import { notifyDataChanged } from "@/lib/data-events";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
-import { unwrap } from "@/lib/action-query";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { CheckIcon, XIcon, ClipboardEditIcon } from "lucide-react";
 import {
-  listPendingEditRequests,
   resolveEditRequest,
   type PendingEditRequest,
 } from "@/app/(protected)/tickets/edit-requests/actions";
 import { Button } from "@/components/ui/button";
+import { fetchQuery } from "@/lib/action-query";
 
 function formatDate(d: Date) {
   return new Date(d).toLocaleTimeString("es-CO", {
@@ -39,7 +38,7 @@ export function PendingEditRequests({
   const t = useTranslations("editRequests");
   const { data: requests = initialRequests } = useQuery({
     queryKey: queryKeys.editRequests.pending,
-    queryFn: () => unwrap(listPendingEditRequests()),
+    queryFn: () => fetchQuery("pendingEditRequests"),
     initialData: initialRequests,
     refetchInterval: 30_000,
   });

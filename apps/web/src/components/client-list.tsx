@@ -45,6 +45,8 @@ import {
   archiveClient,
   unarchiveClient,
 } from "@/app/(protected)/clients/actions";
+import { useIncrementalList } from "@/hooks/use-incremental-list";
+import { ShowMore } from "@/components/ui/show-more";
 
 /** No-show count threshold for the warning badge */
 const NO_SHOW_WARNING_THRESHOLD = 3;
@@ -388,7 +390,8 @@ export function ClientList({ initialClients }: { initialClients: ClientRow[] }) 
   }
 
   const displayList = searchResults !== null ? searchResults : clients;
-  const visible = showArchived ? displayList : displayList.filter((c) => c.isActive);
+  const filtered = showArchived ? displayList : displayList.filter((c) => c.isActive);
+  const { visible, remaining, showMore } = useIncrementalList(filtered, `${query}|${showArchived}`);
 
   return (
     <div className="space-y-4">
@@ -433,7 +436,7 @@ export function ClientList({ initialClients }: { initialClients: ClientRow[] }) 
       </div>
 
       {/* Client list */}
-      {visible.length === 0 ? (
+      {filtered.length === 0 ? (
         query.trim() ? (
           <EmptyState title={t("emptySearchTitle")} description={t("emptySearchDescription")} />
         ) : (
@@ -444,6 +447,7 @@ export function ClientList({ initialClients }: { initialClients: ClientRow[] }) 
           {visible.map((client) => (
             <ClientCard key={client.id} client={client} onUpdate={handleUpdated} />
           ))}
+          <ShowMore remaining={remaining} onClick={showMore} />
         </div>
       )}
     </div>

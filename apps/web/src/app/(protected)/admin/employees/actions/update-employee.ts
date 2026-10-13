@@ -27,6 +27,7 @@ import { terminateEmployeeSchema } from "@befine/types";
 import type { ActionResult } from "@/lib/action-result";
 import type { EmployeeListItem } from "./list-employees";
 import { hasRole } from "@/lib/middleware-helpers";
+import { businessDateOf } from "@/lib/dates";
 
 // ---------------------------------------------------------------------------
 // Edit employee (name, role, subtype, daily rate) — T014
@@ -336,7 +337,7 @@ export async function getUnsettledPeriodsForEmployee(
     );
   } else {
     // Secretary: closed days not settled, excluding vacation + approved_absence
-    const dateStrings = closedDays.map((d) => new Date(d.openedAt).toISOString().slice(0, 10));
+    const dateStrings = closedDays.map((d) => businessDateOf(d.openedAt));
     const absences = await db
       .select({ date: employeeAbsences.date })
       .from(employeeAbsences)
@@ -349,13 +350,13 @@ export async function getUnsettledPeriodsForEmployee(
       );
     const excludedDates = new Set(absences.map((a) => a.date));
     unsettledDays = closedDays.filter((d) => {
-      const dateStr = new Date(d.openedAt).toISOString().slice(0, 10);
+      const dateStr = businessDateOf(d.openedAt);
       return !settledIds.has(d.id) && !excludedDates.has(dateStr);
     });
   }
 
   if (!unsettledDays.length) return null;
-  const dates = unsettledDays.map((d) => new Date(d.openedAt).toISOString().slice(0, 10)).sort();
+  const dates = unsettledDays.map((d) => businessDateOf(d.openedAt)).sort();
   return { businessDayIds: unsettledDays.map((d) => d.id), oldestDate: dates[0] };
 }
 

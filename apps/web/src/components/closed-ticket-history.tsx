@@ -39,18 +39,8 @@ import {
   type ClosedTicketDetail,
 } from "@/app/(protected)/admin/tickets/history/actions";
 import { formatMoney } from "@/i18n";
-
-// ─── Payment method label ─────────────────────────────────────────────────────
-
-const METHOD_LABELS: Record<string, string> = {
-  cash: "Efectivo",
-  card: "Tarjeta",
-  transfer: "Transferencia",
-};
-
-function methodLabel(m: string) {
-  return METHOD_LABELS[m] ?? m;
-}
+import { useIncrementalList } from "@/hooks/use-incremental-list";
+import { ShowMore } from "@/components/ui/show-more";
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -69,6 +59,9 @@ export function ClosedTicketHistory({
 }: ClosedTicketHistoryProps) {
   const t = useTranslations("ticketHistory");
   const tc = useTranslations("common");
+  const tCheckout = useTranslations("checkout");
+  const methodLabel = (m: string) =>
+    tCheckout.has(`method.${m}`) ? tCheckout(`method.${m}` as "method.cash") : m;
 
   const [selectedDayId, setSelectedDayId] = useState(initialDayId);
   const [tickets, setTickets] = useState<ClosedTicketRow[]>(initialTickets);
@@ -81,6 +74,12 @@ export function ClosedTicketHistory({
   const [detailLoading, setDetailLoading] = useState(false);
   const [reopening, setReopening] = useState(false);
   const [reopenError, setReopenError] = useState<string | null>(null);
+
+  const {
+    visible: visibleTickets,
+    remaining,
+    showMore,
+  } = useIncrementalList(tickets, `${selectedDayId}|${search}`);
 
   const currentDayIndex = businessDays.findIndex((d) => d.id === selectedDayId);
   const currentDay = businessDays[currentDayIndex];
@@ -264,7 +263,7 @@ export function ClosedTicketHistory({
               </tr>
             </thead>
             <tbody className="divide-y">
-              {tickets.map((ticket) => (
+              {visibleTickets.map((ticket) => (
                 <tr
                   key={ticket.id}
                   className="hover:bg-muted/30 cursor-pointer transition-colors"
@@ -317,7 +316,7 @@ export function ClosedTicketHistory({
 
           {/* Mobile card list */}
           <ul className="divide-y md:hidden">
-            {tickets.map((ticket) => (
+            {visibleTickets.map((ticket) => (
               <li key={ticket.id}>
                 <button
                   className="w-full px-4 py-3 flex items-start justify-between gap-3 text-left hover:bg-muted/30 transition-colors"
@@ -361,6 +360,9 @@ export function ClosedTicketHistory({
               </li>
             ))}
           </ul>
+          <div className="pb-3">
+            <ShowMore remaining={remaining} onClick={showMore} />
+          </div>
         </div>
       )}
 

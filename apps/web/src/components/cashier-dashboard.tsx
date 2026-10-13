@@ -15,12 +15,10 @@ import { useState, useOptimistic, startTransition as reactStartTransition } from
 import { useQuery } from "@tanstack/react-query";
 import { notifyDataChanged } from "@/lib/data-events";
 import { queryKeys } from "@/lib/query-keys";
-import { unwrap } from "@/lib/action-query";
 import { useTranslations } from "next-intl";
 import { Loader2Icon, CreditCardIcon, TicketIcon } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
-  listOpenTickets,
   transitionToAwaitingPayment,
   transitionReopenedToAwaitingPayment,
   type DashboardTicket,
@@ -28,6 +26,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { optimisticStatusReducer } from "./cashier-dashboard-helpers";
 import { formatMoney } from "@/i18n";
+import { fetchQuery } from "@/lib/action-query";
 
 type TicketsByEmployee = Map<string, { employeeName: string; tickets: DashboardTicket[] }>;
 
@@ -68,7 +67,7 @@ export function CashierDashboard({ initialTickets }: { initialTickets: Dashboard
   const tt = useTranslations("tickets");
   const { data: tickets = [] } = useQuery({
     queryKey: queryKeys.tickets.open,
-    queryFn: () => unwrap(listOpenTickets()),
+    queryFn: () => fetchQuery("openTickets"),
     initialData: initialTickets,
     refetchInterval: 30_000,
   });

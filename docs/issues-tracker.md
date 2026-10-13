@@ -6,6 +6,8 @@
 
 ---
 
+> **Open issues moved to Vikunja (2026-10-12):** project **Innovation Befine** (#9) at https://vikunja.juandawd.dev — one task per issue, title prefixed with its ID (e.g. `[H-48]`), priority 3 = High, 2 = Medium, 1 = Low. This file now keeps only closed issues (resolved / won't fix), the lessons learned and the resolution log. New issues go to Vikunja.
+
 ## Severity definitions
 
 | Severity     | Meaning                                                                                     |
@@ -476,36 +478,6 @@
 
 ---
 
-### H-48 — Production DB schema drifted from repo migrations (single-open-day index missing)
-
-- **Severity:** High
-- **Status:** Open
-- **Affected:** T005/T010 migrations, T023 business day, every feature that calls `getCurrentBusinessDay()`
-- **Description:** Found while cloning the prod schema for the load test. The repo journal has 34 migrations (`0000`–`0033`); production `drizzle.__drizzle_migrations` has 31 rows and `public.__drizzle_migrations` has 29 (two migration tables exist). The partial unique index `uq_business_days_single_open` (migration `0004`) does **not** exist in production — only `business_days_pkey` and `idx_business_days_opened_at`. Nothing in the DB prevents two open business days; `getCurrentBusinessDay()` would then pick one arbitrarily (`LIMIT 1` without `ORDER BY`), splitting tickets/checkouts across days.
-- **Fix:** (1) Diff prod schema vs the `0033` snapshot (`drizzle-kit check`/`pg_dump --schema-only`), (2) verify there's at most one row with `closed_at IS NULL`, (3) re-create `uq_business_days_single_open`, (4) consolidate on one `__drizzle_migrations` table and stop using `db:push` against prod.
-
----
-
-### H-49 — Closing the business day silently strands unpaid tickets
-
-- **Severity:** High
-- **Status:** Partially resolved (2026-10-11) — close-day confirmation now shows the unpaid-ticket count and turns destructive. Still open: tickets from a closed day remain unreachable from Cobrar
-- **Affected:** T023 business day (`closeBusinessDay`, `business-day-panel.tsx`), T038 checkout, cashier dashboard
-- **Description:** Source: training-manual walkthrough with agent-browser, 2026-10-11 (demo data, homelab CT 110). "Cerrar día" only asks _"¿Cerrar el día?"_ — no mention of open tickets. The day was closed with 2 `logged` + 3 `awaiting_payment` tickets. Both the cashier dashboard and `getAwaitingPaymentTickets` are scoped to the current business day, so after closing those tickets disappear from every cashier screen ("Sin tickets abiertos"): the services can never be charged through the normal flow. Also, the first reload after closing still showed "Día abierto".
-- **Fix:** Block (or require explicit override + reason) closing while tickets are `logged`/`awaiting_payment`; show the count in the confirmation. Provide a way to see/charge tickets from previous days.
-
----
-
-### H-50 — "Vender prenda": duplicate sales, no payment method, not counted as revenue
-
-- **Severity:** High
-- **Status:** Open
-- **Affected:** `sell-cloth-piece-modal.tsx`, `cashier/actions/cloth-sales.ts`, analytics
-- **Description:** Source: training-manual walkthrough with agent-browser, 2026-10-11 (demo data, homelab CT 110). (1) One intended sale was stored twice (19:38:28 and 19:39:24); the dialog gives no success toast and silently resets, and the action has no idempotency key. (2) The sale has no payment method and `cloth_sales.ticket_id` stays null, so it never goes through Cobrar or the cash drawer. (3) After two sales ($190.000) Analytics still shows _Ingresos por venta de productos $0_. (4) Every cloth-piece variant in the catalog shows "sin precio", so the cashier types the price by hand each time.
-- **Fix:** Add idempotency key + success toast; either attach the sale to a ticket/checkout or record payment method on the sale; include cloth sales in revenue analytics; configure sale prices in the catalog.
-
----
-
 ### H-51 — Lists don't refresh after mutations (risk of duplicate records)
 
 - **Severity:** High
@@ -516,13 +488,13 @@
 
 ---
 
-### H-52 — Clothiers can't see unfinished pieces from previous days
+### H-53 — Secretary paid twice for a date with two business days; payroll dates computed in UTC
 
 - **Severity:** High
-- **Status:** Open
-- **Affected:** `app/(protected)/clothier/actions.ts` `listTodayProductPieces`
-- **Description:** Found while verifying UX fixes (2026-10-11). The query filters `products.business_day_id = current day`, so every `pending` piece created on an earlier day disappears from the clothiers' phones once a new day is opened (7 such pieces in the demo DB were invisible), while the secretary still lists them under "En progreso". Large-order pieces sent to production on Monday are invisible on Tuesday.
-- **Fix:** Return pieces with `status = 'pending'` (or assigned and not approved) regardless of business day, ordered by product date; keep today's as the default group.
+- **Status:** Resolved (2026-10-12)
+- **Affected:** T065 `compute-secretary-earnings.ts`, T066/T067 payroll screen + unsettled alert, T074 analytics secretary earnings, `update-employee` termination guard
+- **Description:** Found from a duplicate "2026-10-11" row in the payroll status grid (demo data: day closed 14:53, new day opened 15:48 the same date). (1) Secretary pay counted business-day rows, so a closed-and-reopened date paid two daily rates (within the weekly cap); paying the two sibling days in separate payouts would also pay the date twice. Analytics had the same overcount. (2) Every payroll date was `toISOString().slice(0, 10)` — the UTC date — so a day opened after 19:00 Bogota would be filed under the next date (wrong absence match, wrong ISO week). (3) The grid/range picker showed two identical date labels.
+- **Fix:** `businessDateOf()` (Bogota) replaces UTC slicing; `countSecretaryDays()` counts distinct dates and is now what the tests exercise (they previously tested a copy); dates already paid via a sibling business day are excluded; analytics dedupes by date; same-date rows show the opening time ("2026-10-11 · 15:48").
 
 ---
 
@@ -551,14 +523,6 @@
 - **Affected:** T049 (appointments migration), T035 (ticket creation)
 - **Description:** The `service_summary` field on appointments is free text, not linked to the catalog. When a ticket is created from an appointment, there's no automatic service pre-selection, creating potential inconsistencies between what was booked and what was billed.
 - **Fix:** Added `service_variant_id (FK nullable)` to T049 appointments table schema. When present, ticket creation from the appointment auto-populates the service. `service_summary` remains as fallback for non-catalog descriptions.
-
-### M-04 — T028 missing cashier and clothier read access
-
-- **Severity:** Medium
-- **Status:** Open
-- **Affected:** T028 (catalog read access)
-- **Description:** T028 lists stylists and secretary as having read access but doesn't mention cashiers (who need service data for checkout) or clothiers (who need piece data for batch views).
-- **Fix:** Add cashier and clothier to the read-access list for their respective catalog domains.
 
 ### M-05 — Client table has no unique constraint on phone or email
 
@@ -592,22 +556,6 @@
 - **Description:** The admin can adjust the payout amount before confirming, but there's no requirement to store the reason for adjustment or the original computed value. For a financial system, this is a significant audit gap.
 - **Fix:** Added `original_computed_amount` (integer) and `adjustment_reason` (text, nullable, required when amount differs from computed) to T066 payouts table schema.
 
-### M-09 — T100 — No data validation or rollback for spreadsheet import
-
-- **Severity:** Medium
-- **Status:** Open
-- **Affected:** T100 (data migration from spreadsheets)
-- **Description:** The import script handles duplicate detection but specifies no validation rules for imported data (phone format, email format, name length). Also, no rollback mechanism if bad data is introduced.
-- **Fix:** Add input validation to the import script. Create a backup point before import or tag imported records for easy identification.
-
-### M-10 — T082 — iOS PWA limitations not addressed
-
-- **Severity:** Medium
-- **Status:** Open
-- **Affected:** T082 (PWA install prompt), T081 (service worker)
-- **Description:** The PWA spec mentions "Install prompt appears on Android Chrome" but doesn't address iOS Safari limitations (no install prompt, limited service worker scope). Staff likely use iPhones.
-- **Fix:** Document iOS PWA behaviour and add "Add to Home Screen" instructions for iOS users to the training guide (T088).
-
 ### M-11 — No T062 dependency on T061 (payments)
 
 - **Severity:** Medium
@@ -615,14 +563,6 @@
 - **Affected:** T062 (large orders list view)
 - **Description:** T062 shows "balance due" which is computed from payments (T061), but T062 only depends on T059. It should depend on T061 as well.
 - **Fix:** Add T061 to T062's dependency list.
-
-### M-12 — Resend free tier may not cover daily email volume
-
-- **Severity:** Medium
-- **Status:** Open
-- **Affected:** T054 (Resend integration), T056 (confirmation emails)
-- **Description:** Resend free tier allows 100 emails/day. If 80+ appointments generate confirmation + potential rescheduling emails daily, the limit could be tight. No volume estimate exists.
-- **Fix:** Estimate daily email volume and document in `docs/research/notification-channels.md`. Plan for the $20/mo Pro tier if needed.
 
 ### M-13 — T057 — `deposit_paid` column is redundant with payments table
 
@@ -687,14 +627,6 @@
 - **Affected:** T031 (guest flow), T099 (i18n)
 - **Description:** Three hardcoded strings bypass i18n: two `aria-label="Quitar selección"` (lines 282, 304) and one `OK` button label (line 336). All user-facing strings must use `next-intl` per CLAUDE.md conventions.
 - **Fix:** Add i18n keys (`clients.clearSelection`, `common.ok`) and replace hardcoded strings. Tracked as T03R-R2.
-
-### M-28 — T042 payout `needs_review` flag is a stub, AC silently unmet
-
-- **Severity:** Medium
-- **Status:** Deferred
-- **Affected:** T042 (ticket reopen), T066 (payouts table, Phase 7)
-- **Description:** T042 AC says "Payout records that included this ticket are flagged `needs_review`." Payouts don't exist yet — the table is created in T066 (Phase 7). `reopenTicket` has a `NOTE (T066 stub)` comment acknowledging this, but T042 was still marked `done` and committed without linking the deferral anywhere reviewers would see. Risk: T066 ships without the reopen-flag wiring because the dependency isn't captured.
-- **Fix:** Add an AC to T066 that explicitly says "extend `reopenTicket` to flag overlapping payouts as `needs_review = true`" with a pointer to the stub comment. No code change needed now.
 
 ### M-29 — `resolveEditRequest` is not wrapped in a transaction
 
@@ -870,57 +802,6 @@
 
 ---
 
-### M-58 — Clothiers race for the same unassigned piece
-
-- **Severity:** Medium
-- **Status:** Open
-- **Affected:** T047/T048 (`apps/web/src/app/(protected)/clothier/actions.ts` `listTodayProductPieces`, `claimPiece`)
-- **Description:** Source: k6 load test 2026-10-11 (8 stylists, 1 cashier, 1 secretary, 8 clothiers; homelab CT 110 on HDD). All clothiers receive the same ordered list of unassigned pieces, so they pick from the top and collide. Optimistic locking correctly rejects the loser (`CONFLICT`), but each collision is a wasted tap and an error toast for a real person.
-- **Measured:** full run (6 min realistic + 4 min at 3× users) produced 1,094 rejected claims/stale updates; no data corruption (every done piece has an assignee).
-- **Fix:** Add a `claimNextPiece` action that uses `SELECT … FOR UPDATE SKIP LOCKED LIMIT 1`, or randomise/partition the list per clothier.
-
----
-
-### M-59 — In-memory rate limiter: per-instance and never evicts keys
-
-- **Severity:** Medium
-- **Status:** Open
-- **Affected:** `apps/web/src/lib/rate-limit.ts` (all mutations)
-- **Description:** The `@upstash/ratelimit` instance uses an in-process `Map` as its Redis. On Vercel each function instance has its own map, so CLAUDE.md caps (30/min tickets, 5/min payouts…) are not enforced globally. The `store` map also never deletes keys, so it grows for the lifetime of a long-lived (self-hosted) process.
-- **Fix:** Use `Redis.fromEnv()` (Upstash) in production as the file's header already plans; prune empty timestamp arrays in the in-memory fallback.
-
----
-
-### M-60 — Realtime events don't cross Vercel instances; constant SSE reconnects
-
-- **Severity:** Medium
-- **Status:** Open
-- **Affected:** `packages/realtime/src/server.ts`
-- **Description:** `publishEvent` uses an in-process `EventEmitter`. On Vercel the server action and the SSE handler usually run in different instances, so most updates arrive via the 30 s polling fallback. Each open tab also reconnects every 25 s (~40 reconnects/min for 18 devices).
-- **Fix:** Postgres `LISTEN/NOTIFY` or Upstash pub/sub, as described in the file header.
-
----
-
-### M-61 — `createTicket` swallows errors without logging or Sentry
-
-- **Severity:** Medium
-- **Status:** Open
-- **Affected:** T035 (`apps/web/src/app/(protected)/tickets/actions/index.ts` `createTicket` bare `catch`)
-- **Description:** Any error inside the ticket transaction becomes a generic `INTERNAL_ERROR` with no log line or Sentry event. During the load test, the H-47 crash surfaced only as `INTERNAL_ERROR` for stylists.
-- **Fix:** `catch (err)` → `logger.error` + `Sentry.captureException`, keep the generic message for the user.
-
----
-
-### M-62 — Several sequential DB round trips per server action
-
-- **Severity:** Medium (investigate)
-- **Status:** Open
-- **Affected:** All server actions (session, employee lookup, business day, then the actual query)
-- **Description:** Source: k6 load test 2026-10-11 (8 stylists, 1 cashier, 1 secretary, 8 clothiers; homelab CT 110 on HDD). With a fixed ~155 ms per query in the test rig, even `getCurrentEmployeeId` took ~800 ms idle — roughly 4–5 sequential queries per action. On Neon (~5–20 ms/query) this is tolerable, but it adds directly to every tap.
-- **Fix:** Count queries per action (Drizzle logger), cache the employee id in the session/cookie cache, and parallelise independent lookups with `Promise.all`.
-
----
-
 ### M-63 — Server-rendered times ignore America/Bogota
 
 - **Severity:** Medium
@@ -928,16 +809,6 @@
 - **Affected:** `business-day-panel.tsx` (openedAt/closedAt), `closed-ticket-history.tsx` ("Hora cierre")
 - **Description:** Source: training-manual walkthrough with agent-browser, 2026-10-11 (demo data, homelab CT 110). `toLocaleTimeString("es-CO", …)` without `timeZone`. Rendered on the server (UTC on Vercel/containers) the day opened at 2:24 p. m. shows "07:24 p. m."; ticket closed at 2:35 p. m. shows "07:35 p. m." Client re-render shows the right time → also a hydration mismatch.
 - **Fix:** Use a shared formatter with `timeZone: "America/Bogota"` (date-fns-tz) everywhere times are displayed.
-
----
-
-### M-64 — Dialogs take 10–20 s to load; duplicate SSE connections
-
-- **Severity:** Medium
-- **Status:** Partially resolved (2026-10-11) — TanStack Query: one `RealtimeQueryBridge` connection per channel (cashier page 6 → 2 EventSources), dialog reference data cached 5 min, polling via `refetchInterval` only for mounted queries. Measured: Cobrar 10–20 s → ~1 s, Registrar servicio reopen instant. Remaining: reads still go through server actions (serialized); move hot reads to route handlers
-- **Affected:** Cobrar (`checkout-form.tsx`), Vender prenda, Registrar servicio; cashier dashboard realtime
-- **Description:** Source: training-manual walkthrough with agent-browser, 2026-10-11 (demo data, homelab CT 110). On a 1 ms DB, "Cobrar" took ~10–20 s and "Vender prenda" ~15 s to show content (sometimes 1 s). Network shows a queue of sequential POSTs to `/cashier`: Next.js runs server actions one at a time per client, so dialog loads wait behind dashboard polling actions. The cashier page also opens 5 parallel `EventSource` connections to `/api/realtime/cashier` (+1 notifications) — one per subscribing component.
-- **Fix:** Load dialog data via route handlers/TanStack Query (parallel GETs) instead of server actions; share one SSE connection per channel (context/provider).
 
 ---
 
@@ -971,76 +842,6 @@
 
 ---
 
-### M-68 — Silent failures: forms do nothing on non-secure origins; unexplained logout
-
-- **Severity:** Medium
-- **Status:** Partially resolved (2026-10-11) — `lib/uuid.ts` `newUuid()` fallback replaces `crypto.randomUUID()` in client code. Cookie-loss report attributed to the test tool
-- **Affected:** `log-service-form.tsx` and any client code using `crypto.randomUUID()`; auth session
-- **Description:** Source: training-manual walkthrough with agent-browser, 2026-10-11 (demo data, homelab CT 110). (1) Over plain HTTP on a LAN IP, "Registrar ticket" does nothing — `crypto.randomUUID` is undefined outside secure contexts; the exception is swallowed (no toast, no request). Production is HTTPS, but a self-hosted/LAN deployment would break ticket creation silently. (2) ~~The cashier browser lost all cookies…~~ — almost certainly a test-tool artifact: agent-browser restarted its browser process (pages went to `about:blank` twice more during later runs), which drops cookies.
-- **Fix:** Use a UUID helper with a fallback (`crypto.getRandomValues`) and surface submit errors via toast. Investigate the cookie loss (cookie-cache refresh path).
-
----
-
-### M-69 — Catalog: most service variants have 0 % commission (verify with owner)
-
-- **Severity:** Medium
-- **Status:** Open
-- **Affected:** Catalog data (prod), payroll
-- **Description:** Source: training-manual walkthrough with agent-browser, 2026-10-11 (demo data, homelab CT 110). The catalog copied from production shows 0.0 % commission on most variants (e.g. _Aminoacidos JK — Cintura $250.000 0.0%_). Payroll lines for those services pay the stylist $0.
-- **Fix:** Confirm intended commission rates with the owner and update the catalog; consider warning when saving a variant with 0 %.
-
----
-
-### M-70 — Price adjustment ("Ajustar") UX
-
-- **Severity:** Medium
-- **Status:** Open
-- **Affected:** `checkout-form.tsx` override row
-- **Description:** Source: training-manual walkthrough with agent-browser, 2026-10-11 (demo data, homelab CT 110). After entering price and reason, "OK" stays disabled while saving (no spinner, several seconds), and when the override saves the whole Cobrar dialog closes, forcing the cashier to reopen it (another slow load, see M-64).
-- **Fix:** Show a spinner on OK and keep the dialog open with the updated total.
-
----
-
-### M-70 — `packages/db/src/queries` coverage is ~4%; the 80% threshold in CLAUDE.md is not enforced
-
-- **Severity:** Medium
-- **Status:** Open
-- **Affected:** `packages/db/src/queries/` (analytics, order-items, products), CI
-- **Description:** Source: CI pipeline review, 2026-10-12. `vitest run --coverage` on `packages/db` shows 4.2% statements / 1.4% branches for `queries/`. No `thresholds` are set in any vitest config and CI never runs coverage, so the 80% (and 100% branch for financial functions) requirement is unenforced.
-- **Fix:** Add tests for analytics/order-items/products, then add `coverage.thresholds` to `packages/db/vitest.config.ts` and run `test:coverage` in CI.
-
----
-
-### M-71 — E2E missing checkout and payroll settlement specs
-
-- **Severity:** Medium
-- **Status:** Open
-- **Affected:** `apps/web/e2e`
-- **Description:** Source: CI pipeline review, 2026-10-12. CLAUDE.md requires checkout E2E (from Phase 4A) and payroll settlement E2E (from Phase 7). Only appointment-booking, auth-session, role-access, smoke and ticket-lifecycle exist. `@axe-core/playwright` is used only in `smoke.spec.ts`.
-- **Fix:** Add `checkout.spec.ts` and `payroll-settlement.spec.ts`; add axe checks to each flow spec. Confirm the E2E `DATABASE_URL` secret points at a dedicated seeded database.
-
----
-
-### M-72 — `packages/realtime` has no tests; post-deploy smoke job disabled
-
-- **Severity:** Medium
-- **Status:** Open
-- **Affected:** `packages/realtime`, `.github/workflows/ci.yml`
-- **Description:** Source: CI pipeline review, 2026-10-12. The SSE package has no `test` script, so `turbo test` skips it. The `e2e-deploy` smoke job is commented out pending a `VERCEL_PRODUCTION_URL` secret.
-- **Fix:** Add vitest + unit tests for the realtime server/client; add the secret and enable `e2e-deploy`.
-
----
-
-### M-73 — 142 dependency advisories (4 critical, 59 high) from `pnpm audit`
-
-- **Severity:** Medium
-- **Status:** Open
-- **Affected:** root / `apps/web` dependency tree (e.g. `shadcn>@modelcontextprotocol/sdk`)
-- **Description:** Source: CI pipeline review, 2026-10-12. The CI audit step is `continue-on-error` until this backlog is triaged. Many paths are dev-tool transitive deps.
-- **Fix:** Triage with `pnpm audit --prod`, upgrade/override what is reachable in production, then remove `continue-on-error`.
-
----
-
 ### M-74 — Analytics charts use `hsl(var(--primary))` with oklch tokens
 
 - **Severity:** Medium
@@ -1052,78 +853,6 @@
 ---
 
 ## Low-priority issues
-
-### L-20 — T032 work bundled into T030/T031 commits
-
-- **Severity:** Low
-- **Status:** Open
-- **Affected:** T032 (no-show display), commit convention
-- **Description:** T032 (no-show count display) has no dedicated commit. The implementation was bundled into the T030 and T031 commits. CLAUDE.md requires one commit per task (`feat(T0XX): ...`). The work is complete and correct, but the git history doesn't reflect the task boundary.
-- **Fix:** Process note — not worth rebasing. Future tasks must follow the one-commit-per-task convention.
-
-### L-01 — T016 — No account lockout UX after rate limiting
-
-- **Severity:** Low
-- **Status:** Open
-- **Affected:** T016 (login page)
-- **Description:** Better Auth rate limits the login endpoint, but the login UI doesn't specify what message to show after too many failed attempts (e.g., "Too many attempts, try again in X minutes").
-- **Fix:** Add rate-limit feedback message to T016 acceptance criteria.
-
-### L-02 — T091 — No password complexity rules beyond minimum length
-
-- **Severity:** Low
-- **Status:** Open
-- **Affected:** T091 (self-service password change)
-- **Description:** Only specifies "< 8 characters" rejection. No requirement for mixed case, numbers, or special characters. Acceptable if intentional, but should be documented.
-- **Fix:** Document as a conscious decision or add complexity rules.
-
-### L-03 — T025 — No pagination on audit log
-
-- **Severity:** Low
-- **Status:** Open
-- **Affected:** T025 (catalog audit log)
-- **Description:** On a frequently-edited catalog, the audit log could grow large. No pagination or date filtering is specified for the audit log display.
-- **Fix:** Add pagination to T025 acceptance criteria.
-
-### L-04 — T023 — No maximum variant count per service
-
-- **Severity:** Low
-- **Status:** Open
-- **Affected:** T023 (services migration), T024 (service catalog UI)
-- **Description:** A service can have unlimited variants. Could lead to an unwieldy UI. Consider a soft limit or a warning.
-- **Fix:** Add a UI warning if more than 10 variants are added (configurable threshold).
-
-### L-05 — WhatsApp pricing data is outdated
-
-- **Severity:** Low
-- **Status:** Open
-- **Affected:** `docs/research/notification-channels.md`
-- **Description:** WhatsApp pricing section contains 2025 data in a document dated April 2026. Meta's pricing model changes frequently.
-- **Fix:** Note as "pricing approximate, verify before implementation."
-
-### L-06 — SMS pricing uses US rates for Latin American business
-
-- **Severity:** Low
-- **Status:** Open
-- **Affected:** `docs/research/notification-channels.md`
-- **Description:** SMS pricing references US Twilio rates ($0.0079/SMS) when the business is in Latin America.
-- **Fix:** Update with the specific country's rates when known.
-
-### L-07 — T032 displays a no-show count that's always 0 until Phase 5
-
-- **Severity:** Low
-- **Status:** Open
-- **Affected:** T032 (no-show display, Phase 3), T032b (increment logic, Phase 5)
-- **Description:** The no-show count display exists in Phase 3 but the increment mechanism doesn't arrive until Phase 5. Phase 3 deliverable can only verify "it displays 0."
-- **Fix:** Acceptable as-is (design exists early), but note this in testing — meaningful verification requires Phase 5 to be complete.
-
-### L-08 — T102 — Polling every 5 minutes may be aggressive
-
-- **Severity:** Low
-- **Status:** Open
-- **Affected:** T102 (stale-tab detection)
-- **Description:** Each tab polls `/api/version` every 5 minutes. With many staff members and tabs, this adds unnecessary API load.
-- **Fix:** Consider using the service worker (T081) for the check, or increase interval to 15 minutes.
 
 ### L-09 — No file/image storage research
 
@@ -1141,14 +870,6 @@
 - **Description:** Line mentions "the ORM (Prisma/Drizzle/Kysely)" listing three options, but the project decided on Drizzle ORM. Creates confusion for new readers.
 - **Fix:** Update to reference only Drizzle ORM.
 
-### L-11 — T089 — No soft-launch / canary rollout strategy
-
-- **Severity:** Low
-- **Status:** Open
-- **Affected:** T089 (production cutover)
-- **Description:** The cutover checklist is all-or-nothing. A phased rollout (admin uses the app for 1 week before stylists onboard) would reduce risk.
-- **Fix:** Add a phased rollout recommendation to T089.
-
 ### L-12 — T087 — Health endpoint doesn't check DB connectivity
 
 - **Severity:** Low
@@ -1156,22 +877,6 @@
 - **Affected:** T087 (uptime monitoring)
 - **Description:** The `/api/health` endpoint returns `{ status: "ok" }` but doesn't verify DB connectivity. If Neon is down, the health check still passes.
 - **Fix:** Add a lightweight DB ping (`SELECT 1`) to the health endpoint.
-
-### L-13 — T055 — No brand logo in email template
-
-- **Severity:** Low
-- **Status:** Open
-- **Affected:** T055 (appointment confirmation email)
-- **Description:** The email template AC specifies content but doesn't require brand logo/colours from T105.
-- **Fix:** Add brand assets to the email template requirements.
-
-### L-14 — Confirmation email endpoint security for non-users
-
-- **Severity:** Low
-- **Status:** Open
-- **Affected:** `docs/research/notification-channels.md`, T056
-- **Description:** The research mentions a "confirm/cancel link" in the email, implying a public endpoint. But the app is internal-only. How a non-user (the client) interacts with this link, including authentication and security, is undefined.
-- **Fix:** Define the endpoint: is it a tokenized public link, or does confirmation happen manually by the secretary?
 
 ### L-15 — `commission_pct` precision not specified
 
@@ -1344,7 +1049,7 @@
 ### L-19 — Admin settings page not yet created (disabled nav item)
 
 - **Severity:** Low
-- **Status:** Open
+- **Status:** Resolved (2026-10-12) — verified: `/admin/settings` exists (settings form, T08x)
 - **Affected:** T108 (business settings)
 - **Description:** T108 AC allows "a stub screen for now" and the nav item exists in `nav-config.ts` (`/admin/settings`, disabled: true), but no actual page exists at that route. Acceptable for Phase 1 since `enforce_subtype_service_restriction` only becomes meaningful in Phase 4A (T035/T028).
 - **Fix:** Create stub settings page before Phase 4A. No remediation needed now.
@@ -1626,66 +1331,6 @@
 
 ---
 
-### M-49 — Missing meta description on all pages (SEO score 83)
-
-- **Severity:** Medium
-- **Status:** Open
-- **Affected:** All pages (`apps/web/src/app/layout.tsx`)
-- **Description:** Lighthouse SEO audit flags "Document does not have a meta description." Currently no `<meta name="description">` is set in any page's `<head>`. This lowers the SEO score to 83. While this is an internal B2B app, login page and any public-facing paths are indexed by search engines.
-- **Fix:** Add a `description` field to the `metadata` export in `apps/web/src/app/layout.tsx` and override per page where appropriate (login, 403). Example: `export const metadata = { title: "BeFine", description: "Sistema de gestión para salones de belleza" }`.
-
----
-
-### M-50 — `robots.txt` has 2 validation errors
-
-- **Severity:** Medium
-- **Status:** Open
-- **Affected:** `apps/web/public/robots.txt`
-- **Description:** Lighthouse reports "robots.txt is not valid — 2 errors found." Invalid `robots.txt` can cause Google Search Console to reject the file, making crawl directives unreliable.
-- **Fix:** Validate `public/robots.txt` at `https://search.google.com/search-console/robots-testing-tool`. Fix the two errors (likely missing newlines, invalid directive syntax, or duplicate `User-agent` stanzas). For a private app, a minimal valid file is: `User-agent: *\nDisallow: /`.
-
----
-
-### M-51 — Browser console errors logged (Lighthouse Best Practices: 96)
-
-- **Severity:** Medium
-- **Status:** Open
-- **Affected:** Unknown — requires browser DevTools inspection
-- **Description:** Lighthouse Best Practices score is 96 (not 100) due to "Browser errors were logged to the console." Likely candidates: hydration mismatch warnings, missing environment variable warnings, or uncaught promise rejections.
-- **Fix:** Open Chrome DevTools Console on the production URL; filter for errors (red). Identify and fix each one. Common sources: `process.env` variables missing at runtime, React hydration mismatches from server/client rendering differences, or uncaught async rejections in event handlers.
-
----
-
-### L-41 — Legacy JavaScript (est. −13 KB savings)
-
-- **Severity:** Low
-- **Status:** Open
-- **Affected:** Next.js build config (`apps/web/next.config.ts`)
-- **Description:** Lighthouse flags legacy JavaScript that could save ~13 KB. Next.js may be transpiling modern syntax for older browsers due to `browserslist` or `@babel/preset-env` targets.
-- **Fix:** Verify `apps/web/.browserslistrc` or `package.json` `browserslist` field targets modern browsers only (e.g. `> 0.5%, last 2 versions, not dead, not IE 11`). Check if any polyfills are being included unnecessarily. Consider `next.config.ts` `experimental.browsersListQueries` if needed.
-
----
-
-### L-42 — Unused JavaScript (est. −78 KB savings)
-
-- **Severity:** Low
-- **Status:** Open
-- **Affected:** Analytics dashboard, large dialogs (`apps/web/src/app`)
-- **Description:** Lighthouse flags ~78 KB of unused JavaScript on initial load. Primary suspect: Recharts (~120 KB gzip, loaded eagerly on analytics page). Secondary suspects: large dialog components imported at module level.
-- **Fix:** Apply `next/dynamic` with `{ ssr: false }` to the Recharts area chart and bar chart components on the analytics dashboard. Evaluate other large imports (dialog content, heavy form components) for lazy-loading. Re-run Lighthouse to verify savings. Note: analytics LCP is already at 2.8 s (close to 3.0 s budget) — this fix directly protects that target.
-
----
-
-### L-43 — Page prevents bfcache restoration (2 failure reasons)
-
-- **Severity:** Low
-- **Status:** Open
-- **Affected:** Unknown pages
-- **Description:** Lighthouse reports the page blocked back/forward cache (bfcache) for 2 reasons. Common causes: `Cache-Control: no-store` response header, `unload` event listener registered, or use of `SharedArrayBuffer`. Blocked bfcache means browser back/forward navigation does a full reload instead of instant restore.
-- **Fix:** Open Chrome DevTools → Application → Back/forward cache → Test. Inspect the listed failure reasons. Remove `unload` listeners (replace with `pagehide` or `visibilitychange`). If `Cache-Control: no-store` is the cause, evaluate whether it's needed or can be scoped more narrowly via Vercel headers config.
-
----
-
 ### C-21 — No Content-Security-Policy headers defined anywhere
 
 - **Severity:** Critical
@@ -1706,16 +1351,6 @@
 
 ---
 
-### H-44 — T086 restore drill not actually performed
-
-- **Severity:** High
-- **Status:** Open (blocked — see T10R-R3, no staging branch yet)
-- **Affected:** T086 (`docs/research/backup-policy.md`)
-- **Description:** T086 AC requires "Restore drill performed on staging: drop a table, restore to a prior point." The runbook at `docs/research/backup-policy.md:50-52` contains the drill procedure but the result table is entirely empty placeholders (`⏳ — — — — —`). A runbook you have never executed is not a proof of recoverability. If Neon PITR fails or the promote-branch-to-production step takes longer than documented, we discover it during a real incident, not during a drill.
-- **Fix:** Execute the drill on the staging Neon branch. Record the actual date, operator, target timestamp, inserted row ID, confirmation of absence after restore, and wall-clock duration in the table. Additionally capture: exact Vercel env-var update steps, any Neon console UX gotchas, and whether Connection-Pooler URLs needed to be re-issued post-restore. Only after a successful drill may this AC be ticked on the go-live checklist.
-
----
-
 ### H-45 — Issues-tracker Open-status is badly out of sync with resolved Phase 7R/8R/9R work
 
 - **Severity:** High
@@ -1729,7 +1364,7 @@
 ### M-52 — T088 training guides contain no screenshots or screen recordings
 
 - **Severity:** Medium
-- **Status:** Open
+- **Status:** Resolved (2026-10-12) — verified: per-role guides in `docs/training/` have 58 real screenshots (2026-10-11)
 - **Affected:** T088 (`docs/training/{cashier-admin,stylist,clothier,secretary}.md`)
 - **Description:** T088 AC explicitly requires "Includes screenshots or screen recordings for the 2–3 most confusing steps." Grep across `docs/training/` finds zero image references (no `.png`, `.gif`, `.mp4`, no `![...](...)` markdown). The guides are entirely prose. First-time users on a small screen hunting for the "Pagado sin conexión" button, or clothiers understanding which status chip means "pick up this piece", will benefit disproportionately from an annotated screenshot. All four guides currently ship this AC unmet.
 - **Fix:** Identify the 2–3 highest-confusion steps per role (candidates: cashier checkout split-payment screen, stylist mark-awaiting-payment from ticket detail, clothier claim-piece selection, secretary appointment booking with price-change acknowledgement). Capture annotated screenshots (redacted of any real PII) and embed in each guide. Screen recordings are acceptable as alternatives for flows with non-trivial motion (e.g. drawer-to-list transitions).
@@ -1786,16 +1421,6 @@
 
 ---
 
-### M-56 — createAssignment lacks SELECT ... FOR UPDATE; concurrent over-assignment race window exists
-
-- **Severity:** Medium
-- **Status:** Open
-- **Affected:** T4.7 (`apps/web/src/app/(protected)/large-orders/assignment-actions.ts:111-141`)
-- **Description:** `createAssignment` reads `SUM(assignedQuantity)` inside a transaction but does not acquire a row-level lock on the `order_items` row (`SELECT ... FOR UPDATE`). Two concurrent requests that both snapshot the same current total can both pass the capacity check and together exceed `order_items.quantity`. Under the expected low concurrency of a single salon's secretary, the window is narrow, but the invariant is not strictly guaranteed. The concurrent test in `assignments-concurrent.test.ts` documents and models this gap.
-- **Fix:** Add `.for("update")` to the `SELECT quantity FROM order_items` query inside the `createAssignment` transaction. Drizzle supports this via `.for("update")` on a select builder. The lock serializes concurrent inserts so exactly one gets the correct remaining total.
-
----
-
 ### L-46 — Backup policy references non-existent `vercel env pull` subcommand flag
 
 - **Severity:** Low
@@ -1803,36 +1428,6 @@
 - **Affected:** T086 (`docs/research/backup-policy.md:75-77`)
 - **Description:** The monthly manual dump example uses `vercel env pull --environment=production -- DATABASE_URL`. The `vercel env pull` subcommand downloads a `.env` file; it does not emit a single variable to stdout. The `--` separator is not a documented flag for piping a specific variable value into `pg_dump`. Whoever runs this verbatim gets a `.env.local` file on disk and a failed `pg_dump` call.
 - **Fix:** Replace with a verified command sequence: `vercel env pull .env.production --environment=production --yes && set -a && . .env.production && set +a && pg_dump "$DATABASE_URL" --no-owner --no-acl -F c -f "befine-backup-$(date +%Y%m%d).dump" && rm .env.production`. Or route through the Neon CLI: `neonctl connection-string main --project-id <id> | xargs pg_dump …`.
-
----
-
-### L-47 — `createTicket` idempotency check is select-then-insert
-
-- **Severity:** Low
-- **Status:** Open
-- **Affected:** T035/T078 (`createTicket`)
-- **Description:** Two concurrent submissions with the same `idempotencyKey` both pass the `SELECT`, then one hits `tickets_idempotency_key_unique` and returns `INTERNAL_ERROR` instead of the existing ticket. `processCheckout` already does this correctly with `ON CONFLICT DO NOTHING`.
-- **Fix:** Use `INSERT … ON CONFLICT (idempotency_key) DO NOTHING RETURNING *`, then fetch on empty result.
-
----
-
-### L-48 — `trustedOrigins` hard-coded to the vercel.app domain in production
-
-- **Severity:** Low
-- **Status:** Open
-- **Affected:** `apps/web/src/lib/auth.ts`
-- **Description:** Any production build served from another origin (custom domain, self-hosted) only works if `BETTER_AUTH_URL` matches it exactly.
-- **Fix:** Derive `trustedOrigins` from `BETTER_AUTH_URL` / an env list.
-
----
-
-### L-49 — Transaction pool capped at 5 connections per instance
-
-- **Severity:** Low
-- **Status:** Open
-- **Affected:** `packages/db/src/index.ts` `createTxDb`
-- **Description:** Under a burst (closing time: checkouts + mark-done + products) transactions queue behind 5 sockets per instance. Fine on Vercel with many instances; a bottleneck if self-hosted on one process.
-- **Fix:** Make `max` configurable via env; size it to Neon's connection budget.
 
 ---
 
@@ -1853,16 +1448,6 @@
 - **Affected:** Large-order form (quantity / unit price spinbuttons), walk-in guest icon button in log-service form, catalog "Crear servicio" price/commission (placeholder-only labels "Ej: 25000"/"Ej: 40"), absences calendar prev/next month buttons
 - **Description:** Source: training-manual walkthrough with agent-browser, 2026-10-11 (demo data, homelab CT 110). Found via accessibility snapshot — these controls expose no accessible name.
 - **Fix:** Add `<label>`/`aria-label` per CLAUDE.md accessibility baseline.
-
----
-
-### L-52 — Mobile and small UX polish
-
-- **Severity:** Low
-- **Status:** Partially resolved — (3) 2026-10-11: clothier "Listo" asks for confirmation, toasts, idempotency key. (1) 2026-10-12: floating pill replaced by an in-flow top bar on stylist/clothier and admin/secretary mobile shells. Still open: (2), (4), (5)
-- **Affected:** Mobile earnings pages, notifications bell, clothier "Listo", PWA manifest
-- **Description:** Source: training-manual walkthrough with agent-browser, 2026-10-11 (demo data, homelab CT 110). (1) At 390 px the floating name/bell pill overlaps the H1 ("Historial d…"). (2) The unread badge doesn't clear after opening notifications. (3) Clothier "Listo" applies immediately with no confirmation or undo. (4) `/manifest.webmanifest` is redirected to `/login` by middleware (manifest requests carry no cookies), so the PWA manifest is unreachable. (5) "Abrir día" spins ~5 s before the panel updates.
-- **Fix:** Add top padding under the pill; mark notifications read on open; add undo toast for "Listo"; exclude `manifest.webmanifest` in the middleware matcher.
 
 ---
 
@@ -1887,6 +1472,8 @@
 ---
 
 - **2026-10-12 — Colour tokens are oklch.** Never wrap theme variables in `hsl()`/`rgb()`; use `var(--color-*)` directly or `color-mix()` for alpha. Invalid colours fail silently in SVG.
+
+- **2026-10-12 — A business day is not a date.** Days can be closed and reopened on the same calendar date. Anything paid "per day" must count distinct `businessDateOf()` dates, never business-day rows; and never derive a date with `toISOString().slice(0, 10)`.
 
 ## Resolution log
 
@@ -1989,3 +1576,6 @@
 | M-63     | 2026-10-12    | `timeZone: "America/Bogota"` on all remaining locale time/date renders (11 sites)                        | feat/design-system           |
 | L-51     | 2026-10-12    | Accessible names on all flagged controls + icon buttons; keyboard drill-down in analytics                | feat/design-system           |
 | M-74     | 2026-10-12    | Chart colours use `var(--color-primary)` / color-mix instead of hsl() over oklch tokens                  | feat/design-system           |
+| H-53     | 2026-10-12    | Distinct-date secretary pay + sibling-payout exclusion; Bogota dates in payroll; same-date labels        | fix/payroll-same-date-days   |
+| M-64     | 2026-10-12    | Client reads via parallel GET /api/q (allowlist over existing read fns); Cobrar dialog ~1.5 s            | fix/payroll-same-date-days   |
+| UI-audit | 2026-10-12    | Long lists paged 50 at a time (clients, ticket history); global-error localized + styled                 | fix/payroll-same-date-days   |

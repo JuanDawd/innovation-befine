@@ -18,7 +18,8 @@
     "optional": "(opcional)",
     "required": "obligatorio",
     "yes": "Sí",
-    "no": "No"
+    "no": "No",
+    "showMore": "Mostrar {count, plural, one {# más} other {# más}}"
   },
   "roles": {
     "cashier": "Cajero",
@@ -128,7 +129,10 @@
     "forbiddenDescription": "No tienes permiso para ver esta página.",
     "goHome": "Ir a mi panel",
     "unexpected": "Ocurrió un error inesperado",
-    "retry": "Reintentar"
+    "retry": "Reintentar",
+    "globalTitle": "Algo salió mal",
+    "globalDescription": "Ocurrió un error inesperado. Nuestro equipo ha sido notificado.",
+    "globalRetry": "Intentar de nuevo"
   },
   "time": {
     "justNow": "Justo ahora",

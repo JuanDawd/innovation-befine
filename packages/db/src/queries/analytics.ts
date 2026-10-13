@@ -307,9 +307,10 @@ export async function earningsByEmployee(
 
       const excludedDates = new Set(absenceRows.map((a) => a.date));
 
-      // ISO-week cap: count present days per week, cap at expectedWorkDays
+      // ISO-week cap: count present days per week, cap at expectedWorkDays.
+      // Distinct dates only — a day closed and reopened on the same date is one day worked.
       const weekCounts = new Map<string, number>();
-      for (const [, dateStr] of dayDateMap) {
+      for (const dateStr of new Set(dayDateMap.values())) {
         if (excludedDates.has(dateStr)) continue;
         const d = new Date(dateStr + "T12:00:00Z");
         const dow = d.getUTCDay() || 7;
@@ -618,9 +619,12 @@ export async function employeeDayBreakdown(
 
   const dailyRate = empData?.dailyRate ?? 0;
 
+  // A date with two business days (closed + reopened) pays once: only the first counts.
+  const seenDates = new Set<string>();
   return dayRows.map((d) => {
     const dateStr = toBogotaDate(new Date(d.openedAt));
-    const present = !excludedDates.has(dateStr);
+    const present = !excludedDates.has(dateStr) && !seenDates.has(dateStr);
+    seenDates.add(dateStr);
     return {
       businessDayId: d.id,
       date: dateStr,

@@ -10,24 +10,23 @@ import { notifyDataChanged } from "@/lib/data-events";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
-import { unwrap } from "@/lib/action-query";
 import { useTranslations } from "next-intl";
 import { CheckCircle2Icon, Loader2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import {
-  listPendingProductPieceApprovals,
   approveProductPiece,
   type PendingProductPieceApprovalRow,
 } from "@/app/(protected)/products/approval-actions";
+import { fetchQuery } from "@/lib/action-query";
 
 export function ProductApprovalBoard() {
   const t = useTranslations("products");
 
   const { data: pieces = [], isPending: isLoading } = useQuery({
     queryKey: queryKeys.products.approvals,
-    queryFn: () => unwrap(listPendingProductPieceApprovals()),
+    queryFn: () => fetchQuery("pendingProductPieceApprovals"),
     refetchInterval: 60_000,
   });
   const [pendingId, setPendingId] = useState<string | null>(null);

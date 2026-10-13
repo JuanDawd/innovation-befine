@@ -11,7 +11,6 @@ import { useState, useTransition } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { notifyDataChanged } from "@/lib/data-events";
 import { queryKeys } from "@/lib/query-keys";
-import { unwrap } from "@/lib/action-query";
 import { useTranslations } from "next-intl";
 import {
   ChevronLeftIcon,
@@ -26,8 +25,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { BookAppointmentForm } from "@/components/book-appointment-form";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
-  listAppointmentsForDate,
-  listBookingStylists,
   acknowledgeAppointmentPriceChange,
   type AppointmentListRow,
 } from "@/app/(protected)/appointments/actions";
@@ -35,6 +32,7 @@ import { AppointmentStatusActions } from "@/components/appointment-status-action
 import { NativeSelect } from "@/components/ui/native-select";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { useSearchParamState } from "@/hooks/use-search-param-state";
+import { fetchQuery } from "@/lib/action-query";
 
 // ─── Price change acknowledge inline widget (T109) ────────────────────────────
 
@@ -106,7 +104,7 @@ export function AppointmentList() {
   );
   const { data: stylists = [] } = useQuery({
     queryKey: queryKeys.staff.bookingStylists,
-    queryFn: () => unwrap(listBookingStylists()),
+    queryFn: () => fetchQuery("bookingStylists"),
     staleTime: 5 * 60_000,
   });
   const {
@@ -115,7 +113,7 @@ export function AppointmentList() {
     error: queryError,
   } = useQuery({
     queryKey: queryKeys.appointments.byDate(date, stylistFilter),
-    queryFn: () => unwrap(listAppointmentsForDate(date, stylistFilter || undefined)),
+    queryFn: () => fetchQuery("appointmentsForDate", { date, stylist: stylistFilter }),
     refetchInterval: 60_000,
   });
   const error = queryError?.message ?? null;

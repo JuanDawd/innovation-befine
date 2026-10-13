@@ -4,15 +4,12 @@ import { notifyDataChanged } from "@/lib/data-events";
 import { useState, useTransition } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
-import { unwrap } from "@/lib/action-query";
 import { Loader2Icon } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   createClothSale,
-  listSellableClothPieces,
-  listClientsForSale,
   type SellableClothPiece,
   type ClientOption,
 } from "@/app/(protected)/cashier/actions/cloth-sales";
@@ -20,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { formatMoney } from "@/i18n";
+import { fetchQuery } from "@/lib/action-query";
 
 interface SellClothPieceModalProps {
   open: boolean;
@@ -35,13 +33,13 @@ export function SellClothPieceModal({ open, onOpenChange, ticketId }: SellClothP
   // Loaded when the modal first opens, then cached (reopening is instant).
   const piecesQuery = useQuery({
     queryKey: queryKeys.catalog.sellableClothPieces,
-    queryFn: () => unwrap(listSellableClothPieces()),
+    queryFn: () => fetchQuery("sellableClothPieces"),
     staleTime: 5 * 60_000,
     enabled: open,
   });
   const clientsQuery = useQuery({
     queryKey: queryKeys.clients.options,
-    queryFn: () => unwrap(listClientsForSale()),
+    queryFn: () => fetchQuery("clientsForSale"),
     staleTime: 5 * 60_000,
     enabled: open,
   });
