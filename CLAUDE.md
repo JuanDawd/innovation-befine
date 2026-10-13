@@ -93,7 +93,7 @@ When the **last task in a phase** is marked `done`, stop and tell the user:
 3. Regression sweep — run `turbo test` and confirm no regressions
 4. Security & edge-case scan — endpoints, permissions, input validation, error handling
 5. Code quality review — dead code, inconsistent patterns, missing types, duplicated logic
-6. Issue consolidation — review `docs/issues-tracker.md` and verify open issues are still valid
+6. Issue consolidation — review the open tasks in Vikunja (project Innovation Befine #9) and verify they are still valid
 
 **After the audit, Opus creates a remediation sub-phase in `docs/Business/progress.md`:**
 
@@ -108,7 +108,7 @@ When the **last task in a phase** is marked `done`, stop and tell the user:
 - IDs: `T0XX-R#` where `XX` is the phase number, `#` is sequential
 - Severity must be noted — Critical and High are **blocking**
 - Do NOT start the next phase until all Critical and High remediation tasks are `done`
-- Medium and Low may be deferred to `docs/issues-tracker.md`
+- Medium and Low may be deferred to Vikunja (project Innovation Befine #9)
 
 ---
 
@@ -148,15 +148,14 @@ Before marking any task done and before committing:
 
 If any issue is found — bug, gap, edge case, missing error handling, UX problem:
 
-1. Log it in `docs/issues-tracker.md` under the appropriate severity section
-2. Use the next available issue ID in its severity group
-3. Include: severity, status (Open), affected tasks, description, fix recommendation
-4. If blocking: fix now. If not blocking: track as prioritized follow-up.
+1. If blocking: fix now, and record it as Resolved in `docs/issues-tracker.md` (next ID in its severity group) with a resolution-log row.
+2. If not blocking: create a task in Vikunja project **Innovation Befine** (#9) — title `[<next ID>] <summary>`, priority 3/2/1 for High/Medium/Low, description with affected tasks, details and fix recommendation.
 
 ### 6. Update progress
 
 - Mark the task as `done` in `docs/Business/progress.md`
 - If issues were found and fixed, note it in the issues-tracker resolution log
+- If a fix closes a Vikunja task, mark it done there and add the resolution-log row here
 
 ---
 
@@ -164,9 +163,9 @@ If any issue is found — bug, gap, edge case, missing error handling, UX proble
 
 When working on any task, actively look for gaps, loopholes, inconsistencies, missing error handling, security concerns, and UX problems. When found:
 
-1. Log immediately in `docs/issues-tracker.md` under the appropriate severity section
-2. Use the existing format: issue ID, severity, status, affected tasks, description, fix recommendation
-3. Add a lessons-learned entry if the issue reveals a pattern to prevent in the future
+1. Open work lives in Vikunja (https://vikunja.juandawd.dev, project **Innovation Befine** #9): one task per issue, title prefixed with its ID. `docs/issues-tracker.md` keeps only closed issues, lessons learned and the resolution log.
+2. Format: issue ID, severity, affected tasks, description, fix recommendation
+3. Add a lessons-learned entry (in the tracker) if the issue reveals a pattern to prevent in the future
 
 **What to watch for:**
 
