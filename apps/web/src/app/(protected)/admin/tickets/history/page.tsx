@@ -11,6 +11,7 @@ import { ReceiptIcon } from "lucide-react";
 import { PageSkeleton } from "@/components/ui/loading-skeleton";
 import { ClosedTicketHistory } from "@/components/closed-ticket-history";
 import { listBusinessDays, listClosedTickets } from "./actions";
+import { PageHeader } from "@/components/page-header";
 
 async function HistoryContent() {
   const daysResult = await listBusinessDays();
@@ -48,10 +49,7 @@ export default async function TicketHistoryPage() {
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6 lg:p-8">
-      <div>
-        <h1 className="text-xl md:text-2xl font-semibold">{t("pageTitle")}</h1>
-        <p className="text-sm text-muted-foreground">{t("pageSubtitle")}</p>
-      </div>
+      <PageHeader title={t("pageTitle")} description={t("pageSubtitle")} />
 
       <Suspense fallback={<PageSkeleton />}>
         <HistoryContent />

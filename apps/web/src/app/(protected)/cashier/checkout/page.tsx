@@ -2,33 +2,27 @@
  * Cashier checkout page — T038, T039
  */
 
-import Link from "next/link";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { headers } from "next/headers";
-import { ChevronLeftIcon } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { hasRole } from "@/lib/middleware-helpers";
 import { CheckoutForm } from "@/components/checkout-form";
+import { PageHeader } from "@/components/page-header";
 
 export default async function CheckoutPage() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session || !hasRole(session.user, "cashier", "admin")) redirect("/cashier");
+  const t = await getTranslations();
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6 max-w-xl mx-auto w-full">
-      <Link
-        href="/cashier"
-        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
-      >
-        <ChevronLeftIcon className="size-4" aria-hidden="true" />
-        Volver
-      </Link>
-      <div>
-        <h1 className="text-xl md:text-2xl font-semibold">Cobrar</h1>
-        <p className="text-sm text-muted-foreground">
-          Selecciona los tickets a cobrar e indica el método de pago.
-        </p>
-      </div>
+      <PageHeader
+        title={t("tickets.checkoutTitle")}
+        description={t("tickets.checkoutSubtitle")}
+        backHref="/cashier"
+        backLabel={t("common.back")}
+      />
       <CheckoutForm />
     </div>
   );

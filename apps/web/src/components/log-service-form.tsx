@@ -27,6 +27,8 @@ import {
   type StylistOption,
 } from "@/app/(protected)/tickets/actions";
 import { listActiveServices } from "@/app/(protected)/admin/catalog/actions/services";
+import { NativeSelect } from "@/components/ui/native-select";
+import { formatMoney } from "@/i18n";
 
 type ServiceVariant = {
   id: string;
@@ -145,11 +147,12 @@ export function LogServiceForm({
           <label htmlFor="ls-employee" className="text-sm font-medium">
             {t("employee")}
           </label>
-          <select
+          <NativeSelect
             id="ls-employee"
             value={employeeId}
             onChange={(e) => setEmployeeId(e.target.value)}
-            className="flex h-8 w-full rounded-lg border border-input bg-background px-2.5 py-1 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50"
+            className="w-full"
+            selectClassName="text-sm"
           >
             <option value="">{t("employeePlaceholder")}</option>
             {stylists.map((s) => (
@@ -157,7 +160,7 @@ export function LogServiceForm({
                 {s.name}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </div>
       )}
 
@@ -166,14 +169,15 @@ export function LogServiceForm({
         <label htmlFor="ls-service" className="text-sm font-medium">
           {t("service")}
         </label>
-        <select
+        <NativeSelect
           id="ls-service"
           value={serviceId}
           onChange={(e) => {
             setServiceId(e.target.value);
             setVariantId("");
           }}
-          className="flex h-8 w-full rounded-lg border border-input bg-background px-2.5 py-1 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50"
+          className="w-full"
+          selectClassName="text-sm"
         >
           <option value="">{t("servicePlaceholder")}</option>
           {services.map((s) => (
@@ -181,7 +185,7 @@ export function LogServiceForm({
               {s.name}
             </option>
           ))}
-        </select>
+        </NativeSelect>
       </div>
 
       {/* Variant selector */}
@@ -190,11 +194,12 @@ export function LogServiceForm({
           <label htmlFor="ls-variant" className="text-sm font-medium">
             {t("variant")}
           </label>
-          <select
+          <NativeSelect
             id="ls-variant"
             value={variantId}
             onChange={(e) => setVariantId(e.target.value)}
-            className="flex h-8 w-full rounded-lg border border-input bg-background px-2.5 py-1 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50"
+            className="w-full"
+            selectClassName="text-sm"
           >
             <option value="">{t("variantPlaceholder")}</option>
             {variants.map((v) => (
@@ -202,11 +207,11 @@ export function LogServiceForm({
                 {v.name}
               </option>
             ))}
-          </select>
+          </NativeSelect>
           {selectedVariant && (
             <p className="text-xs text-muted-foreground">
-              {t("price")}: ${selectedVariant.customerPrice.toLocaleString("es-CO")} ·{" "}
-              {t("commission")}: {selectedVariant.commissionPct}%
+              {t("price")}: {formatMoney(selectedVariant.customerPrice)} · {t("commission")}:{" "}
+              {selectedVariant.commissionPct}%
             </p>
           )}
         </div>

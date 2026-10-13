@@ -50,12 +50,9 @@ import {
   checkVariantOpenTickets,
   checkServiceOpenTickets,
 } from "@/app/(protected)/admin/catalog/actions/services";
+import { formatMoney } from "@/i18n";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function formatCOP(amount: number): string {
-  return `$${amount.toLocaleString("es-CO")}`;
-}
 
 // ─── Create Service Dialog ────────────────────────────────────────────────────
 
@@ -197,9 +194,9 @@ function CreateServiceDialog({ onSuccess }: { onSuccess: (service: ServiceRow) =
                           type="button"
                           onClick={() => remove(idx)}
                           className="text-muted-foreground hover:text-destructive"
-                          aria-label="Eliminar variante"
+                          aria-label={t("removeVariant")}
                         >
-                          <Trash2Icon className="size-3.5" />
+                          <Trash2Icon className="size-3.5" aria-hidden="true" />
                         </button>
                       )}
                     </div>
@@ -225,6 +222,7 @@ function CreateServiceDialog({ onSuccess }: { onSuccess: (service: ServiceRow) =
                           type="number"
                           min={0}
                           placeholder={t("customerPricePlaceholder")}
+                          aria-label={t("customerPrice")}
                           aria-invalid={!!errors.variants?.[idx]?.customerPrice}
                           {...register(`variants.${idx}.customerPrice`, { valueAsNumber: true })}
                         />
@@ -244,6 +242,7 @@ function CreateServiceDialog({ onSuccess }: { onSuccess: (service: ServiceRow) =
                           max={100}
                           step={0.01}
                           placeholder={t("commissionPctPlaceholder")}
+                          aria-label={t("commissionPct")}
                           aria-invalid={!!errors.variants?.[idx]?.commissionPct}
                           {...register(`variants.${idx}.commissionPct`, { valueAsNumber: true })}
                         />
@@ -476,6 +475,7 @@ function VariantEditRow({
             type="number"
             min={0}
             placeholder={t("customerPricePlaceholder")}
+            aria-label={t("customerPrice")}
             aria-invalid={!!errors.customerPrice}
             {...register("customerPrice", { valueAsNumber: true })}
           />
@@ -494,6 +494,7 @@ function VariantEditRow({
             max={100}
             step={0.01}
             placeholder={t("commissionPctPlaceholder")}
+            aria-label={t("commissionPct")}
             aria-invalid={!!errors.commissionPct}
             {...register("commissionPct", { valueAsNumber: true })}
           />
@@ -594,6 +595,7 @@ function AddVariantRow({
             type="number"
             min={0}
             placeholder={t("customerPricePlaceholder")}
+            aria-label={t("customerPrice")}
             aria-invalid={!!errors.customerPrice}
             {...register("customerPrice", { valueAsNumber: true })}
           />
@@ -612,6 +614,7 @@ function AddVariantRow({
             max={100}
             step={0.01}
             placeholder={t("commissionPctPlaceholder")}
+            aria-label={t("commissionPct")}
             aria-invalid={!!errors.commissionPct}
             {...register("commissionPct", { valueAsNumber: true })}
           />
@@ -854,7 +857,7 @@ function ServiceCard({
                 {visibleVariants.map((v) => {
                   const isEditOpen = openSlot.type === "edit" && openSlot.variantId === v.id;
                   return (
-                    <div key={v.id} className="transition-all duration-200">
+                    <div key={v.id}>
                       {/* Collapsed row */}
                       <div
                         className={`flex items-center justify-between rounded-lg px-3 py-2 text-sm ${v.isActive ? "bg-muted/50" : "bg-muted/20 opacity-60"} ${isEditOpen ? "rounded-b-none border-b-0" : ""}`}
@@ -869,7 +872,7 @@ function ServiceCard({
                         </div>
                         <div className="flex items-center gap-3">
                           <span className="font-mono tabular-nums text-xs">
-                            {formatCOP(v.customerPrice)}
+                            {formatMoney(v.customerPrice)}
                           </span>
                           <span className="text-xs text-muted-foreground">
                             {parseFloat(v.commissionPct).toFixed(1)}%
@@ -927,7 +930,7 @@ function ServiceCard({
 
                       {/* Inline edit form */}
                       {isEditOpen && (
-                        <div className="overflow-hidden transition-all duration-200">
+                        <div>
                           <VariantEditRow
                             variant={v}
                             onDirtyChange={setSlotIsDirty}
@@ -953,7 +956,7 @@ function ServiceCard({
             {localService.isActive && (
               <div className="mt-2">
                 {openSlot.type === "add" ? (
-                  <div className="overflow-hidden transition-all duration-200">
+                  <div>
                     <AddVariantRow
                       serviceId={localService.id}
                       onDirtyChange={setSlotIsDirty}

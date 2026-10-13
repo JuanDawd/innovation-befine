@@ -6,6 +6,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { ChevronLeftIcon, ChevronRightIcon, Loader2Icon, PlusIcon, Trash2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { logAbsence, deleteAbsence, type AbsenceRow, type EmployeeOption } from "./actions";
+import { NativeSelect } from "@/components/ui/native-select";
 
 type Props = {
   year: number;
@@ -15,9 +16,9 @@ type Props = {
 };
 
 const ABSENCE_COLORS = {
-  vacation: "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300",
-  approved_absence: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300",
-  missed: "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300",
+  vacation: "bg-status-progress text-status-progress-foreground",
+  approved_absence: "bg-status-attention text-status-attention-foreground",
+  missed: "bg-status-negative text-status-negative-foreground",
 } as const;
 
 // Generate day headers from Intl (locale-aware, Mon-Sun order for the grid)
@@ -107,12 +108,24 @@ export function AbsenceCalendar({ year, month, absences, employees }: Props) {
     <div className="space-y-4">
       {/* Month navigation */}
       <div className="flex items-center justify-between">
-        <Button variant="outline" size="sm" onClick={prevMonth} disabled={isPending}>
-          <ChevronLeftIcon className="size-4" />
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={prevMonth}
+          disabled={isPending}
+          aria-label={t("prevMonth")}
+        >
+          <ChevronLeftIcon className="size-4" aria-hidden="true" />
         </Button>
         <h2 className="text-lg font-semibold capitalize">{monthName}</h2>
-        <Button variant="outline" size="sm" onClick={nextMonth} disabled={isPending}>
-          <ChevronRightIcon className="size-4" />
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={nextMonth}
+          disabled={isPending}
+          aria-label={t("nextMonth")}
+        >
+          <ChevronRightIcon className="size-4" aria-hidden="true" />
         </Button>
       </div>
 
@@ -182,7 +195,10 @@ export function AbsenceCalendar({ year, month, absences, employees }: Props) {
           .map(([date, rows]) => (
             <div key={date} className="border rounded-md p-3 space-y-1">
               <p className="text-xs font-semibold text-muted-foreground">
-                {new Date(date + "T12:00:00").toLocaleDateString("es-CO", { dateStyle: "medium" })}
+                {new Date(date + "T12:00:00").toLocaleDateString("es-CO", {
+                  timeZone: "America/Bogota",
+                  dateStyle: "medium",
+                })}
               </p>
               {rows.map((a) => (
                 <div
@@ -236,6 +252,7 @@ export function AbsenceCalendar({ year, month, absences, employees }: Props) {
           <p className="text-sm font-semibold">
             {t("logAbsenceFor", {
               date: new Date(selectedDate + "T12:00:00").toLocaleDateString("es-CO", {
+                timeZone: "America/Bogota",
                 dateStyle: "medium",
               }),
             })}
@@ -246,11 +263,12 @@ export function AbsenceCalendar({ year, month, absences, employees }: Props) {
                 <label className="text-sm font-medium" htmlFor="employeeId">
                   {t("employee")} <span className="text-destructive">*</span>
                 </label>
-                <select
+                <NativeSelect
                   id="employeeId"
                   name="employeeId"
                   required
-                  className="w-full h-9 rounded-md border border-input bg-transparent px-3 text-sm focus-visible:outline-none focus-visible:border-ring"
+                  className="w-full"
+                  selectClassName="h-9 text-sm"
                 >
                   <option value="">{t("selectEmployee")}</option>
                   {employees.map((e) => (
@@ -258,22 +276,23 @@ export function AbsenceCalendar({ year, month, absences, employees }: Props) {
                       {e.name}
                     </option>
                   ))}
-                </select>
+                </NativeSelect>
               </div>
               <div className="space-y-1">
                 <label className="text-sm font-medium" htmlFor="type">
                   {t("type")} <span className="text-destructive">*</span>
                 </label>
-                <select
+                <NativeSelect
                   id="type"
                   name="type"
                   required
-                  className="w-full h-9 rounded-md border border-input bg-transparent px-3 text-sm focus-visible:outline-none focus-visible:border-ring"
+                  className="w-full"
+                  selectClassName="h-9 text-sm"
                 >
                   <option value="vacation">{t("type_vacation")}</option>
                   <option value="approved_absence">{t("type_approved_absence")}</option>
                   <option value="missed">{t("type_missed")}</option>
-                </select>
+                </NativeSelect>
               </div>
               <div className="space-y-1">
                 <label className="text-sm font-medium" htmlFor="note">

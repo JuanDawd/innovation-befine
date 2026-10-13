@@ -24,20 +24,24 @@ import {
 import { transitionToAwaitingPayment } from "@/app/(protected)/tickets/actions";
 import { RequestEditDialog } from "@/components/request-edit-dialog";
 import { Button } from "@/components/ui/button";
+import { formatMoney } from "@/i18n";
 
 function formatPrice(n: number) {
-  return `$${n.toLocaleString("es-CO")}`;
+  return formatMoney(n);
 }
 
 function formatTime(d: Date) {
-  return new Date(d).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" });
+  return new Date(d).toLocaleTimeString("es-CO", {
+    timeZone: "America/Bogota",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 function statusClass(status: MyEditRequest["status"]) {
-  if (status === "approved")
-    return "bg-green-50 text-green-700 dark:bg-green-950/30 dark:text-green-300";
-  if (status === "rejected") return "bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-300";
-  return "bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-300";
+  if (status === "approved") return "bg-status-success text-status-success-foreground";
+  if (status === "rejected") return "bg-status-negative text-status-negative-foreground";
+  return "bg-status-attention text-status-attention-foreground";
 }
 
 function statusLabel(status: MyEditRequest["status"], t: (k: string) => string) {
@@ -124,11 +128,11 @@ export function MyEditRequests({
                     </div>
                     <div className="shrink-0">
                       {isReady ? (
-                        <span className="inline-block rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
+                        <span className="inline-block rounded-full bg-status-attention px-2 py-0.5 text-xs font-medium text-status-attention-foreground">
                           {tt("alreadyReady")}
                         </span>
                       ) : item.hasPendingRequest ? (
-                        <span className="inline-block rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
+                        <span className="inline-block rounded-full bg-status-attention px-2 py-0.5 text-xs font-medium text-status-attention-foreground">
                           {t("pendingBadge")}
                         </span>
                       ) : (

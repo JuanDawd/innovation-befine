@@ -4,6 +4,8 @@ import { useTranslations } from "next-intl";
 import { Trash2Icon, ChevronDownIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ClothPieceRow } from "@/app/(protected)/admin/catalog/actions/cloth-pieces";
+import { NativeSelect } from "@/components/ui/native-select";
+import { formatMoney } from "@/i18n";
 
 export type OrderLine = {
   key: number;
@@ -99,7 +101,7 @@ export function LineAccordion({
         <div className="flex shrink-0 items-center gap-2 ml-2">
           {lineTotal > 0 && !open && (
             <span className="text-xs font-mono text-muted-foreground">
-              ${lineTotal.toLocaleString("es-CO")}
+              {formatMoney(lineTotal)}
             </span>
           )}
           <ChevronDownIcon
@@ -119,11 +121,12 @@ export function LineAccordion({
               <label className="text-xs font-medium text-muted-foreground">
                 {t("selectPiece")}
               </label>
-              <select
+              <NativeSelect
                 aria-label={t("selectPiece")}
                 value={line.clothPieceId}
                 onChange={(e) => onUpdate({ clothPieceId: e.target.value })}
-                className="h-8 w-full rounded-md border border-input bg-background px-2.5 text-sm focus-visible:outline-none focus-visible:border-ring"
+                className="w-full"
+                selectClassName="text-sm"
               >
                 <option value="">{t("selectPiece")}</option>
                 {clothPieces.map((p) => (
@@ -131,18 +134,19 @@ export function LineAccordion({
                     {p.name}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             </div>
             <div className="space-y-1">
               <label className="text-xs font-medium text-muted-foreground">
                 {t("selectVariant")}
               </label>
-              <select
+              <NativeSelect
                 aria-label={t("selectVariant")}
                 value={line.clothPieceVariantId}
                 onChange={(e) => onUpdate({ clothPieceVariantId: e.target.value })}
                 disabled={!line.clothPieceId || activeVariants.length === 0}
-                className="h-8 w-full rounded-md border border-input bg-background px-2.5 text-sm focus-visible:outline-none focus-visible:border-ring disabled:opacity-50"
+                className="w-full"
+                selectClassName="text-sm"
               >
                 <option value="">
                   {line.clothPieceId && activeVariants.length === 0
@@ -154,7 +158,7 @@ export function LineAccordion({
                     {v.name}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             </div>
           </div>
 
@@ -165,6 +169,7 @@ export function LineAccordion({
                 type="number"
                 min={1}
                 step={1}
+                aria-label={t("quantity")}
                 value={line.quantity}
                 onChange={(e) =>
                   onUpdate({ quantity: Math.max(1, parseInt(e.target.value, 10) || 1) })
@@ -178,6 +183,7 @@ export function LineAccordion({
                 type="number"
                 min={0}
                 step={1}
+                aria-label={t("unitPrice")}
                 value={line.unitPrice}
                 onChange={(e) => onUpdate({ unitPrice: parseInt(e.target.value, 10) || 0 })}
                 className="w-full h-8 rounded-md border border-input bg-background px-2.5 text-sm font-mono focus-visible:outline-none focus-visible:border-ring"
@@ -193,6 +199,7 @@ export function LineAccordion({
               rows={2}
               maxLength={300}
               required
+              aria-label={t("itemDescription")}
               value={line.itemDescription}
               onChange={(e) => onUpdate({ itemDescription: e.target.value })}
               placeholder={t("itemDescriptionPlaceholder")}
@@ -253,9 +260,7 @@ export function LineAccordion({
 
           <div className="flex items-center justify-between">
             {lineTotal > 0 && (
-              <span className="text-sm font-mono font-semibold">
-                ${lineTotal.toLocaleString("es-CO")}
-              </span>
+              <span className="text-sm font-mono font-semibold">{formatMoney(lineTotal)}</span>
             )}
             <button
               type="button"

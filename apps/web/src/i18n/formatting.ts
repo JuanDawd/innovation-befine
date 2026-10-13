@@ -1,7 +1,7 @@
 import { format, formatDistanceToNow, type Locale as DateLocale } from "date-fns";
 import { es, enUS } from "date-fns/locale";
 import { toZonedTime } from "date-fns-tz";
-import { BUSINESS_TIMEZONE, CURRENCY_CODE, type Locale } from "./config";
+import { BUSINESS_TIMEZONE, type Locale } from "./config";
 
 const dateLocales: Record<Locale, DateLocale> = {
   es,
@@ -11,15 +11,15 @@ const dateLocales: Record<Locale, DateLocale> = {
 /**
  * Format a monetary amount in COP (Colombian Pesos).
  * COP has no cents — values are whole pesos.
- * Output: "$12.500" (Spanish) or "$12,500" (English)
+ * Output: "$12.500" (Spanish) or "$12,500" (English); negatives "-$12.500".
+ * Built from the grouped number rather than `style: "currency"`, which adds
+ * a non-breaking space ("$ 12.500") in es-CO and "COP" in en-US.
  */
 export function formatMoney(pesos: number, locale: Locale = "es"): string {
-  return new Intl.NumberFormat(locale === "es" ? "es-CO" : "en-US", {
-    style: "currency",
-    currency: CURRENCY_CODE,
-    minimumFractionDigits: 0,
+  const grouped = new Intl.NumberFormat(locale === "es" ? "es-CO" : "en-US", {
     maximumFractionDigits: 0,
-  }).format(pesos);
+  }).format(Math.abs(pesos));
+  return `${pesos < 0 ? "-" : ""}$${grouped}`;
 }
 
 /**

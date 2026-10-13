@@ -924,7 +924,7 @@
 ### M-63 — Server-rendered times ignore America/Bogota
 
 - **Severity:** Medium
-- **Status:** Open
+- **Status:** Resolved (2026-10-12) — every remaining `toLocale*String("es-CO", …)` on a timestamp now passes `timeZone: "America/Bogota"` (business-day panel, closed-ticket history, edit requests, notifications, absences); no displayed time depends on the server timezone
 - **Affected:** `business-day-panel.tsx` (openedAt/closedAt), `closed-ticket-history.tsx` ("Hora cierre")
 - **Description:** Source: training-manual walkthrough with agent-browser, 2026-10-11 (demo data, homelab CT 110). `toLocaleTimeString("es-CO", …)` without `timeZone`. Rendered on the server (UTC on Vercel/containers) the day opened at 2:24 p. m. shows "07:24 p. m."; ticket closed at 2:35 p. m. shows "07:35 p. m." Client re-render shows the right time → also a hydration mismatch.
 - **Fix:** Use a shared formatter with `timeZone: "America/Bogota"` (date-fns-tz) everywhere times are displayed.
@@ -944,7 +944,7 @@
 ### M-65 — Checkout pre-selects every awaiting ticket from every client
 
 - **Severity:** Medium
-- **Status:** Open
+- **Status:** Resolved (2026-10-12) — checkout starts with nothing selected; tickets grouped by client with a per-client "select all"; confirmation names the client(s) and warns when one payment covers several clients; price-adjust failures now toast
 - **Affected:** `checkout-form.tsx`
 - **Description:** Source: training-manual walkthrough with agent-browser, 2026-10-11 (demo data, homelab CT 110). Opening "Cobrar" selects all `awaiting_payment` tickets (4 different clients in the demo). A rushed cashier can charge one client for everyone's services.
 - **Fix:** Start with nothing selected (or only the ticket that was clicked), group by client, and show the client name in the confirmation.
@@ -954,7 +954,7 @@
 ### M-66 — Payroll: errors hidden behind the confirmation modal; day picker unwieldy
 
 - **Severity:** Medium
-- **Status:** Partially resolved (2026-10-11) — `ConfirmationDialog` now closes after confirm (errors visible; fixes every confirm dialog). Still open: day-picker chips / oldest-first guidance
+- **Status:** Resolved (2026-10-12) — 2026-10-11: `ConfirmationDialog` closes after confirm (errors visible). 2026-10-12: day chips replaced by a range picker that always starts at the oldest unpaid day ("Desde" fixed, "Hasta" select), so out-of-order payouts can't be built; "Pagar hasta hoy" shortcut; "161 / 6 máx/semana" split into "Días trabajados" + "Máximo pagable por semana"
 - **Affected:** `admin/payroll/payroll-screen.tsx`, `ConfirmationDialog`
 - **Description:** Source: training-manual walkthrough with agent-browser, 2026-10-11 (demo data, homelab CT 110). When `recordPayout` fails (e.g. _"Hay días anteriores sin pagar para este empleado…"_) the "¿Confirmar el pago?" dialog stays open and the error renders behind it — the admin sees nothing happen. The picker lets you select non-oldest days without warning, renders every unsettled day as a chip (166 chips), and shows the unclear label "161 / 6 máx/semana".
 - **Fix:** Close the dialog and toast the error; enforce/auto-select the oldest contiguous range; replace chips with a date-range picker.
@@ -964,7 +964,7 @@
 ### M-67 — Secretary sees "Cobrar" but checkout is cashier/admin-only
 
 - **Severity:** Medium
-- **Status:** Open
+- **Status:** Resolved (2026-10-12) — sidebar "Cobrar" only rendered for cashier/admin (matches server permission)
 - **Affected:** Sidebar quick actions, `cashier/checkout/actions.ts`
 - **Description:** Source: training-manual walkthrough with agent-browser, 2026-10-11 (demo data, homelab CT 110). The secretary sidebar shows "Cobrar", but `getAwaitingPaymentTickets`/`processCheckout` return FORBIDDEN for `secretary` (dialog shows an empty list).
 - **Fix:** Hide the button for roles without checkout permission (or grant the permission deliberately).
@@ -1038,6 +1038,16 @@
 - **Affected:** root / `apps/web` dependency tree (e.g. `shadcn>@modelcontextprotocol/sdk`)
 - **Description:** Source: CI pipeline review, 2026-10-12. The CI audit step is `continue-on-error` until this backlog is triaged. Many paths are dev-tool transitive deps.
 - **Fix:** Triage with `pnpm audit --prod`, upgrade/override what is reachable in production, then remove `continue-on-error`.
+
+---
+
+### M-74 — Analytics charts use `hsl(var(--primary))` with oklch tokens
+
+- **Severity:** Medium
+- **Status:** Resolved (2026-10-12)
+- **Affected:** T072, T073 — `admin/analytics/analytics-dashboard.tsx` (comparison bars, drill-down sparkline, daily breakdown)
+- **Description:** Found during the 2026-10-12 a11y/i18n sweep. The theme tokens are `oklch(...)`, so `hsl(var(--primary))` is an invalid colour; Recharts SVG fills/strokes fall back to the default (black), so the "current" series renders without the brand colour and the "prior" series is invisible on the dark theme.
+- **Fix:** Use `var(--color-primary)` and `color-mix(in oklab, var(--color-muted-foreground) 40%, transparent)`.
 
 ---
 
@@ -1829,7 +1839,7 @@
 ### L-50 — Untranslated strings (raw enum keys / English)
 
 - **Severity:** Low
-- **Status:** Open
+- **Status:** Resolved (2026-10-12) — `StatusBadge` labels come from the `status` namespace (never the raw key); product piece and large-order detail badges, "Nueva cita" stylist subtypes, analytics role column, earnings payout method, appointment statuses all translated; "Analytics" → "Analítica"
 - **Affected:** "Nueva cita" stylist select (`masseuse`, `makeup_artist`, `spa_manager`…), product detail piece status (`initial`), large-order status badge (`pending`, `in production`), admin sidebar + page title "Analytics", Analytics "Por empleado" role column (`Secretary`, `Stylist`)
 - **Description:** Source: training-manual walkthrough with agent-browser, 2026-10-11 (demo data, homelab CT 110). These bypass `next-intl` while the rest of the UI is Spanish (e.g. "Crear empleado" translates the same subtypes correctly).
 - **Fix:** Map enums through translation keys; add an i18n lint for raw enum rendering.
@@ -1839,7 +1849,7 @@
 ### L-51 — Accessibility: unlabeled controls
 
 - **Severity:** Low
-- **Status:** Open
+- **Status:** Resolved (2026-10-12) — scripted scan of every input/select/textarea and icon-only button: large-order quantity/price/description/ETA/notes, catalog price/commission/piece-rate/selling-price, absences prev/next month, guest-cancel and assignment save/cancel buttons now have accessible names; analytics drill-down row has a real `aria-expanded` button
 - **Affected:** Large-order form (quantity / unit price spinbuttons), walk-in guest icon button in log-service form, catalog "Crear servicio" price/commission (placeholder-only labels "Ej: 25000"/"Ej: 40"), absences calendar prev/next month buttons
 - **Description:** Source: training-manual walkthrough with agent-browser, 2026-10-11 (demo data, homelab CT 110). Found via accessibility snapshot — these controls expose no accessible name.
 - **Fix:** Add `<label>`/`aria-label` per CLAUDE.md accessibility baseline.
@@ -1849,7 +1859,7 @@
 ### L-52 — Mobile and small UX polish
 
 - **Severity:** Low
-- **Status:** Partially resolved (2026-10-11) — clothier "Listo" now asks for confirmation (piece + quantity) and shows success toasts; claim/done send idempotency key. Rest open
+- **Status:** Partially resolved — (3) 2026-10-11: clothier "Listo" asks for confirmation, toasts, idempotency key. (1) 2026-10-12: floating pill replaced by an in-flow top bar on stylist/clothier and admin/secretary mobile shells. Still open: (2), (4), (5)
 - **Affected:** Mobile earnings pages, notifications bell, clothier "Listo", PWA manifest
 - **Description:** Source: training-manual walkthrough with agent-browser, 2026-10-11 (demo data, homelab CT 110). (1) At 390 px the floating name/bell pill overlaps the H1 ("Historial d…"). (2) The unread badge doesn't clear after opening notifications. (3) Clothier "Listo" applies immediately with no confirmation or undo. (4) `/manifest.webmanifest` is redirected to `/login` by middleware (manifest requests carry no cookies), so the PWA manifest is unreachable. (5) "Abrir día" spins ~5 s before the panel updates.
 - **Fix:** Add top padding under the pill; mark notifications read on open; add undo toast for "Listo"; exclude `manifest.webmanifest` in the middleware matcher.
@@ -1875,6 +1885,8 @@
 | 2026-04-11 | 3       | T032 work bundled into T030/T031 commits instead of a dedicated commit                                   | No-show display was simple enough to implement alongside the component it lives in, leading to skipping the separate commit        | Follow the one-commit-per-task rule even for small tasks. The git history should mirror the task list. Small tasks get small commits — that's fine.                         |
 
 ---
+
+- **2026-10-12 — Colour tokens are oklch.** Never wrap theme variables in `hsl()`/`rgb()`; use `var(--color-*)` directly or `color-mix()` for alpha. Invalid colours fail silently in SVG.
 
 ## Resolution log
 
@@ -1970,3 +1982,10 @@
 | H-46     | 2026-10-11    | Better Auth `customRules["/sign-in/email"]` 30/60 s; k6 login storm 18/18 OK                             | load test (uncommitted)      |
 | H-47     | 2026-10-11    | `WS_NO_BUFFER_UTIL` inlined via next.config `env`; 0 `b.mask` crashes in k6 run                          | load test (uncommitted)      |
 | M-57     | 2026-10-11    | Not reproducible on healthy rig — SSE streams close at 25 s                                              | load test                    |
+| L-50     | 2026-10-12    | StatusBadge translates via `status` ns; subtypes/roles/methods via next-intl; "Analítica"                | feat/design-system           |
+| M-65     | 2026-10-12    | Opt-in selection grouped by client; client names + multi-client warning in confirmation                  | feat/design-system           |
+| M-67     | 2026-10-12    | "Cobrar" quick action hidden for roles without checkout permission                                       | feat/design-system           |
+| M-66     | 2026-10-12    | Oldest-first range picker replaces per-day chips; clearer secretary breakdown labels                     | feat/design-system           |
+| M-63     | 2026-10-12    | `timeZone: "America/Bogota"` on all remaining locale time/date renders (11 sites)                        | feat/design-system           |
+| L-51     | 2026-10-12    | Accessible names on all flagged controls + icon buttons; keyboard drill-down in analytics                | feat/design-system           |
+| M-74     | 2026-10-12    | Chart colours use `var(--color-primary)` / color-mix instead of hsl() over oklch tokens                  | feat/design-system           |

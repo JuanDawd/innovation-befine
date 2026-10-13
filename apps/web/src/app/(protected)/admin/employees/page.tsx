@@ -15,6 +15,7 @@ import { PageSkeleton } from "@/components/ui/loading-skeleton";
 import { EmployeeList } from "@/components/employee-list";
 import { listEmployees } from "@/app/(protected)/admin/employees/actions/list-employees";
 import { NewEmployeeDialog } from "@/components/new-employee-dialog";
+import { PageHeader } from "@/components/page-header";
 
 async function EmployeeData() {
   const result = await listEmployees();
@@ -31,10 +32,7 @@ export default async function EmployeesPage() {
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6 lg:p-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl md:text-2xl font-semibold">{t("pageTitle")}</h1>
-        <NewEmployeeDialog />
-      </div>
+      <PageHeader title={t("pageTitle")} actions={<NewEmployeeDialog />} />
 
       <Suspense fallback={<PageSkeleton />}>
         <EmployeeData />

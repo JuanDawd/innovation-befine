@@ -1,4 +1,5 @@
 import { cva, type VariantProps } from "class-variance-authority";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 
 /**
@@ -65,9 +66,15 @@ interface StatusBadgeProps extends React.ComponentProps<"span"> {
   label?: string;
 }
 
+/**
+ * Pass the entity status (e.g. "in_production"); the label comes from the
+ * `status` i18n namespace. Pass `label` when using a bare category or a
+ * status that isn't in that namespace — raw enum keys are never shown.
+ */
 function StatusBadge({ status, label, className, ...props }: StatusBadgeProps) {
+  const t = useTranslations("status");
   const category = resolveStatusCategory(status);
-  const displayLabel = label ?? status.replace(/_/g, " ");
+  const displayLabel = label ?? (t.has(status) ? t(status) : "");
 
   return (
     <span className={cn(statusBadgeVariants({ status: category }), className)} {...props}>

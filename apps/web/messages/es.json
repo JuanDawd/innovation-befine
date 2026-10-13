@@ -66,7 +66,14 @@
     "currentPassword": "Contraseña actual",
     "currentPasswordRequired": "La contraseña actual es obligatoria",
     "currentPasswordWrong": "La contraseña actual no es correcta",
-    "changePasswordSuccess": "Contraseña actualizada correctamente"
+    "changePasswordSuccess": "Contraseña actualizada correctamente",
+    "validation": {
+      "currentPasswordRequired": "La contraseña actual es obligatoria",
+      "passwordMin": "La contraseña debe tener al menos 8 caracteres",
+      "confirmPasswordRequired": "Confirma tu contraseña",
+      "passwordsDontMatch": "Las contraseñas no coinciden",
+      "emailInvalid": "Ingresa un correo electrónico válido"
+    }
   },
   "status": {
     "logged": "Registrado",
@@ -84,7 +91,8 @@
     "paid_in_full": "Pagado completo",
     "completed": "Completado",
     "cancelled": "Cancelado",
-    "no_show": "No se presentó"
+    "no_show": "No se presentó",
+    "ready": "Listo"
   },
   "businessDay": {
     "open": "Abrir día",
@@ -118,7 +126,9 @@
     "rateLimited": "Demasiados intentos. Intenta de nuevo en {minutes} minutos.",
     "forbidden": "Acceso denegado",
     "forbiddenDescription": "No tienes permiso para ver esta página.",
-    "goHome": "Ir a mi panel"
+    "goHome": "Ir a mi panel",
+    "unexpected": "Ocurrió un error inesperado",
+    "retry": "Reintentar"
   },
   "time": {
     "justNow": "Justo ahora",
@@ -128,7 +138,13 @@
   },
   "home": {
     "title": "Innovation Befine",
-    "subtitle": "Plataforma de operaciones internas"
+    "subtitle": "Plataforma de operaciones internas",
+    "cashierTitle": "Caja de hoy",
+    "cashierSubtitle": "Tickets abiertos, cobros y cierre del día",
+    "stylistTitle": "Mis servicios",
+    "stylistSubtitle": "Registra cada servicio al terminarlo",
+    "secretaryTitle": "Registro de servicios",
+    "secretarySubtitle": "Registra servicios y revisa tus solicitudes de cambio"
   },
   "landing": {
     "eyebrow": "Plataforma interna",
@@ -270,7 +286,9 @@
     "impactWarning": "{count, plural, one {# ticket abierto usa esta entidad} other {# tickets abiertos usan esta entidad}}",
     "discardChanges": "¿Descartar cambios?",
     "discardChangesDescription": "Tienes cambios sin guardar en esta variante. ¿Seguro que quieres cerrarla?",
-    "discard": "Descartar"
+    "discard": "Descartar",
+    "sellingPriceTitle": "Precio de venta",
+    "removeVariant": "Eliminar variante"
   },
   "clients": {
     "pageTitle": "Clientes",
@@ -341,7 +359,9 @@
     "markReadyError": "No se pudo actualizar el ticket",
     "alreadyReady": "Ya listo para cobrar",
     "emptyTitle": "Sin tickets abiertos",
-    "emptyDescription": "Los servicios registrados aparecerán aquí."
+    "emptyDescription": "Los servicios registrados aparecerán aquí.",
+    "checkoutTitle": "Cobrar",
+    "checkoutSubtitle": "Selecciona los tickets a cobrar e indica el método de pago."
   },
   "dayAtAGlance": {
     "revenueToday": "Ingresos hoy",
@@ -386,7 +406,7 @@
     "detailPayments": "Pagos",
     "detailTotal": "Total",
     "detailError": "No se pudo cargar el detalle del ticket.",
-    "overrideNote": "Precio original: ${original}",
+    "overrideNote": "Precio original: {original}",
     "reopenAction": "Reabrir ticket",
     "reopenHint": "El ticket volverá al tablero del cajero para un nuevo cobro."
   },
@@ -530,7 +550,8 @@
     "editPiece": "Editar pieza",
     "editPieceError": "No se pudo guardar la pieza",
     "saveChanges": "Guardar cambios",
-    "back": "Volver"
+    "back": "Volver",
+    "noLargeOrderLink": "Sin vinculación"
   },
   "appointments": {
     "pageTitle": "Citas",
@@ -588,7 +609,22 @@
     "rescheduleTime": "Nueva hora",
     "rescheduleConfirm": "Confirmar reagendado",
     "rescheduleSuccess": "Cita reagendada",
-    "rescheduleRequiredError": "Selecciona fecha y hora para reagendar"
+    "rescheduleRequiredError": "Selecciona fecha y hora para reagendar",
+    "status": {
+      "booked": "Reservada",
+      "confirmed": "Confirmada",
+      "completed": "Completada",
+      "cancelled": "Cancelada",
+      "rescheduled": "Reprogramada",
+      "no_show": "No asistió"
+    },
+    "validation": {
+      "clientRequired": "Selecciona un cliente o ingresa un nombre de invitado",
+      "stylistRequired": "Selecciona un estilista",
+      "serviceSummaryRequired": "La descripción del servicio es obligatoria",
+      "scheduledAtRequired": "Selecciona una fecha y hora",
+      "durationRange": "Entre 15 y 480 minutos"
+    }
   },
   "payroll": {
     "pageTitle": "Nómina",
@@ -598,8 +634,8 @@
     "since": "desde",
     "liquidate": "Liquidar",
     "step1": "1. Selecciona el empleado",
-    "step2": "2. Selecciona los días laborales",
-    "payTodayShortcut": "Pagar día de hoy",
+    "step2": "2. Elige el periodo a pagar",
+    "payTodayShortcut": "Pagar hasta hoy",
     "noTodayDay": "No hay un día laboral cerrado para hoy",
     "earningsDescriptorStylist": "Pagar por servicios del día",
     "earningsDescriptorClothier": "Pagar por piezas del día",
@@ -653,10 +689,17 @@
     "gridStatus_pending": "Pendiente",
     "gridStatus_open": "Día abierto",
     "confirmPayoutTitle": "¿Confirmar el pago?",
-    "confirmPayoutDescription": "Esta acción registrará el pago de forma permanente. No se puede deshacer."
+    "confirmPayoutDescription": "Esta acción registrará el pago de forma permanente. No se puede deshacer.",
+    "rangeFrom": "Desde",
+    "rangeFromHint": "Día más antiguo sin pagar — los pagos van en orden",
+    "rangeTo": "Hasta",
+    "rangeToPlaceholder": "Elige el último día a pagar",
+    "previewDays": "Calcular ganancias ({count, plural, one {# día} other {# días}})",
+    "weeklyDayCap": "Máximo pagable por semana",
+    "weeklyDayCapValue": "{count, plural, one {# día} other {# días}}"
   },
   "analytics": {
-    "pageTitle": "Analytics",
+    "pageTitle": "Analítica",
     "period_day": "Hoy",
     "period_week": "Esta semana",
     "period_month": "Este mes",
@@ -681,7 +724,11 @@
     "emptyDescription": "No hay días laborales cerrados para este período. Cierra tickets para ver los totales.",
     "csvDisabledTooltip": "Sin datos para exportar",
     "sparseData": "{daysWithData} de {totalDays} días tienen datos en este período",
-    "downloadCsv": "Descargar CSV"
+    "downloadCsv": "Descargar CSV",
+    "toggleDrillDown": "Ver detalle diario de {name}",
+    "seriesCurrent": "Actual",
+    "seriesPrior": "Período anterior",
+    "noDrillDownData": "Sin datos para este período."
   },
   "absences": {
     "pageTitle": "Ausencias y vacaciones",
@@ -698,7 +745,9 @@
     "type_missed": "Falta",
     "note": "Nota",
     "save": "Guardar",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "prevMonth": "Mes anterior",
+    "nextMonth": "Mes siguiente"
   },
   "largeOrders": {
     "pageTitle": "Pedidos grandes",
@@ -805,7 +854,8 @@
     "instructionsPlaceholder": "Ej: Doble costura en mangas",
     "generatedDescription": "Descripción generada automáticamente",
     "itemsRequired": "Se requiere al menos un artículo",
-    "itemsIncomplete": "Completa todos los campos de cada artículo (tipo, variante y descripción)"
+    "itemsIncomplete": "Completa todos los campos de cada artículo (tipo, variante y descripción)",
+    "production": "Producción"
   },
   "nav": {
     "dashboard": "Tablero",
@@ -821,7 +871,7 @@
     "largeOrders": "Pedidos grandes",
     "absences": "Ausencias",
     "payroll": "Nómina",
-    "analytics": "Analytics",
+    "analytics": "Analítica",
     "myEarnings": "Mis ganancias",
     "openMenu": "Abrir menú",
     "closeMenu": "Cerrar menú",
@@ -833,7 +883,13 @@
     "groupOperations": "Operaciones",
     "groupPeople": "Personas",
     "groupFinance": "Finanzas",
-    "groupManagement": "Gestión"
+    "groupManagement": "Gestión",
+    "viewingCompany": "Empresa",
+    "toggleSidebar": "Mostrar u ocultar menú",
+    "sidebarTitle": "Menú",
+    "sidebarDescription": "Navegación principal",
+    "skipToContent": "Saltar al contenido",
+    "mainNavigation": "Navegación principal"
   },
   "sync": {
     "offlineTitle": "Sin conexión",
@@ -848,6 +904,109 @@
   "versionBanner": {
     "message": "Hay una nueva versión disponible.",
     "refresh": "Actualizar ahora",
-    "dismiss": "Ignorar"
+    "dismiss": "Ignorar",
+    "swMessage": "Actualización disponible — recarga para aplicar",
+    "swReload": "Recargar",
+    "swReloadLabel": "Recargar página",
+    "swClose": "Cerrar aviso"
+  },
+  "settings": {
+    "pageTitle": "Configuración",
+    "pageSubtitle": "Ajustes de comportamiento del sistema para el negocio.",
+    "saved": "Configuración guardada",
+    "saveChanges": "Guardar cambios",
+    "authSection": "Autenticación de empleados",
+    "requireEmail": "Requerir correo electrónico",
+    "requireEmailHelp": "Cuando está activo, los empleados deben registrarse con un correo. Al desactivarlo, pueden usar un nombre de usuario en su lugar.",
+    "accessSection": "Control de acceso",
+    "cashierAdmin": "Permitir al cajero acceder a rutas de administración",
+    "cashierAdminHelp": "Cuando está activo, los usuarios con rol <strong>cajero</strong> pueden navegar a secciones de administración (analítica, nómina, empleados, etc.). Solo relevante después de separar los roles cajero y admin.",
+    "subtypeSection": "Servicios por subtipo",
+    "subtypeRestriction": "Restringir servicios por subtipo de estilista",
+    "subtypeRestrictionHelp": "Cuando está activo, cada estilista solo puede registrar servicios que coincidan con su subtipo. Al desactivarlo, todos los servicios están disponibles para cualquier estilista."
+  },
+  "checkout": {
+    "method": {
+      "cash": "Efectivo",
+      "card": "Tarjeta",
+      "transfer": "Transferencia"
+    },
+    "successTitle": "Pago registrado correctamente",
+    "session": "Sesión",
+    "subtotal": "Subtotal",
+    "total": "Total",
+    "printReceipt": "Imprimir recibo",
+    "empty": "No hay tickets pendientes de pago.",
+    "ticketsHeading": "Tickets por cobrar",
+    "selectHint": "Marca los tickets del cliente que va a pagar.",
+    "selectClient": "Seleccionar todos los tickets de {client}",
+    "adjust": "Ajustar",
+    "adjustPrice": "Nuevo precio",
+    "adjustReason": "Motivo del ajuste",
+    "save": "Guardar",
+    "adjustError": "No se pudo ajustar el precio",
+    "totalToCharge": "Total a cobrar",
+    "paymentMethods": "Métodos de pago",
+    "paymentMethod": "Método de pago",
+    "amount": "Monto",
+    "remaining": "Restante",
+    "removeRow": "Eliminar método de pago",
+    "unassigned": "Faltan {amount} por asignar",
+    "addMethod": "Agregar método",
+    "submit": "Confirmar cobro",
+    "nothingSelected": "Selecciona al menos un ticket",
+    "confirmTitle": "¿Cobrar {amount} a {clients}?",
+    "confirmDescription": "{count, plural, one {Se cerrará # ticket} other {Se cerrarán # tickets}} y se registrará el pago. Esta acción no se puede deshacer.",
+    "multiClientWarning": "Este cobro incluye {count} clientes distintos: {clients}. Confirma que una sola persona paga por todos."
+  },
+  "clothSale": {
+    "title": "Vender prenda",
+    "piece": "Prenda",
+    "piecePlaceholder": "Seleccionar prenda…",
+    "variant": "Variante",
+    "variantPlaceholder": "Seleccionar variante…",
+    "noPrice": "sin precio",
+    "quantity": "Cantidad",
+    "unitPrice": "Precio unit.",
+    "basePrice": "(base {price})",
+    "priceRequired": "Requerido",
+    "total": "Total",
+    "customer": "Cliente",
+    "customerType": {
+      "none": "Anónimo",
+      "client": "Cliente registrado",
+      "guest": "Invitado"
+    },
+    "clientPlaceholder": "Seleccionar cliente…",
+    "guestName": "Nombre del cliente",
+    "linkedToTicket": "Esta venta quedará vinculada al ticket actual.",
+    "submit": "Registrar venta",
+    "success": "Venta registrada — {total}"
+  },
+  "orderProgress": {
+    "emptyTitle": "Sin ítems de producción",
+    "emptyDescription": "Este pedido no tiene ítems registrados aún.",
+    "assign": "Asignar",
+    "clothier": "Confeccionista",
+    "selectPlaceholder": "Seleccionar…",
+    "quantity": "Cantidad",
+    "saving": "Guardando…",
+    "createAssignment": "Crear asignación",
+    "assignError": "Error al asignar",
+    "assignSuccess": "Asignación creada",
+    "staleData": "Dato desactualizado, recarga la página",
+    "reportError": "Error al reportar",
+    "reportSuccess": "Avance reportado",
+    "approveError": "Error al aprobar",
+    "approveSuccess": "Cantidad aprobada",
+    "unassigned": "Sin asignar",
+    "report": "Reportar",
+    "approve": "Aprobar",
+    "colEmployee": "Empleado",
+    "colAssigned": "Asignado",
+    "colCompleted": "Completado",
+    "colApproved": "Aprobado",
+    "colProgress": "Progreso",
+    "colActions": "Acciones"
   }
 }

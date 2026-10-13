@@ -67,6 +67,15 @@
   --color-info: var(--info);
   --color-info-foreground: var(--info-foreground);
 
+  /* Brand constants — landing/login are always-dark brand pages */
+  --color-brand-pink: var(--brand-pink);
+  --color-brand-pink-soft: var(--brand-pink-soft);
+  --color-brand-ink: var(--brand-ink);
+  --color-brand-bone: var(--brand-bone);
+  --color-brand-stone: var(--brand-stone);
+  --color-brand-taupe: var(--brand-taupe);
+  --color-brand-char: var(--brand-char);
+
   /* Border radius scale */
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
@@ -90,6 +99,18 @@
    Sidebar stays dark in both themes (brand identity anchor).
    ───────────────────────────────────────────────────────────────── */
 :root {
+  color-scheme: light;
+
+  /* Brand constants (theme-independent). Used by the landing and login
+     pages, which are always dark. App screens use the semantic tokens. */
+  --brand-pink: #e9408e;
+  --brand-pink-soft: #f06aa5;
+  --brand-ink: #010101;
+  --brand-bone: #f2ece1; /* primary text on ink */
+  --brand-stone: #b8b0a3; /* secondary text on ink */
+  --brand-taupe: #807870; /* muted text on ink — lowest that passes AA */
+  --brand-char: #2a2724; /* hairlines / decorative on ink */
+
   /* Warm ivory canvas — not cold white */
   --background: oklch(0.962 0.012 80);
   --foreground: oklch(0.15 0.005 60);
@@ -157,6 +178,7 @@
 }
 
 .dark {
+  color-scheme: dark;
   /* Pure-black canvas — editorial after-hours */
   --background: oklch(0.02 0 0);
   --foreground: oklch(0.94 0.013 80);
@@ -219,9 +241,42 @@
   --info-foreground: oklch(1 0 0);
 }
 
+/* Height of the fixed mobile bottom nav (stylist/clothier shell), so fixed
+   overlays — toasts, sync/update banners — sit above it. 0 elsewhere. */
+:root {
+  --app-bottom-inset: 0px;
+}
+:root:has([data-bottom-nav]) {
+  --app-bottom-inset: calc(4rem + env(safe-area-inset-bottom));
+}
+
+/* Respect "reduce motion": kill animations/transitions app-wide (pulses,
+   spinners still show state via their static frame). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
+  }
+  /* No double-tap-zoom delay on controls */
+  a,
+  button,
+  input,
+  select,
+  textarea,
+  label,
+  summary,
+  [role="button"] {
+    touch-action: manipulation;
   }
   body {
     @apply bg-background text-foreground;

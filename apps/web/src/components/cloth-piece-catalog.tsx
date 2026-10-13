@@ -53,10 +53,7 @@ import {
   deactivateClothPieceVariant,
   restoreClothPieceVariant,
 } from "@/app/(protected)/admin/catalog/actions/cloth-pieces";
-
-function formatCOP(amount: number): string {
-  return `$${amount.toLocaleString("es-CO")}`;
-}
+import { formatMoney } from "@/i18n";
 
 // ─── Variant form schema ──────────────────────────────────────────────────────
 
@@ -157,11 +154,14 @@ function VariantRow({
             className="font-mono tabular-nums text-xs text-muted-foreground"
             title="Tarifa costurera"
           >
-            {formatCOP(variant.pieceRate)}
+            {formatMoney(variant.pieceRate)}
           </span>
           {variant.sellingPrice != null && (
-            <span className="font-mono tabular-nums text-xs font-medium" title="Precio de venta">
-              {formatCOP(variant.sellingPrice)}
+            <span
+              className="font-mono tabular-nums text-xs font-medium"
+              title={t("sellingPriceTitle")}
+            >
+              {formatMoney(variant.sellingPrice)}
             </span>
           )}
           <button
@@ -328,6 +328,7 @@ function AddVariantForm({
         <div className="flex-1 min-w-32 space-y-1">
           <Input
             placeholder={t("variantNamePlaceholder")}
+            aria-label={t("variantName")}
             aria-invalid={!!errors.name}
             {...register("name")}
           />
@@ -338,6 +339,7 @@ function AddVariantForm({
             type="number"
             min={0}
             placeholder={t("pieceRatePlaceholder")}
+            aria-label={t("pieceRateLabel")}
             aria-invalid={!!errors.pieceRate}
             {...register("pieceRate", { valueAsNumber: true })}
           />
@@ -350,6 +352,7 @@ function AddVariantForm({
             type="number"
             min={0}
             placeholder={t("sellingPricePlaceholder")}
+            aria-label={t("sellingPriceLabel")}
             aria-invalid={!!errors.sellingPrice}
             {...register("sellingPrice", {
               setValueAs: (v) => (v === "" || v === null ? null : Number(v)),

@@ -56,18 +56,18 @@ Used by `CraftableProgressBar`. Colors the indicator based on completion percent
 
 ### Typography scale
 
-| Level | Class                                   | Usage                         |
-| ----- | --------------------------------------- | ----------------------------- |
-| H1    | `text-4xl font-bold tracking-tight`     | Page titles                   |
-| H2    | `text-2xl font-semibold tracking-tight` | Section headings              |
-| H3    | `text-lg font-semibold`                 | Card headers, sub-sections    |
-| H4    | `text-base font-medium`                 | Dialog titles, group labels   |
-| Body  | `text-sm` (default)                     | Regular content               |
-| Small | `text-xs`                               | Badges, captions, helper text |
-| Mono  | `font-mono tabular-nums`                | Monetary amounts, IDs         |
+| Level | Class                                                            | Usage                                 |
+| ----- | ---------------------------------------------------------------- | ------------------------------------- |
+| H1    | `PageHeader` (`font-display text-2xl md:text-3xl font-semibold`) | Page titles — always via `PageHeader` |
+| H2    | `text-lg font-semibold`                                          | Section headings                      |
+| H3    | `text-lg font-semibold`                                          | Card headers, sub-sections            |
+| H4    | `text-base font-medium`                                          | Dialog titles, group labels           |
+| Body  | `text-sm` (default)                                              | Regular content                       |
+| Small | `text-xs`                                                        | Badges, captions, helper text         |
+| Mono  | `font-mono tabular-nums`                                         | Monetary amounts, IDs                 |
 
-Font family: **Geist** (variable `--font-sans`).
-Monospace: system monospace stack (`--font-mono`).
+Fonts (loaded in `app/layout.tsx`): **Inter Tight** body/UI (`--font-sans`), **Fraunces** display for page titles (`--font-display`, `font-display`), **JetBrains Mono** figures (`--font-mono`).
+Minimum text size: `text-xs` (12px) — no arbitrary `text-[10px]`-style sizes.
 
 ### Spacing scale
 
@@ -139,6 +139,20 @@ import { PlusIcon, PencilIcon, Trash2Icon } from "lucide-react";
 ---
 
 ## Component patterns
+
+### `PageHeader`
+
+The only page-title pattern (`components/page-header.tsx`). Title states the task ("Mis servicios", "Cobrar"), never the role.
+Props: `title`, `description?`, `meta?` (inline badge), `backHref?` + `backLabel?`, `actions?`.
+
+### `NativeSelect`
+
+Use instead of a raw `<select>` (`components/ui/native-select.tsx`). Same props as `<select>`; keeps the OS picker on phones, matches `Input` styling in both themes. `className` sizes the wrapper; `selectClassName` tweaks the control.
+
+### Money and status colours
+
+- Money: always `formatMoney(pesos)` from `@/i18n` → `$12.500`. Never hand-roll `toLocaleString`.
+- Status / feedback colours: only `status-*` and `success`/`warning`/`destructive` tokens. No raw palette classes (`text-amber-800`, `bg-green-50`, …) and no `dark:` colour pairs — tokens already switch with the theme.
 
 All components live in `apps/web/src/components/ui/`.
 

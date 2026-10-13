@@ -77,7 +77,7 @@ function ConfirmationDialog({
             <div className="space-y-1.5">
               <DialogTitle className={cn(isDestructive && "text-destructive")}>{title}</DialogTitle>
               {warning && (
-                <p className="flex items-center gap-1.5 text-sm text-amber-700 dark:text-amber-400">
+                <p className="flex items-center gap-1.5 text-sm text-status-attention-foreground">
                   <AlertTriangleIcon className="size-3.5 shrink-0" aria-hidden="true" />
                   {warning}
                 </p>

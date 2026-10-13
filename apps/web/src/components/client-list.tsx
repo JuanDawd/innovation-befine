@@ -55,7 +55,7 @@ function NoShowBadge({ count }: { count: number }) {
   const t = useTranslations("clients");
   if (count < NO_SHOW_WARNING_THRESHOLD) return null;
   return (
-    <span className="flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+    <span className="flex items-center gap-1 rounded-full bg-status-attention px-2 py-0.5 text-xs font-medium text-status-attention-foreground">
       <AlertTriangleIcon className="size-3" aria-hidden="true" />
       {t("noShowWarning", { count })}
     </span>

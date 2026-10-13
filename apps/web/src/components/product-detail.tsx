@@ -2,8 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
-import { PencilIcon, ChevronDownIcon, ChevronUpIcon, ArrowLeftIcon } from "lucide-react";
-import Link from "next/link";
+import { PencilIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -20,19 +19,7 @@ import {
 import { updateProductPiece } from "@/app/(protected)/products/actions";
 import { updateProductPieceSchema, type UpdateProductPieceInput } from "@befine/types";
 import type { ProductDetailRow, ProductPieceDetailRow } from "@befine/db";
-
-// ─── Piece status mapping ─────────────────────────────────────────────────────
-
-function pieceBadgeStatus(status: ProductPieceDetailRow["status"]): string {
-  switch (status) {
-    case "pending":
-      return "initial";
-    case "done_pending_approval":
-      return "attention";
-    case "approved":
-      return "success";
-  }
-}
+import { PageHeader } from "@/components/page-header";
 
 function deriveProductStatus(pieces: ProductPieceDetailRow[]): ProductStatusKey {
   if (pieces.length === 0) return "not_started";
@@ -63,11 +50,15 @@ function PieceNotes({ piece }: { piece: ProductPieceDetailRow }) {
     <div className="mt-1">
       <button
         type="button"
-        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+        className="-ml-2 flex min-h-11 items-center gap-1 rounded-md px-2 text-sm text-muted-foreground hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
       >
-        {open ? <ChevronUpIcon className="size-3" /> : <ChevronDownIcon className="size-3" />}
+        {open ? (
+          <ChevronUpIcon className="size-4" aria-hidden="true" />
+        ) : (
+          <ChevronDownIcon className="size-4" aria-hidden="true" />
+        )}
         {t("viewNotes")}
       </button>
       {open && (
@@ -289,17 +280,12 @@ export function ProductDetail({ initialData, isEditor, backHref }: Props) {
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6 lg:p-8">
-      <div className="flex items-center gap-3">
-        <Link
-          href={backHref}
-          className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
-          aria-label={t("back")}
-        >
-          <ArrowLeftIcon className="size-4" />
-        </Link>
-        <h1 className="text-xl font-semibold">{t("detailTitle")}</h1>
-        <ProductStatusBadge status={productStatus} />
-      </div>
+      <PageHeader
+        title={t("detailTitle")}
+        meta={<ProductStatusBadge status={productStatus} />}
+        backHref={backHref}
+        backLabel={t("back")}
+      />
 
       {data.pieces.length > 0 && <ProductProgressBar pct={progressPct} className="max-w-xs" />}
 
@@ -354,7 +340,7 @@ export function ProductDetail({ initialData, isEditor, backHref }: Props) {
                   </span>
                 </td>
                 <td className="px-3 py-2.5">
-                  <StatusBadge status={pieceBadgeStatus(piece.status)} />
+                  <StatusBadge status={piece.status} />
                 </td>
                 {isEditor && (
                   <td className="px-3 py-2.5">

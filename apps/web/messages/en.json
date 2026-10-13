@@ -65,7 +65,14 @@
     "currentPassword": "Current password",
     "currentPasswordRequired": "Current password is required",
     "currentPasswordWrong": "Current password is incorrect",
-    "changePasswordSuccess": "Password updated successfully"
+    "changePasswordSuccess": "Password updated successfully",
+    "validation": {
+      "currentPasswordRequired": "Current password is required",
+      "passwordMin": "Password must be at least 8 characters",
+      "confirmPasswordRequired": "Confirm your password",
+      "passwordsDontMatch": "Passwords don't match",
+      "emailInvalid": "Enter a valid email address"
+    }
   },
   "status": {
     "logged": "Logged",
@@ -83,7 +90,8 @@
     "paid_in_full": "Paid in full",
     "completed": "Completed",
     "cancelled": "Cancelled",
-    "no_show": "No-show"
+    "no_show": "No-show",
+    "ready": "Ready"
   },
   "businessDay": {
     "open": "Open day",
@@ -117,7 +125,9 @@
     "rateLimited": "Too many attempts. Try again in {minutes} minutes.",
     "forbidden": "Access denied",
     "forbiddenDescription": "You don't have permission to view this page.",
-    "goHome": "Go to my dashboard"
+    "goHome": "Go to my dashboard",
+    "unexpected": "Something went wrong",
+    "retry": "Try again"
   },
   "time": {
     "justNow": "Just now",
@@ -127,7 +137,13 @@
   },
   "home": {
     "title": "Innovation Befine",
-    "subtitle": "Internal operations platform"
+    "subtitle": "Internal operations platform",
+    "cashierTitle": "Today's register",
+    "cashierSubtitle": "Open tickets, checkouts and closing the day",
+    "stylistTitle": "My services",
+    "stylistSubtitle": "Log each service as soon as you finish it",
+    "secretaryTitle": "Service log",
+    "secretarySubtitle": "Log services and review your change requests"
   },
   "landing": {
     "eyebrow": "Internal platform",
@@ -269,7 +285,9 @@
     "impactWarning": "{count, plural, one {# open ticket uses this entity} other {# open tickets use this entity}}",
     "discardChanges": "Discard changes?",
     "discardChangesDescription": "You have unsaved changes in this variant. Are you sure you want to close it?",
-    "discard": "Discard"
+    "discard": "Discard",
+    "sellingPriceTitle": "Selling price",
+    "removeVariant": "Remove variant"
   },
   "clients": {
     "pageTitle": "Clients",
@@ -339,7 +357,9 @@
     "markReadyError": "Could not update the ticket",
     "alreadyReady": "Already ready for checkout",
     "emptyTitle": "No open tickets",
-    "emptyDescription": "Logged services will appear here."
+    "emptyDescription": "Logged services will appear here.",
+    "checkoutTitle": "Checkout",
+    "checkoutSubtitle": "Select the tickets to charge and choose the payment method."
   },
   "dayAtAGlance": {
     "revenueToday": "Revenue today",
@@ -384,7 +404,7 @@
     "detailPayments": "Payments",
     "detailTotal": "Total",
     "detailError": "Could not load ticket detail.",
-    "overrideNote": "Original price: ${original}",
+    "overrideNote": "Original price: {original}",
     "reopenAction": "Reopen ticket",
     "reopenHint": "The ticket will return to the cashier board for a new checkout."
   },
@@ -497,7 +517,8 @@
     "editPiece": "Edit piece",
     "editPieceError": "Could not save the piece",
     "saveChanges": "Save changes",
-    "back": "Back"
+    "back": "Back",
+    "noLargeOrderLink": "Not linked"
   },
   "appointments": {
     "pageTitle": "Appointments",
@@ -555,7 +576,22 @@
     "rescheduleTime": "New time",
     "rescheduleConfirm": "Confirm reschedule",
     "rescheduleSuccess": "Appointment rescheduled",
-    "rescheduleRequiredError": "Select a date and time to reschedule"
+    "rescheduleRequiredError": "Select a date and time to reschedule",
+    "status": {
+      "booked": "Booked",
+      "confirmed": "Confirmed",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "rescheduled": "Rescheduled",
+      "no_show": "No-show"
+    },
+    "validation": {
+      "clientRequired": "Select a client or enter a guest name",
+      "stylistRequired": "Select a stylist",
+      "serviceSummaryRequired": "Service description is required",
+      "scheduledAtRequired": "Select a date and time",
+      "durationRange": "Between 15 and 480 minutes"
+    }
   },
   "payroll": {
     "pageTitle": "Payroll",
@@ -565,8 +601,8 @@
     "since": "since",
     "liquidate": "Settle",
     "step1": "1. Select employee",
-    "step2": "2. Select business days",
-    "payTodayShortcut": "Pay today's day",
+    "step2": "2. Choose the pay period",
+    "payTodayShortcut": "Pay through today",
     "noTodayDay": "No closed business day for today",
     "earningsDescriptorStylist": "Pay for today's services",
     "earningsDescriptorClothier": "Pay for today's pieces",
@@ -620,7 +656,14 @@
     "gridStatus_pending": "Pending",
     "gridStatus_open": "Day open",
     "confirmPayoutTitle": "Confirm payment?",
-    "confirmPayoutDescription": "This will permanently record the payout. It cannot be undone."
+    "confirmPayoutDescription": "This will permanently record the payout. It cannot be undone.",
+    "rangeFrom": "From",
+    "rangeFromHint": "Oldest unpaid day — payouts go in order",
+    "rangeTo": "Through",
+    "rangeToPlaceholder": "Choose the last day to pay",
+    "previewDays": "Calculate earnings ({count, plural, one {# day} other {# days}})",
+    "weeklyDayCap": "Payable days per week",
+    "weeklyDayCapValue": "{count, plural, one {# day} other {# days}}"
   },
   "analytics": {
     "pageTitle": "Analytics",
@@ -648,7 +691,11 @@
     "emptyDescription": "No closed business days for this period. Close tickets to see totals.",
     "csvDisabledTooltip": "No data to export",
     "sparseData": "{daysWithData} of {totalDays} days have data in this period",
-    "downloadCsv": "Download CSV"
+    "downloadCsv": "Download CSV",
+    "toggleDrillDown": "Show daily breakdown for {name}",
+    "seriesCurrent": "Current",
+    "seriesPrior": "Previous period",
+    "noDrillDownData": "No data for this period."
   },
   "absences": {
     "pageTitle": "Absences & Vacation",
@@ -665,7 +712,9 @@
     "type_missed": "Missed day",
     "note": "Note",
     "save": "Save",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "prevMonth": "Previous month",
+    "nextMonth": "Next month"
   },
   "largeOrders": {
     "pageTitle": "Large orders",
@@ -770,7 +819,8 @@
     "instructions": "Instructions",
     "instructionsPlaceholder": "E.g. Double stitch on sleeves",
     "generatedDescription": "Auto-generated description",
-    "itemsRequired": "At least one item is required"
+    "itemsRequired": "At least one item is required",
+    "production": "Production"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -798,7 +848,13 @@
     "groupOperations": "Operations",
     "groupPeople": "People",
     "groupFinance": "Finance",
-    "groupManagement": "Management"
+    "groupManagement": "Management",
+    "viewingCompany": "Viewing",
+    "toggleSidebar": "Toggle sidebar",
+    "sidebarTitle": "Menu",
+    "sidebarDescription": "Main navigation",
+    "skipToContent": "Skip to content",
+    "mainNavigation": "Main navigation"
   },
   "sync": {
     "offlineTitle": "You're offline",
@@ -813,6 +869,109 @@
   "versionBanner": {
     "message": "A new version is available.",
     "refresh": "Refresh now",
-    "dismiss": "Dismiss"
+    "dismiss": "Dismiss",
+    "swMessage": "Update available — reload to apply",
+    "swReload": "Reload",
+    "swReloadLabel": "Reload page",
+    "swClose": "Dismiss"
+  },
+  "settings": {
+    "pageTitle": "Settings",
+    "pageSubtitle": "Business-wide system behaviour settings.",
+    "saved": "Settings saved",
+    "saveChanges": "Save changes",
+    "authSection": "Employee sign-in",
+    "requireEmail": "Require email",
+    "requireEmailHelp": "When on, employees must register with an email. When off, they can use a username instead.",
+    "accessSection": "Access control",
+    "cashierAdmin": "Allow the cashier to open admin pages",
+    "cashierAdminHelp": "When on, users with the <strong>cashier</strong> role can open admin sections (analytics, payroll, employees, etc.). Only relevant once the cashier and admin roles are separated.",
+    "subtypeSection": "Services by subtype",
+    "subtypeRestriction": "Restrict services by stylist subtype",
+    "subtypeRestrictionHelp": "When on, each stylist can only log services matching their subtype. When off, every service is available to every stylist."
+  },
+  "checkout": {
+    "method": {
+      "cash": "Cash",
+      "card": "Card",
+      "transfer": "Transfer"
+    },
+    "successTitle": "Payment recorded",
+    "session": "Session",
+    "subtotal": "Subtotal",
+    "total": "Total",
+    "printReceipt": "Print receipt",
+    "empty": "No tickets awaiting payment.",
+    "ticketsHeading": "Tickets to charge",
+    "selectHint": "Tick the tickets of the client who is paying.",
+    "selectClient": "Select all tickets for {client}",
+    "adjust": "Adjust",
+    "adjustPrice": "New price",
+    "adjustReason": "Reason for adjustment",
+    "save": "Save",
+    "adjustError": "Could not adjust the price",
+    "totalToCharge": "Total to charge",
+    "paymentMethods": "Payment methods",
+    "paymentMethod": "Payment method",
+    "amount": "Amount",
+    "remaining": "Remaining",
+    "removeRow": "Remove payment method",
+    "unassigned": "{amount} left to assign",
+    "addMethod": "Add method",
+    "submit": "Confirm checkout",
+    "nothingSelected": "Select at least one ticket",
+    "confirmTitle": "Charge {amount} to {clients}?",
+    "confirmDescription": "{count, plural, one {# ticket will be closed} other {# tickets will be closed}} and the payment recorded. This cannot be undone.",
+    "multiClientWarning": "This checkout covers {count} different clients: {clients}. Make sure one person is paying for all of them."
+  },
+  "clothSale": {
+    "title": "Sell garment",
+    "piece": "Garment",
+    "piecePlaceholder": "Select garment…",
+    "variant": "Variant",
+    "variantPlaceholder": "Select variant…",
+    "noPrice": "no price",
+    "quantity": "Quantity",
+    "unitPrice": "Unit price",
+    "basePrice": "(base {price})",
+    "priceRequired": "Required",
+    "total": "Total",
+    "customer": "Customer",
+    "customerType": {
+      "none": "Anonymous",
+      "client": "Saved client",
+      "guest": "Guest"
+    },
+    "clientPlaceholder": "Select client…",
+    "guestName": "Customer name",
+    "linkedToTicket": "This sale will be linked to the current ticket.",
+    "submit": "Record sale",
+    "success": "Sale recorded — {total}"
+  },
+  "orderProgress": {
+    "emptyTitle": "No production items",
+    "emptyDescription": "This order has no items yet.",
+    "assign": "Assign",
+    "clothier": "Clothier",
+    "selectPlaceholder": "Select…",
+    "quantity": "Quantity",
+    "saving": "Saving…",
+    "createAssignment": "Create assignment",
+    "assignError": "Could not assign",
+    "assignSuccess": "Assignment created",
+    "staleData": "Data is out of date, reload the page",
+    "reportError": "Could not report progress",
+    "reportSuccess": "Progress reported",
+    "approveError": "Could not approve",
+    "approveSuccess": "Quantity approved",
+    "unassigned": "Unassigned",
+    "report": "Report",
+    "approve": "Approve",
+    "colEmployee": "Employee",
+    "colAssigned": "Assigned",
+    "colCompleted": "Completed",
+    "colApproved": "Approved",
+    "colProgress": "Progress",
+    "colActions": "Actions"
   }
 }

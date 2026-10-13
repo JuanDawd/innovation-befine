@@ -38,12 +38,11 @@ import {
   type EmployeeDrillDownResult,
 } from "./actions";
 import type { EarningsByEmployee } from "@befine/db";
+import { formatCount, formatMoney } from "@/i18n";
+import { PageHeader } from "@/components/page-header";
+import { oneOf, useSearchParamState } from "@/hooks/use-search-param-state";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function formatCOP(n: number): string {
-  return "$" + n.toLocaleString("es-CO");
-}
 
 function delta(
   current: number,
@@ -61,9 +60,9 @@ function DeltaIndicator({ current, prior }: { current: number; prior: number }) 
     <span
       className={`inline-flex items-center gap-0.5 text-xs font-semibold ${
         dir === "up"
-          ? "text-green-600 dark:text-green-400"
+          ? "text-status-success-foreground"
           : dir === "down"
-            ? "text-red-600 dark:text-red-400"
+            ? "text-status-negative-foreground"
             : "text-muted-foreground"
       }`}
     >
@@ -94,7 +93,7 @@ function MetricCard({
     <div className="rounded-xl border p-4 space-y-1">
       <p className="text-xs text-muted-foreground">{label}</p>
       <p className={`text-2xl font-bold ${mono ? "font-mono tabular-nums" : ""}`}>
-        {mono ? formatCOP(value) : value.toLocaleString("es-CO")}
+        {mono ? formatMoney(value) : formatCount(value)}
       </p>
       <DeltaIndicator current={value} prior={priorValue} />
     </div>
@@ -110,6 +109,7 @@ function ComparisonChart({
   prior: { revenue: number; jobs: number; earnings: number };
   labels: { revenue: string; jobs: string; earnings: string };
 }) {
+  const t = useTranslations("analytics");
   const data = [
     { metric: labels.revenue, current: current.revenue, prior: prior.revenue },
     { metric: labels.jobs, current: current.jobs, prior: prior.jobs },
@@ -121,16 +121,18 @@ function ComparisonChart({
       <BarChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
         <XAxis dataKey="metric" tick={{ fontSize: 11 }} />
         <YAxis hide />
-        <Tooltip
-          formatter={(v: unknown) => Number(v).toLocaleString("es-CO")}
-          labelStyle={{ fontSize: 11 }}
+        <Tooltip formatter={(v: unknown) => formatCount(Number(v))} labelStyle={{ fontSize: 11 }} />
+        <Bar
+          dataKey="current"
+          fill="var(--color-primary)"
+          radius={[3, 3, 0, 0]}
+          name={t("seriesCurrent")}
         />
-        <Bar dataKey="current" fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} name="Actual" />
         <Bar
           dataKey="prior"
-          fill="hsl(var(--muted-foreground) / 0.4)"
+          fill="color-mix(in oklab, var(--color-muted-foreground) 40%, transparent)"
           radius={[3, 3, 0, 0]}
-          name="Período anterior"
+          name={t("seriesPrior")}
         />
       </BarChart>
     </ResponsiveContainer>
@@ -146,6 +148,9 @@ function EmployeeRow({
   emp: EarningsByEmployee;
   period: "day" | "week" | "month";
 }) {
+  const t = useTranslations("analytics");
+  const tc = useTranslations("common");
+  const tRoles = useTranslations("roles");
   const [open, setOpen] = useState(false);
   const [drillDown, setDrillDown] = useState<EmployeeDrillDownResult | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -170,17 +175,31 @@ function EmployeeRow({
     <>
       <tr className="hover:bg-muted/40 cursor-pointer transition-colors" onClick={toggleDrillDown}>
         <td className="px-3 py-2 text-sm font-medium">{emp.employeeName}</td>
-        <td className="px-3 py-2 text-xs text-muted-foreground capitalize">{emp.role}</td>
+        <td className="px-3 py-2 text-xs text-muted-foreground">
+          {tRoles.has(emp.role) ? tRoles(emp.role) : emp.role}
+        </td>
         <td className="px-3 py-2 text-sm text-right tabular-nums">{emp.jobCount}</td>
         <td className="px-3 py-2 text-sm text-right tabular-nums font-mono">
-          {emp.totalEarnings > 0 ? formatCOP(emp.totalEarnings) : "—"}
+          {emp.totalEarnings > 0 ? formatMoney(emp.totalEarnings) : "—"}
         </td>
         <td className="px-3 py-2 text-center">
-          {open ? (
-            <ChevronUpIcon className="size-4 mx-auto text-muted-foreground" />
-          ) : (
-            <ChevronDownIcon className="size-4 mx-auto text-muted-foreground" />
-          )}
+          {/* Keyboard/screen-reader control; the row itself stays clickable for mouse users */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleDrillDown();
+            }}
+            aria-expanded={open}
+            aria-label={t("toggleDrillDown", { name: emp.employeeName })}
+            className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+          >
+            {open ? (
+              <ChevronUpIcon className="size-4" aria-hidden="true" />
+            ) : (
+              <ChevronDownIcon className="size-4" aria-hidden="true" />
+            )}
+          </button>
         </td>
       </tr>
       {open && (
@@ -188,7 +207,7 @@ function EmployeeRow({
           <td colSpan={5} className="px-3 pb-3 pt-0 bg-muted/10">
             {isPending ? (
               <div className="flex items-center gap-2 py-3 text-xs text-muted-foreground">
-                <Loader2Icon className="size-3 animate-spin" /> Cargando...
+                <Loader2Icon className="size-3 animate-spin" aria-hidden="true" /> {tc("loading")}
               </div>
             ) : drillDown && drillDown.days.length > 0 ? (
               <div className="space-y-2 pt-2">
@@ -197,13 +216,13 @@ function EmployeeRow({
                     <XAxis dataKey="date" hide />
                     <YAxis hide />
                     <Tooltip
-                      formatter={(v: unknown) => formatCOP(Number(v))}
+                      formatter={(v: unknown) => formatMoney(Number(v))}
                       labelStyle={{ fontSize: 10 }}
                     />
                     <Line
                       type="monotone"
                       dataKey="earnings"
-                      stroke="hsl(var(--primary))"
+                      stroke="var(--color-primary)"
                       dot={false}
                       strokeWidth={2}
                     />
@@ -214,7 +233,7 @@ function EmployeeRow({
                     {drillDown.days.map((d) => (
                       <tr key={d.businessDayId} className="border-t">
                         <td className="py-0.5 text-muted-foreground">{d.date}</td>
-                        <td className="py-0.5 text-right font-mono">{formatCOP(d.earnings)}</td>
+                        <td className="py-0.5 text-right font-mono">{formatMoney(d.earnings)}</td>
                         <td className="py-0.5 text-right text-muted-foreground">
                           {d.jobs} trabajos
                         </td>
@@ -224,7 +243,7 @@ function EmployeeRow({
                 </table>
               </div>
             ) : (
-              <p className="py-3 text-xs text-muted-foreground">Sin datos para este período.</p>
+              <p className="py-3 text-xs text-muted-foreground">{t("noDrillDownData")}</p>
             )}
           </td>
         </tr>
@@ -334,12 +353,12 @@ function EmployeeTable({
                 </span>
                 <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
                   <div
-                    className="h-full bg-primary rounded-full transition-all"
+                    className="h-full bg-primary rounded-full transition-[width]"
                     style={{ width: `${(emp.totalEarnings / maxEarnings) * 100}%` }}
                   />
                 </div>
                 <span className="font-mono text-muted-foreground w-24 text-right">
-                  {formatCOP(emp.totalEarnings)}
+                  {formatMoney(emp.totalEarnings)}
                 </span>
               </div>
             ))}
@@ -353,11 +372,19 @@ function EmployeeTable({
 // ─── Main dashboard ───────────────────────────────────────────────────────────
 
 type Period = "day" | "week" | "month";
+const PERIODS = ["day", "week", "month"] as const;
 
 export function AnalyticsDashboard({ initialData }: { initialData: AnalyticsSummary }) {
   const t = useTranslations("analytics");
-  const [period, setPeriod] = useState<Period>(initialData.period);
-  const [includeInactive, setIncludeInactive] = useState(false);
+  // Period and the inactive toggle live in the URL (?period=week&inactive=1);
+  // the server page reads the same params for the first render.
+  const [period, setPeriod] = useSearchParamState<Period>("period", "day", oneOf(PERIODS));
+  const [inactiveParam, setInactiveParam] = useSearchParamState(
+    "inactive",
+    "0",
+    oneOf(["0", "1"] as const),
+  );
+  const includeInactive = inactiveParam === "1";
   const [data, setData] = useState<AnalyticsSummary>(initialData);
   const [isPending, startTransition] = useTransition();
   const [csvPending, setCsvPending] = useState(false);
@@ -392,7 +419,7 @@ export function AnalyticsDashboard({ initialData }: { initialData: AnalyticsSumm
 
   function toggleInactive() {
     const next = !includeInactive;
-    setIncludeInactive(next);
+    setInactiveParam(next ? "1" : "0");
     startTransition(async () => {
       const res = await getAnalyticsSummary({ period, includeInactive: next });
       if (res.success) setData(res.data);
@@ -428,45 +455,47 @@ export function AnalyticsDashboard({ initialData }: { initialData: AnalyticsSumm
   return (
     <div className="space-y-8 print:space-y-4">
       {/* Period tabs + CSV download */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl md:text-2xl font-semibold print:text-2xl">{t("pageTitle")}</h1>
-        <div className="flex flex-wrap items-center gap-2 print:hidden">
-          <div className="flex gap-1 rounded-lg border p-1 w-fit">
-            {(["day", "week", "month"] as const).map((p) => (
-              <Button
-                key={p}
-                variant={period === p ? "default" : "ghost"}
-                size="sm"
-                onClick={() => switchPeriod(p)}
-                disabled={isPending}
-              >
-                {t(`period_${p}`)}
-              </Button>
-            ))}
-            {isPending && (
-              <Loader2Icon className="size-4 animate-spin self-center ml-1 text-muted-foreground" />
-            )}
-          </div>
+      <PageHeader
+        title={t("pageTitle")}
+        actions={
+          <div className="flex flex-wrap items-center gap-2 print:hidden">
+            <div className="flex gap-1 rounded-lg border p-1 w-fit">
+              {(["day", "week", "month"] as const).map((p) => (
+                <Button
+                  key={p}
+                  variant={period === p ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => switchPeriod(p)}
+                  disabled={isPending}
+                >
+                  {t(`period_${p}`)}
+                </Button>
+              ))}
+              {isPending && (
+                <Loader2Icon className="size-4 animate-spin self-center ml-1 text-muted-foreground" />
+              )}
+            </div>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={downloadCsv}
-            disabled={csvPending || isPending || isEmpty}
-            title={isEmpty ? t("csvDisabledTooltip") : undefined}
-          >
-            {csvPending ? (
-              <Loader2Icon className="size-4 animate-spin mr-1.5" aria-hidden="true" />
-            ) : (
-              <DownloadIcon className="size-4 mr-1.5" aria-hidden="true" />
-            )}
-            {t("downloadCsv")}
-          </Button>
-        </div>
-      </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={downloadCsv}
+              disabled={csvPending || isPending || isEmpty}
+              title={isEmpty ? t("csvDisabledTooltip") : undefined}
+            >
+              {csvPending ? (
+                <Loader2Icon className="size-4 animate-spin mr-1.5" aria-hidden="true" />
+              ) : (
+                <DownloadIcon className="size-4 mr-1.5" aria-hidden="true" />
+              )}
+              {t("downloadCsv")}
+            </Button>
+          </div>
+        }
+      />
       {/* Sparse-data informational banner */}
       {isSparse && (
-        <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-300">
+        <div className="flex items-start gap-2 rounded-lg border border-status-attention-foreground/30 bg-status-attention px-4 py-3 text-sm text-status-attention-foreground">
           <AlertCircleIcon className="size-4 mt-0.5 shrink-0" aria-hidden="true" />
           <span>{t("sparseData", { daysWithData, totalDays })}</span>
         </div>
@@ -567,12 +596,12 @@ export function AnalyticsDashboard({ initialData }: { initialData: AnalyticsSumm
                   />
                   <YAxis hide />
                   <Tooltip
-                    formatter={(v: unknown) => formatCOP(Number(v))}
+                    formatter={(v: unknown) => formatMoney(Number(v))}
                     labelStyle={{ fontSize: 10 }}
                   />
                   <Bar
                     dataKey="revenue"
-                    fill="hsl(var(--primary))"
+                    fill="var(--color-primary)"
                     radius={[2, 2, 0, 0]}
                     name={t("revenue")}
                   />

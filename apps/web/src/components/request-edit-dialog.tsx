@@ -26,6 +26,8 @@ import {
   listActiveServiceVariants,
   type ActiveServiceVariant,
 } from "@/app/(protected)/tickets/edit-requests/actions";
+import { NativeSelect } from "@/components/ui/native-select";
+import { formatMoney } from "@/i18n";
 
 interface Props {
   ticketItemId: string;
@@ -127,23 +129,24 @@ export function RequestEditDialog({
               {loading ? (
                 <div className="h-9 rounded-md border bg-muted animate-pulse" />
               ) : (
-                <select
+                <NativeSelect
                   id="new-variant-select"
                   value={selectedVariantId}
                   onChange={(e) => {
                     setSelectedVariantId(e.target.value);
                     setError(null);
                   }}
-                  className="w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  className="w-full"
+                  selectClassName="text-sm"
                   aria-required="true"
                 >
                   <option value="">{t("variantPlaceholder")}</option>
                   {variants.map((v) => (
                     <option key={v.id} value={v.id}>
-                      {v.serviceName} — {v.name} (${v.customerPrice.toLocaleString("es-CO")})
+                      {v.serviceName} — {v.name} ({formatMoney(v.customerPrice)})
                     </option>
                   ))}
-                </select>
+                </NativeSelect>
               )}
               {error && (
                 <p className="mt-1 text-xs text-destructive" role="alert">
@@ -151,7 +154,7 @@ export function RequestEditDialog({
                 </p>
               )}
               {success && (
-                <p className="mt-1 text-xs text-green-600" role="status">
+                <p className="mt-1 text-xs text-status-success-foreground" role="status">
                   {t("requestSent")}
                 </p>
               )}

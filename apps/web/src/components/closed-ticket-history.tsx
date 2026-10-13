@@ -38,6 +38,7 @@ import {
   type ClosedTicketRow,
   type ClosedTicketDetail,
 } from "@/app/(protected)/admin/tickets/history/actions";
+import { formatMoney } from "@/i18n";
 
 // ─── Payment method label ─────────────────────────────────────────────────────
 
@@ -67,6 +68,7 @@ export function ClosedTicketHistory({
   initialTickets,
 }: ClosedTicketHistoryProps) {
   const t = useTranslations("ticketHistory");
+  const tc = useTranslations("common");
 
   const [selectedDayId, setSelectedDayId] = useState(initialDayId);
   const [tickets, setTickets] = useState<ClosedTicketRow[]>(initialTickets);
@@ -176,6 +178,7 @@ export function ClosedTicketHistory({
           {currentDay ? (
             <span className="text-sm font-medium" suppressHydrationWarning>
               {new Date(currentDay.openedAt).toLocaleDateString("es-CO", {
+                timeZone: "America/Bogota",
                 weekday: "long",
                 year: "numeric",
                 month: "long",
@@ -215,7 +218,7 @@ export function ClosedTicketHistory({
           <button
             onClick={clearSearch}
             className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            aria-label="Limpiar búsqueda"
+            aria-label={tc("clearSearch")}
           >
             <XIcon className="size-4" aria-hidden="true" />
           </button>
@@ -272,7 +275,7 @@ export function ClosedTicketHistory({
                       {ticket.clientName}
                       {ticket.hasOverride && (
                         <TriangleAlertIcon
-                          className="size-3.5 text-amber-500"
+                          className="size-3.5 text-status-attention-foreground"
                           aria-label={t("hasOverride")}
                         />
                       )}
@@ -293,7 +296,7 @@ export function ClosedTicketHistory({
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right font-mono tabular-nums">
-                    ${ticket.total.toLocaleString("es-CO")}
+                    {formatMoney(ticket.total)}
                   </td>
                   <td
                     className="px-4 py-3 text-right text-muted-foreground"
@@ -301,6 +304,7 @@ export function ClosedTicketHistory({
                   >
                     {ticket.closedAt
                       ? new Date(ticket.closedAt).toLocaleTimeString("es-CO", {
+                          timeZone: "America/Bogota",
                           hour: "2-digit",
                           minute: "2-digit",
                         })
@@ -323,7 +327,7 @@ export function ClosedTicketHistory({
                     <p className="font-medium truncate flex items-center gap-1.5">
                       {ticket.clientName}
                       {ticket.hasOverride && (
-                        <TriangleAlertIcon className="size-3.5 shrink-0 text-amber-500" />
+                        <TriangleAlertIcon className="size-3.5 shrink-0 text-status-attention-foreground" />
                       )}
                     </p>
                     <p className="text-xs text-muted-foreground truncate">{ticket.employeeName}</p>
@@ -342,12 +346,11 @@ export function ClosedTicketHistory({
                     </div>
                   </div>
                   <div className="text-right shrink-0">
-                    <p className="font-mono tabular-nums text-sm">
-                      ${ticket.total.toLocaleString("es-CO")}
-                    </p>
+                    <p className="font-mono tabular-nums text-sm">{formatMoney(ticket.total)}</p>
                     <p className="text-xs text-muted-foreground" suppressHydrationWarning>
                       {ticket.closedAt
                         ? new Date(ticket.closedAt).toLocaleTimeString("es-CO", {
+                            timeZone: "America/Bogota",
                             hour: "2-digit",
                             minute: "2-digit",
                           })
@@ -396,6 +399,7 @@ export function ClosedTicketHistory({
                   <p className="font-medium">
                     {detail.closedAt
                       ? new Date(detail.closedAt).toLocaleString("es-CO", {
+                          timeZone: "America/Bogota",
                           dateStyle: "short",
                           timeStyle: "short",
                         })
@@ -420,20 +424,20 @@ export function ClosedTicketHistory({
                           )}
                         </span>
                         <span className="font-mono tabular-nums shrink-0">
-                          ${(item.effectivePrice * item.quantity).toLocaleString("es-CO")}
+                          {formatMoney(item.effectivePrice * item.quantity)}
                         </span>
                       </div>
                       {item.quantity > 1 && (
                         <p className="text-xs text-muted-foreground">
-                          {item.quantity} × ${item.effectivePrice.toLocaleString("es-CO")}
+                          {item.quantity} × {formatMoney(item.effectivePrice)}
                         </p>
                       )}
                       {item.overridePrice !== null && (
-                        <div className="mt-1 flex items-start gap-1 text-xs text-amber-600">
+                        <div className="mt-1 flex items-start gap-1 text-xs text-status-attention-foreground">
                           <TriangleAlertIcon className="size-3.5 shrink-0 mt-0.5" />
                           <span>
                             {t("overrideNote", {
-                              original: item.unitPrice.toLocaleString("es-CO"),
+                              original: formatMoney(item.unitPrice),
                             })}
                             {item.overrideReason && (
                               <span className="text-muted-foreground">
@@ -458,9 +462,7 @@ export function ClosedTicketHistory({
                   {detail.payments.map((p, i) => (
                     <div key={i} className="px-3 py-2.5 flex justify-between">
                       <span>{methodLabel(p.method)}</span>
-                      <span className="font-mono tabular-nums">
-                        ${p.amount.toLocaleString("es-CO")}
-                      </span>
+                      <span className="font-mono tabular-nums">{formatMoney(p.amount)}</span>
                     </div>
                   ))}
                 </div>
@@ -469,9 +471,7 @@ export function ClosedTicketHistory({
               {/* Total */}
               <div className="flex justify-between items-center border-t pt-3 font-semibold">
                 <span>{t("detailTotal")}</span>
-                <span className="font-mono tabular-nums text-lg">
-                  ${detail.total.toLocaleString("es-CO")}
-                </span>
+                <span className="font-mono tabular-nums text-lg">{formatMoney(detail.total)}</span>
               </div>
 
               {/* Reopen action */}

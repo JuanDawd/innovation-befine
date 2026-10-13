@@ -7,6 +7,7 @@ import { queryKeys } from "@/lib/query-keys";
 import { unwrap } from "@/lib/action-query";
 import { Loader2Icon } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   createClothSale,
@@ -16,6 +17,9 @@ import {
   type ClientOption,
 } from "@/app/(protected)/cashier/actions/cloth-sales";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
+import { formatMoney } from "@/i18n";
 
 interface SellClothPieceModalProps {
   open: boolean;
@@ -25,6 +29,8 @@ interface SellClothPieceModalProps {
 }
 
 export function SellClothPieceModal({ open, onOpenChange, ticketId }: SellClothPieceModalProps) {
+  const t = useTranslations("clothSale");
+  const tc = useTranslations("common");
   const [isPending, startTransition] = useTransition();
   // Loaded when the modal first opens, then cached (reopening is instant).
   const piecesQuery = useQuery({
@@ -102,7 +108,7 @@ export function SellClothPieceModal({ open, onOpenChange, ticketId }: SellClothP
         toast.error(res.error.message);
         return;
       }
-      toast.success(`Venta registrada — $${res.data.effectiveTotal.toLocaleString("es-CO")}`);
+      toast.success(t("success", { total: formatMoney(res.data.effectiveTotal) }));
       notifyDataChanged("clothSales", "tickets", "businessDay");
       reset();
       onOpenChange(false);
@@ -113,60 +119,62 @@ export function SellClothPieceModal({ open, onOpenChange, ticketId }: SellClothP
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Vender prenda</DialogTitle>
+          <DialogTitle>{t("title")}</DialogTitle>
         </DialogHeader>
 
         {isLoading ? (
           <div className="flex items-center justify-center py-8 text-muted-foreground">
-            <Loader2Icon className="size-4 animate-spin mr-2" />
-            Cargando…
+            <Loader2Icon className="size-4 animate-spin mr-2" aria-hidden="true" />
+            {tc("loading")}
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Piece selector */}
             <div className="space-y-1">
               <label className="text-sm font-medium" htmlFor="sell-piece">
-                Prenda <span className="text-destructive">*</span>
+                {t("piece")} <span className="text-destructive">*</span>
               </label>
-              <select
+              <NativeSelect
                 id="sell-piece"
                 value={selectedPieceId}
                 onChange={(e) => handlePieceChange(e.target.value)}
                 required
-                className="w-full h-9 rounded-md border border-input bg-transparent px-3 text-sm focus-visible:outline-none focus-visible:border-ring"
+                className="w-full"
+                selectClassName="h-9 text-sm"
               >
-                <option value="">Seleccionar prenda…</option>
+                <option value="">{t("piecePlaceholder")}</option>
                 {pieces.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             </div>
 
             {/* Variant selector */}
             {selectedPiece && (
               <div className="space-y-1">
                 <label className="text-sm font-medium" htmlFor="sell-variant">
-                  Variante <span className="text-destructive">*</span>
+                  {t("variant")} <span className="text-destructive">*</span>
                 </label>
-                <select
+                <NativeSelect
                   id="sell-variant"
                   value={selectedVariantId}
                   onChange={(e) => handleVariantChange(e.target.value)}
                   required
-                  className="w-full h-9 rounded-md border border-input bg-transparent px-3 text-sm focus-visible:outline-none focus-visible:border-ring"
+                  className="w-full"
+                  selectClassName="h-9 text-sm"
                 >
-                  <option value="">Seleccionar variante…</option>
+                  <option value="">{t("variantPlaceholder")}</option>
                   {selectedPiece.variants.map((v) => (
                     <option key={v.id} value={v.id}>
                       {v.name}
                       {v.sellingPrice != null
-                        ? ` — $${v.sellingPrice.toLocaleString("es-CO")}`
-                        : " — sin precio"}
+                        ? ` — ${formatMoney(v.sellingPrice)}`
+                        : ` — ${t("noPrice")}`}
                     </option>
                   ))}
-                </select>
+                </NativeSelect>
               </div>
             )}
 
@@ -175,35 +183,35 @@ export function SellClothPieceModal({ open, onOpenChange, ticketId }: SellClothP
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <label className="text-sm font-medium" htmlFor="sell-qty">
-                    Cantidad
+                    {t("quantity")}
                   </label>
-                  <input
+                  <Input
                     id="sell-qty"
                     type="number"
                     min={1}
                     value={quantity}
                     onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value, 10) || 1))}
-                    className="w-full h-9 rounded-md border border-input bg-transparent px-3 text-sm font-mono focus-visible:outline-none focus-visible:border-ring"
+                    className="h-9 font-mono"
                   />
                 </div>
                 <div className="space-y-1">
                   <label className="text-sm font-medium" htmlFor="sell-price">
-                    Precio unit.{" "}
+                    {t("unitPrice")}{" "}
                     {basePrice != null && (
                       <span className="text-xs font-normal text-muted-foreground">
-                        (base ${basePrice.toLocaleString("es-CO")})
+                        {t("basePrice", { price: formatMoney(basePrice) })}
                       </span>
                     )}
                   </label>
-                  <input
+                  <Input
                     id="sell-price"
                     type="number"
                     min={0}
-                    placeholder={basePrice != null ? basePrice.toString() : "Requerido"}
+                    placeholder={basePrice != null ? basePrice.toString() : t("priceRequired")}
                     value={priceOverride}
                     onChange={(e) => setPriceOverride(e.target.value)}
                     required={basePrice === null}
-                    className="w-full h-9 rounded-md border border-input bg-transparent px-3 text-sm font-mono focus-visible:outline-none focus-visible:border-ring"
+                    className="h-9 font-mono"
                   />
                 </div>
               </div>
@@ -212,8 +220,8 @@ export function SellClothPieceModal({ open, onOpenChange, ticketId }: SellClothP
             {/* Total preview */}
             {total != null && (
               <div className="flex items-center justify-between rounded-md bg-muted/40 px-3 py-2 text-sm">
-                <span className="text-muted-foreground">Total</span>
-                <span className="font-mono font-semibold">${total.toLocaleString("es-CO")}</span>
+                <span className="text-muted-foreground">{t("total")}</span>
+                <span className="font-mono font-semibold">{formatMoney(total)}</span>
               </div>
             )}
 
@@ -221,8 +229,10 @@ export function SellClothPieceModal({ open, onOpenChange, ticketId }: SellClothP
             {selectedVariantId && (
               <div className="space-y-2">
                 <p className="text-sm font-medium">
-                  Cliente{" "}
-                  <span className="text-xs font-normal text-muted-foreground">(opcional)</span>
+                  {t("customer")}{" "}
+                  <span className="text-xs font-normal text-muted-foreground">
+                    {tc("optional")}
+                  </span>
                 </p>
                 <div className="flex gap-2 flex-wrap">
                   {(["none", "client", "guest"] as const).map((type) => (
@@ -230,59 +240,53 @@ export function SellClothPieceModal({ open, onOpenChange, ticketId }: SellClothP
                       key={type}
                       type="button"
                       onClick={() => setCustomerType(type)}
+                      aria-pressed={customerType === type}
                       className={`rounded-md border px-3 py-1 text-xs font-medium transition-colors ${
                         customerType === type
                           ? "border-primary bg-primary text-primary-foreground"
                           : "border-input hover:bg-muted"
                       }`}
                     >
-                      {type === "none"
-                        ? "Anónimo"
-                        : type === "client"
-                          ? "Cliente registrado"
-                          : "Invitado"}
+                      {t(`customerType.${type}`)}
                     </button>
                   ))}
                 </div>
 
                 {customerType === "client" && (
-                  <select
+                  <NativeSelect
                     value={clientId}
                     onChange={(e) => setClientId(e.target.value)}
                     required
-                    aria-label="Cliente registrado"
-                    className="w-full h-9 rounded-md border border-input bg-transparent px-3 text-sm focus-visible:outline-none focus-visible:border-ring"
+                    aria-label={t("customerType.client")}
+                    className="w-full"
+                    selectClassName="h-9 text-sm"
                   >
-                    <option value="">Seleccionar cliente…</option>
+                    <option value="">{t("clientPlaceholder")}</option>
                     {clients.map((c) => (
                       <option key={c.id} value={c.id}>
                         {c.name}
                         {c.phone ? ` — ${c.phone}` : ""}
                       </option>
                     ))}
-                  </select>
+                  </NativeSelect>
                 )}
 
                 {customerType === "guest" && (
-                  <input
+                  <Input
                     type="text"
-                    placeholder="Nombre del cliente"
+                    placeholder={t("guestName")}
                     value={guestName}
                     onChange={(e) => setGuestName(e.target.value)}
                     required
-                    aria-label="Nombre del cliente"
+                    aria-label={t("guestName")}
                     maxLength={120}
-                    className="w-full h-9 rounded-md border border-input bg-transparent px-3 text-sm focus-visible:outline-none focus-visible:border-ring"
+                    className="h-9"
                   />
                 )}
               </div>
             )}
 
-            {ticketId && (
-              <p className="text-xs text-muted-foreground">
-                Esta venta quedará vinculada al ticket actual.
-              </p>
-            )}
+            {ticketId && <p className="text-xs text-muted-foreground">{t("linkedToTicket")}</p>}
 
             <div className="flex gap-2 pt-1">
               <Button
@@ -290,11 +294,13 @@ export function SellClothPieceModal({ open, onOpenChange, ticketId }: SellClothP
                 disabled={isPending || !selectedVariantId || effectiveUnitPrice == null}
                 className="flex-1"
               >
-                {isPending ? <Loader2Icon className="size-4 animate-spin mr-2" /> : null}
-                Registrar venta
+                {isPending ? (
+                  <Loader2Icon className="size-4 animate-spin mr-2" aria-hidden="true" />
+                ) : null}
+                {t("submit")}
               </Button>
               <Button type="button" variant="ghost" onClick={() => handleOpenChange(false)}>
-                Cancelar
+                {tc("cancel")}
               </Button>
             </div>
           </form>

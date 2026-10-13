@@ -12,7 +12,7 @@ export default async function LoginPage() {
   return (
     <div
       className="relative h-dvh overflow-hidden flex"
-      style={{ background: "#010101", color: "#f2ece1" }}
+      style={{ background: "var(--brand-ink)", color: "var(--brand-bone)" }}
     >
       {/* ─── Grain overlay ─── */}
       <div
@@ -27,7 +27,7 @@ export default async function LoginPage() {
       {/* ─── Left decorative panel (lg+) ─── */}
       <div
         className="hidden lg:flex lg:w-[52%] xl:w-[55%] relative flex-col justify-center px-12 xl:px-16 flex-shrink-0"
-        style={{ borderRight: "1px solid rgba(242,236,225,0.06)" }}
+        style={{ borderRight: "1px solid color-mix(in srgb, var(--brand-bone) 6%, transparent)" }}
       >
         {/* Ambient blooms */}
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -35,13 +35,14 @@ export default async function LoginPage() {
             className="absolute -top-40 -left-40 h-[500px] w-[500px] rounded-full"
             style={{
               background:
-                "radial-gradient(circle at 40% 40%, rgba(233,64,142,0.16) 0%, rgba(233,64,142,0.04) 50%, transparent 70%)",
+                "radial-gradient(circle at 40% 40%, color-mix(in srgb, var(--brand-pink) 16%, transparent) 0%, color-mix(in srgb, var(--brand-pink) 4%, transparent) 50%, transparent 70%)",
             }}
           />
           <div
             className="absolute bottom-0 right-0 h-[350px] w-[350px] rounded-full"
             style={{
-              background: "radial-gradient(circle, rgba(233,64,142,0.06) 0%, transparent 70%)",
+              background:
+                "radial-gradient(circle, color-mix(in srgb, var(--brand-pink) 6%, transparent) 0%, transparent 70%)",
             }}
           />
         </div>
@@ -56,7 +57,7 @@ export default async function LoginPage() {
               height="10"
               rx="1.5"
               transform="rotate(45 7 7)"
-              fill="#E9408E"
+              fill="var(--brand-pink)"
             />
           </svg>
           <Image
@@ -72,12 +73,16 @@ export default async function LoginPage() {
         {/* Editorial headline — vertically centered */}
         <div className="relative z-10 space-y-6">
           <div className="flex items-center gap-2.5">
-            <span className="h-px w-8" style={{ background: "#E9408E" }} aria-hidden="true" />
             <span
-              className="text-[10px] font-semibold tracking-[0.25em] uppercase"
+              className="h-px w-8"
+              style={{ background: "var(--brand-pink)" }}
+              aria-hidden="true"
+            />
+            <span
+              className="text-xs font-semibold tracking-[0.25em] uppercase"
               style={{
-                color: "#E9408E",
-                fontFamily: "'Inter Tight', ui-sans-serif, system-ui, sans-serif",
+                color: "var(--brand-pink)",
+                fontFamily: "var(--font-sans)",
               }}
             >
               Plataforma interna
@@ -87,16 +92,17 @@ export default async function LoginPage() {
           <h1
             className="text-[clamp(2.4rem,3.8vw,3.8rem)] leading-[0.95] tracking-tight font-bold"
             style={{
-              fontFamily: "'Fraunces', 'Cormorant Garamond', 'Times New Roman', serif",
+              fontFamily: "var(--font-display)",
               fontVariationSettings: "'SOFT' 40, 'WONK' 1",
             }}
           >
-            <span style={{ color: "#f2ece1" }}>Gestión operativa</span>
+            <span style={{ color: "var(--brand-bone)" }}>Gestión operativa</span>
             <br />
             <em
               className="not-italic"
               style={{
-                background: "linear-gradient(100deg, #E9408E 0%, #f06aa5 60%, #E9408E 100%)",
+                background:
+                  "linear-gradient(100deg, var(--brand-pink) 0%, var(--brand-pink-soft) 60%, var(--brand-pink) 100%)",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
                 backgroundClip: "text",
@@ -109,8 +115,8 @@ export default async function LoginPage() {
           <p
             className="text-sm leading-relaxed max-w-xs"
             style={{
-              color: "#4a4640",
-              fontFamily: "'Inter Tight', ui-sans-serif, system-ui, sans-serif",
+              color: "var(--brand-taupe)",
+              fontFamily: "var(--font-sans)",
             }}
           >
             Tickets, confección, nómina y más — todo en un solo lugar diseñado para el ritmo de
@@ -131,7 +137,7 @@ export default async function LoginPage() {
               height="10"
               rx="1.5"
               transform="rotate(45 7 7)"
-              fill="#E9408E"
+              fill="var(--brand-pink)"
             />
           </svg>
           <Image
@@ -151,7 +157,8 @@ export default async function LoginPage() {
           <div
             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[400px] w-[400px] rounded-full"
             style={{
-              background: "radial-gradient(circle, rgba(233,64,142,0.05) 0%, transparent 65%)",
+              background:
+                "radial-gradient(circle, color-mix(in srgb, var(--brand-pink) 5%, transparent) 0%, transparent 65%)",
             }}
           />
         </div>
@@ -162,10 +169,10 @@ export default async function LoginPage() {
             {/* Heading */}
             <div className="mb-8 space-y-1">
               <p
-                className="text-[10px] font-semibold tracking-[0.22em] uppercase"
+                className="text-xs font-semibold tracking-[0.22em] uppercase"
                 style={{
-                  color: "#E9408E",
-                  fontFamily: "'Inter Tight', ui-sans-serif, system-ui, sans-serif",
+                  color: "var(--brand-pink)",
+                  fontFamily: "var(--font-sans)",
                 }}
               >
                 Acceso
@@ -173,8 +180,8 @@ export default async function LoginPage() {
               <h2
                 className="text-2xl font-bold tracking-tight"
                 style={{
-                  fontFamily: "'Fraunces', 'Cormorant Garamond', 'Times New Roman', serif",
-                  color: "#f2ece1",
+                  fontFamily: "var(--font-display)",
+                  color: "var(--brand-bone)",
                 }}
               >
                 {t("auth.login")}
@@ -188,23 +195,23 @@ export default async function LoginPage() {
         {/* Footer back link */}
         <div
           className="relative z-10 px-8 py-5"
-          style={{ borderTop: "1px solid rgba(242,236,225,0.05)" }}
+          style={{ borderTop: "1px solid color-mix(in srgb, var(--brand-bone) 5%, transparent)" }}
         >
           <Link
             href="/"
             className="group flex items-center gap-2 text-xs w-fit transition-colors"
             style={{
-              color: "#4a4640",
-              fontFamily: "'Inter Tight', ui-sans-serif, system-ui, sans-serif",
+              color: "var(--brand-taupe)",
+              fontFamily: "var(--font-sans)",
             }}
           >
             <span
-              className="transition-all group-hover:-translate-x-0.5 group-hover:text-[#E9408E]"
+              className="transition-[translate,color] group-hover:-translate-x-0.5 group-hover:text-brand-pink"
               aria-hidden="true"
             >
               ←
             </span>
-            <span className="group-hover:text-[#b8b0a3] transition-colors">Volver al inicio</span>
+            <span className="group-hover:text-brand-stone transition-colors">Volver al inicio</span>
           </Link>
         </div>
       </div>

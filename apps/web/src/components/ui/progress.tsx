@@ -26,7 +26,10 @@ function Progress({
     >
       <BaseProgress.Track className="h-full w-full">
         <BaseProgress.Indicator
-          className={cn("h-full rounded-full transition-all", indicatorClassName ?? "bg-primary")}
+          className={cn(
+            "h-full rounded-full transition-[width]",
+            indicatorClassName ?? "bg-primary",
+          )}
           style={{ width: `${Math.min(100, Math.max(0, (value / max) * 100))}%` }}
         />
       </BaseProgress.Track>

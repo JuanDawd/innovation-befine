@@ -22,7 +22,7 @@ import { Input } from "@/components/ui/input";
 import { signIn } from "@/lib/auth-client";
 
 const schema = z.object({
-  email: z.email("Ingresa un correo electrónico válido"),
+  email: z.email("validation.emailInvalid"),
 });
 
 type FormInput = z.infer<typeof schema>;
@@ -55,7 +55,7 @@ export function ForgotPasswordForm() {
   if (sent) {
     return (
       <div className="space-y-4 text-center">
-        <p className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700 dark:border-green-800 dark:bg-green-900/20 dark:text-green-400">
+        <p className="rounded-lg border border-status-success-foreground/30 bg-status-success px-4 py-3 text-sm text-status-success-foreground">
           {t("resetLinkSent")}
         </p>
         <Link
@@ -84,7 +84,7 @@ export function ForgotPasswordForm() {
         />
         {errors.email && (
           <p id="reset-email-error" className="text-sm text-destructive" role="alert">
-            {errors.email.message}
+            {t(errors.email.message as Parameters<typeof t>[0])}
           </p>
         )}
       </div>

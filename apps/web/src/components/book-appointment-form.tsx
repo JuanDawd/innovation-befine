@@ -28,6 +28,7 @@ import { Input } from "@/components/ui/input";
 import { ClientSearchWidget } from "@/components/client-search-widget";
 import { createAppointment, listBookingStylists } from "@/app/(protected)/appointments/actions";
 import type { ClientRow } from "@/app/(protected)/clients/actions";
+import { NativeSelect } from "@/components/ui/native-select";
 
 type ClientSelection =
   | { type: "saved"; client: ClientRow }
@@ -54,6 +55,7 @@ export function BookAppointmentForm({
 }) {
   const t = useTranslations("appointments");
   const tc = useTranslations("common");
+  const tSubtype = useTranslations("stylistSubtypes");
   const router = useRouter();
 
   const {
@@ -86,15 +88,14 @@ export function BookAppointmentForm({
 
   const validate = useCallback(() => {
     const errors: Record<string, string> = {};
-    if (!clientSelection) errors.client = "Selecciona un cliente o ingresa un nombre de invitado";
-    if (!stylistId) errors.stylist = "Selecciona un estilista";
-    if (!serviceSummary.trim())
-      errors.serviceSummary = "La descripción del servicio es obligatoria";
-    if (!datetimeLocal) errors.scheduledAt = "Selecciona una fecha y hora";
+    if (!clientSelection) errors.client = t("validation.clientRequired");
+    if (!stylistId) errors.stylist = t("validation.stylistRequired");
+    if (!serviceSummary.trim()) errors.serviceSummary = t("validation.serviceSummaryRequired");
+    if (!datetimeLocal) errors.scheduledAt = t("validation.scheduledAtRequired");
     if (durationMinutes < 15 || durationMinutes > 480)
-      errors.durationMinutes = "Entre 15 y 480 minutos";
+      errors.durationMinutes = t("validation.durationRange");
     return errors;
-  }, [clientSelection, stylistId, serviceSummary, datetimeLocal, durationMinutes]);
+  }, [clientSelection, stylistId, serviceSummary, datetimeLocal, durationMinutes, t]);
 
   function handleSubmit() {
     const errors = validate();
@@ -184,20 +185,23 @@ export function BookAppointmentForm({
         <label className="text-sm font-medium" htmlFor="apt-stylist">
           {t("stylist")}
         </label>
-        <select
+        <NativeSelect
           id="apt-stylist"
           value={stylistId}
           onChange={(e) => setStylistId(e.target.value)}
-          className="h-9 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm focus-visible:outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+          className="w-full"
+          selectClassName="h-9 text-sm"
         >
           <option value="">{t("stylistPlaceholder")}</option>
           {stylists.map((s) => (
             <option key={s.id} value={s.id}>
               {s.name}
-              {s.stylistSubtype ? ` — ${s.stylistSubtype}` : ""}
+              {s.stylistSubtype && tSubtype.has(s.stylistSubtype)
+                ? ` — ${tSubtype(s.stylistSubtype)}`
+                : ""}
             </option>
           ))}
-        </select>
+        </NativeSelect>
         {fieldErrors.stylist && (
           <p className="text-xs text-destructive" role="alert">
             {fieldErrors.stylist}

@@ -32,6 +32,9 @@ import {
   type AppointmentListRow,
 } from "@/app/(protected)/appointments/actions";
 import { AppointmentStatusActions } from "@/components/appointment-status-actions";
+import { NativeSelect } from "@/components/ui/native-select";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { useSearchParamState } from "@/hooks/use-search-param-state";
 
 // ─── Price change acknowledge inline widget (T109) ────────────────────────────
 
@@ -55,12 +58,12 @@ function PriceChangedAcknowledge({
 
   return (
     <div className="flex items-center gap-1 mt-0.5">
-      <TriangleAlertIcon className="size-3 text-amber-600 shrink-0" aria-hidden />
-      <span className="text-xs text-amber-700 dark:text-amber-400">{t("priceChangedBadge")}</span>
+      <TriangleAlertIcon className="size-3 text-status-attention-foreground shrink-0" aria-hidden />
+      <span className="text-xs text-status-attention-foreground">{t("priceChangedBadge")}</span>
       <Button
         size="sm"
         variant="ghost"
-        className="h-5 px-1.5 text-xs text-amber-700 hover:text-amber-900 hover:bg-amber-100"
+        className="h-5 px-1.5 text-xs text-status-attention-foreground hover:bg-status-attention"
         onClick={acknowledge}
         disabled={isPending}
         aria-label={t("acknowledgeAction")}
@@ -89,40 +92,18 @@ function formatTime(date: Date): string {
   });
 }
 
-const STATUS_BADGE: Record<AppointmentListRow["status"], { label: string; className: string }> = {
-  booked: {
-    label: "Reservada",
-    className: "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300",
-  },
-  confirmed: {
-    label: "Confirmada",
-    className: "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300",
-  },
-  completed: {
-    label: "Completada",
-    className: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300",
-  },
-  cancelled: {
-    label: "Cancelada",
-    className: "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300",
-  },
-  rescheduled: {
-    label: "Reprogramada",
-    className: "bg-yellow-100 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-300",
-  },
-  no_show: {
-    label: "No asistió",
-    className: "bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300",
-  },
-};
-
 export function AppointmentList() {
   const t = useTranslations("appointments");
   const tc = useTranslations("common");
 
-  const [date, setDate] = useState(todayBogota);
+  // Date and stylist live in the URL (?date=YYYY-MM-DD&stylist=<id>) — survive refresh, shareable.
+  const [date, setDate] = useSearchParamState("date", todayBogota(), (raw) =>
+    /^\d{4}-\d{2}-\d{2}$/.test(raw) ? raw : null,
+  );
   const [bookOpen, setBookOpen] = useState(false);
-  const [stylistFilter, setStylistFilter] = useState("");
+  const [stylistFilter, setStylistFilter] = useSearchParamState("stylist", "", (raw) =>
+    /^[0-9a-f-]{36}$/i.test(raw) ? raw : null,
+  );
   const { data: stylists = [] } = useQuery({
     queryKey: queryKeys.staff.bookingStylists,
     queryFn: () => unwrap(listBookingStylists()),
@@ -189,11 +170,11 @@ export function AppointmentList() {
 
         <div className="flex items-center gap-2">
           {/* Stylist filter */}
-          <select
+          <NativeSelect
             aria-label={t("filterByStylist")}
             value={stylistFilter}
             onChange={(e) => setStylistFilter(e.target.value)}
-            className="h-9 rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm focus-visible:outline-none focus-visible:border-ring"
+            selectClassName="h-9 text-sm"
           >
             <option value="">{t("allStylists")}</option>
             {stylists.map((s) => (
@@ -201,7 +182,7 @@ export function AppointmentList() {
                 {s.name}
               </option>
             ))}
-          </select>
+          </NativeSelect>
 
           {/* New appointment */}
           <Button size="sm" onClick={() => setBookOpen(true)}>
@@ -240,7 +221,6 @@ export function AppointmentList() {
             </thead>
             <tbody>
               {rows.map((row) => {
-                const badge = STATUS_BADGE[row.status];
                 const clientDisplay = row.clientName ?? row.guestName ?? "—";
                 const showPriceAlert =
                   !row.priceChangeAcknowledged &&
@@ -248,7 +228,7 @@ export function AppointmentList() {
                 return (
                   <tr
                     key={row.id}
-                    className={`border-t hover:bg-muted/30 transition-colors${showPriceAlert ? " bg-amber-50 dark:bg-amber-950/20" : ""}`}
+                    className={`border-t hover:bg-muted/30 transition-colors${showPriceAlert ? " bg-status-attention" : ""}`}
                   >
                     <td className="px-3 py-2 font-mono tabular-nums whitespace-nowrap">
                       {formatTime(row.scheduledAt)}
@@ -269,11 +249,7 @@ export function AppointmentList() {
                       )}
                     </td>
                     <td className="px-3 py-2">
-                      <span
-                        className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${badge.className}`}
-                      >
-                        {badge.label}
-                      </span>
+                      <StatusBadge status={row.status} label={t(`status.${row.status}`)} />
                     </td>
                     <td className="px-3 py-2">
                       <AppointmentStatusActions

@@ -13,6 +13,7 @@ import { getUpcomingBirthdays } from "@/app/(protected)/clients/actions";
 import { MyEditRequests, MyEditRequestsSkeleton } from "@/components/my-edit-requests";
 import { UpcomingBirthdays } from "@/components/upcoming-birthdays";
 import { Skeleton } from "@/components/ui/loading-skeleton";
+import { PageHeader } from "@/components/page-header";
 
 async function EditRequestsSection() {
   const [itemsRes, requestsRes] = await Promise.all([
@@ -38,13 +39,11 @@ export default async function SecretaryHomePage() {
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6 lg:p-8">
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-xl md:text-2xl font-semibold">{t("roles.secretary")}</h1>
-          <p className="text-sm text-muted-foreground">{t("home.subtitle")}</p>
-        </div>
-        <LogServiceDialog isStylist={false} redirectPath="/secretary" />
-      </div>
+      <PageHeader
+        title={t("home.secretaryTitle")}
+        description={t("home.secretarySubtitle")}
+        actions={<LogServiceDialog isStylist={false} redirectPath="/secretary" />}
+      />
 
       <Suspense fallback={<MyEditRequestsSkeleton />}>
         <EditRequestsSection />

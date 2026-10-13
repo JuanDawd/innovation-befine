@@ -8,6 +8,8 @@ import { buttonVariants } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import type { LargeOrderListRow } from "./actions";
+import { NativeSelect } from "@/components/ui/native-select";
+import { formatMoney } from "@/i18n";
 
 type Props = { orders: LargeOrderListRow[] };
 
@@ -39,8 +41,8 @@ export function LargeOrdersTable({ orders }: Props) {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">
-        <select
-          className="h-8 rounded-md border border-input bg-transparent px-2 text-sm focus-visible:outline-none focus-visible:border-ring"
+        <NativeSelect
+          selectClassName="text-sm"
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
           aria-label={t("filterByStatus")}
@@ -51,7 +53,7 @@ export function LargeOrdersTable({ orders }: Props) {
               {t(`status_${s}` as Parameters<typeof t>[0])}
             </option>
           ))}
-        </select>
+        </NativeSelect>
       </div>
 
       <div className="rounded-md border overflow-x-auto">
@@ -75,20 +77,20 @@ export function LargeOrdersTable({ orders }: Props) {
                   {order.description}
                 </td>
                 <td className="px-4 py-2 text-right font-mono tabular-nums">
-                  ${order.totalPrice.toLocaleString("es-CO")}
+                  {formatMoney(order.totalPrice)}
                 </td>
                 <td className="px-4 py-2 text-right font-mono tabular-nums">
                   <span
                     className={
                       order.balanceDue > 0 &&
                       (order.status === "delivered" || order.status === "ready")
-                        ? "text-amber-600 dark:text-amber-400 font-semibold"
+                        ? "text-status-attention-foreground font-semibold"
                         : order.balanceDue === 0
-                          ? "text-green-600 dark:text-green-400"
+                          ? "text-status-success-foreground"
                           : ""
                     }
                   >
-                    ${order.balanceDue.toLocaleString("es-CO")}
+                    {formatMoney(order.balanceDue)}
                   </span>
                 </td>
                 <td className="px-4 py-2">

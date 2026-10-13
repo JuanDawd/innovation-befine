@@ -52,6 +52,9 @@ import {
   type ClothierOption,
   type ProductionUserContext,
 } from "../assignment-actions";
+import { NativeSelect } from "@/components/ui/native-select";
+import { formatMoney } from "@/i18n";
+import { PageHeader } from "@/components/page-header";
 
 const PRODUCTION_COLLAPSE_KEY = "production-section-collapsed";
 
@@ -146,6 +149,7 @@ export function LargeOrderDetail({
   currentEmployeeId = null,
 }: Props) {
   const t = useTranslations("largeOrders");
+  const tc = useTranslations("common");
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const order = initialOrder;
@@ -332,18 +336,19 @@ export function LargeOrderDetail({
   return (
     <div className="space-y-5">
       {/* ── Header ── */}
-      <div className="flex items-start justify-between gap-4">
-        <div className="space-y-1.5">
-          <h1 className="text-xl md:text-2xl font-semibold">{order.clientName}</h1>
-          <StatusBadge status={order.status} />
-        </div>
-        {!isTerminal && !editing && (
-          <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
-            <PencilIcon className="size-3.5 mr-1.5" />
-            {t("editOrder")}
-          </Button>
-        )}
-      </div>
+      <PageHeader
+        title={order.clientName}
+        meta={<StatusBadge status={order.status} />}
+        actions={
+          !isTerminal &&
+          !editing && (
+            <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
+              <PencilIcon className="size-3.5 mr-1.5" />
+              {t("editOrder")}
+            </Button>
+          )
+        }
+      />
 
       {/* ── Edit mode ── */}
       {editing ? (
@@ -380,9 +385,7 @@ export function LargeOrderDetail({
           {editGrandTotal > 0 && (
             <div className="flex items-center justify-between rounded-md bg-muted/50 px-3 py-2 text-sm">
               <span className="text-muted-foreground">{t("grandTotal")}</span>
-              <span className="font-mono font-semibold">
-                ${editGrandTotal.toLocaleString("es-CO")}
-              </span>
+              <span className="font-mono font-semibold">{formatMoney(editGrandTotal)}</span>
             </div>
           )}
 
@@ -391,6 +394,7 @@ export function LargeOrderDetail({
             <label className="text-sm font-medium">{t("estimatedDelivery")}</label>
             <input
               type="datetime-local"
+              aria-label={t("estimatedDelivery")}
               value={editEta}
               onChange={(e) => setEditEta(e.target.value)}
               className="w-full h-9 rounded-md border border-input bg-transparent px-3 text-sm focus-visible:outline-none focus-visible:border-ring"
@@ -401,6 +405,7 @@ export function LargeOrderDetail({
           <div className="space-y-1">
             <label className="text-sm font-medium">{t("notes")}</label>
             <textarea
+              aria-label={t("notes")}
               value={editNotes}
               onChange={(e) => setEditNotes(e.target.value)}
               rows={2}
@@ -433,8 +438,8 @@ export function LargeOrderDetail({
                 setError(null);
               }}
             >
-              <XIcon className="size-3.5 mr-1.5" />
-              Cancelar
+              <XIcon className="size-3.5 mr-1.5" aria-hidden="true" />
+              {tc("cancel")}
             </Button>
           </div>
         </div>
@@ -476,13 +481,13 @@ export function LargeOrderDetail({
               <div className="px-4 py-3 text-center">
                 <p className="text-xs text-muted-foreground mb-1">{t("totalPrice")}</p>
                 <p className="font-mono font-semibold tabular-nums">
-                  ${order.totalPrice.toLocaleString("es-CO")}
+                  {formatMoney(order.totalPrice)}
                 </p>
               </div>
               <div className="px-4 py-3 text-center">
                 <p className="text-xs text-muted-foreground mb-1">{t("colPaid")}</p>
-                <p className="font-mono font-semibold tabular-nums text-green-600 dark:text-green-400">
-                  ${order.totalPaid.toLocaleString("es-CO")}
+                <p className="font-mono font-semibold tabular-nums text-status-success-foreground">
+                  {formatMoney(order.totalPaid)}
                 </p>
               </div>
               <div className="px-4 py-3 text-center">
@@ -490,11 +495,11 @@ export function LargeOrderDetail({
                 <p
                   className={`font-mono font-semibold tabular-nums ${
                     order.balanceDue > 0
-                      ? "text-amber-600 dark:text-amber-400"
-                      : "text-green-600 dark:text-green-400"
+                      ? "text-status-attention-foreground"
+                      : "text-status-success-foreground"
                   }`}
                 >
-                  ${order.balanceDue.toLocaleString("es-CO")}
+                  {formatMoney(order.balanceDue)}
                 </p>
               </div>
             </div>
@@ -603,13 +608,13 @@ export function LargeOrderDetail({
 
           <div className="space-y-3 py-1">
             {hasDeposits && (
-              <div className="rounded-md border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/20 p-3 text-sm space-y-1">
-                <p className="font-semibold text-amber-800 dark:text-amber-300">
+              <div className="rounded-md border border-status-attention-foreground/30 bg-status-attention p-3 text-sm space-y-1">
+                <p className="font-semibold text-status-attention-foreground">
                   {t("cancelDepositWarning")}
                 </p>
-                <p className="text-amber-700 dark:text-amber-400">
+                <p className="text-status-attention-foreground">
                   {t("cancelDepositAmount", {
-                    amount: `$${order.totalPaid.toLocaleString("es-CO")}`,
+                    amount: formatMoney(order.totalPaid),
                   })}
                 </p>
                 <label className="flex items-center gap-2 cursor-pointer mt-2">
@@ -619,7 +624,7 @@ export function LargeOrderDetail({
                     onChange={(e) => setAcknowledgedDeposits(e.target.checked)}
                     className="size-4 rounded border-input"
                   />
-                  <span className="text-amber-800 dark:text-amber-300 font-medium">
+                  <span className="text-status-attention-foreground font-medium">
                     {t("cancelDepositAck")}
                   </span>
                 </label>
@@ -699,16 +704,17 @@ export function LargeOrderDetail({
                   <label className="text-sm font-medium" htmlFor="method">
                     {t("paymentMethod")}
                   </label>
-                  <select
+                  <NativeSelect
                     id="method"
                     name="method"
                     defaultValue="cash"
-                    className="w-full h-9 rounded-md border border-input bg-transparent px-3 text-sm focus-visible:outline-none focus-visible:border-ring"
+                    className="w-full"
+                    selectClassName="h-9 text-sm"
                   >
                     <option value="cash">{t("cash")}</option>
                     <option value="card">{t("card")}</option>
                     <option value="transfer">{t("transfer")}</option>
-                  </select>
+                  </NativeSelect>
                 </div>
                 <div className="space-y-1">
                   <label className="text-sm font-medium" htmlFor="paidAt">
@@ -762,7 +768,7 @@ export function LargeOrderDetail({
                       })}
                     </td>
                     <td className="px-4 py-2.5 text-right font-mono tabular-nums font-medium">
-                      ${p.amount.toLocaleString("es-CO")}
+                      {formatMoney(p.amount)}
                     </td>
                     <td className="px-4 py-2.5 capitalize text-sm">
                       {t(p.method as Parameters<typeof t>[0])}
@@ -793,7 +799,7 @@ export function LargeOrderDetail({
           >
             <div className="flex items-center gap-2">
               <FactoryIcon className="size-4 text-muted-foreground" />
-              <span className="text-sm font-semibold">Producción</span>
+              <span className="text-sm font-semibold">{t("production")}</span>
             </div>
             {productionCollapsed ? (
               <ChevronDownIcon className="size-4 text-muted-foreground" />
@@ -887,7 +893,7 @@ export function LargeOrderDetail({
                       <div className="flex items-center gap-2">
                         <div className="flex-1 bg-muted rounded-full h-2 max-w-25">
                           <div
-                            className="bg-primary h-2 rounded-full transition-all"
+                            className="bg-primary h-2 rounded-full transition-[width]"
                             style={{ width: `${pct}%` }}
                           />
                         </div>

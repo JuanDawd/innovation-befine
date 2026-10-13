@@ -41,6 +41,8 @@ import {
   terminateEmployee,
 } from "@/app/(protected)/admin/employees/actions/update-employee";
 import { previewEarnings } from "@/app/(protected)/admin/payroll/actions";
+import { NativeSelect } from "@/components/ui/native-select";
+import { formatMoney } from "@/i18n";
 
 const STYLIST_SUBTYPES = [
   { value: "hairdresser" },
@@ -237,11 +239,11 @@ export function EmployeeList({ initialEmployees }: EmployeeListProps) {
     <div className="space-y-4">
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
-        <select
+        <NativeSelect
           aria-label={t("filterByRole")}
           value={filterRole}
           onChange={(e) => setFilterRole(e.target.value)}
-          className="h-8 rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
+          selectClassName="text-sm"
         >
           <option value="all">{t("allRoles")}</option>
           {APP_ROLES.map((r) => (
@@ -249,7 +251,7 @@ export function EmployeeList({ initialEmployees }: EmployeeListProps) {
               {tRoles(r)}
             </option>
           ))}
-        </select>
+        </NativeSelect>
 
         <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
           <input
@@ -303,9 +305,7 @@ export function EmployeeList({ initialEmployees }: EmployeeListProps) {
                     status={emp.isActive ? "active" : "inactive"}
                     label={emp.isActive ? t("statusActive") : t("statusInactive")}
                     className={
-                      emp.isActive
-                        ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                        : undefined
+                      emp.isActive ? "bg-status-success text-status-success-foreground" : undefined
                     }
                   />
                   <span className="text-xs text-muted-foreground">
@@ -373,9 +373,10 @@ export function EmployeeList({ initialEmployees }: EmployeeListProps) {
               <label htmlFor="edit-role" className="text-sm font-medium">
                 {t("role")}
               </label>
-              <select
+              <NativeSelect
                 id="edit-role"
-                className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
+                className="w-full"
+                selectClassName="text-sm"
                 {...register("role")}
               >
                 {APP_ROLES.map((r) => (
@@ -383,7 +384,7 @@ export function EmployeeList({ initialEmployees }: EmployeeListProps) {
                     {tRoles(r)}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             </div>
 
             {/* Stylist subtype */}
@@ -392,9 +393,10 @@ export function EmployeeList({ initialEmployees }: EmployeeListProps) {
                 <label htmlFor="edit-subtype" className="text-sm font-medium">
                   {t("stylistSubtype")}
                 </label>
-                <select
+                <NativeSelect
                   id="edit-subtype"
-                  className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
+                  className="w-full"
+                  selectClassName="text-sm"
                   {...register("stylistSubtype")}
                 >
                   <option value="">{t("selectSubtype")}</option>
@@ -403,7 +405,7 @@ export function EmployeeList({ initialEmployees }: EmployeeListProps) {
                       {tSubtypes(value)}
                     </option>
                   ))}
-                </select>
+                </NativeSelect>
               </div>
             )}
 
@@ -429,9 +431,10 @@ export function EmployeeList({ initialEmployees }: EmployeeListProps) {
               <label htmlFor="edit-work-days" className="text-sm font-medium">
                 {t("expectedWorkDays")}
               </label>
-              <select
+              <NativeSelect
                 id="edit-work-days"
-                className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
+                className="w-full"
+                selectClassName="text-sm"
                 {...register("expectedWorkDays", { valueAsNumber: true })}
               >
                 {[1, 2, 3, 4, 5, 6, 7].map((d) => (
@@ -439,7 +442,7 @@ export function EmployeeList({ initialEmployees }: EmployeeListProps) {
                     {d}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             </div>
 
             <div className="space-y-1.5">
@@ -468,7 +471,10 @@ export function EmployeeList({ initialEmployees }: EmployeeListProps) {
                   aria-pressed={editTarget.showEarnings}
                 >
                   {editTarget.showEarnings ? (
-                    <CheckIcon className="size-4 text-green-600" aria-hidden="true" />
+                    <CheckIcon
+                      className="size-4 text-status-success-foreground"
+                      aria-hidden="true"
+                    />
                   ) : (
                     <XIcon className="size-4 text-muted-foreground" aria-hidden="true" />
                   )}
@@ -521,9 +527,7 @@ export function EmployeeList({ initialEmployees }: EmployeeListProps) {
             {computedTermination !== null && (
               <p className="text-sm text-muted-foreground">
                 {t("terminateComputed")}:{" "}
-                <span className="font-mono font-semibold">
-                  ${computedTermination.toLocaleString("es-CO")}
-                </span>
+                <span className="font-mono font-semibold">{formatMoney(computedTermination)}</span>
               </p>
             )}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -544,18 +548,19 @@ export function EmployeeList({ initialEmployees }: EmployeeListProps) {
                 <label className="text-sm font-medium" htmlFor="terminateMethod">
                   {t("terminateMethod")}
                 </label>
-                <select
+                <NativeSelect
                   id="terminateMethod"
                   value={terminateMethod}
                   onChange={(e) =>
                     setTerminateMethod(e.target.value as "cash" | "card" | "transfer")
                   }
-                  className="w-full h-9 rounded-md border border-input bg-transparent px-3 text-sm focus-visible:outline-none focus-visible:border-ring"
+                  className="w-full"
+                  selectClassName="h-9 text-sm"
                 >
                   <option value="cash">{t("cash")}</option>
                   <option value="card">{t("card")}</option>
                   <option value="transfer">{t("transfer")}</option>
-                </select>
+                </NativeSelect>
               </div>
             </div>
             <div className="space-y-1">

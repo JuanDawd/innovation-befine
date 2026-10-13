@@ -20,12 +20,12 @@ import { changePassword } from "@/app/(protected)/profile/actions/change-passwor
 
 const schema = z
   .object({
-    currentPassword: z.string().min(1, "La contraseña actual es obligatoria"),
-    newPassword: z.string().min(8, "La contraseña debe tener al menos 8 caracteres"),
-    confirmPassword: z.string().min(1, "Confirma tu contraseña"),
+    currentPassword: z.string().min(1, "validation.currentPasswordRequired"),
+    newPassword: z.string().min(8, "validation.passwordMin"),
+    confirmPassword: z.string().min(1, "validation.confirmPasswordRequired"),
   })
   .refine((d) => d.newPassword === d.confirmPassword, {
-    message: "Las contraseñas no coinciden",
+    message: "validation.passwordsDontMatch",
     path: ["confirmPassword"],
   });
 
@@ -63,7 +63,7 @@ export function ChangePasswordForm() {
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
       {success && (
         <p
-          className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700 dark:border-green-800 dark:bg-green-900/20 dark:text-green-400"
+          className="rounded-lg border border-status-success-foreground/30 bg-status-success px-3 py-2 text-sm text-status-success-foreground"
           role="status"
         >
           {t("changePasswordSuccess")}
@@ -93,7 +93,7 @@ export function ChangePasswordForm() {
         />
         {errors.currentPassword && (
           <p id="current-password-error" className="text-sm text-destructive" role="alert">
-            {errors.currentPassword.message}
+            {t(errors.currentPassword.message as Parameters<typeof t>[0])}
           </p>
         )}
       </div>
@@ -112,7 +112,7 @@ export function ChangePasswordForm() {
         />
         {errors.newPassword && (
           <p id="profile-new-password-error" className="text-sm text-destructive" role="alert">
-            {errors.newPassword.message}
+            {t(errors.newPassword.message as Parameters<typeof t>[0])}
           </p>
         )}
       </div>
@@ -131,7 +131,7 @@ export function ChangePasswordForm() {
         />
         {errors.confirmPassword && (
           <p id="profile-confirm-password-error" className="text-sm text-destructive" role="alert">
-            {errors.confirmPassword.message}
+            {t(errors.confirmPassword.message as Parameters<typeof t>[0])}
           </p>
         )}
       </div>

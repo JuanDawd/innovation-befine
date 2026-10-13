@@ -73,7 +73,7 @@ function UserInitials({ name, size = "md" }: { name: string; size?: "sm" | "md" 
     <span
       className={cn(
         "flex shrink-0 items-center justify-center rounded-full bg-linear-to-br from-primary to-primary/60 font-semibold text-primary-foreground",
-        size === "sm" ? "size-7 text-[11px]" : "size-8 text-xs",
+        size === "sm" ? "size-7 text-xs" : "size-8 text-xs",
       )}
       aria-hidden="true"
       style={{ fontFamily: "var(--font-display)" }}
@@ -83,12 +83,23 @@ function UserInitials({ name, size = "md" }: { name: string; size?: "sm" | "md" 
   );
 }
 
+const SKIP_LINK_CLASS =
+  "sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:bg-background focus:px-3 focus:py-2 focus:text-sm focus:shadow-md focus:ring-3 focus:ring-ring/50";
+
+/** Wordmark for the mobile top bars. */
+function BrandMark() {
+  return (
+    <span className="font-display text-lg font-medium tracking-tight text-primary">Befine</span>
+  );
+}
+
 /** Sub-company identifier — Befine / DoWell / Swimwear */
 function CompanyStrip() {
+  const t = useTranslations("nav");
   return (
     <div className="mx-2 mt-1 rounded-sm border border-sidebar-border/60 bg-linear-to-b from-primary/6 to-transparent px-3 py-2.5 group-data-[collapsible=icon]:hidden">
-      <div className="text-[9px] font-medium uppercase tracking-[0.22em] text-sidebar-foreground/50">
-        Viewing
+      <div className="text-xs font-medium uppercase tracking-[0.22em] text-sidebar-foreground/60">
+        {t("viewingCompany")}
       </div>
       <div
         className="text-lg font-medium tracking-tight text-primary"
@@ -96,7 +107,7 @@ function CompanyStrip() {
       >
         Befine
       </div>
-      <div className="mt-1 flex gap-2.5 text-[10px] uppercase tracking-[0.14em] text-sidebar-foreground/30">
+      <div className="mt-1 flex gap-2.5 text-xs uppercase tracking-[0.14em] text-sidebar-foreground/50">
         <span className="cursor-not-allowed">DoWell</span>
         <span className="cursor-not-allowed">Swimwear</span>
       </div>
@@ -117,10 +128,13 @@ function UserMenu({
   userName,
   role,
   onLogout,
+  variant = "sidebar",
 }: {
   userName: string;
   role: AppRole;
   onLogout: () => void;
+  /** "bar" = compact trigger on the page background (mobile top bar). */
+  variant?: "sidebar" | "bar";
 }) {
   const t = useTranslations();
   const { theme, setTheme } = useTheme();
@@ -130,14 +144,25 @@ function UserMenu({
       <DropdownMenuTrigger
         id="user-menu-trigger"
         aria-label={t("nav.openUserMenu")}
-        className="flex min-w-0 flex-1 items-center gap-2.5 rounded-md p-1 text-left outline-none transition-colors hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+        className={cn(
+          "flex min-w-0 items-center gap-2.5 rounded-md p-1 text-left outline-none transition-colors",
+          variant === "sidebar"
+            ? "flex-1 hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+            : "rounded-full hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50",
+        )}
       >
         <UserInitials name={userName} />
-        <span className="min-w-0 flex-1 truncate text-sm text-sidebar-foreground group-data-[collapsible=icon]:hidden">
-          {userName}
-        </span>
+        {variant === "sidebar" && (
+          <span className="min-w-0 flex-1 truncate text-sm text-sidebar-foreground group-data-[collapsible=icon]:hidden">
+            {userName}
+          </span>
+        )}
       </DropdownMenuTrigger>
-      <DropdownMenuContent side="top" align="start" className="w-56">
+      <DropdownMenuContent
+        side={variant === "sidebar" ? "top" : "bottom"}
+        align={variant === "sidebar" ? "start" : "end"}
+        className="w-56"
+      >
         <div className="px-3 py-2">
           <p className="truncate text-sm font-medium">{userName}</p>
           <p className="text-xs text-muted-foreground">{ROLE_LABELS[role]}</p>
@@ -214,7 +239,7 @@ function SidebarNavItem({ item, active }: { item: NavItem; active: boolean }) {
         <span
           aria-hidden="true"
           className={cn(
-            "inline-flex size-1 shrink-0 rounded-full transition-all group-data-[collapsible=icon]:hidden",
+            "inline-flex size-1 shrink-0 rounded-full transition-[background-color,box-shadow] group-data-[collapsible=icon]:hidden",
             active ? "bg-primary shadow-[0_0_8px_var(--color-primary)]" : "bg-transparent",
           )}
         />
@@ -235,7 +260,7 @@ function BottomTabLink({ item, active }: { item: NavItem; active: boolean }) {
   if (item.disabled) {
     return (
       <span
-        className="flex flex-col items-center gap-1 px-2 py-1.5 text-xs text-muted-foreground opacity-40"
+        className="flex min-h-16 flex-1 flex-col items-center justify-center gap-1 px-2 text-xs text-muted-foreground opacity-40"
         aria-disabled="true"
       >
         <Icon className="size-5 shrink-0" aria-hidden="true" />
@@ -249,8 +274,8 @@ function BottomTabLink({ item, active }: { item: NavItem; active: boolean }) {
       href={item.href}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "flex flex-col items-center gap-1 px-2 py-1.5 text-xs font-medium transition-colors",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        "flex min-h-16 flex-1 flex-col items-center justify-center gap-1 px-2 text-xs font-medium transition-colors",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
         active ? "text-primary" : "text-muted-foreground",
       )}
     >
@@ -317,23 +342,34 @@ export function AppShell({
   // Stylist / clothier: mobile-first bottom tabs, no sidebar
   if (usesBottomNav) {
     return (
-      <div className="flex h-dvh flex-col overflow-hidden bg-background">
-        {/* Floating utility pill (mobile top-right) */}
-        <div className="fixed right-3 top-3 z-30 flex items-center gap-1.5 rounded-full border border-border bg-background/90 px-1.5 py-1 shadow-sm backdrop-blur">
-          <UserMenu userName={userName} role={role} onLogout={handleLogout} />
-          {employeeId && (
-            <NotificationBell employeeId={employeeId} initialNotifications={initialNotifications} />
-          )}
-        </div>
+      <div data-bottom-nav className="flex h-dvh flex-col overflow-hidden bg-background">
+        <a href="#main" className={SKIP_LINK_CLASS}>
+          {t("nav.skipToContent")}
+        </a>
+        {/* Top bar — in flow, so it never covers the page title */}
+        <header className="flex shrink-0 items-center justify-between gap-2 border-b border-border bg-background px-3 pt-[env(safe-area-inset-top)]">
+          <BrandMark />
+          <div className="flex h-14 items-center gap-1">
+            {employeeId && (
+              <NotificationBell
+                employeeId={employeeId}
+                initialNotifications={initialNotifications}
+              />
+            )}
+            <UserMenu userName={userName} role={role} onLogout={handleLogout} variant="bar" />
+          </div>
+        </header>
 
         <VersionBanner />
         <RealtimeQueryBridge role={role} />
 
-        <main className="flex-1 overflow-y-auto pb-16">{children}</main>
+        <main id="main" className="flex-1 overflow-y-auto pb-[var(--app-bottom-inset)]">
+          {children}
+        </main>
 
         <nav
-          className="fixed inset-x-0 bottom-0 z-30 flex h-16 items-center justify-around border-t border-border bg-background"
-          aria-label="Navegación principal"
+          className="fixed inset-x-0 bottom-0 z-30 flex border-t border-border bg-background pb-[env(safe-area-inset-bottom)]"
+          aria-label={t("nav.mainNavigation")}
         >
           {navItems.map((item) => (
             <BottomTabLink key={item.href} item={item} active={isActive(item, activeHref)} />
@@ -383,24 +419,27 @@ export function AppShell({
               <SidebarMenuItem>
                 <SidebarMenuButton
                   onClick={() => setSellOpen(true)}
-                  tooltip="Vender prenda"
+                  tooltip={t("clothSale.title")}
                   id="sidebar-sell"
                 >
                   <ShoppingBagIcon aria-hidden="true" />
-                  <span>Vender prenda</span>
+                  <span>{t("clothSale.title")}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             )}
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                onClick={() => setCheckoutOpen(true)}
-                tooltip={t("dayAtAGlance.actionCheckout")}
-                id="sidebar-checkout"
-              >
-                <CreditCardIcon aria-hidden="true" />
-                <span>{t("dayAtAGlance.actionCheckout")}</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
+            {/* Checkout is cashier/admin-only server-side (M-67) */}
+            {(role === "cashier" || role === "admin") && (
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  onClick={() => setCheckoutOpen(true)}
+                  tooltip={t("dayAtAGlance.actionCheckout")}
+                  id="sidebar-checkout"
+                >
+                  <CreditCardIcon aria-hidden="true" />
+                  <span>{t("dayAtAGlance.actionCheckout")}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )}
           </SidebarMenu>
 
           <div className="flex items-center gap-1 group-data-[collapsible=icon]:flex-col-reverse group-data-[collapsible=icon]:gap-2">
@@ -421,16 +460,23 @@ export function AppShell({
       </Sidebar>
 
       <SidebarInset className="flex min-w-0 flex-1 flex-col">
-        {/* Mobile trigger — floats top-left, desktop hides (sidebar is always visible there) */}
-        <SidebarTrigger
-          className="fixed left-3 top-3 z-30 size-10 rounded-full border border-border bg-background/90 shadow-sm backdrop-blur md:hidden"
-          aria-label={t("nav.openMenu")}
-        />
+        <a href="#main" className={SKIP_LINK_CLASS}>
+          {t("nav.skipToContent")}
+        </a>
+        {/* Mobile top bar — in flow; desktop hides it (sidebar is always visible there) */}
+        <header className="flex shrink-0 items-center gap-2 border-b border-border bg-background px-2 pt-[env(safe-area-inset-top)] md:hidden">
+          <div className="flex h-14 items-center gap-2">
+            <SidebarTrigger className="size-11" aria-label={t("nav.openMenu")} />
+            <BrandMark />
+          </div>
+        </header>
 
         <VersionBanner />
         <RealtimeQueryBridge role={role} />
 
-        <main className="flex-1 overflow-y-auto">{children}</main>
+        <main id="main" className="flex-1 overflow-y-auto">
+          {children}
+        </main>
       </SidebarInset>
 
       <Dialog open={logServiceOpen} onOpenChange={setLogServiceOpen}>

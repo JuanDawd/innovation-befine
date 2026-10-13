@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { PackageSearch, PlusIcon, PencilIcon, CheckIcon, XIcon } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import { ProductProgressBar } from "@/components/ui/product-progress-bar";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ import type {
   ClothierOption,
   ProductionUserContext,
 } from "@/app/(protected)/large-orders/assignment-actions";
+import { NativeSelect } from "@/components/ui/native-select";
 
 type ActionResult = { success: boolean; error?: { message: string; code?: string } };
 
@@ -50,12 +52,13 @@ export function OrderItemProgressTable({
   onApprove,
   onRefresh,
 }: OrderItemProgressTableProps) {
+  const t = useTranslations("orderProgress");
   if (items.length === 0) {
     return (
       <EmptyState
         icon={PackageSearch}
-        title="Sin ítems de producción"
-        description="Este pedido no tiene ítems registrados aún."
+        title={t("emptyTitle")}
+        description={t("emptyDescription")}
       />
     );
   }
@@ -122,6 +125,8 @@ function ItemSection({
   onApprove,
   onRefresh,
 }: ItemSectionProps) {
+  const t = useTranslations("orderProgress");
+  const tc = useTranslations("common");
   const [showForm, setShowForm] = useState(false);
   const [assigneeId, setAssigneeId] = useState("");
   const [quantity, setQuantity] = useState(1);
@@ -136,10 +141,10 @@ function ItemSection({
     startTransition(async () => {
       const res = await onAssign(item.id, item.clothPieceId, assigneeId, quantity);
       if (!res.success) {
-        toast.error(res.error?.message ?? "Error al asignar");
+        toast.error(res.error?.message ?? t("assignError"));
         return;
       }
-      toast.success("Asignación creada");
+      toast.success(t("assignSuccess"));
       setShowForm(false);
       setAssigneeId("");
       setQuantity(1);
@@ -163,7 +168,7 @@ function ItemSection({
               onClick={() => setShowForm(true)}
             >
               <PlusIcon className="size-3 mr-1" />
-              Asignar
+              {t("assign")}
             </Button>
           )}
         </div>
@@ -177,26 +182,27 @@ function ItemSection({
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-1">
               <label className="text-xs font-medium" htmlFor={`assignee-${item.id}`}>
-                Confeccionista
+                {t("clothier")}
               </label>
-              <select
+              <NativeSelect
                 id={`assignee-${item.id}`}
                 value={assigneeId}
                 onChange={(e) => setAssigneeId(e.target.value)}
                 required
-                className="w-full h-8 rounded-md border border-input bg-transparent px-2 text-sm focus-visible:outline-none focus-visible:border-ring"
+                className="w-full"
+                selectClassName="text-sm"
               >
-                <option value="">Seleccionar…</option>
+                <option value="">{t("selectPlaceholder")}</option>
                 {clothiers.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             </div>
             <div className="space-y-1">
               <label className="text-xs font-medium" htmlFor={`qty-${item.id}`}>
-                Cantidad
+                {t("quantity")}
               </label>
               <input
                 id={`qty-${item.id}`}
@@ -212,7 +218,7 @@ function ItemSection({
           </div>
           <div className="flex gap-2">
             <Button type="submit" size="sm" className="h-7 text-xs" disabled={isPending}>
-              {isPending ? "Guardando…" : "Crear asignación"}
+              {isPending ? t("saving") : t("createAssignment")}
             </Button>
             <Button
               type="button"
@@ -225,7 +231,7 @@ function ItemSection({
                 setQuantity(1);
               }}
             >
-              Cancelar
+              {tc("cancel")}
             </Button>
           </div>
         </form>
@@ -235,12 +241,18 @@ function ItemSection({
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b bg-muted/50 text-xs text-muted-foreground">
-              <th className="px-3 py-2 text-left font-medium">Empleado</th>
-              <th className="px-3 py-2 text-right font-medium">Asignado</th>
-              <th className="hidden px-3 py-2 text-right font-medium md:table-cell">Completado</th>
-              <th className="hidden px-3 py-2 text-right font-medium md:table-cell">Aprobado</th>
-              <th className="px-3 py-2 text-left font-medium">Progreso</th>
-              <th className="px-3 py-2" />
+              <th className="px-3 py-2 text-left font-medium">{t("colEmployee")}</th>
+              <th className="px-3 py-2 text-right font-medium">{t("colAssigned")}</th>
+              <th className="hidden px-3 py-2 text-right font-medium md:table-cell">
+                {t("colCompleted")}
+              </th>
+              <th className="hidden px-3 py-2 text-right font-medium md:table-cell">
+                {t("colApproved")}
+              </th>
+              <th className="px-3 py-2 text-left font-medium">{t("colProgress")}</th>
+              <th className="px-3 py-2">
+                <span className="sr-only">{t("colActions")}</span>
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -307,6 +319,8 @@ function AssignmentRow({
   onOptimisticUpdate,
   onRevert,
 }: AssignmentRowProps) {
+  const t = useTranslations("orderProgress");
+  const tc = useTranslations("common");
   const [editMode, setEditMode] = useState<"report" | "approve" | null>(null);
   const [inputValue, setInputValue] = useState(0);
   const [isPending, startTransition] = useTransition();
@@ -339,12 +353,12 @@ function AssignmentRow({
         if (!res.success) {
           onRevert(row);
           if (res.error?.code === "STALE_DATA") {
-            toast.error("Dato desactualizado, recarga la página");
+            toast.error(t("staleData"));
           } else {
-            toast.error(res.error?.message ?? "Error al reportar");
+            toast.error(res.error?.message ?? t("reportError"));
           }
         } else {
-          toast.success("Avance reportado");
+          toast.success(t("reportSuccess"));
         }
       } else if (editMode === "approve" && onApprove) {
         const optimistic: AssignmentProgressRow = { ...row, approvedQuantity: inputValue };
@@ -355,12 +369,12 @@ function AssignmentRow({
         if (!res.success) {
           onRevert(row);
           if (res.error?.code === "STALE_DATA") {
-            toast.error("Dato desactualizado, recarga la página");
+            toast.error(t("staleData"));
           } else {
-            toast.error(res.error?.message ?? "Error al aprobar");
+            toast.error(res.error?.message ?? t("approveError"));
           }
         } else {
-          toast.success("Cantidad aprobada");
+          toast.success(t("approveSuccess"));
         }
       }
     });
@@ -369,7 +383,7 @@ function AssignmentRow({
   return (
     <tr className="border-b last:border-0">
       <td className={`px-3 py-2 ${isUnassigned ? "italic text-muted-foreground" : ""}`}>
-        {isUnassigned ? "Sin asignar" : (row.assigneeName ?? "—")}
+        {isUnassigned ? t("unassigned") : (row.assigneeName ?? "—")}
       </td>
       <td
         className={`px-3 py-2 text-right tabular-nums ${isUnassigned ? "text-muted-foreground" : ""}`}
@@ -405,7 +419,7 @@ function AssignmentRow({
                 disabled={isPending}
               >
                 <PencilIcon className="size-3 mr-1" />
-                Reportar
+                {t("report")}
               </Button>
             )}
             {canApprove && (
@@ -417,7 +431,7 @@ function AssignmentRow({
                 disabled={isPending}
               >
                 <PencilIcon className="size-3 mr-1" />
-                Aprobar
+                {t("approve")}
               </Button>
             )}
           </div>
@@ -431,7 +445,7 @@ function AssignmentRow({
               value={inputValue}
               onChange={(e) => setInputValue(Number(e.target.value))}
               className="w-14 h-6 rounded border border-input bg-transparent px-1 text-xs font-mono text-right focus-visible:outline-none focus-visible:border-ring"
-              aria-label={editMode === "report" ? "Completado" : "Aprobado"}
+              aria-label={editMode === "report" ? t("colCompleted") : t("colApproved")}
             />
             <Button
               size="sm"
@@ -439,6 +453,7 @@ function AssignmentRow({
               className="h-6 px-2 text-xs"
               onClick={submitEdit}
               disabled={isPending}
+              aria-label={tc("save")}
             >
               <CheckIcon className="size-3.5" aria-hidden="true" />
             </Button>
@@ -448,6 +463,7 @@ function AssignmentRow({
               className="h-6 px-2"
               onClick={cancelEdit}
               disabled={isPending}
+              aria-label={tc("cancel")}
             >
               <XIcon className="size-3.5" aria-hidden="true" />
             </Button>

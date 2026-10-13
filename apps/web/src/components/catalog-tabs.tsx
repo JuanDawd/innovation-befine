@@ -6,9 +6,12 @@
  * Tab switcher for Services / Cloth pieces catalog sections.
  */
 
-import { useState, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
+import { oneOf, useSearchParamState } from "@/hooks/use-search-param-state";
+
+const CATALOG_TABS = ["services", "clothPieces"] as const;
 
 export function CatalogTabs({
   services,
@@ -18,7 +21,7 @@ export function CatalogTabs({
   clothPieces: ReactNode;
 }) {
   const t = useTranslations("catalog");
-  const [tab, setTab] = useState<"services" | "clothPieces">("services");
+  const [tab, setTab] = useSearchParamState("tab", "services", oneOf(CATALOG_TABS));
 
   const tabs = [
     { id: "services" as const, label: t("servicesTab") },

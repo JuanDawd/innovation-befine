@@ -49,6 +49,11 @@ export type CheckoutTicket = {
   total: number;
 };
 
+export type AwaitingTicket = CheckoutTicket & {
+  /** Groups tickets that belong to the same payer: saved client id, else guest name. */
+  clientKey: string;
+};
+
 export type CheckoutSummary = {
   sessionId: string;
   tickets: CheckoutTicket[];
@@ -61,7 +66,7 @@ export type CheckoutSummary = {
 
 export async function getAwaitingPaymentTickets(
   clientName?: string,
-): Promise<ActionResult<CheckoutTicket[]>> {
+): Promise<ActionResult<AwaitingTicket[]>> {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session)
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
@@ -97,13 +102,16 @@ export async function getAwaitingPaymentTickets(
     .orderBy(tickets.createdAt);
 
   // Group into tickets
-  const ticketMap = new Map<string, CheckoutTicket>();
+  const ticketMap = new Map<string, AwaitingTicket>();
   for (const r of rows) {
     if (!ticketMap.has(r.id)) {
       ticketMap.set(r.id, {
         id: r.id,
         status: r.status,
         clientName: r.clientName ?? r.guestName ?? "—",
+        clientKey: r.clientId
+          ? `client:${r.clientId}`
+          : `guest:${(r.guestName ?? r.id).trim().toLowerCase()}`,
         lineItems: [],
         total: 0,
       });

@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import { hasRole } from "@/lib/middleware-helpers";
 import { listAbsencesForMonth, listActiveEmployeesForAbsence } from "./actions";
 import { AbsenceCalendar } from "./absence-calendar";
+import { PageHeader } from "@/components/page-header";
 
 export default async function AbsencesPage({
   searchParams,
@@ -30,7 +31,7 @@ export default async function AbsencesPage({
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6 lg:p-8">
-      <h1 className="text-xl md:text-2xl font-semibold">{t("pageTitle")}</h1>
+      <PageHeader title={t("pageTitle")} />
       <AbsenceCalendar year={year} month={month} absences={absences} employees={employees} />
     </div>
   );

@@ -7,6 +7,7 @@ import { ProductApprovalBoard } from "@/components/product-approval-board";
 import { ProductsDashboardTable } from "@/components/products-dashboard-table";
 import { NewProductDialog } from "@/components/new-product-dialog";
 import { listLargeOrders } from "@/app/(protected)/large-orders/actions";
+import { PageHeader } from "@/components/page-header";
 
 export default async function AdminProductsPage() {
   const t = await getTranslations("products");
@@ -22,10 +23,10 @@ export default async function AdminProductsPage() {
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6 lg:p-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl md:text-2xl font-semibold">{t("pageTitle")}</h1>
-        <NewProductDialog redirectPath="/admin/products" largeOrders={activeOrders} />
-      </div>
+      <PageHeader
+        title={t("pageTitle")}
+        actions={<NewProductDialog redirectPath="/admin/products" largeOrders={activeOrders} />}
+      />
       <ProductsDashboardTable isAdmin />
       <ProductApprovalBoard />
     </div>

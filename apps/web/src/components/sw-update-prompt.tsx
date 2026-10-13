@@ -9,8 +9,10 @@
 
 import { useEffect, useState } from "react";
 import { RefreshCwIcon, XIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export function SwUpdatePrompt() {
+  const t = useTranslations("versionBanner");
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -32,26 +34,24 @@ export function SwUpdatePrompt() {
     <div
       role="alert"
       aria-live="polite"
-      className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 rounded-xl border border-blue-300 bg-blue-50 px-4 py-3 shadow-lg dark:border-blue-700 dark:bg-blue-950/70 max-w-sm w-[calc(100%-2rem)]"
+      className="fixed bottom-[calc(var(--app-bottom-inset)+1rem)] left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 rounded-xl border border-status-progress-foreground/30 bg-status-progress px-4 py-3 shadow-lg max-w-sm w-[calc(100%-2rem)]"
     >
       <RefreshCwIcon
-        className="size-4 shrink-0 text-blue-700 dark:text-blue-300"
+        className="size-4 shrink-0 text-status-progress-foreground"
         aria-hidden="true"
       />
-      <span className="flex-1 text-sm text-blue-800 dark:text-blue-200">
-        Actualización disponible — recarga para aplicar
-      </span>
+      <span className="flex-1 text-sm text-status-progress-foreground">{t("swMessage")}</span>
       <button
         onClick={() => window.location.reload()}
-        className="rounded px-2 py-1 text-xs font-medium text-blue-800 dark:text-blue-200 border border-blue-300 dark:border-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900"
-        aria-label="Recargar página"
+        className="rounded px-2 py-1 text-xs font-medium text-status-progress-foreground border border-status-progress-foreground/30 hover:bg-status-progress"
+        aria-label={t("swReloadLabel")}
       >
-        Recargar
+        {t("swReload")}
       </button>
       <button
         onClick={() => setVisible(false)}
-        aria-label="Cerrar aviso"
-        className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200"
+        aria-label={t("swClose")}
+        className="text-status-progress-foreground"
       >
         <XIcon className="size-4" aria-hidden="true" />
       </button>

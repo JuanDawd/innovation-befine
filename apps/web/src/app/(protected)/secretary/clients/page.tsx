@@ -11,6 +11,7 @@ import { hasRole } from "@/lib/middleware-helpers";
 import { PageSkeleton } from "@/components/ui/loading-skeleton";
 import { ClientList } from "@/components/client-list";
 import { listClients } from "@/app/(protected)/clients/actions";
+import { PageHeader } from "@/components/page-header";
 
 async function ClientData() {
   const result = await listClients(true);
@@ -26,7 +27,7 @@ export default async function SecretaryClientsPage() {
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6 lg:p-8">
-      <h1 className="text-xl md:text-2xl font-semibold">{t("pageTitle")}</h1>
+      <PageHeader title={t("pageTitle")} />
       <Suspense fallback={<PageSkeleton />}>
         <ClientData />
       </Suspense>

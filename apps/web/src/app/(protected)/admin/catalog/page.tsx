@@ -17,6 +17,7 @@ import { ClothPieceCatalog } from "@/components/cloth-piece-catalog";
 import { CatalogTabs } from "@/components/catalog-tabs";
 import { listAllServices } from "./actions/services";
 import { listAllClothPieces } from "./actions/cloth-pieces";
+import { PageHeader } from "@/components/page-header";
 
 async function CatalogData() {
   const [servicesResult, piecesResult] = await Promise.all([
@@ -43,7 +44,7 @@ export default async function CatalogPage() {
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6 lg:p-8">
-      <h1 className="text-xl md:text-2xl font-semibold">{t("pageTitle")}</h1>
+      <PageHeader title={t("pageTitle")} />
 
       <Suspense fallback={<PageSkeleton />}>
         <CatalogData />

@@ -16,7 +16,7 @@ const STATUS_META: Record<TaskStatus, { label: string; className: string }> = {
   pending: { label: "Próximamente", className: "bg-muted text-muted-foreground" },
   moved: {
     label: "Movido",
-    className: "bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400",
+    className: "bg-status-progress text-status-progress-foreground",
   },
   plan: { label: "Planeado", className: "bg-muted text-muted-foreground" },
 };
@@ -53,7 +53,7 @@ export default async function PublicRoadmapPage() {
           </div>
           <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
             <div
-              className="h-full bg-primary transition-all"
+              className="h-full bg-primary transition-[width]"
               style={{ width: `${overallPct}%` }}
               aria-hidden="true"
             />

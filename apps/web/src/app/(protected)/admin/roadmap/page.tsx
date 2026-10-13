@@ -10,6 +10,7 @@ import {
   type TaskStatus,
 } from "@/lib/roadmap";
 import { cn } from "@/lib/utils";
+import { PageHeader } from "@/components/page-header";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +23,7 @@ const STATUS_META: Record<TaskStatus, { label: string; className: string }> = {
   pending: { label: "Pendiente", className: "bg-status-initial text-status-initial-foreground" },
   moved: {
     label: "Movido",
-    className: "bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400",
+    className: "bg-status-progress text-status-progress-foreground",
   },
   plan: { label: "Plan", className: "bg-muted text-muted-foreground" },
 };
@@ -35,18 +36,14 @@ export default async function AdminRoadmapPage() {
 
   return (
     <div className="px-6 py-8 max-w-5xl mx-auto space-y-4">
-      <header className="space-y-2">
-        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Roadmap interno</p>
-        <h1
-          className="text-3xl font-semibold tracking-tight"
-          style={{ fontFamily: "var(--font-display)" }}
-        >
-          Estado del producto
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Una tarea = una responsabilidad. Origen: <code className="font-mono">roadmaps/</code>
-        </p>
-      </header>
+      <PageHeader
+        title="Estado del producto"
+        description={
+          <>
+            Una tarea = una responsabilidad. Origen: <code className="font-mono">roadmaps/</code>
+          </>
+        }
+      />
 
       {roadmaps.map((roadmap) => (
         <RoadmapSection key={roadmap.slug} roadmap={roadmap} />
@@ -143,7 +140,7 @@ function TaskRow({ task }: { task: RoadmapTask }) {
     return (
       <li className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm">
         <div className="flex min-w-0 flex-1 items-center gap-2">
-          <span className="shrink-0 font-mono text-[11px] text-muted-foreground tabular-nums">
+          <span className="shrink-0 font-mono text-xs text-muted-foreground tabular-nums">
             {task.id}
           </span>
           <span className="truncate">{task.title}</span>
@@ -158,7 +155,7 @@ function TaskRow({ task }: { task: RoadmapTask }) {
       <details className="group">
         <summary className="flex cursor-pointer items-center justify-between gap-3 px-4 py-2.5 text-sm marker:hidden [&::-webkit-details-marker]:hidden">
           <div className="flex min-w-0 flex-1 items-center gap-2">
-            <span className="shrink-0 font-mono text-[11px] text-muted-foreground tabular-nums">
+            <span className="shrink-0 font-mono text-xs text-muted-foreground tabular-nums">
               {task.id}
             </span>
             <span className="truncate">{task.title}</span>
@@ -193,7 +190,7 @@ function TaskRow({ task }: { task: RoadmapTask }) {
             )}
           </div>
           {task.dependencies && (
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               <span className="font-medium">Deps:</span> {task.dependencies}
             </p>
           )}
@@ -219,7 +216,7 @@ function StatusBadge({ meta }: { meta: { label: string; className: string } }) {
 function DetailBlock({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-1">
+      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">
         {title}
       </p>
       {children}
@@ -231,7 +228,7 @@ function ProgressBar({ pct }: { pct: number }) {
   return (
     <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
       <div
-        className="h-full bg-primary transition-all"
+        className="h-full bg-primary transition-[width]"
         style={{ width: `${pct}%` }}
         aria-hidden="true"
       />

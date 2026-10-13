@@ -7,6 +7,7 @@ import { listLargeOrders, listClientsForOrder } from "./actions";
 import { listActiveClothPieces } from "@/app/(protected)/admin/catalog/actions/cloth-pieces";
 import { LargeOrdersTable } from "./large-orders-table";
 import { NewLargeOrderDialog } from "./new-large-order-dialog";
+import { PageHeader } from "@/components/page-header";
 
 export default async function LargeOrdersPage() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -28,16 +29,18 @@ export default async function LargeOrdersPage() {
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6 lg:p-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl md:text-2xl font-semibold">{t("pageTitle")}</h1>
-        {canCreate && (
-          <NewLargeOrderDialog
-            clients={clients}
-            clothPieces={clothPieces}
-            canOverridePrice={canOverridePrice}
-          />
-        )}
-      </div>
+      <PageHeader
+        title={t("pageTitle")}
+        actions={
+          canCreate && (
+            <NewLargeOrderDialog
+              clients={clients}
+              clothPieces={clothPieces}
+              canOverridePrice={canOverridePrice}
+            />
+          )
+        }
+      />
       <LargeOrdersTable orders={orders} />
     </div>
   );

@@ -89,7 +89,7 @@ function DashboardSection({
                           row.largeOrderId && (
                             <Link
                               href={`/large-orders/${row.largeOrderId}#produccion`}
-                              className="text-xs font-medium text-amber-600 dark:text-amber-400 hover:underline"
+                              className="text-xs font-medium text-status-attention-foreground hover:underline"
                             >
                               {row.unassignedQuantity} uds. sin asignar
                             </Link>
