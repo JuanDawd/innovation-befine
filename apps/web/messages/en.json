@@ -128,7 +128,10 @@
     "forbiddenDescription": "You don't have permission to view this page.",
     "goHome": "Go to my dashboard",
     "unexpected": "Something went wrong",
-    "retry": "Try again"
+    "retry": "Try again",
+    "globalTitle": "Something went wrong",
+    "globalDescription": "An unexpected error occurred. Our team has been notified.",
+    "globalRetry": "Try again"
   },
   "time": {
     "justNow": "Just now",
