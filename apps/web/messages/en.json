@@ -18,7 +18,8 @@
     "optional": "(optional)",
     "required": "required",
     "yes": "Yes",
-    "no": "No"
+    "no": "No",
+    "showMore": "Show {count} more"
   },
   "roles": {
     "cashier": "Cashier",

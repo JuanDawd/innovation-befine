@@ -18,7 +18,8 @@
     "optional": "(opcional)",
     "required": "obligatorio",
     "yes": "Sí",
-    "no": "No"
+    "no": "No",
+    "showMore": "Mostrar {count, plural, one {# más} other {# más}}"
   },
   "roles": {
     "cashier": "Cajero",
