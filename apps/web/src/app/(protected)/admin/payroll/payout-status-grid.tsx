@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { StatusBadge } from "@/components/ui/status-badge";
 import type { PayoutStatusRow } from "./actions";
+import { sameDateSuffixes } from "./day-labels";
 
 type Props = { rows: PayoutStatusRow[] };
 
@@ -16,6 +17,7 @@ export function PayoutStatusGrid({ rows }: Props) {
   const t = useTranslations("payroll");
 
   if (rows.length === 0) return null;
+  const suffix = sameDateSuffixes(rows.map((r) => ({ ...r, id: r.businessDayId })));
 
   return (
     <div className="space-y-2">
@@ -31,7 +33,10 @@ export function PayoutStatusGrid({ rows }: Props) {
           <tbody className="divide-y divide-border">
             {rows.map((row) => (
               <tr key={row.businessDayId} className="hover:bg-muted/20">
-                <td className="px-3 py-2 font-mono text-xs">{row.date}</td>
+                <td className="px-3 py-2 font-mono text-xs tabular-nums">
+                  {row.date}
+                  {suffix.get(row.businessDayId)}
+                </td>
                 <td className="px-3 py-2">
                   <StatusBadge
                     status={STATUS_TO_ENTITY[row.status]}

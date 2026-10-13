@@ -38,12 +38,16 @@ import { getUnpaidPastBusinessDays } from "@befine/db";
 import { computeStylistEarnings } from "@/lib/payroll/compute-stylist-earnings";
 import { computeClothierEarnings } from "@/lib/payroll/compute-clothier-earnings";
 import { computeSecretaryEarnings } from "@/lib/payroll/compute-secretary-earnings";
+import { businessDateOf } from "@/lib/dates";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export type BusinessDayOption = {
   id: string;
+  /** Bogota calendar date (YYYY-MM-DD). Not unique: a day can be closed and reopened. */
   date: string;
+  /** ISO timestamp — tells apart two business days on the same date. */
+  openedAt: string;
   isSettled: boolean;
 };
 
@@ -133,7 +137,8 @@ export async function listClosedBusinessDays(
     success: true,
     data: rows.map((r) => ({
       id: r.id,
-      date: new Date(r.openedAt).toISOString().slice(0, 10),
+      date: businessDateOf(r.openedAt),
+      openedAt: new Date(r.openedAt).toISOString(),
       isSettled: settledIds.has(r.id),
     })),
   };
@@ -524,7 +529,7 @@ export async function getUnsettledEmployees(): Promise<ActionResult<UnsettledEmp
       );
     } else {
       // Secretary: closed days not yet settled, excluding vacation + approved_absence (T07R-R4)
-      const dateStrings = closedDays.map((d) => new Date(d.openedAt).toISOString().slice(0, 10));
+      const dateStrings = closedDays.map((d) => businessDateOf(d.openedAt));
       const absenceRows = await db
         .select({ date: employeeAbsences.date })
         .from(employeeAbsences)
@@ -537,18 +542,19 @@ export async function getUnsettledEmployees(): Promise<ActionResult<UnsettledEmp
         );
       const excludedDates = new Set(absenceRows.map((a) => a.date));
       unsettledDays = closedDays.filter((d) => {
-        const dateStr = new Date(d.openedAt).toISOString().slice(0, 10);
+        const dateStr = businessDateOf(d.openedAt);
         return !settled.has(d.id) && !excludedDates.has(dateStr);
       });
     }
 
     if (unsettledDays.length > 0) {
-      const dates = unsettledDays.map((d) => new Date(d.openedAt).toISOString().slice(0, 10));
+      const dates = unsettledDays.map((d) => businessDateOf(d.openedAt));
       result.push({
         employeeId: emp.id,
         employeeName: emp.name,
         role: emp.role,
-        unsettledDayCount: unsettledDays.length,
+        // Distinct dates — a closed-and-reopened day is still one day to settle
+        unsettledDayCount: new Set(dates).size,
         oldestUnsettledDate: dates.sort()[0],
       });
     }
@@ -701,6 +707,7 @@ export async function getMyEarnings(): Promise<ActionResult<MyEarningsSummary>> 
 export type PayoutStatusRow = {
   businessDayId: string;
   date: string;
+  openedAt: string;
   /** "paid" = covered by a payout, "pending" = closed but not yet paid, "open" = not yet closed */
   status: "paid" | "pending" | "open";
 };
@@ -750,7 +757,8 @@ export async function getPayoutStatusGrid(
     success: true,
     data: recent.map((d) => ({
       businessDayId: d.id,
-      date: new Date(d.openedAt).toISOString().slice(0, 10),
+      date: businessDateOf(d.openedAt),
+      openedAt: new Date(d.openedAt).toISOString(),
       status: settledIds.has(d.id) ? "paid" : d.closedAt ? "pending" : "open",
     })),
   };

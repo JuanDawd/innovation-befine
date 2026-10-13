@@ -48,6 +48,6 @@ export async function getUnpaidPastBusinessDays(
     .filter((d) => !settledIds.has(d.id))
     .map((d) => ({
       businessDayId: d.id,
-      date: new Date(d.openedAt).toISOString().slice(0, 10),
+      date: new Date(d.openedAt).toLocaleDateString("en-CA", { timeZone: "America/Bogota" }),
     }));
 }

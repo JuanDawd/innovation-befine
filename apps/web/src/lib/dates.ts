@@ -13,6 +13,15 @@ export function todayInBogota(): string {
   return new Date().toLocaleDateString("en-CA", { timeZone: BOGOTA_TZ });
 }
 
+/**
+ * Calendar date (YYYY-MM-DD) a business day belongs to, in Bogota time.
+ * Never use `toISOString().slice(0, 10)` for this — that is the UTC date, and
+ * a day opened after 19:00 Bogota would land on the next date.
+ */
+export function businessDateOf(openedAt: Date | string): string {
+  return new Date(openedAt).toLocaleDateString("en-CA", { timeZone: BOGOTA_TZ });
+}
+
 /** Start of the current ISO week (Monday) in Bogota TZ */
 export function isoWeekStartInBogota(): Date {
   const today = new Date(todayInBogota() + "T00:00:00-05:00");

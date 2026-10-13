@@ -526,6 +526,16 @@
 
 ---
 
+### H-53 — Secretary paid twice for a date with two business days; payroll dates computed in UTC
+
+- **Severity:** High
+- **Status:** Resolved (2026-10-12)
+- **Affected:** T065 `compute-secretary-earnings.ts`, T066/T067 payroll screen + unsettled alert, T074 analytics secretary earnings, `update-employee` termination guard
+- **Description:** Found from a duplicate "2026-10-11" row in the payroll status grid (demo data: day closed 14:53, new day opened 15:48 the same date). (1) Secretary pay counted business-day rows, so a closed-and-reopened date paid two daily rates (within the weekly cap); paying the two sibling days in separate payouts would also pay the date twice. Analytics had the same overcount. (2) Every payroll date was `toISOString().slice(0, 10)` — the UTC date — so a day opened after 19:00 Bogota would be filed under the next date (wrong absence match, wrong ISO week). (3) The grid/range picker showed two identical date labels.
+- **Fix:** `businessDateOf()` (Bogota) replaces UTC slicing; `countSecretaryDays()` counts distinct dates and is now what the tests exercise (they previously tested a copy); dates already paid via a sibling business day are excluded; analytics dedupes by date; same-date rows show the opening time ("2026-10-11 · 15:48").
+
+---
+
 ## Medium-priority issues
 
 ### M-01 — No-show count never decrements
@@ -1888,6 +1898,8 @@
 
 - **2026-10-12 — Colour tokens are oklch.** Never wrap theme variables in `hsl()`/`rgb()`; use `var(--color-*)` directly or `color-mix()` for alpha. Invalid colours fail silently in SVG.
 
+- **2026-10-12 — A business day is not a date.** Days can be closed and reopened on the same calendar date. Anything paid "per day" must count distinct `businessDateOf()` dates, never business-day rows; and never derive a date with `toISOString().slice(0, 10)`.
+
 ## Resolution log
 
 > When an issue is resolved, update its status above and add an entry here.
@@ -1989,3 +2001,4 @@
 | M-63     | 2026-10-12    | `timeZone: "America/Bogota"` on all remaining locale time/date renders (11 sites)                        | feat/design-system           |
 | L-51     | 2026-10-12    | Accessible names on all flagged controls + icon buttons; keyboard drill-down in analytics                | feat/design-system           |
 | M-74     | 2026-10-12    | Chart colours use `var(--color-primary)` / color-mix instead of hsl() over oklch tokens                  | feat/design-system           |
+| H-53     | 2026-10-12    | Distinct-date secretary pay + sibling-payout exclusion; Bogota dates in payroll; same-date labels        | fix/payroll-same-date-days   |

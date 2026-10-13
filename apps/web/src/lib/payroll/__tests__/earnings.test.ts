@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { bankersRound } from "@/lib/payroll/compute-stylist-earnings";
-import { isoWeekKey } from "@/lib/dates";
+import { businessDateOf, isoWeekKey } from "@/lib/dates";
+import { countSecretaryDays } from "@/lib/payroll/secretary-days";
 
 // ─── T063 stylist earnings — bankersRound ─────────────────────────────────────
 
@@ -132,25 +133,6 @@ describe("Clothier earnings computation", () => {
 
 // ─── T065 secretary earnings — via isoWeekKey from real lib/dates ─────────────
 
-function computeSecretaryDays(
-  allDates: string[],
-  excludedDates: string[],
-  expectedWorkDays: number,
-): number {
-  const excluded = new Set(excludedDates);
-  const weekCounts = new Map<string, number>();
-  for (const d of allDates) {
-    if (excluded.has(d)) continue;
-    const w = isoWeekKey(d);
-    weekCounts.set(w, (weekCounts.get(w) ?? 0) + 1);
-  }
-  let total = 0;
-  for (const count of weekCounts.values()) {
-    total += Math.min(count, expectedWorkDays);
-  }
-  return total;
-}
-
 describe("Secretary earnings computation", () => {
   const MON = "2026-04-13"; // Week 16
   const TUE = "2026-04-14";
@@ -161,46 +143,55 @@ describe("Secretary earnings computation", () => {
   const MON2 = "2026-04-20"; // Week 17
 
   it("full-time 6 days/week — 6 present days in one week = 6", () => {
-    expect(computeSecretaryDays([MON, TUE, WED, THU, FRI, SAT], [], 6)).toBe(6);
+    expect(countSecretaryDays([MON, TUE, WED, THU, FRI, SAT], [], 6)).toBe(6);
   });
 
   it("vacation day excluded from count", () => {
     // Tue is vacation — 5 present days, cap=6 → 5
-    expect(computeSecretaryDays([MON, TUE, WED, THU, FRI, SAT], [TUE], 6)).toBe(5);
+    expect(countSecretaryDays([MON, TUE, WED, THU, FRI, SAT], [TUE], 6)).toBe(5);
   });
 
   it("approved_absence excluded", () => {
-    expect(computeSecretaryDays([MON, TUE, WED, THU, FRI, SAT], [WED], 6)).toBe(5);
+    expect(countSecretaryDays([MON, TUE, WED, THU, FRI, SAT], [WED], 6)).toBe(5);
   });
 
   it("part-time 3 days/week — 6 days present capped at 3", () => {
-    expect(computeSecretaryDays([MON, TUE, WED, THU, FRI, SAT], [], 3)).toBe(3);
+    expect(countSecretaryDays([MON, TUE, WED, THU, FRI, SAT], [], 3)).toBe(3);
   });
 
   it("part-time 3 days — only 2 present → 2 (under cap)", () => {
-    expect(computeSecretaryDays([MON, TUE], [], 3)).toBe(2);
+    expect(countSecretaryDays([MON, TUE], [], 3)).toBe(2);
   });
 
   it("span two weeks — caps applied per week independently", () => {
     // Week 16: 6 days cap=6 → 6; Week 17: 1 day → 1 = 7
-    expect(computeSecretaryDays([MON, TUE, WED, THU, FRI, SAT, MON2], [], 6)).toBe(7);
+    expect(countSecretaryDays([MON, TUE, WED, THU, FRI, SAT, MON2], [], 6)).toBe(7);
   });
 
   it("span two weeks — part-time 3 days/week cap applied per week", () => {
     // Week 16: 6 days → capped at 3; Week 17: 1 day → 1 = 4
-    expect(computeSecretaryDays([MON, TUE, WED, THU, FRI, SAT, MON2], [], 3)).toBe(4);
+    expect(countSecretaryDays([MON, TUE, WED, THU, FRI, SAT, MON2], [], 3)).toBe(4);
   });
 
   it("no business days — 0 days worked", () => {
-    expect(computeSecretaryDays([], [], 6)).toBe(0);
+    expect(countSecretaryDays([], [], 6)).toBe(0);
   });
 
   it("all days excluded — 0 days worked", () => {
-    expect(computeSecretaryDays([MON, TUE, WED], [MON, TUE, WED], 6)).toBe(0);
+    expect(countSecretaryDays([MON, TUE, WED], [MON, TUE, WED], 6)).toBe(0);
+  });
+
+  it("closed and reopened on the same date counts as one day (no double daily rate)", () => {
+    expect(countSecretaryDays([MON, TUE, TUE, WED], [], 6)).toBe(3);
+  });
+
+  it("duplicate dates don't eat into the weekly cap", () => {
+    // Raw count would be 4 (= cap) → 4 daily rates; distinct dates are 3
+    expect(countSecretaryDays([MON, TUE, TUE, WED], [], 4)).toBe(3);
   });
 
   it("total earnings = daysWorked × dailyRate", () => {
-    const daysWorked = computeSecretaryDays([MON, TUE, WED, THU, FRI, SAT], [], 6);
+    const daysWorked = countSecretaryDays([MON, TUE, WED, THU, FRI, SAT], [], 6);
     const dailyRate = 60_000;
     expect(daysWorked * dailyRate).toBe(360_000);
   });
@@ -223,5 +214,16 @@ describe("isoWeekKey", () => {
 
   it("week boundary at year start — 2026-01-01 is in 2026-W01", () => {
     expect(isoWeekKey("2026-01-05")).toBe("2026-W02");
+  });
+});
+
+describe("businessDateOf", () => {
+  it("uses the Bogota date, not the UTC date, for late openings", () => {
+    // 2026-10-11 20:00 Bogota = 2026-10-12 01:00 UTC
+    expect(businessDateOf("2026-10-12T01:00:00Z")).toBe("2026-10-11");
+  });
+
+  it("morning opening keeps the same date", () => {
+    expect(businessDateOf("2026-10-11T13:00:00Z")).toBe("2026-10-11");
   });
 });
