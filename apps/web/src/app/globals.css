@@ -120,7 +120,7 @@
   --popover-foreground: oklch(0.15 0.005 60);
 
   /* Brand primary: Befine pink — slightly deeper on light for contrast */
-  --primary: oklch(0.58 0.22 0);
+  --primary: oklch(0.57 0.22 0); /* 4.5:1 as text on ivory */
   --primary-foreground: oklch(1 0 0);
 
   --secondary: oklch(0.935 0.015 80);
@@ -132,29 +132,29 @@
   --accent: oklch(0.92 0.045 165);
   --accent-foreground: oklch(0.4 0.1 165);
 
-  --destructive: oklch(0.58 0.22 25);
+  --destructive: oklch(0.565 0.22 25); /* 4.5:1 as text on ivory */
   --border: oklch(0.87 0.018 75);
-  --input: oklch(0.87 0.018 75);
-  --ring: oklch(0.58 0.22 0);
+  --input: oklch(0.64 0.018 75); /* 3:1 input boundary (WCAG 1.4.11); --border stays soft */
+  --ring: oklch(0.57 0.22 0);
 
   /* Chart: pink → mint → amber editorial spectrum */
-  --chart-1: oklch(0.58 0.22 0); /* pink */
+  --chart-1: oklch(0.57 0.22 0); /* pink */
   --chart-2: oklch(0.6 0.1 165); /* mint */
   --chart-3: oklch(0.6 0.12 65); /* amber */
   --chart-4: oklch(0.45 0.02 60); /* ink */
-  --chart-5: oklch(0.72 0.16 5); /* soft pink */
+  --chart-5: oklch(0.675 0.16 5); /* soft pink — 3:1 on card */
 
   --radius: 0.5rem;
 
   /* Sidebar: stays dark in BOTH themes — brand identity anchor */
   --sidebar: oklch(0.08 0.002 60);
   --sidebar-foreground: oklch(0.94 0.013 80);
-  --sidebar-primary: oklch(0.65 0.23 1);
+  --sidebar-primary: oklch(0.598 0.23 1); /* white text 4.5:1 */
   --sidebar-primary-foreground: oklch(1 0 0);
   --sidebar-accent: oklch(0.18 0.015 10);
   --sidebar-accent-foreground: oklch(0.96 0.015 80);
   --sidebar-border: oklch(0.22 0.008 30);
-  --sidebar-ring: oklch(0.65 0.23 1);
+  --sidebar-ring: oklch(0.598 0.23 1);
 
   /* Status: neutral=initial, pink=progress, amber=attention, mint=success, deep-pink=negative */
   --status-initial: oklch(0.92 0.01 80);
@@ -169,11 +169,11 @@
   --status-negative-foreground: oklch(0.5 0.19 25);
 
   /* Semantic feedback */
-  --success: oklch(0.6 0.1 165); /* mint */
+  --success: oklch(0.555 0.1 165); /* mint — white text 4.5:1 */
   --success-foreground: oklch(1 0 0);
   --warning: oklch(0.7 0.14 65); /* amber */
   --warning-foreground: oklch(0.2 0 0);
-  --info: oklch(0.58 0.22 0); /* pink — no blue in this system */
+  --info: oklch(0.57 0.22 0); /* pink — no blue in this system */
   --info-foreground: oklch(1 0 0);
 }
 
@@ -188,7 +188,7 @@
   --popover-foreground: oklch(0.94 0.013 80);
 
   /* Brand primary: brand pink in dark mode */
-  --primary: oklch(0.65 0.23 1);
+  --primary: oklch(0.598 0.23 1); /* white text 4.5:1; 4.6:1 as text on black */
   --primary-foreground: oklch(1 0 0);
 
   --secondary: oklch(0.12 0.005 60);
@@ -202,11 +202,11 @@
 
   --destructive: oklch(0.68 0.22 25);
   --border: oklch(1 0 0 / 12%);
-  --input: oklch(1 0 0 / 16%);
-  --ring: oklch(0.65 0.23 1);
+  --input: oklch(0.47 0 0); /* 3:1 input boundary on black */
+  --ring: oklch(0.598 0.23 1);
 
   /* Chart: pink → mint → amber spectrum, dark-calibrated */
-  --chart-1: oklch(0.65 0.23 1); /* pink */
+  --chart-1: oklch(0.598 0.23 1); /* pink */
   --chart-2: oklch(0.81 0.09 165); /* mint */
   --chart-3: oklch(0.79 0.13 75); /* amber */
   --chart-4: oklch(0.72 0.015 80); /* bone */
@@ -215,12 +215,12 @@
   /* Sidebar: unchanged from light (stays dark for identity) */
   --sidebar: oklch(0.02 0 0);
   --sidebar-foreground: oklch(0.94 0.013 80);
-  --sidebar-primary: oklch(0.65 0.23 1);
+  --sidebar-primary: oklch(0.598 0.23 1);
   --sidebar-primary-foreground: oklch(1 0 0);
   --sidebar-accent: oklch(0.14 0.015 10);
   --sidebar-accent-foreground: oklch(0.96 0.013 80);
   --sidebar-border: oklch(0.22 0.008 30);
-  --sidebar-ring: oklch(0.65 0.23 1);
+  --sidebar-ring: oklch(0.598 0.23 1);
 
   --status-initial: oklch(0.2 0.005 60);
   --status-initial-foreground: oklch(0.72 0.012 75);
@@ -237,7 +237,7 @@
   --success-foreground: oklch(0.1 0 0);
   --warning: oklch(0.79 0.13 75);
   --warning-foreground: oklch(0.12 0 0);
-  --info: oklch(0.65 0.23 1);
+  --info: oklch(0.598 0.23 1);
   --info-foreground: oklch(1 0 0);
 }
 
