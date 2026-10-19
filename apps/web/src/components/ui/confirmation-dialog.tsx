@@ -17,7 +17,8 @@ import {
 import { Button } from "@/components/ui/button";
 
 interface ConfirmationDialogProps {
-  trigger: ReactNode;
+  /** Omit for a dialog opened programmatically through `open` / `onOpenChange`. */
+  trigger?: ReactNode;
   title: string;
   description: string;
   /** Optional warning line rendered above the description (e.g. open-ticket count). */
@@ -65,7 +66,7 @@ function ConfirmationDialog({
 
   return (
     <Dialog open={actualOpen} onOpenChange={setOpen}>
-      <DialogTrigger render={trigger as React.ReactElement} />
+      {trigger !== undefined && <DialogTrigger render={trigger as React.ReactElement} />}
       <DialogContent className="max-w-sm" showCloseButton={false}>
         <DialogHeader>
           <div className="flex items-start gap-3">
