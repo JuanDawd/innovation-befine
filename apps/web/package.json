@@ -51,7 +51,7 @@
     "recharts": "^3.8.1",
     "require-in-the-middle": "^8.0.1",
     "resend": "^6.10.0",
-    "shadcn": "^4.1.2",
+    "shadcn": "^4.21.5",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.5.0",
     "tailwindcss": "^4.2.2",
