@@ -144,7 +144,7 @@ export function ClothierWorkBoard({ employeeId }: { employeeId: string }) {
   if (isLoading && pieces.length === 0) {
     return (
       <div className="flex items-center justify-center py-16">
-        <Loader2Icon className="size-6 animate-spin text-muted-foreground" />
+        <Loader2Icon className="size-6 animate-spin text-muted-foreground" aria-hidden="true" />
       </div>
     );
   }
@@ -159,139 +159,155 @@ export function ClothierWorkBoard({ employeeId }: { employeeId: string }) {
     );
   }
 
+  const toDo = myPieces.filter((p) => p.status === "pending");
+  const done = myPieces.filter((p) => p.status !== "pending");
+
+  const sectionHeading = (id: string, label: string, count: number) => (
+    <h2 id={id} className="mb-1 flex items-baseline gap-2 px-4 text-lg font-semibold">
+      {label}
+      <span className="text-sm font-normal text-muted-foreground tabular-nums">{count}</span>
+    </h2>
+  );
+
+  const pieceTitle = (piece: ProductPieceRow) => (
+    <div className="flex flex-wrap items-center gap-2">
+      <span className="truncate text-sm font-medium">{piece.clothPieceName}</span>
+      <span className="inline-flex shrink-0 items-center rounded bg-muted px-1.5 py-0.5 font-mono text-xs font-medium tabular-nums">
+        ×{piece.quantity}
+      </span>
+    </div>
+  );
+
+  const pieceError = (piece: ProductPieceRow) =>
+    errorMap[piece.id] && (
+      <p className="text-xs text-destructive" role="alert">
+        {errorMap[piece.id]}
+      </p>
+    );
+
   return (
-    <div className="flex flex-col gap-6 pb-10">
-      {/* Progress bar */}
+    <div className="flex flex-col gap-8 pb-10">
+      {/* Progress */}
       {totalMine > 0 && (
-        <div className="flex flex-col gap-1.5 px-4 pt-4">
-          <p className="text-xs text-muted-foreground">
-            {t("progress", { done: doneCount, total: totalMine })}
+        <div className="flex flex-col gap-2 px-4 pt-4">
+          <p
+            className={
+              toDo.length === 0
+                ? "flex items-center gap-1.5 text-sm font-medium text-status-success-foreground"
+                : "text-sm text-muted-foreground"
+            }
+          >
+            {toDo.length === 0 && <CheckCircle2Icon className="size-4" aria-hidden="true" />}
+            {toDo.length === 0
+              ? t("allDone")
+              : t("progress", { done: doneCount, total: totalMine })}
           </p>
           <ProductProgressBar
-            pct={totalMine > 0 ? Math.round((doneCount / totalMine) * 100) : 0}
+            pct={Math.round((doneCount / totalMine) * 100)}
             showLabel={false}
             className="w-full"
           />
         </div>
       )}
 
-      {/* My assigned pieces */}
-      {myPieces.length > 0 && (
-        <section>
-          <p className="px-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
-            {t("myPieces")}
-          </p>
+      {/* To do: my pending pieces */}
+      {toDo.length > 0 && (
+        <section aria-labelledby="pieces-todo">
+          {sectionHeading("pieces-todo", t("groupToDo"), toDo.length)}
           <ul className="divide-y divide-border">
-            {myPieces.map((piece) => {
-              const isDone = piece.status !== "pending";
-              return (
-                <li
-                  key={piece.id}
-                  className="flex items-start justify-between gap-3 px-4 py-4 min-h-[64px]"
-                >
-                  <div className="flex items-start gap-3 flex-1 min-w-0">
-                    {isDone ? (
-                      <CheckCircle2Icon className="size-5 shrink-0 text-status-success-foreground mt-0.5" />
-                    ) : (
-                      <CircleIcon className="size-5 shrink-0 text-muted-foreground mt-0.5" />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span
-                          className={`text-sm font-medium truncate ${
-                            isDone ? "line-through text-muted-foreground" : ""
-                          }`}
-                        >
-                          {piece.clothPieceName}
-                        </span>
-                        <span className="inline-flex items-center rounded bg-muted px-1.5 py-0.5 text-xs font-medium shrink-0">
-                          ×{piece.quantity}
-                        </span>
-                        {isDone && <PieceStatusBadge status={piece.status} />}
-                      </div>
-                      <PieceNotes piece={piece} />
-                    </div>
+            {toDo.map((piece) => (
+              <li key={piece.id} className="flex flex-col gap-3 px-4 py-4">
+                <div className="flex items-start gap-3">
+                  <CircleIcon
+                    className="mt-0.5 size-5 shrink-0 text-muted-foreground"
+                    aria-hidden="true"
+                  />
+                  <div className="min-w-0 flex-1">
+                    {pieceTitle(piece)}
+                    <PieceNotes piece={piece} />
                   </div>
-
-                  <div className="flex flex-col items-end gap-1 shrink-0">
-                    {piece.status === "pending" && (
-                      <ConfirmationDialog
-                        trigger={
-                          <Button
-                            size="sm"
-                            disabled={pendingId === piece.id}
-                            className="min-w-[80px]"
-                          >
-                            {pendingId === piece.id ? (
-                              <Loader2Icon className="size-4 animate-spin" />
-                            ) : (
-                              t("markDone")
-                            )}
-                          </Button>
-                        }
-                        title={t("markDoneConfirmTitle", {
-                          piece: piece.clothPieceName,
-                          quantity: piece.quantity,
-                        })}
-                        description={t("markDoneConfirmDescription")}
-                        confirmLabel={t("markDone")}
-                        cancelLabel={t("cancel")}
-                        onConfirm={() => handleMarkDone(piece)}
-                      />
-                    )}
-                    {errorMap[piece.id] && (
-                      <p className="text-xs text-destructive">{errorMap[piece.id]}</p>
-                    )}
-                  </div>
-                </li>
-              );
-            })}
+                </div>
+                <ConfirmationDialog
+                  trigger={
+                    <Button className="h-11 w-full gap-1.5" disabled={pendingId === piece.id}>
+                      {pendingId === piece.id ? (
+                        <Loader2Icon className="animate-spin" aria-hidden="true" />
+                      ) : (
+                        <CheckCircle2Icon aria-hidden="true" />
+                      )}
+                      {t("markDone")}
+                    </Button>
+                  }
+                  title={t("markDoneConfirmTitle", {
+                    piece: piece.clothPieceName,
+                    quantity: piece.quantity,
+                  })}
+                  description={t("markDoneConfirmDescription")}
+                  confirmLabel={t("markDone")}
+                  cancelLabel={t("cancel")}
+                  onConfirm={() => handleMarkDone(piece)}
+                />
+                {pieceError(piece)}
+              </li>
+            ))}
           </ul>
         </section>
       )}
 
       {/* Unassigned / claimable pieces */}
       {available.length > 0 && (
-        <section>
-          <p className="px-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
-            {t("available")}
-          </p>
+        <section aria-labelledby="pieces-available">
+          {sectionHeading("pieces-available", t("available"), available.length)}
           <ul className="divide-y divide-border">
             {available.map((piece) => (
-              <li
-                key={piece.id}
-                className="flex items-start justify-between gap-3 px-4 py-4 min-h-[64px]"
-              >
-                <div className="flex items-start gap-3 flex-1 min-w-0">
-                  <PlusCircleIcon className="size-5 shrink-0 text-muted-foreground mt-0.5" />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-sm font-medium truncate">{piece.clothPieceName}</span>
-                      <span className="inline-flex items-center rounded bg-muted px-1.5 py-0.5 text-xs font-medium shrink-0">
-                        ×{piece.quantity}
-                      </span>
-                    </div>
+              <li key={piece.id} className="flex flex-col gap-3 px-4 py-4">
+                <div className="flex items-start gap-3">
+                  <PlusCircleIcon
+                    className="mt-0.5 size-5 shrink-0 text-muted-foreground"
+                    aria-hidden="true"
+                  />
+                  <div className="min-w-0 flex-1">
+                    {pieceTitle(piece)}
                     <PieceNotes piece={piece} />
                   </div>
                 </div>
-
-                <div className="flex flex-col items-end gap-1 shrink-0">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleClaim(piece)}
-                    disabled={pendingId === piece.id}
-                    className="min-w-[80px]"
-                  >
-                    {pendingId === piece.id ? (
-                      <Loader2Icon className="size-4 animate-spin" />
-                    ) : (
-                      t("claim")
-                    )}
-                  </Button>
-                  {errorMap[piece.id] && (
-                    <p className="text-xs text-destructive">{errorMap[piece.id]}</p>
+                <Button
+                  variant="outline"
+                  onClick={() => handleClaim(piece)}
+                  disabled={pendingId === piece.id}
+                  className="h-11 w-full gap-1.5"
+                >
+                  {pendingId === piece.id ? (
+                    <Loader2Icon className="animate-spin" aria-hidden="true" />
+                  ) : (
+                    <PlusCircleIcon aria-hidden="true" />
                   )}
+                  {t("claim")}
+                </Button>
+                {pieceError(piece)}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {/* Finished: done and awaiting approval, or approved */}
+      {done.length > 0 && (
+        <section aria-labelledby="pieces-done">
+          {sectionHeading("pieces-done", t("groupDone"), done.length)}
+          <ul className="divide-y divide-border">
+            {done.map((piece) => (
+              <li key={piece.id} className="flex items-start gap-3 px-4 py-3">
+                <CheckCircle2Icon
+                  className="mt-0.5 size-5 shrink-0 text-status-success-foreground"
+                  aria-hidden="true"
+                />
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    {pieceTitle(piece)}
+                    <PieceStatusBadge status={piece.status} />
+                  </div>
+                  <PieceNotes piece={piece} />
                 </div>
               </li>
             ))}

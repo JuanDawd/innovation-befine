@@ -3,8 +3,10 @@
 /**
  * MyEditRequests — T041, T037
  *
- * Secretary / stylist view: lists today's open ticket items with a "Request edit" button
- * and a "Mark ready for payment" button (T037), plus a "My requests" status section.
+ * Secretary / stylist view: today's open ticket items grouped by what to do next —
+ * "Por marcar listos" (with the mark-ready action, T037), "Reabiertos",
+ * "Esperando cobro" — each with a "Request edit" action, plus a "My requests"
+ * status section.
  */
 
 import { useState } from "react";
@@ -21,8 +23,12 @@ import {
 import { transitionToAwaitingPayment } from "@/app/(protected)/tickets/actions";
 import { RequestEditDialog } from "@/components/request-edit-dialog";
 import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { formatMoney } from "@/i18n";
 import { fetchQuery } from "@/lib/action-query";
+
+/** Variant names that only restate the default — not worth showing. */
+const DEFAULT_VARIANTS = new Set(["Estándar", "Standard"]);
 
 function formatPrice(n: number) {
   return formatMoney(n);
@@ -97,95 +103,141 @@ export function MyEditRequests({
     }
   }
 
+  const total = items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
+  const groups = [
+    {
+      key: "toMark",
+      label: t("groupToMark"),
+      status: "logged",
+      items: items.filter((i) => i.ticketStatus === "logged"),
+    },
+    {
+      key: "reopened",
+      label: t("groupReopened"),
+      status: "reopened",
+      items: items.filter((i) => i.ticketStatus === "reopened"),
+    },
+    {
+      key: "waiting",
+      label: t("groupWaiting"),
+      status: "awaiting_payment",
+      items: items.filter((i) => i.ticketStatus === "awaiting_payment"),
+    },
+  ].filter((g) => g.items.length > 0);
+
+  function serviceLabel(item: OpenTicketItem) {
+    return DEFAULT_VARIANTS.has(item.variantName)
+      ? item.serviceName
+      : `${item.serviceName} · ${item.variantName}`;
+  }
+
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       {/* My services today */}
-      <section aria-label={t("sectionTitle")}>
-        <h2 className="mb-3 text-sm font-semibold">{t("sectionTitle")}</h2>
+      <section aria-labelledby="my-services-heading" className="flex flex-col gap-4">
+        <div>
+          <h2 id="my-services-heading" className="text-lg font-semibold">
+            {t("sectionTitle")}
+          </h2>
+          {items.length > 0 && (
+            <p className="mt-0.5 text-sm text-muted-foreground tabular-nums">
+              {t("daySummary", { count: items.length, total: formatPrice(total) })}
+            </p>
+          )}
+        </div>
         {items.length === 0 ? (
           <EmptyState icon={ClipboardListIcon} title={t("sectionEmpty")} />
         ) : (
-          <div className="flex flex-col gap-2">
-            {items.map((item) => {
-              const isReady = item.ticketStatus === "awaiting_payment";
-              const isTransitioning = transitioning.has(item.ticketId);
-              const transitionError = transitionErrors.get(item.ticketId);
+          groups.map((group) => (
+            <section
+              key={group.key}
+              aria-labelledby={`group-${group.key}`}
+              className="flex flex-col gap-2.5"
+            >
+              <h3
+                id={`group-${group.key}`}
+                className="flex flex-wrap items-center gap-x-2.5 gap-y-1"
+              >
+                <StatusBadge status={group.status} label={group.label} />
+                <span className="text-xs text-muted-foreground tabular-nums">
+                  {group.items.length}
+                </span>
+              </h3>
+              {group.key === "toMark" && (
+                <p className="-mt-1 text-xs text-muted-foreground">{t("toMarkHint")}</p>
+              )}
+              <ul className="grid gap-2.5 grid-cols-[repeat(auto-fill,minmax(min(100%,18rem),1fr))]">
+                {group.items.map((item) => {
+                  const isTransitioning = transitioning.has(item.ticketId);
+                  const transitionError = transitionErrors.get(item.ticketId);
+                  const canMarkReady = item.ticketStatus === "logged";
 
-              return (
-                <div key={item.itemId} className="rounded-lg border bg-card p-3 shadow-xs">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium truncate">
-                        {item.serviceName} — {item.variantName}
-                      </p>
-                      <p className="text-xs text-muted-foreground truncate">{item.clientName}</p>
-                      <p className="mt-0.5 font-mono tabular-nums text-xs text-muted-foreground">
-                        {formatPrice(item.unitPrice)}
+                  return (
+                    <li key={item.itemId} className="min-w-0 rounded-xl border bg-card px-3.5 py-3">
+                      <div className="flex items-baseline justify-between gap-3">
+                        <p className="min-w-0 truncate text-sm font-semibold">{item.clientName}</p>
+                        <p className="shrink-0 font-mono text-sm font-medium tabular-nums">
+                          {formatPrice(item.unitPrice * item.quantity)}
+                        </p>
+                      </div>
+                      <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                        {serviceLabel(item)}
                         {item.quantity > 1 ? ` × ${item.quantity}` : ""}
                       </p>
-                    </div>
-                    <div className="shrink-0">
-                      {isReady ? (
-                        <span className="inline-block rounded-full bg-status-attention px-2 py-0.5 text-xs font-medium text-status-attention-foreground">
-                          {tt("alreadyReady")}
-                        </span>
-                      ) : item.hasPendingRequest ? (
-                        <span className="inline-block rounded-full bg-status-attention px-2 py-0.5 text-xs font-medium text-status-attention-foreground">
-                          {t("pendingBadge")}
-                        </span>
-                      ) : (
-                        <RequestEditDialog
-                          ticketItemId={item.itemId}
-                          currentServiceName={item.serviceName}
-                          currentVariantName={item.variantName}
-                          currentVariantId={item.serviceVariantId}
-                          onSuccess={refresh}
-                        />
-                      )}
-                    </div>
-                  </div>
 
-                  {/* Mark ready button — only for logged tickets */}
-                  {item.ticketStatus === "logged" && (
-                    <div className="mt-2 border-t pt-2">
                       {transitionError && (
-                        <p className="mb-1 text-xs text-destructive" role="alert">
+                        <p className="mt-2 text-xs text-destructive" role="alert">
                           {transitionError}
                         </p>
                       )}
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-7 w-full gap-1 text-xs"
-                        disabled={isTransitioning}
-                        onClick={() => handleMarkReady(item.ticketId)}
-                      >
-                        {isTransitioning ? (
-                          <Loader2Icon className="size-3 animate-spin" aria-hidden="true" />
+
+                      <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2">
+                        {item.hasPendingRequest ? (
+                          <StatusBadge status="attention" label={t("pendingBadge")} />
                         ) : (
-                          <CreditCardIcon className="size-3" aria-hidden="true" />
+                          <RequestEditDialog
+                            ticketItemId={item.itemId}
+                            currentServiceName={item.serviceName}
+                            currentVariantName={item.variantName}
+                            currentVariantId={item.serviceVariantId}
+                            onSuccess={refresh}
+                          />
                         )}
-                        {tt("markReady")}
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+                        {canMarkReady && (
+                          <Button
+                            className="gap-1.5 max-sm:h-11 max-sm:flex-1"
+                            disabled={isTransitioning}
+                            onClick={() => handleMarkReady(item.ticketId)}
+                            aria-label={t("markReadyLabel", {
+                              client: item.clientName,
+                              service: serviceLabel(item),
+                            })}
+                          >
+                            {isTransitioning ? (
+                              <Loader2Icon className="animate-spin" aria-hidden="true" />
+                            ) : (
+                              <CreditCardIcon aria-hidden="true" />
+                            )}
+                            {tt("markReady")}
+                          </Button>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          ))
         )}
       </section>
 
       {/* My submitted requests */}
       {requests.length > 0 && (
         <section aria-label={t("myRequestsTitle")}>
-          <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold">
-            <ClipboardListIcon className="size-4" aria-hidden="true" />
-            {t("myRequestsTitle")}
-          </h2>
+          <h2 className="mb-3 text-lg font-semibold">{t("myRequestsTitle")}</h2>
           <div className="flex flex-col gap-2">
             {requests.map((req) => (
-              <div key={req.id} className="rounded-lg border bg-card p-3 shadow-xs">
+              <div key={req.id} className="rounded-xl border bg-card px-3.5 py-3">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
                     <p className="text-xs text-muted-foreground truncate">{req.clientName}</p>
@@ -225,7 +277,7 @@ export function MyEditRequestsSkeleton() {
         <div className="mb-3 h-4 w-32 rounded bg-muted animate-pulse" />
         <div className="flex flex-col gap-2">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-20 rounded-lg border bg-muted animate-pulse" />
+            <div key={i} className="h-24 rounded-xl border bg-muted animate-pulse" />
           ))}
         </div>
       </section>

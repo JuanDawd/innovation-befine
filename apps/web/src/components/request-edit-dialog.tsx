@@ -99,7 +99,12 @@ export function RequestEditDialog({
 
   return (
     <>
-      <Button variant="outline" size="sm" className="h-7 gap-1 text-xs" onClick={handleOpen}>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="gap-1 text-muted-foreground pointer-coarse:h-11"
+        onClick={handleOpen}
+      >
         <PencilIcon className="size-3" aria-hidden="true" />
         {t("requestEdit")}
       </Button>

@@ -466,7 +466,10 @@
     "size": "Size",
     "instructions": "Instructions",
     "statusApproved": "Approved",
-    "statusPendingApproval": "Pending approval"
+    "statusPendingApproval": "Pending approval",
+    "groupToDo": "To do",
+    "groupDone": "Finished",
+    "allDone": "You finished all your pieces for today."
   },
   "products": {
     "pageTitle": "Products",
@@ -541,7 +544,9 @@
     "editPieceError": "Could not save the piece",
     "saveChanges": "Save changes",
     "back": "Back",
-    "noLargeOrderLink": "Not linked"
+    "noLargeOrderLink": "Not linked",
+    "unassignedUnits": "{count, plural, one {# unit unassigned} other {# units unassigned}}",
+    "openDetailLabel": "View product detail{order, select, none {} other { for {order}}}"
   },
   "appointments": {
     "pageTitle": "Appointments",
@@ -718,7 +723,8 @@
     "toggleDrillDown": "Show daily breakdown for {name}",
     "seriesCurrent": "Current",
     "seriesPrior": "Previous period",
-    "noDrillDownData": "No data for this period."
+    "noDrillDownData": "No data for this period.",
+    "emptyTryPeriod": "View {period, select, week {this week} other {this month}}"
   },
   "absences": {
     "pageTitle": "Absences & Vacation",
@@ -1000,7 +1006,13 @@
   "editRequests": {
     "approveLabel": "Approve {client}'s change",
     "rejectLabel": "Reject {client}'s change",
-    "loadError": "Requests could not be loaded."
+    "loadError": "Requests could not be loaded.",
+    "groupToMark": "To mark ready",
+    "groupWaiting": "Awaiting payment",
+    "groupReopened": "Reopened",
+    "daySummary": "{count, plural, =0 {No services today} one {# service today} other {# services today}} · {total}",
+    "toMarkHint": "Mark them ready when you finish so the front desk can charge.",
+    "markReadyLabel": "Mark ready to charge: {client}, {service}"
   },
   "cashierBoard": {
     "title": "Live board",
