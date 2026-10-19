@@ -308,25 +308,28 @@ function EmployeeTable({
         <table className="w-full text-sm">
           <thead className="bg-muted/50 text-xs">
             <tr>
-              <th
-                className="px-3 py-2 text-left font-medium cursor-pointer select-none"
-                onClick={() => toggleSort("name")}
-              >
-                {t("colEmployee")} {sortKey === "name" ? (sortAsc ? "↑" : "↓") : ""}
-              </th>
+              <SortHeader
+                align="left"
+                label={t("colEmployee")}
+                active={sortKey === "name"}
+                ascending={sortAsc}
+                onSort={() => toggleSort("name")}
+              />
               <th className="px-3 py-2 text-left font-medium">{t("colRole")}</th>
-              <th
-                className="px-3 py-2 text-right font-medium cursor-pointer select-none"
-                onClick={() => toggleSort("jobs")}
-              >
-                {t("colJobs")} {sortKey === "jobs" ? (sortAsc ? "↑" : "↓") : ""}
-              </th>
-              <th
-                className="px-3 py-2 text-right font-medium cursor-pointer select-none"
-                onClick={() => toggleSort("earnings")}
-              >
-                {t("colEarnings")} {sortKey === "earnings" ? (sortAsc ? "↑" : "↓") : ""}
-              </th>
+              <SortHeader
+                align="right"
+                label={t("colJobs")}
+                active={sortKey === "jobs"}
+                ascending={sortAsc}
+                onSort={() => toggleSort("jobs")}
+              />
+              <SortHeader
+                align="right"
+                label={t("colEarnings")}
+                active={sortKey === "earnings"}
+                ascending={sortAsc}
+                onSort={() => toggleSort("earnings")}
+              />
               <th className="px-3 py-2 w-6" />
             </tr>
           </thead>
@@ -372,6 +375,39 @@ function EmployeeTable({
 // ─── Main dashboard ───────────────────────────────────────────────────────────
 
 type Period = "day" | "week" | "month";
+/** Sortable column header: a real button inside the <th>, with aria-sort on the cell. */
+function SortHeader({
+  label,
+  align,
+  active,
+  ascending,
+  onSort,
+}: {
+  label: string;
+  align: "left" | "right";
+  active: boolean;
+  ascending: boolean;
+  onSort: () => void;
+}) {
+  return (
+    <th
+      className={`px-3 py-2 font-medium ${align === "right" ? "text-right" : "text-left"}`}
+      aria-sort={active ? (ascending ? "ascending" : "descending") : "none"}
+    >
+      <button
+        type="button"
+        onClick={onSort}
+        className="inline-flex items-center gap-1 rounded-sm hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+      >
+        {label}
+        <span aria-hidden="true" className="w-3 text-muted-foreground">
+          {active ? (ascending ? "↑" : "↓") : ""}
+        </span>
+      </button>
+    </th>
+  );
+}
+
 const PERIODS = ["day", "week", "month"] as const;
 
 export function AnalyticsDashboard({ initialData }: { initialData: AnalyticsSummary }) {
