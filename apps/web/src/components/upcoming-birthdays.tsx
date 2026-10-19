@@ -3,8 +3,9 @@
 /**
  * UpcomingBirthdays — 5R.9
  *
- * Compact widget showing clients whose birthday falls within the next 14 days
- * (Bogota timezone). Fetched server-side by the parent page; this component
+ * Compact side-rail widget showing clients whose birthday falls within the next
+ * 14 days (Bogota timezone). When empty it is one line on wide screens and
+ * hidden below 1280px, where the rail stacks above the board. Fetched server-side by the parent page; this component
  * is a pure presenter so no client-side data fetching is needed.
  */
 
@@ -62,11 +63,11 @@ export function UpcomingBirthdays({ birthdays }: { birthdays: UpcomingBirthdayRo
   const t = useTranslations("clients");
 
   return (
-    <section aria-label={t("upcomingBirthdaysTitle")}>
-      <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
-        <CakeIcon className="size-4 text-muted-foreground" aria-hidden="true" />
-        {t("upcomingBirthdaysTitle")}
-      </h2>
+    <section
+      aria-label={t("upcomingBirthdaysTitle")}
+      className={birthdays.length === 0 ? "hidden xl:block" : undefined}
+    >
+      <h2 className="mb-2 text-lg font-semibold text-foreground">{t("upcomingBirthdaysTitle")}</h2>
 
       {birthdays.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t("upcomingBirthdaysEmpty")}</p>
@@ -75,7 +76,7 @@ export function UpcomingBirthdays({ birthdays }: { birthdays: UpcomingBirthdayRo
           {birthdays.map((entry) => (
             <li
               key={`${entry.type}-${entry.id}`}
-              className="flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2"
+              className="flex items-center gap-3 rounded-xl border border-border bg-card px-3 py-2"
             >
               <ClientInitials name={entry.name} />
               <div className="min-w-0 flex-1">

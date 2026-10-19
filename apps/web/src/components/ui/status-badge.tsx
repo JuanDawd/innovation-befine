@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 /**
  * Status colour mapping (from T103 design system):
  * - initial (grey): logged, pending, booked
- * - progress (blue): awaiting_payment, in_production, confirmed
+ * - progress (brand rose; see --status-progress): awaiting_payment, in_production, confirmed
  * - attention (amber): reopened, done_pending_approval, rescheduled
  * - success (green): closed, approved, delivered, paid_in_full, completed
  * - negative (red): cancelled, no_show

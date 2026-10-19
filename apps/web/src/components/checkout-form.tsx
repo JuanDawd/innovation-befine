@@ -5,7 +5,9 @@
  *
  * Cashier bulk checkout:
  * - Shows awaiting_payment tickets grouped by client; nothing is pre-selected
- *   (M-65 — one client must never be charged for everyone's services)
+ *   (M-65 — one client must never be charged for everyone's services), except
+ *   when opened from a board card: `preselectTicketId` selects that ticket's
+ *   client — the cashier picked that payer explicitly.
  * - Line items with snapshotted prices (overrides visible if set)
  * - Payment rows (cash / card / transfer), amounts must sum to total
  * - Confirmation dialog before submitting
@@ -62,7 +64,10 @@ function groupByClient(tickets: AwaitingTicket[]): ClientGroup[] {
 // Override state per ticket item
 type OverrideEdit = { price: string; reason: string; saving: boolean };
 
-export function CheckoutForm({ onClose }: { onClose?: () => void } = {}) {
+export function CheckoutForm({
+  onClose,
+  preselectTicketId,
+}: { onClose?: () => void; preselectTicketId?: string } = {}) {
   const t = useTranslations("checkout");
   const tc = useTranslations("common");
   const router = useRouter();
@@ -80,6 +85,16 @@ export function CheckoutForm({ onClose }: { onClose?: () => void } = {}) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [summary, setSummary] = useState<CheckoutSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Board card → select that ticket's client once the list arrives
+  // (adjust-state-during-render; runs once per ticket id).
+  const [seededFor, setSeededFor] = useState<string | null>(null);
+  if (preselectTicketId && seededFor !== preselectTicketId && !isLoading) {
+    setSeededFor(preselectTicketId);
+    const payer = allTickets.find((tk) => tk.id === preselectTicketId)?.clientKey;
+    if (payer) {
+      setPickedIds(new Set(allTickets.filter((tk) => tk.clientKey === payer).map((tk) => tk.id)));
+    }
+  }
   // overrides[ticketItemId] = { price, reason, saving }
   const [overrideEdits, setOverrideEdits] = useState<Record<string, OverrideEdit>>({});
 

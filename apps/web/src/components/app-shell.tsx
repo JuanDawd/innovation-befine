@@ -46,6 +46,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { LogServiceForm } from "@/components/log-service-form";
+import { BRAND_NAME, BRAND_UNITS } from "@/lib/brand";
 import { CheckoutForm } from "@/components/checkout-form";
 import { SellClothPieceModal } from "@/components/sell-cloth-piece-modal";
 import type { NotificationRow } from "@/app/(protected)/notifications/actions";
@@ -89,11 +90,13 @@ const SKIP_LINK_CLASS =
 /** Wordmark for the mobile top bars. */
 function BrandMark() {
   return (
-    <span className="font-display text-lg font-medium tracking-tight text-primary">Befine</span>
+    <span className="font-display text-lg font-medium tracking-tight text-primary">
+      {BRAND_NAME}
+    </span>
   );
 }
 
-/** Sub-company identifier — Befine / DoWell / Swimwear */
+/** Tenant identifier — brand name plus its business units (see lib/brand). */
 function CompanyStrip() {
   const t = useTranslations("nav");
   return (
@@ -101,16 +104,16 @@ function CompanyStrip() {
       <div className="text-xs font-medium uppercase tracking-[0.22em] text-sidebar-foreground/60">
         {t("viewingCompany")}
       </div>
-      <div
-        className="text-lg font-medium tracking-tight text-primary"
-        style={{ fontFamily: "var(--font-display)" }}
-      >
-        Befine
+      <div className="font-display text-lg font-medium tracking-tight text-sidebar-brand">
+        {BRAND_NAME}
       </div>
-      <div className="mt-1 flex gap-2.5 text-xs uppercase tracking-[0.14em] text-sidebar-foreground/50">
-        <span className="cursor-not-allowed">DoWell</span>
-        <span className="cursor-not-allowed">Swimwear</span>
-      </div>
+      {BRAND_UNITS.length > 0 && (
+        <div className="mt-1 flex gap-2.5 text-xs uppercase tracking-[0.14em] text-sidebar-foreground/60">
+          {BRAND_UNITS.map((unit) => (
+            <span key={unit}>{unit}</span>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -382,7 +385,11 @@ export function AppShell({
   // Admin / secretary: shadcn collapsible sidebar
   return (
     <SidebarProvider defaultOpen={sidebarDefaultOpen}>
-      <Sidebar collapsible="icon">
+      {/* First Tab stop, before the sidebar's links */}
+      <a href="#main" className={SKIP_LINK_CLASS}>
+        {t("nav.skipToContent")}
+      </a>
+      <Sidebar collapsible="icon" role="navigation" aria-label={t("nav.mainNavigation")}>
         <SidebarHeader>
           <CompanyStrip />
         </SidebarHeader>
@@ -460,9 +467,6 @@ export function AppShell({
       </Sidebar>
 
       <SidebarInset className="flex min-w-0 flex-1 flex-col">
-        <a href="#main" className={SKIP_LINK_CLASS}>
-          {t("nav.skipToContent")}
-        </a>
         {/* Mobile top bar — in flow; desktop hides it (sidebar is always visible there) */}
         <header className="flex shrink-0 items-center gap-2 border-b border-border bg-background px-2 pt-[env(safe-area-inset-top)] md:hidden">
           <div className="flex h-14 items-center gap-2">

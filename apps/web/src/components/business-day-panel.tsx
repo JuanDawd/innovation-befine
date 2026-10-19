@@ -1,27 +1,42 @@
 "use client";
 
 /**
- * BusinessDayPanel — T019
+ * Business day header controls — T019
  *
- * Shows the current business day status (open/closed) with actions:
- * - Open day (when closed)
- * - Close day (when open, requires confirmation)
- * - Reopen last closed day (when closed, requires confirmation + reason)
+ * - BusinessDayStatusBadge / BusinessDayStatusLine: status badge and one line
+ *   (date, opening time, or a warning when the day has been left open
+ *   overnight). They live in PageHeader.
+ * - BusinessDayActions: Open day / Close day / Reopen last closed day.
  *
- * This is a client component driven by server data (passed as props).
+ * Closing (H-49): the dialog never offers a confirmable state before it knows
+ * how many tickets are still unpaid. It refetches the shared `tickets.open`
+ * and `businessDay.stats` queries on open and keeps confirm disabled until
+ * both settle. With unpaid tickets, the primary action is "go charge them".
+ *
+ * Client components driven by server data (passed as props).
  * After each mutation the server revalidates and Next.js re-renders the page.
  */
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { notifyDataChanged } from "@/lib/data-events";
-import { listOpenTickets } from "@/app/(protected)/tickets/actions";
+import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { CalendarCheckIcon, CalendarXIcon, Loader2Icon, RotateCcwIcon } from "lucide-react";
+import {
+  AlertTriangleIcon,
+  CalendarCheckIcon,
+  CalendarXIcon,
+  Loader2Icon,
+  RotateCcwIcon,
+} from "lucide-react";
+import { notifyDataChanged } from "@/lib/data-events";
+import { queryKeys } from "@/lib/query-keys";
+import { fetchQuery } from "@/lib/action-query";
+import { formatMoney } from "@/i18n";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -29,7 +44,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { daysSince } from "@/components/cashier-dashboard-helpers";
 import type { BusinessDay } from "@/lib/business-day";
 import {
   openBusinessDay,
@@ -37,12 +53,227 @@ import {
   reopenBusinessDay,
 } from "@/app/(protected)/cashier/actions/business-day";
 
-interface BusinessDayPanelProps {
+const TZ = "America/Bogota";
+
+interface BusinessDayProps {
   currentDay: BusinessDay | null;
   lastClosedDay: BusinessDay | null;
 }
 
-export function BusinessDayPanel({ currentDay, lastClosedDay }: BusinessDayPanelProps) {
+// ─── Status (PageHeader meta + description) ──────────────────────────────────
+
+export function BusinessDayStatusBadge({ currentDay }: Pick<BusinessDayProps, "currentDay">) {
+  const t = useTranslations("businessDay");
+  return currentDay ? (
+    <StatusBadge status="success" label={t("dayOpen")} />
+  ) : (
+    <StatusBadge status="initial" label={t("dayClosed")} />
+  );
+}
+
+export function BusinessDayStatusLine({ currentDay, lastClosedDay }: BusinessDayProps) {
+  const t = useTranslations("businessDay");
+  const today = new Date().toLocaleDateString("es-CO", {
+    timeZone: TZ,
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
+  const todayLabel = today.charAt(0).toUpperCase() + today.slice(1);
+
+  if (!currentDay) {
+    return (
+      <span suppressHydrationWarning>
+        {todayLabel}
+        {lastClosedDay?.closedAt &&
+          ` · ${t("lastClosedAt", {
+            date: new Date(lastClosedDay.closedAt).toLocaleString("es-CO", {
+              timeZone: TZ,
+              dateStyle: "short",
+              timeStyle: "short",
+            }),
+          })}`}
+      </span>
+    );
+  }
+
+  const openedAt = new Date(currentDay.openedAt);
+  const days = daysSince(openedAt);
+  if (days >= 1) {
+    return (
+      <span className="flex flex-wrap items-center gap-x-1.5" suppressHydrationWarning>
+        <span>
+          {t("openSince", {
+            date: openedAt.toLocaleDateString("es-CO", {
+              timeZone: TZ,
+              day: "numeric",
+              month: "short",
+            }),
+          })}
+        </span>
+        <span aria-hidden="true">·</span>
+        <span className="flex items-center gap-1 font-medium text-status-attention-foreground">
+          <AlertTriangleIcon className="size-3.5 shrink-0" aria-hidden="true" />
+          {t("staleDay", { days })}
+        </span>
+      </span>
+    );
+  }
+
+  return (
+    <span suppressHydrationWarning>
+      {todayLabel} ·{" "}
+      {t("openedAt", {
+        time: openedAt.toLocaleTimeString("es-CO", {
+          timeZone: TZ,
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      })}
+    </span>
+  );
+}
+
+// ─── Close-day dialog ────────────────────────────────────────────────────────
+
+type CloseSummary = { revenue: number; closedCount: number };
+
+function CloseDayDialog({
+  disabled,
+  onClose,
+}: {
+  disabled: boolean;
+  onClose: (summary: CloseSummary) => void;
+}) {
+  const t = useTranslations("businessDay");
+  const tCommon = useTranslations("common");
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [checking, setChecking] = useState(false);
+
+  // Same cached queries the board and summary strip use; refetched on open.
+  const tickets = useQuery({
+    queryKey: queryKeys.tickets.open,
+    queryFn: () => fetchQuery("openTickets"),
+    enabled: false,
+  });
+  const stats = useQuery({
+    queryKey: queryKeys.businessDay.stats,
+    queryFn: () => fetchQuery("dayStats"),
+    enabled: false,
+  });
+
+  async function handleOpenChange(next: boolean) {
+    setOpen(next);
+    if (!next) return;
+    setChecking(true);
+    await Promise.all([tickets.refetch(), stats.refetch()]);
+    setChecking(false);
+  }
+
+  const failed = !checking && (tickets.isError || stats.isError);
+  const known = !checking && !failed && tickets.data !== undefined && stats.data !== undefined;
+  const openCount = tickets.data?.length ?? 0;
+  const revenue = stats.data?.revenue ?? 0;
+  const closedCount = stats.data?.closedCount ?? 0;
+
+  function confirmClose() {
+    setOpen(false);
+    onClose({ revenue, closedCount });
+  }
+
+  function goCharge() {
+    setOpen(false);
+    router.push("/cashier/checkout", { scroll: false });
+  }
+
+  return (
+    <>
+      <Button
+        size="lg"
+        variant="outline"
+        disabled={disabled}
+        onClick={() => void handleOpenChange(true)}
+        className="pointer-coarse:h-11"
+      >
+        {disabled ? (
+          <Loader2Icon className="animate-spin" aria-hidden="true" />
+        ) : (
+          <CalendarXIcon aria-hidden="true" />
+        )}
+        {t("close")}
+      </Button>
+      <Dialog open={open} onOpenChange={(next) => void handleOpenChange(next)}>
+        <DialogContent className="max-w-md" showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle>{t("confirmClose")}</DialogTitle>
+            <DialogDescription>{t("confirmCloseDescription")}</DialogDescription>
+          </DialogHeader>
+
+          <div aria-live="polite" className="flex flex-col gap-3">
+            {checking && (
+              <p className="flex items-center gap-2 py-3 text-sm text-muted-foreground">
+                <Loader2Icon className="size-4 animate-spin" aria-hidden="true" />
+                {t("closeChecking")}
+              </p>
+            )}
+            {failed && (
+              <p
+                className="flex items-start gap-2 rounded-lg bg-status-negative px-3 py-2.5 text-sm text-status-negative-foreground"
+                role="alert"
+              >
+                <AlertTriangleIcon className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+                {t("closeError")}
+              </p>
+            )}
+            {known && (
+              <>
+                <dl className="grid grid-cols-3 gap-px overflow-hidden rounded-lg border bg-border text-center">
+                  {[
+                    [t("summaryRevenue"), formatMoney(revenue)],
+                    [t("summaryClosed"), String(closedCount)],
+                    [t("summaryOpen"), String(openCount)],
+                  ].map(([label, value]) => (
+                    <div key={label} className="flex flex-col gap-1 bg-card px-2 py-3">
+                      <dt className="text-xs text-muted-foreground">{label}</dt>
+                      <dd className="font-mono text-sm font-medium tabular-nums">{value}</dd>
+                    </div>
+                  ))}
+                </dl>
+                {openCount > 0 && (
+                  <p className="flex items-start gap-2 rounded-lg bg-status-attention px-3 py-2.5 text-sm text-status-attention-foreground">
+                    <AlertTriangleIcon className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+                    {t("closeOpenTicketsWarning", { count: openCount })}
+                  </p>
+                )}
+              </>
+            )}
+          </div>
+
+          <DialogFooter>
+            <DialogClose render={<Button variant="outline" />}>{tCommon("cancel")}</DialogClose>
+            {known && openCount > 0 ? (
+              <>
+                <Button variant="destructive" onClick={confirmClose}>
+                  {t("closeAnyway")}
+                </Button>
+                <Button onClick={goCharge}>{t("goCharge", { count: openCount })}</Button>
+              </>
+            ) : (
+              <Button onClick={confirmClose} disabled={!known}>
+                {t("close")}
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+// ─── Actions ─────────────────────────────────────────────────────────────────
+
+export function BusinessDayActions({ currentDay, lastClosedDay }: BusinessDayProps) {
   const router = useRouter();
   const t = useTranslations("businessDay");
   const tCommon = useTranslations("common");
@@ -53,21 +284,6 @@ export function BusinessDayPanel({ currentDay, lastClosedDay }: BusinessDayPanel
   const [reopenOpen, setReopenOpen] = useState(false);
   const [reopenReason, setReopenReason] = useState("");
   const [reopenReasonError, setReopenReasonError] = useState<string | null>(null);
-
-  const isOpen = currentDay !== null;
-
-  // H-49: surface unpaid tickets before the cashier confirms closing the day.
-  const [closeOpen, setCloseOpen] = useState(false);
-  const [openTicketCount, setOpenTicketCount] = useState(0);
-
-  function handleCloseOpenChange(next: boolean) {
-    setCloseOpen(next);
-    if (!next) return;
-    setOpenTicketCount(0);
-    listOpenTickets().then((res) => {
-      if (res.success) setOpenTicketCount(res.data.length);
-    });
-  }
 
   function handleOpen() {
     startTransition(async () => {
@@ -82,12 +298,17 @@ export function BusinessDayPanel({ currentDay, lastClosedDay }: BusinessDayPanel
     });
   }
 
-  function handleClose() {
+  function handleClose(summary: CloseSummary) {
     if (!currentDay) return;
     startTransition(async () => {
       const result = await closeBusinessDay(currentDay.id);
       if (result.success) {
-        toast.success(t("closeSuccess"));
+        toast.success(
+          t("closeSuccessSummary", {
+            revenue: formatMoney(summary.revenue),
+            count: summary.closedCount,
+          }),
+        );
         notifyDataChanged("businessDay", "tickets");
         router.refresh();
       } else {
@@ -98,7 +319,7 @@ export function BusinessDayPanel({ currentDay, lastClosedDay }: BusinessDayPanel
 
   function handleReopenSubmit() {
     if (reopenReason.trim().length < 5) {
-      setReopenReasonError("El motivo debe tener al menos 5 caracteres");
+      setReopenReasonError(t("reopenReasonTooShort"));
       return;
     }
     setReopenReasonError(null);
@@ -122,106 +343,38 @@ export function BusinessDayPanel({ currentDay, lastClosedDay }: BusinessDayPanel
   }
 
   return (
-    <div className="rounded-xl border bg-card p-6 shadow-sm flex-1">
-      {/* Status header */}
-      <div className="flex items-center gap-3 mb-4">
-        {isOpen ? (
-          <div className="rounded-full bg-status-success p-2">
-            <CalendarCheckIcon
-              className="size-5 text-status-success-foreground"
-              aria-hidden="true"
-            />
-          </div>
-        ) : (
-          <div className="rounded-full bg-muted p-2">
-            <CalendarXIcon className="size-5 text-muted-foreground" aria-hidden="true" />
-          </div>
-        )}
-        <div>
-          <p className="font-semibold text-sm">{isOpen ? t("dayOpen") : t("dayClosed")}</p>
-          {isOpen && currentDay && (
-            <p className="text-xs text-muted-foreground" suppressHydrationWarning>
-              {t("openedAt", {
-                time: new Date(currentDay.openedAt).toLocaleTimeString("es-CO", {
-                  timeZone: "America/Bogota",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                }),
-              })}
-            </p>
+    <div className="flex flex-wrap items-center gap-2">
+      {currentDay ? (
+        <CloseDayDialog disabled={isPending} onClose={handleClose} />
+      ) : (
+        <>
+          {lastClosedDay && (
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={() => setReopenOpen(true)}
+              disabled={isPending}
+              className="pointer-coarse:h-11"
+            >
+              <RotateCcwIcon aria-hidden="true" />
+              {t("reopen")}
+            </Button>
           )}
-          {!isOpen && lastClosedDay?.closedAt && (
-            <p className="text-xs text-muted-foreground" suppressHydrationWarning>
-              {t("lastClosedAt", {
-                date: new Date(lastClosedDay.closedAt).toLocaleString("es-CO", {
-                  timeZone: "America/Bogota",
-                  dateStyle: "short",
-                  timeStyle: "short",
-                }),
-              })}
-            </p>
-          )}
-        </div>
-      </div>
-
-      {/* Actions */}
-      <div className="flex flex-col gap-2 sm:flex-row">
-        {!isOpen && (
-          <Button onClick={handleOpen} disabled={isPending} className="flex-1">
+          <Button
+            size="lg"
+            onClick={handleOpen}
+            disabled={isPending}
+            className="pointer-coarse:h-11"
+          >
             {isPending ? (
-              <Loader2Icon className="mr-2 size-4 animate-spin" aria-hidden="true" />
+              <Loader2Icon className="animate-spin" aria-hidden="true" />
             ) : (
-              <CalendarCheckIcon className="mr-2 size-4" aria-hidden="true" />
+              <CalendarCheckIcon aria-hidden="true" />
             )}
             {t("open")}
           </Button>
-        )}
-
-        {isOpen && (
-          <ConfirmationDialog
-            trigger={
-              <Button variant="outline" disabled={isPending} className="flex-1">
-                {isPending ? (
-                  <Loader2Icon className="mr-2 size-4 animate-spin" aria-hidden="true" />
-                ) : (
-                  <CalendarXIcon className="mr-2 size-4" aria-hidden="true" />
-                )}
-                {t("close")}
-              </Button>
-            }
-            title={t("confirmClose")}
-            description={t("confirmCloseDescription")}
-            warning={
-              openTicketCount > 0
-                ? t("closeOpenTicketsWarning", { count: openTicketCount })
-                : undefined
-            }
-            variant={openTicketCount > 0 ? "destructive" : "default"}
-            confirmLabel={t("close")}
-            cancelLabel={tCommon("cancel")}
-            onConfirm={handleClose}
-            open={closeOpen}
-            onOpenChange={handleCloseOpenChange}
-          />
-        )}
-
-        {!isOpen && lastClosedDay && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setReopenOpen(true)}
-            disabled={isPending}
-            className="flex-1 text-muted-foreground"
-          >
-            <RotateCcwIcon className="mr-2 size-4" aria-hidden="true" />
-            {t("reopen")}
-          </Button>
-        )}
-
-        {!isOpen && !lastClosedDay && (
-          <p className="text-xs text-muted-foreground mt-1">{t("noPreviousDay")}</p>
-        )}
-      </div>
+        </>
+      )}
 
       {/* Reopen dialog with reason field */}
       <Dialog
@@ -265,7 +418,7 @@ export function BusinessDayPanel({ currentDay, lastClosedDay }: BusinessDayPanel
               {tCommon("cancel")}
             </Button>
             <Button onClick={handleReopenSubmit} disabled={isPending}>
-              {isPending && <Loader2Icon className="mr-2 size-4 animate-spin" aria-hidden="true" />}
+              {isPending && <Loader2Icon className="animate-spin" aria-hidden="true" />}
               {t("reopen")}
             </Button>
           </DialogFooter>

@@ -28,7 +28,7 @@ Used by the `StatusBadge` component. Maps entity statuses to visual categories:
 | Category            | Colour                | Entity statuses                                      |
 | ------------------- | --------------------- | ---------------------------------------------------- |
 | `initial` (grey)    | `bg-status-initial`   | logged, pending, booked                              |
-| `progress` (blue)   | `bg-status-progress`  | awaiting_payment, in_production, confirmed           |
+| `progress` (rose)   | `bg-status-progress`  | awaiting_payment, in_production, confirmed           |
 | `attention` (amber) | `bg-status-attention` | reopened, done_pending_approval, rescheduled         |
 | `success` (green)   | `bg-status-success`   | closed, approved, delivered, paid_in_full, completed |
 | `negative` (red)    | `bg-status-negative`  | cancelled, no_show                                   |
@@ -40,7 +40,7 @@ Used by `CraftableStatusBadge`. Maps craftable-level status keys to the standard
 | Craftable status   | Category            | Colour                |
 | ------------------ | ------------------- | --------------------- |
 | `not_started`      | `initial` (grey)    | `bg-status-initial`   |
-| `in_progress`      | `progress` (blue)   | `bg-status-progress`  |
+| `in_progress`      | `progress` (rose)   | `bg-status-progress`  |
 | `pending_approval` | `attention` (amber) | `bg-status-attention` |
 | `all_approved`     | `success` (green)   | `bg-status-success`   |
 
