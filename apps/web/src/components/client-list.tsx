@@ -296,7 +296,10 @@ function ClientCard({
       <p className="truncate font-mono text-xs text-muted-foreground tabular-nums max-md:col-span-2 md:text-sm">
         {localClient.phone ?? <span aria-hidden="true">—</span>}
       </p>
-      <p className="truncate text-xs text-muted-foreground max-md:col-span-2 md:text-sm">
+      {/* On phones an empty email takes no row; on desktop the column keeps its dash */}
+      <p
+        className={`truncate text-xs text-muted-foreground max-md:col-span-2 md:text-sm ${localClient.email ? "" : "max-md:hidden"}`}
+      >
         {localClient.email ?? <span aria-hidden="true">—</span>}
       </p>
 

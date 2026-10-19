@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import type { LargeOrderListRow } from "./actions";
 import { NativeSelect } from "@/components/ui/native-select";
 import { formatMoney } from "@/i18n";
+import { cn } from "@/lib/utils";
 
 type Props = { orders: LargeOrderListRow[] };
 
@@ -20,6 +21,24 @@ const STATUS_OPTIONS = [
   "paid_in_full",
   "cancelled",
 ] as const;
+
+/** Balance still owed on a ready/delivered order is the one to chase. */
+function balanceClass(order: LargeOrderListRow): string {
+  if (order.balanceDue > 0 && (order.status === "delivered" || order.status === "ready"))
+    return "font-semibold text-status-attention-foreground";
+  if (order.balanceDue === 0) return "text-status-success-foreground";
+  return "";
+}
+
+function formatEta(date: Date | string | null): string {
+  if (!date) return "—";
+  return new Date(date).toLocaleDateString("es-CO", {
+    timeZone: "America/Bogota",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
 
 export function LargeOrdersTable({ orders }: Props) {
   const t = useTranslations("largeOrders");
@@ -55,7 +74,39 @@ export function LargeOrdersTable({ orders }: Props) {
         </NativeSelect>
       </div>
 
-      <div className="rounded-md border overflow-x-auto">
+      {/* Below desktop width: one card per order, the whole card opens it */}
+      <ul className="grid gap-2.5 md:grid-cols-2 xl:hidden">
+        {filtered.map((order) => (
+          <li key={order.id}>
+            <Link
+              href={`/large-orders/${order.id}`}
+              className="block rounded-xl border bg-card px-3.5 py-3 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+            >
+              <div className="flex items-baseline justify-between gap-3">
+                <p className="min-w-0 truncate text-sm font-semibold">{order.clientName}</p>
+                <StatusBadge
+                  status={order.status}
+                  label={t(`status_${order.status}` as Parameters<typeof t>[0])}
+                />
+              </div>
+              <p className="mt-0.5 truncate text-xs text-muted-foreground">{order.description}</p>
+              <div className="mt-2.5 flex items-end justify-between gap-3 text-xs text-muted-foreground">
+                <span>{formatEta(order.estimatedDeliveryAt)}</span>
+                <span className="text-right">
+                  <span className="block font-mono text-base font-medium text-foreground tabular-nums">
+                    {formatMoney(order.totalPrice)}
+                  </span>
+                  <span className={cn("font-mono tabular-nums", balanceClass(order))}>
+                    {t("colBalance")} {formatMoney(order.balanceDue)}
+                  </span>
+                </span>
+              </div>
+            </Link>
+          </li>
+        ))}
+      </ul>
+
+      <div className="hidden overflow-x-auto rounded-xl border xl:block">
         <table className="w-full text-sm">
           <thead className="bg-muted/50">
             <tr>
@@ -89,18 +140,7 @@ export function LargeOrdersTable({ orders }: Props) {
                   {formatMoney(order.totalPrice)}
                 </td>
                 <td className="px-4 py-2 text-right font-mono tabular-nums">
-                  <span
-                    className={
-                      order.balanceDue > 0 &&
-                      (order.status === "delivered" || order.status === "ready")
-                        ? "text-status-attention-foreground font-semibold"
-                        : order.balanceDue === 0
-                          ? "text-status-success-foreground"
-                          : ""
-                    }
-                  >
-                    {formatMoney(order.balanceDue)}
-                  </span>
+                  <span className={balanceClass(order)}>{formatMoney(order.balanceDue)}</span>
                 </td>
                 <td className="px-4 py-2">
                   <StatusBadge
@@ -109,14 +149,7 @@ export function LargeOrdersTable({ orders }: Props) {
                   />
                 </td>
                 <td className="px-4 py-2 text-muted-foreground text-xs">
-                  {order.estimatedDeliveryAt
-                    ? new Date(order.estimatedDeliveryAt).toLocaleDateString("es-CO", {
-                        timeZone: "America/Bogota",
-                        day: "2-digit",
-                        month: "short",
-                        year: "numeric",
-                      })
-                    : "—"}
+                  {formatEta(order.estimatedDeliveryAt)}
                 </td>
                 <td className="px-2 py-2 text-muted-foreground" aria-hidden="true">
                   <ChevronRightIcon className="size-4 transition-transform group-hover:translate-x-0.5 group-hover:text-foreground" />

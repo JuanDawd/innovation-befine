@@ -343,9 +343,9 @@ export function CheckoutForm({
                       const edit = overrideEdits[li.ticketItemId];
                       const effectivePrice = li.overridePrice ?? li.unitPrice;
                       return (
-                        <div key={li.ticketItemId} className="mt-1">
-                          <div className="flex items-center justify-between gap-2">
-                            <p className="text-sm">
+                        <div key={li.ticketItemId} className="mt-0.5 first:mt-0">
+                          <div className="flex items-baseline justify-between gap-2">
+                            <p className="min-w-0 text-sm">
                               {li.serviceName}
                               {li.variantName &&
                               li.variantName !== "Estándar" &&
@@ -354,41 +354,44 @@ export function CheckoutForm({
                                 : ""}
                               {li.quantity > 1 ? ` ×${li.quantity}` : ""}
                             </p>
-                            <div className="flex items-center gap-1 shrink-0">
-                              {li.overridePrice !== null && (
-                                <span className="text-xs line-through text-muted-foreground">
-                                  {formatMoney(li.unitPrice)}
+                            {/* Item price only when it differs from the ticket total beside it */}
+                            {(tk.lineItems.length > 1 || li.overridePrice !== null) && (
+                              <span className="flex shrink-0 items-baseline gap-1">
+                                {li.overridePrice !== null && (
+                                  <span className="text-xs text-muted-foreground line-through">
+                                    {formatMoney(li.unitPrice)}
+                                  </span>
+                                )}
+                                <span className="font-mono text-xs tabular-nums">
+                                  {formatMoney(effectivePrice * li.quantity)}
                                 </span>
-                              )}
-                              <span className="font-mono tabular-nums text-xs">
-                                {formatMoney(effectivePrice * li.quantity)}
                               </span>
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  setOverrideEdits((prev) =>
-                                    prev[li.ticketItemId]
-                                      ? (() => {
-                                          const n = { ...prev };
-                                          delete n[li.ticketItemId];
-                                          return n;
-                                        })()
-                                      : {
-                                          ...prev,
-                                          [li.ticketItemId]: {
-                                            price: String(li.overridePrice ?? li.unitPrice),
-                                            reason: "",
-                                            saving: false,
-                                          },
-                                        },
-                                  )
-                                }
-                                className="text-xs text-muted-foreground underline hover:text-foreground"
-                              >
-                                {t("adjust")}
-                              </button>
-                            </div>
+                            )}
                           </div>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setOverrideEdits((prev) =>
+                                prev[li.ticketItemId]
+                                  ? (() => {
+                                      const n = { ...prev };
+                                      delete n[li.ticketItemId];
+                                      return n;
+                                    })()
+                                  : {
+                                      ...prev,
+                                      [li.ticketItemId]: {
+                                        price: String(li.overridePrice ?? li.unitPrice),
+                                        reason: "",
+                                        saving: false,
+                                      },
+                                    },
+                              )
+                            }
+                            className="-ml-1 rounded px-1 text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none pointer-coarse:min-h-11"
+                          >
+                            {t("adjust")}
+                          </button>
                           {edit && (
                             <div className="mt-1 flex gap-1">
                               <Input
@@ -444,7 +447,7 @@ export function CheckoutForm({
                       );
                     })}
                   </div>
-                  <span className="font-mono tabular-nums text-sm shrink-0">
+                  <span className="shrink-0 font-mono text-sm font-medium tabular-nums">
                     {formatMoney(tk.total)}
                   </span>
                 </label>
