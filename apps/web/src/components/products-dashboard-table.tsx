@@ -4,7 +4,13 @@ import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { type LucideIcon, Loader2Icon, PackageIcon, ClockIcon } from "lucide-react";
+import {
+  type LucideIcon,
+  ChevronRightIcon,
+  Loader2Icon,
+  PackageIcon,
+  ClockIcon,
+} from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ProductStatusBadge, type ProductStatusKey } from "@/components/ui/product-status-badge";
 import { ProductProgressBar } from "@/components/ui/product-progress-bar";
@@ -39,7 +45,7 @@ function DashboardSection({
 
   return (
     <div className="flex flex-col gap-2">
-      <h2 className="text-base font-semibold">{title}</h2>
+      <h2 className="text-lg font-semibold">{title}</h2>
       {rows.length === 0 ? (
         <EmptyState icon={icon} title={emptyText} className="py-8" />
       ) : (
@@ -56,7 +62,9 @@ function DashboardSection({
                   {t("colLargeOrder")}
                 </th>
                 <th className="px-3 py-2.5 text-left font-medium">{t("colProgress")}</th>
-                <th className="px-3 py-2.5 text-left font-medium">{t("colDetail")}</th>
+                <th className="w-10 px-2 py-2.5">
+                  <span className="sr-only">{t("colDetail")}</span>
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -68,9 +76,18 @@ function DashboardSection({
                     : t("noAssigned");
 
                 return (
-                  <tr key={row.id} className="hover:bg-muted/30">
+                  <tr key={row.id} className="group relative hover:bg-muted/40">
                     <td className="px-3 py-2.5">
-                      <ProductStatusBadge status={statusKey} />
+                      {/* Stretched link: the whole row opens the product */}
+                      <Link
+                        href={`${detailBase}/${row.id}`}
+                        aria-label={t("openDetailLabel", {
+                          order: row.largeOrderClientName ?? "none",
+                        })}
+                        className="after:absolute after:inset-0 focus-visible:outline-none focus-visible:after:rounded-sm focus-visible:after:ring-3 focus-visible:after:ring-ring/50"
+                      >
+                        <ProductStatusBadge status={statusKey} />
+                      </Link>
                     </td>
                     <td className="px-3 py-2.5 text-muted-foreground hidden sm:table-cell max-w-[160px] truncate">
                       {assigned}
@@ -88,9 +105,9 @@ function DashboardSection({
                           row.largeOrderId && (
                             <Link
                               href={`/large-orders/${row.largeOrderId}#produccion`}
-                              className="text-xs font-medium text-status-attention-foreground hover:underline"
+                              className="relative z-10 text-xs font-medium text-status-attention-foreground hover:underline"
                             >
-                              {row.unassignedQuantity} uds. sin asignar
+                              {t("unassignedUnits", { count: row.unassignedQuantity })}
                             </Link>
                           )}
                       </div>
@@ -100,16 +117,18 @@ function DashboardSection({
                         <span className="text-xs tabular-nums text-muted-foreground whitespace-nowrap">
                           {row.approvedPieces}/{row.totalPieces}
                         </span>
-                        <ProductProgressBar pct={row.progressPct} />
+                        {/* Same numbers as the label beside it (this product's pieces) */}
+                        <ProductProgressBar
+                          pct={
+                            row.totalPieces > 0
+                              ? Math.round((row.approvedPieces / row.totalPieces) * 100)
+                              : 0
+                          }
+                        />
                       </div>
                     </td>
-                    <td className="px-3 py-2.5">
-                      <Link
-                        href={`${detailBase}/${row.id}`}
-                        className="text-xs text-primary underline-offset-4 hover:underline"
-                      >
-                        {t("viewDetail")}
-                      </Link>
+                    <td className="px-2 py-2.5 text-muted-foreground" aria-hidden="true">
+                      <ChevronRightIcon className="size-4 transition-transform group-hover:translate-x-0.5 group-hover:text-foreground" />
                     </td>
                   </tr>
                 );

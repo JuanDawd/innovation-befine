@@ -3,8 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { ShoppingBagIcon } from "lucide-react";
-import { buttonVariants } from "@/components/ui/button";
+import { ChevronRightIcon, ShoppingBagIcon } from "lucide-react";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import type { LargeOrderListRow } from "./actions";
@@ -66,13 +65,23 @@ export function LargeOrdersTable({ orders }: Props) {
               <th className="px-4 py-2 text-right font-medium font-mono">{t("colBalance")}</th>
               <th className="px-4 py-2 text-left font-medium">{t("colStatus")}</th>
               <th className="px-4 py-2 text-left font-medium">{t("colETA")}</th>
-              <th className="px-4 py-2 text-left font-medium">{t("colActions")}</th>
+              <th className="w-10 px-2 py-2">
+                <span className="sr-only">{t("colActions")}</span>
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
             {filtered.map((order) => (
-              <tr key={order.id} className="hover:bg-muted/30">
-                <td className="px-4 py-2 font-medium">{order.clientName}</td>
+              <tr key={order.id} className="group relative hover:bg-muted/40">
+                <td className="px-4 py-2.5 font-medium">
+                  {/* Stretched link: the whole row opens the order */}
+                  <Link
+                    href={`/large-orders/${order.id}`}
+                    className="after:absolute after:inset-0 focus-visible:outline-none focus-visible:after:rounded-sm focus-visible:after:ring-3 focus-visible:after:ring-ring/50"
+                  >
+                    {order.clientName}
+                  </Link>
+                </td>
                 <td className="px-4 py-2 max-w-50 truncate text-muted-foreground">
                   {order.description}
                 </td>
@@ -109,13 +118,8 @@ export function LargeOrdersTable({ orders }: Props) {
                       })
                     : "—"}
                 </td>
-                <td className="px-4 py-2">
-                  <Link
-                    href={`/large-orders/${order.id}`}
-                    className={buttonVariants({ variant: "outline", size: "sm" })}
-                  >
-                    {t("viewDetail")}
-                  </Link>
+                <td className="px-2 py-2 text-muted-foreground" aria-hidden="true">
+                  <ChevronRightIcon className="size-4 transition-transform group-hover:translate-x-0.5 group-hover:text-foreground" />
                 </td>
               </tr>
             ))}

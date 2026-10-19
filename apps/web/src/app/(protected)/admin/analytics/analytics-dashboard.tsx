@@ -506,6 +506,15 @@ export function AnalyticsDashboard({ initialData }: { initialData: AnalyticsSumm
           icon={BarChart3Icon}
           title={t("emptyTitle")}
           description={t("emptyDescription")}
+          action={
+            period !== "month"
+              ? {
+                  // Widen the window instead of leaving the admin at a dead end
+                  label: t("emptyTryPeriod", { period: period === "day" ? "week" : "month" }),
+                  onClick: () => setPeriod(period === "day" ? "week" : "month"),
+                }
+              : undefined
+          }
         />
       )}
 

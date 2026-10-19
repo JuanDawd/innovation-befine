@@ -9,7 +9,7 @@
  */
 
 import { notifyDataChanged } from "@/lib/data-events";
-import { useState, useTransition, useEffect, useRef } from "react";
+import { cloneElement, useState, useTransition, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
@@ -74,7 +74,8 @@ function ClientDialog({
   onSuccess,
 }: {
   config: ClientDialogMode;
-  trigger: React.ReactNode;
+  /** A button element; the dialog attaches its own onClick to it. */
+  trigger: React.ReactElement<{ onClick?: () => void }>;
   onSuccess: (client: ClientRow) => void;
 }) {
   const t = useTranslations("clients");
@@ -125,10 +126,7 @@ function ClientDialog({
 
   return (
     <>
-      {/* Clone trigger to attach onClick */}
-      <button type="button" onClick={handleOpen} className="contents">
-        {trigger}
-      </button>
+      {cloneElement(trigger, { onClick: handleOpen })}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-md">
@@ -221,7 +219,7 @@ function ClientDialog({
   );
 }
 
-// ─── Client Card ──────────────────────────────────────────────────────────────
+// ─── Client Row ──────────────────────────────────────────────────────────────
 
 function ClientCard({
   client,
@@ -265,45 +263,56 @@ function ClientCard({
     });
   }
 
+  const archived = !localClient.isActive;
+  const iconButton = "text-muted-foreground pointer-coarse:size-11";
+
   return (
-    <div
-      className={`flex items-start justify-between rounded-xl border p-4 ${!localClient.isActive ? "opacity-60" : ""}`}
-    >
-      <div className="min-w-0 flex-1 space-y-1">
+    <li className="grid gap-x-6 gap-y-1 px-4 py-3 md:grid-cols-[minmax(0,1.3fr)_minmax(0,0.8fr)_minmax(0,1.2fr)_auto] md:items-center">
+      <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
-          <p className="font-medium text-sm">{localClient.name}</p>
-          {!localClient.isActive && (
+          <p
+            className={`truncate text-sm font-medium ${archived ? "text-muted-foreground" : "text-foreground"}`}
+          >
+            {localClient.name}
+          </p>
+          {archived && (
             <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
               {t("archived")}
             </span>
           )}
           <NoShowBadge count={localClient.noShowCount} />
         </div>
-        <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-muted-foreground">
-          {localClient.phone && <span>{localClient.phone}</span>}
-          {localClient.email && <span>{localClient.email}</span>}
-        </div>
         {localClient.notes && (
-          <p className="text-xs text-muted-foreground italic">{localClient.notes}</p>
+          <p className="mt-0.5 truncate text-xs text-muted-foreground italic">
+            {localClient.notes}
+          </p>
         )}
         {localClient.noShowCount > 0 && localClient.noShowCount < NO_SHOW_WARNING_THRESHOLD && (
-          <p className="text-xs text-muted-foreground">
+          <p className="mt-0.5 text-xs text-muted-foreground">
             {t("noShowCount")}: {localClient.noShowCount}
           </p>
         )}
       </div>
+      <p className="truncate font-mono text-xs text-muted-foreground tabular-nums max-md:col-span-2 md:text-sm">
+        {localClient.phone ?? <span aria-hidden="true">—</span>}
+      </p>
+      <p className="truncate text-xs text-muted-foreground max-md:col-span-2 md:text-sm">
+        {localClient.email ?? <span aria-hidden="true">—</span>}
+      </p>
 
-      <div className="ml-3 flex shrink-0 items-center gap-1">
+      <div className="-mr-2 flex shrink-0 items-center justify-end gap-0.5 max-md:row-start-1 max-md:col-start-2 max-md:self-start">
         {localClient.isActive && (
           <ClientDialog
             config={{ mode: "edit", client: localClient }}
             trigger={
-              <button
-                className="text-muted-foreground hover:text-foreground p-1"
-                aria-label={t("editClient")}
+              <Button
+                variant="ghost"
+                size="icon"
+                className={iconButton}
+                aria-label={`${t("editClient")}: ${localClient.name}`}
               >
-                <PencilIcon className="size-4" />
-              </button>
+                <PencilIcon aria-hidden="true" />
+              </Button>
             }
             onSuccess={(updated) => {
               setLocalClient(updated);
@@ -315,13 +324,15 @@ function ClientCard({
         {localClient.isActive ? (
           <ConfirmationDialog
             trigger={
-              <button
-                className="text-muted-foreground hover:text-destructive p-1"
-                aria-label={t("archive")}
+              <Button
+                variant="ghost"
+                size="icon"
+                className={`${iconButton} hover:text-destructive`}
+                aria-label={`${t("archive")}: ${localClient.name}`}
                 disabled={isPending}
               >
-                <ArchiveIcon className="size-4" />
-              </button>
+                <ArchiveIcon aria-hidden="true" />
+              </Button>
             }
             title={t("archiveConfirmTitle", { name: localClient.name })}
             description={t("archiveConfirmDescription")}
@@ -330,17 +341,19 @@ function ClientCard({
             onConfirm={handleArchive}
           />
         ) : (
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={handleUnarchive}
             disabled={isPending}
-            className="text-muted-foreground hover:text-foreground p-1"
-            aria-label={t("unarchive")}
+            className={iconButton}
+            aria-label={`${t("unarchive")}: ${localClient.name}`}
           >
-            <ArchiveRestoreIcon className="size-4" />
-          </button>
+            <ArchiveRestoreIcon aria-hidden="true" />
+          </Button>
         )}
       </div>
-    </div>
+    </li>
   );
 }
 
@@ -443,10 +456,12 @@ export function ClientList({ initialClients }: { initialClients: ClientRow[] }) 
           <EmptyState title={t("emptyTitle")} description={t("emptyDescription")} />
         )
       ) : (
-        <div className="space-y-2">
-          {visible.map((client) => (
-            <ClientCard key={client.id} client={client} onUpdate={handleUpdated} />
-          ))}
+        <div className="space-y-3">
+          <ul className="divide-y overflow-hidden rounded-xl border bg-card max-md:[&>li]:grid-cols-[minmax(0,1fr)_auto]">
+            {visible.map((client) => (
+              <ClientCard key={client.id} client={client} onUpdate={handleUpdated} />
+            ))}
+          </ul>
           <ShowMore remaining={remaining} onClick={showMore} />
         </div>
       )}
