@@ -55,6 +55,12 @@ Master task list. Each task is atomic: one unit of work that can be completed, r
 | Large order payments           | **Multiple partial payments** from day one — no single deposit column. `large_order_payments` is a running ledger                                                                        |
 | Data migration scope           | **Clients, employees, and catalog only** — no historical tickets or payouts. Analytics baseline starts from go-live                                                                      |
 | Training guide audience        | **Cashier_admin, secretary, admin** roles only — stylists and clothiers have simple enough interfaces                                                                                    |
+| Producto vs Pedido grande      | **Merged into one Pedido** — size is the only difference; "grandes" is a 10+ units filter. See `pedidos-spec.md`                                                                         |
+| Production unit                | **Units per size cell**, split among clothiers by assignment; one record drives pay and progress                                                                                         |
+| Clothier day closing           | **Required** ("Cerrar mi jornada", 0 must be confirmed); pay settlement blocked until approved; business-day close only warns                                                            |
+| After-hours money              | Pedido payments and garment sales attach to the **next business day** with a "fuera de horario" note; services only in an open day                                                       |
+| Stock                          | **Ledger per variant + size + colour**; Vender prenda blocks overselling (admin override)                                                                                                |
+| Activity log                   | **General, immutable**, written in the action's transaction; includes sign-ins                                                                                                           |
 
 ---
 
@@ -684,6 +690,42 @@ Update `apps/web/src/lib/db/README.md` with a short "When to use `getDb()` vs `g
 
 ---
 
+## Phase 11 — Pedidos (unified orders, production, stock, activity log)
+
+> Added 2026-10-19 after a design grilling session. Spec: [`pedidos-spec.md`](pedidos-spec.md) · tasks: [`tasks/phase-11-pedidos.md`](tasks/phase-11-pedidos.md). One Pedido model replaces Productos and Pedidos grandes; production counted in units (assignments per size cell) drives both pay and progress; all money goes through the till; stock ledger per variant + size + colour; general immutable activity log incl. logins. No data migration — existing orders/products are test data.
+
+| ID   | Task                                                         | Status  | Dependencies                 |
+| ---- | ------------------------------------------------------------ | ------- | ---------------------------- |
+| T110 | Sizes and colours catalog                                    | pending | —                            |
+| T111 | Pedido core schema                                           | pending | T110                         |
+| T112 | Production schema                                            | pending | T111                         |
+| T113 | Money and stock schema                                       | pending | T111                         |
+| T114 | Activity log foundation                                      | pending | —                            |
+| T115 | New settings (secretary payments, claim limit, scrapped pay) | pending | —                            |
+| T116 | Create / edit pedido                                         | pending | T111, T030                   |
+| T117 | Pedidos list and detail                                      | pending | T116, T118                   |
+| T118 | Derived status engine                                        | pending | T112, T113                   |
+| T119 | Edit rules after production starts                           | pending | T116, T112                   |
+| T120 | Admin-approved restructure                                   | pending | T119, T127, T128             |
+| T121 | Deliveries in units                                          | pending | T112                         |
+| T122 | Assigning work                                               | pending | T112                         |
+| T123 | Mi trabajo (clothier)                                        | pending | T122, T115                   |
+| T124 | Producción review queue                                      | pending | T123                         |
+| T125 | Cerrar mi jornada                                            | pending | T123, T124                   |
+| T126 | Clothier payroll on approved units                           | pending | T124, T125                   |
+| T127 | Pedido payments and the till                                 | pending | T113, T115                   |
+| T128 | Stock ledger and Inventario                                  | pending | T113, T124                   |
+| T129 | Vender prenda from stock                                     | pending | T128, T127                   |
+| T130 | Caja de hoy and close summary by source                      | pending | T127, T129, T125             |
+| T131 | Activity log coverage                                        | pending | T114                         |
+| T132 | Actividad screen and Historial tabs                          | pending | T131                         |
+| T133 | Analítica additions                                          | pending | T127, T126, T128             |
+| T134 | Navigation and RBAC                                          | pending | T117, T123, T124, T128, T132 |
+| T135 | Retire the old model and reset test data                     | pending | T134                         |
+| T136 | E2E, training guide and screenshots                          | pending | T135                         |
+
+---
+
 ## POST-MVP — Future enhancements
 
 > Tracked in `docs/roadmap-post-mvp.md` (browse by category at `/admin/roadmap`).
@@ -718,7 +760,8 @@ Update `apps/web/src/lib/db/README.md` with a short "When to use `getDb()` vs `g
 | 9 — Offline               | 5       | 5       | 0           |
 | 9R — Remediation          | 16      | 15      | 0           |
 | 10 — Polish               | 9       | 0       | 0           |
-| **Total**                 | **201** | **161** | **0**       |
+| 11 — Pedidos              | 27      | 0       | 0           |
+| **Total**                 | **228** | **161** | **0**       |
 
 ---
 
