@@ -952,6 +952,16 @@
 
 ---
 
+### M-73 — 142 dependency advisories (4 critical, 59 high) from `pnpm audit`
+
+- **Severity:** Medium (contained criticals reachable in production)
+- **Status:** Resolved (2026-10-23) — 0 critical; remaining highs are build-time only
+- **Affected:** `apps/web`, `packages/db`, `packages/types` dependencies; `.github/workflows/ci.yml`
+- **Description:** `pnpm audit --prod` (2026-10-23): 6 critical / 63 high. Production-reachable: **next 15.5.16** (unauthenticated RCE in the image optimizer, middleware/proxy bypass, server-action SSRF/DoS), **better-auth 1.6.2** (OAuth account takeover / token replay, stored XSS), **@sentry/nextjs 10.48** (middleware bypass via tunnel route), **ws 8.20** (DoS — Neon transaction pool), **zod 4.4.3** (memory exhaustion). Most of the rest came through the `shadcn` CLI sitting in `dependencies`.
+- **Fix:** next 15.5.28, better-auth ~1.6.33 (stays on 1.6; 1.7.12 was 3 days old), @sentry/nextjs 10.76.2, ws 8.22, zod 4.6.7; `shadcn` moved to devDependencies. Now 0 critical / 41 high, all build-time transitive (next-pwa → workbox/webpack/babel, Sentry bundler plugin, postcss pinned by next). `sharp` 0.34 (pinned by next 15.5; unused on Vercel) left as is. CI: critical audit now blocks; high stays informational. Verified: turbo typecheck/test/lint green, `next build` succeeds.
+
+---
+
 ## Low-priority issues
 
 ### L-09 — No file/image storage research
@@ -1735,3 +1745,4 @@
 | L-49     | 2026-10-23    | Transaction pool size configurable via DB_TX_POOL_MAX (default 5)                                               | fix/vikunja-backlog          |
 | L-52     | 2026-10-23    | Notification badge clears on panel close; manifest + service worker no longer redirected to /login              | fix/vikunja-backlog          |
 | M-68     | 2026-10-23    | Ticket and cloth-sale forms toast thrown errors; retries reuse an input-tied idempotency key                    | fix/vikunja-backlog          |
+| M-73     | 2026-10-23    | Patched next/better-auth/sentry/ws/zod (0 critical); shadcn → devDeps; CI blocks on critical                    | fix/vikunja-backlog          |
