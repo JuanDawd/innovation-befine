@@ -1551,6 +1551,16 @@
 
 ---
 
+### L-48 — `trustedOrigins` hard-coded to the vercel.app domain in production
+
+- **Severity:** Low
+- **Status:** Resolved (2026-10-23)
+- **Affected:** `apps/web/src/lib/auth.ts`
+- **Description:** Any production build served from another origin (custom domain, self-hosted) was rejected by Better Auth unless code changed.
+- **Fix:** `lib/trusted-origins.ts` `resolveTrustedOrigins()` trusts the origins of `BETTER_AUTH_URL`, `NEXT_PUBLIC_APP_URL` and a comma-separated `BETTER_AUTH_TRUSTED_ORIGINS`; the vercel.app origin (prod) / `localhost:3000` (dev) stay as the base so nothing that works today breaks. Tests: `lib/__tests__/trusted-origins.test.ts`.
+
+---
+
 ## Lessons learned
 
 > This section is populated during development. Each entry documents what went wrong, the root cause, and how to prevent it in the future.
@@ -1691,3 +1701,4 @@
 | M-59     | 2026-10-23    | Rate limits actually enforced (fake eval contract fixed); Upstash when configured; per-limiter prefix; eviction | fix/vikunja-backlog          |
 | M-50     | 2026-10-23    | robots.txt served by app/robots.ts (disallow all) and public in middleware                                      | fix/vikunja-backlog          |
 | M-49     | 2026-10-23    | Verified root metadata already sets a description (fixed earlier)                                               | fix/vikunja-backlog          |
+| L-48     | 2026-10-23    | trustedOrigins derived from BETTER_AUTH_URL / NEXT_PUBLIC_APP_URL / BETTER_AUTH_TRUSTED_ORIGINS                 | fix/vikunja-backlog          |
