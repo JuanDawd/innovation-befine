@@ -8,6 +8,8 @@
  */
 
 import { headers } from "next/headers";
+import * as Sentry from "@sentry/nextjs";
+import { logger } from "@/lib/logger";
 import { eq, and, inArray } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { getDb, getTxDb } from "@/lib/db";
@@ -247,7 +249,16 @@ export async function createTicket(rawInput: unknown): Promise<ActionResult<Tick
         createdAt: result.ticket.createdAt,
       },
     };
-  } catch {
+  } catch (err) {
+    // M-61: keep the generic message for the user, but never lose the cause.
+    logger.error(
+      { err, action: "createTicket", businessDayId: businessDay.id, employeeId: input.employeeId },
+      "createTicket failed",
+    );
+    Sentry.captureException(err, {
+      tags: { action: "createTicket" },
+      extra: { businessDayId: businessDay.id, idempotencyKey: input.idempotencyKey },
+    });
     return {
       success: false,
       error: { code: "INTERNAL_ERROR", message: "Error al crear el ticket" },

@@ -892,6 +892,16 @@
 
 ---
 
+### M-61 — `createTicket` swallows errors without logging or Sentry
+
+- **Severity:** Medium
+- **Status:** Resolved (2026-10-23)
+- **Affected:** T035 `tickets/actions/index.ts` `createTicket`
+- **Description:** Any error inside the ticket transaction became a generic `INTERNAL_ERROR` with no log line or Sentry event; during the load test the H-47 crash surfaced only as `INTERNAL_ERROR` for stylists.
+- **Fix:** `catch (err)` → `logger.error` + `Sentry.captureException` (tag `action: createTicket`, business day + idempotency key), user still sees the generic message. `lib/logger.ts` doc now states the rule for caught errors. Test: `tickets/__tests__/create-ticket.test.ts`.
+
+---
+
 ## Low-priority issues
 
 ### L-09 — No file/image storage research
@@ -1623,3 +1633,4 @@
 | H-49     | 2026-10-23    | Close day blocked atomically while tickets are unpaid; `voided` status + `voidTicket` with reason        | fix/vikunja-backlog          |
 | H-50     | 2026-10-23    | Cloth sales: idempotency key + required payment method; counted in analytics and day revenue             | fix/vikunja-backlog          |
 | M-56     | 2026-10-23    | createAssignment locks the order_items row (FOR UPDATE) before the capacity SUM                          | fix/vikunja-backlog          |
+| M-61     | 2026-10-23    | createTicket catch logs + Sentry.captureException; generic message kept                                  | fix/vikunja-backlog          |
