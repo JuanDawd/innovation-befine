@@ -3,13 +3,13 @@
 # NEON_LOCAL_PROXY=1). Never point E2E at a shared or production database.
 #
 #   docker compose -f apps/web/e2e/db/compose.yaml up -d --wait
-#   DATABASE_URL=postgres://postgres:postgres@localhost:5432/main
+#   DATABASE_URL=postgres://postgres:postgres@localhost:5432/main  # ggignore — throwaway test database, not a secret
 services:
   postgres:
     image: postgres:17
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: postgres  # ggignore — throwaway test database, not a secret
       POSTGRES_DB: main
     ports: ["54329:5432"]
     tmpfs: ["/var/lib/postgresql/data"]
@@ -20,7 +20,7 @@ services:
   neon-proxy:
     image: ghcr.io/timowilhelm/local-neon-http-proxy:main
     environment:
-      PG_CONNECTION_STRING: postgres://postgres:postgres@postgres:5432/main
+      PG_CONNECTION_STRING: postgres://postgres:postgres@postgres:5432/main  # ggignore — throwaway test database, not a secret
     ports: ["4444:4444"]
     depends_on:
       postgres: { condition: service_healthy }

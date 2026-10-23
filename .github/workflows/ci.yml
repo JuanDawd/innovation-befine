@@ -95,7 +95,7 @@ jobs:
         image: postgres:17
         env:
           POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
+          POSTGRES_PASSWORD: postgres  # ggignore — throwaway test database, not a secret
           POSTGRES_DB: main
         ports: ["5432:5432"]
         options: >-
@@ -104,13 +104,13 @@ jobs:
       neon-proxy:
         image: ghcr.io/timowilhelm/local-neon-http-proxy:main
         env:
-          PG_CONNECTION_STRING: postgres://postgres:postgres@postgres:5432/main
+          PG_CONNECTION_STRING: postgres://postgres:postgres@postgres:5432/main  # ggignore — throwaway test database, not a secret
         ports: ["4444:4444"]
 
     env:
       NEON_LOCAL_PROXY: "1"
-      DATABASE_URL: postgres://postgres:postgres@localhost:5432/main
-      TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/main
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/main  # ggignore — throwaway test database, not a secret
+      TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/main  # ggignore — throwaway test database, not a secret
 
     steps:
       - uses: actions/checkout@v4
@@ -147,7 +147,7 @@ jobs:
         image: postgres:17
         env:
           POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
+          POSTGRES_PASSWORD: postgres  # ggignore — throwaway test database, not a secret
           POSTGRES_DB: main
         ports: ["5432:5432"]
         options: >-
@@ -156,13 +156,13 @@ jobs:
       neon-proxy:
         image: ghcr.io/timowilhelm/local-neon-http-proxy:main
         env:
-          PG_CONNECTION_STRING: postgres://postgres:postgres@postgres:5432/main
+          PG_CONNECTION_STRING: postgres://postgres:postgres@postgres:5432/main  # ggignore — throwaway test database, not a secret
         ports: ["4444:4444"]
 
     # Dummy secrets on purpose: nothing here may reach production or send email.
     env:
       NEON_LOCAL_PROXY: "1"
-      DATABASE_URL: postgres://postgres:postgres@localhost:5432/main
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/main  # ggignore — throwaway test database, not a secret
       BETTER_AUTH_SECRET: e2e-only-secret-0123456789abcdef0123456789
       BETTER_AUTH_URL: http://localhost:3000
       NEXT_PUBLIC_APP_URL: http://localhost:3000
