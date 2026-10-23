@@ -4,9 +4,13 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { RefreshCwIcon } from "lucide-react";
 
-const BASE_INTERVAL_MS = 5 * 60 * 1000;
-const MAX_BACKOFF_MS = 30 * 60 * 1000;
-const JITTER_MS = 30 * 1000;
+// L-08: every device in the salon shares one public IP, and /api/version is
+// rate-limited per IP (30/min) — poll every 15 min and re-check on focus at
+// most once a minute (phones lock/unlock constantly).
+const BASE_INTERVAL_MS = 15 * 60 * 1000;
+const MAX_BACKOFF_MS = 60 * 60 * 1000;
+const JITTER_MS = 60 * 1000;
+const MIN_FOCUS_RECHECK_MS = 60 * 1000;
 
 function nextDelay(failures: number): number {
   const base =
@@ -27,6 +31,7 @@ export function VersionBanner() {
     let timer: ReturnType<typeof setTimeout> | null = null;
     let cancelled = false;
     let failures = 0;
+    let lastCheckAt = 0;
 
     function clear() {
       if (timer) {
@@ -43,6 +48,7 @@ export function VersionBanner() {
 
     async function check() {
       if (cancelled || document.hidden) return;
+      lastCheckAt = Date.now();
       try {
         const res = await fetch("/api/version", { cache: "no-store" });
         if (!res.ok) {
@@ -66,8 +72,10 @@ export function VersionBanner() {
       if (cancelled) return;
       if (document.hidden) {
         clear();
-      } else {
+      } else if (Date.now() - lastCheckAt >= MIN_FOCUS_RECHECK_MS) {
         check();
+      } else {
+        schedule();
       }
     }
 

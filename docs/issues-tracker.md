@@ -1601,6 +1601,16 @@
 
 ---
 
+### L-08 — T102 — Polling every 5 minutes may be aggressive
+
+- **Severity:** Low
+- **Status:** Resolved (2026-10-23)
+- **Affected:** T102 `components/version-banner.tsx`
+- **Description:** Each tab polled `/api/version` every 5 minutes and on every return to the tab. With rate limits now actually enforced (M-59) and all salon devices behind one public IP sharing the 30/min `/api/version` bucket, focus re-checks from phones locking/unlocking could hit the cap.
+- **Fix:** 15-min base interval (±1 min jitter, backoff to 60 min); a focus re-check runs only if the last check was ≥ 1 min ago, otherwise the timer is just rescheduled. Pause-while-hidden and backoff from M-55 kept.
+
+---
+
 ## Lessons learned
 
 > This section is populated during development. Each entry documents what went wrong, the root cause, and how to prevent it in the future.
@@ -1746,3 +1756,4 @@
 | L-52     | 2026-10-23    | Notification badge clears on panel close; manifest + service worker no longer redirected to /login              | fix/vikunja-backlog          |
 | M-68     | 2026-10-23    | Ticket and cloth-sale forms toast thrown errors; retries reuse an input-tied idempotency key                    | fix/vikunja-backlog          |
 | M-73     | 2026-10-23    | Patched next/better-auth/sentry/ws/zod (0 critical); shadcn → devDeps; CI blocks on critical                    | fix/vikunja-backlog          |
+| L-08     | 2026-10-23    | Version check every 15 min; focus re-check throttled to 1/min (shared salon IP)                                 | fix/vikunja-backlog          |
