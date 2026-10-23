@@ -149,16 +149,15 @@ jobs:
       # which seed.ts (SEED_*) and the specs (E2E_*) both read.
       - name: Generate ephemeral credentials
         run: |
-          gen() { local v; v="$(openssl rand -hex 24)"; echo "::add-mask::$v"; echo "$v"; }
-          {
-            echo "BETTER_AUTH_SECRET=$(gen)"
-            echo "RESEND_API_KEY=re_$(gen)"
-            for role in ADMIN SECRETARY STYLIST CLOTHIER; do
-              pw="$(gen)Aa1!"
-              echo "SEED_${role}_PASSWORD=$pw"
-              echo "E2E_${role}_PASSWORD=$pw"
-            done
-          } >> "$GITHUB_ENV"
+          # Mask each value before it can appear in any log, then export it.
+          put() { echo "::add-mask::$2"; echo "$1=$2" >> "$GITHUB_ENV"; }
+          put BETTER_AUTH_SECRET "$(openssl rand -hex 24)"
+          put RESEND_API_KEY "re_$(openssl rand -hex 24)"
+          for role in ADMIN SECRETARY STYLIST CLOTHIER; do
+            pw="$(openssl rand -hex 24)Aa1!"
+            put "SEED_${role}_PASSWORD" "$pw"
+            put "E2E_${role}_PASSWORD" "$pw"
+          done
 
       - name: Migrate and seed
         run: |

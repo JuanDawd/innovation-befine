@@ -2,6 +2,7 @@ import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import {
   asRole,
+  containing,
   cop,
   E2E_SERVICE,
   ensureDayOpen,
@@ -32,7 +33,7 @@ test.describe("checkout", () => {
     await secretary.context.close();
 
     await markReady(page, guest);
-    await page.getByRole("link", { name: new RegExp(`Cobrar a ${guest}`) }).click();
+    await page.getByRole("link", { name: containing(`Cobrar a ${guest}`) }).click();
 
     const dialog = page.getByRole("dialog");
     await expect(dialog.getByText(guest).first()).toBeVisible({ timeout: 15_000 });
@@ -57,14 +58,14 @@ test.describe("checkout", () => {
 
     await dialog.getByRole("button", { name: "Confirmar cobro" }).click();
     const confirm = page.getByRole("dialog", {
-      name: new RegExp(`Cobrar ${cop(E2E_SERVICE.price).replace("$", "\\$")} a ${guest}`),
+      name: containing(`Cobrar ${cop(E2E_SERVICE.price)} a ${guest}`),
     });
     await confirm.getByRole("button", { name: "Confirmar" }).click();
 
     await expect(page.getByText("Pago registrado correctamente")).toBeVisible({ timeout: 15_000 });
 
     await page.goto("/cashier");
-    await expect(page.getByRole("link", { name: new RegExp(`Cobrar a ${guest}`) })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: containing(`Cobrar a ${guest}`) })).toHaveCount(0);
   });
 
   test("can't close the day while a ticket is unpaid; a walk-out ticket can be voided", async ({

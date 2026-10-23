@@ -10,6 +10,11 @@ import { expect, type Browser, type Page } from "@playwright/test";
 export const E2E_SERVICE = { name: "E2E Corte", price: 50_000, commission: 20_000 } as const;
 export const E2E_STYLIST = "Estilista";
 
+/** Matches accessible names that contain `text` literally (regex characters escaped). */
+export function containing(text: string): RegExp {
+  return new RegExp(text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+}
+
 /** Unique guest name so specs don't see each other's tickets. */
 export function guestName(prefix: string): string {
   return `${prefix} ${Date.now().toString(36)}`;
@@ -77,9 +82,9 @@ export async function logGuestTicket(page: Page, guest: string): Promise<void> {
 export async function markReady(page: Page, guest: string): Promise<void> {
   await page.goto("/cashier");
   await page
-    .getByRole("button", { name: new RegExp(`Marcar listo para cobrar: ${guest}`) })
+    .getByRole("button", { name: containing(`Marcar listo para cobrar: ${guest}`) })
     .click({ timeout: 15_000 });
-  await expect(page.getByRole("link", { name: new RegExp(`Cobrar a ${guest}`) })).toBeVisible({
+  await expect(page.getByRole("link", { name: containing(`Cobrar a ${guest}`) })).toBeVisible({
     timeout: 15_000,
   });
 }
@@ -87,13 +92,13 @@ export async function markReady(page: Page, guest: string): Promise<void> {
 /** Cashier: charge the guest's awaiting ticket in full, in cash. */
 export async function chargeInCash(page: Page, guest: string, amount: number): Promise<void> {
   await page.goto("/cashier");
-  await page.getByRole("link", { name: new RegExp(`Cobrar a ${guest}`) }).click();
+  await page.getByRole("link", { name: containing(`Cobrar a ${guest}`) }).click();
   const dialog = page.getByRole("dialog");
   await expect(dialog.getByText(guest).first()).toBeVisible({ timeout: 15_000 });
   await dialog.getByRole("button", { name: "Restante" }).first().click();
   await dialog.getByRole("button", { name: "Confirmar cobro" }).click();
   const confirm = page.getByRole("dialog", {
-    name: new RegExp(`Cobrar \\${cop(amount)} a ${guest}`),
+    name: containing(`Cobrar ${cop(amount)} a ${guest}`),
   });
   await confirm.getByRole("button", { name: "Confirmar" }).click();
   await expect(page.getByText("Pago registrado correctamente")).toBeVisible({ timeout: 15_000 });
