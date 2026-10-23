@@ -302,7 +302,8 @@
     "discardChangesDescription": "You have unsaved changes in this variant. Are you sure you want to close it?",
     "discard": "Discard",
     "sellingPriceTitle": "Selling price",
-    "removeVariant": "Remove variant"
+    "removeVariant": "Remove variant",
+    "variantLimitWarning": "This service has {count} variants. More than {limit} get hard to pick on a phone — consider splitting it into several services."
   },
   "clients": {
     "pageTitle": "Clients",

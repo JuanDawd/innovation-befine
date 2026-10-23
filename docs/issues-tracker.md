@@ -1611,6 +1611,16 @@
 
 ---
 
+### L-04 — T023 — No maximum variant count per service
+
+- **Severity:** Low
+- **Status:** Resolved (2026-10-23)
+- **Affected:** T024 `components/service-catalog.tsx`
+- **Description:** A service could have unlimited variants with no signal that the stylist's variant picker was getting unwieldy.
+- **Fix:** Soft limit `VARIANT_SOFT_LIMIT = 10`: above it, the create-service dialog and the service detail show a non-blocking warning suggesting a split into several services.
+
+---
+
 ## Lessons learned
 
 > This section is populated during development. Each entry documents what went wrong, the root cause, and how to prevent it in the future.
@@ -1757,3 +1767,4 @@
 | M-68     | 2026-10-23    | Ticket and cloth-sale forms toast thrown errors; retries reuse an input-tied idempotency key                    | fix/vikunja-backlog          |
 | M-73     | 2026-10-23    | Patched next/better-auth/sentry/ws/zod (0 critical); shadcn → devDeps; CI blocks on critical                    | fix/vikunja-backlog          |
 | L-08     | 2026-10-23    | Version check every 15 min; focus re-check throttled to 1/min (shared salon IP)                                 | fix/vikunja-backlog          |
+| L-04     | 2026-10-23    | Soft warning above 10 active variants per service (create + detail)                                             | fix/vikunja-backlog          |

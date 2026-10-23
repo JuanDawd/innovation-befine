@@ -303,7 +303,8 @@
     "discardChangesDescription": "Tienes cambios sin guardar en esta variante. ¿Seguro que quieres cerrarla?",
     "discard": "Descartar",
     "sellingPriceTitle": "Precio de venta",
-    "removeVariant": "Eliminar variante"
+    "removeVariant": "Eliminar variante",
+    "variantLimitWarning": "Este servicio tiene {count} variantes. Más de {limit} se vuelven difíciles de elegir en el celular — considera dividirlo en varios servicios."
   },
   "clients": {
     "pageTitle": "Clientes",

@@ -256,6 +256,7 @@ function CreateServiceDialog({ onSuccess }: { onSuccess: (service: ServiceRow) =
                   </div>
                 ))}
               </div>
+              <VariantLimitWarning count={fields.length} />
               <Button
                 type="button"
                 variant="outline"
@@ -513,6 +514,23 @@ function VariantEditRow({
         </Button>
       </div>
     </form>
+  );
+}
+
+// L-04: soft limit — past this a service's variant list gets hard to scan on
+// the stylist's phone. A warning, not a block.
+const VARIANT_SOFT_LIMIT = 10;
+
+function VariantLimitWarning({ count }: { count: number }) {
+  const t = useTranslations("catalog");
+  if (count <= VARIANT_SOFT_LIMIT) return null;
+  return (
+    <p
+      role="status"
+      className="rounded-md bg-status-attention px-3 py-2 text-xs text-status-attention-foreground"
+    >
+      {t("variantLimitWarning", { count, limit: VARIANT_SOFT_LIMIT })}
+    </p>
   );
 }
 
@@ -953,7 +971,10 @@ function ServiceCard({
 
             {/* Add variant slot */}
             {localService.isActive && (
-              <div className="mt-2">
+              <div className="mt-2 flex flex-col gap-2">
+                <VariantLimitWarning
+                  count={localService.variants.filter((v) => v.isActive).length}
+                />
                 {openSlot.type === "add" ? (
                   <div>
                     <AddVariantRow
