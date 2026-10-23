@@ -184,23 +184,9 @@ export async function createTicket(rawInput: unknown): Promise<ActionResult<Tick
   const txDb = getTxDb();
   try {
     const result = await txDb.transaction(async (tx) => {
-      // Idempotency: return existing ticket if key already used
-      const existing = await tx
-        .select()
-        .from(tickets)
-        .where(eq(tickets.idempotencyKey, input.idempotencyKey))
-        .limit(1);
-
-      if (existing[0]) {
-        const [empUser] = await tx
-          .select({ name: users.name })
-          .from(employees)
-          .innerJoin(users, eq(employees.userId, users.id))
-          .where(eq(employees.id, existing[0].employeeId))
-          .limit(1);
-        return { ticket: existing[0], employeeName: empUser?.name ?? "" };
-      }
-
+      // Idempotency (L-47): insert-or-nothing on the unique key. A concurrent
+      // retry with the same key waits on the first insert and then does
+      // nothing, instead of failing on the unique constraint.
       const [newTicket] = await tx
         .insert(tickets)
         .values({
@@ -211,7 +197,24 @@ export async function createTicket(rawInput: unknown): Promise<ActionResult<Tick
           idempotencyKey: input.idempotencyKey,
           createdBy: createdByEmployeeId,
         })
+        .onConflictDoNothing({ target: tickets.idempotencyKey })
         .returning();
+
+      if (!newTicket) {
+        const [existing] = await tx
+          .select()
+          .from(tickets)
+          .where(eq(tickets.idempotencyKey, input.idempotencyKey))
+          .limit(1);
+        if (!existing) throw new Error("Idempotency key conflict but no ticket found");
+        const [empUser] = await tx
+          .select({ name: users.name })
+          .from(employees)
+          .innerJoin(users, eq(employees.userId, users.id))
+          .where(eq(employees.id, existing.employeeId))
+          .limit(1);
+        return { ticket: existing, employeeName: empUser?.name ?? "" };
+      }
 
       await tx.insert(ticketItems).values({
         ticketId: newTicket.id,

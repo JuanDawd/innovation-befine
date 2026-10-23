@@ -1501,6 +1501,16 @@
 
 ---
 
+### L-47 — `createTicket` idempotency check is select-then-insert
+
+- **Severity:** Low
+- **Status:** Resolved (2026-10-23)
+- **Affected:** T035 `tickets/actions/index.ts` `createTicket`
+- **Description:** The transaction selected by `idempotency_key` and inserted if absent. Two concurrent submits with the same key could both miss the select; the second then failed on the unique constraint and the user saw `INTERNAL_ERROR` instead of their ticket.
+- **Fix:** `INSERT … ON CONFLICT (idempotency_key) DO NOTHING RETURNING *`, then fetch the existing ticket when nothing was returned (the CLAUDE.md idempotency pattern); the ticket item is only inserted for a new ticket. Tests: `tickets/__tests__/create-ticket.test.ts`.
+
+---
+
 ## Lessons learned
 
 > This section is populated during development. Each entry documents what went wrong, the root cause, and how to prevent it in the future.
@@ -1634,3 +1644,4 @@
 | H-50     | 2026-10-23    | Cloth sales: idempotency key + required payment method; counted in analytics and day revenue             | fix/vikunja-backlog          |
 | M-56     | 2026-10-23    | createAssignment locks the order_items row (FOR UPDATE) before the capacity SUM                          | fix/vikunja-backlog          |
 | M-61     | 2026-10-23    | createTicket catch logs + Sentry.captureException; generic message kept                                  | fix/vikunja-backlog          |
+| L-47     | 2026-10-23    | createTicket idempotency via INSERT … ON CONFLICT DO NOTHING + fetch                                     | fix/vikunja-backlog          |
