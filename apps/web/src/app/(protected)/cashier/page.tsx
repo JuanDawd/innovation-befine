@@ -1,17 +1,27 @@
 /**
  * Cashier/admin home — T019, T035, T036, T041, T093
  *
- * Shows:
- * - Business day status panel
- * - Day-at-a-glance stats (revenue, open ticket count, quick actions) — T093
- * - Pending edit requests panel — T041
- * - Live ticket board
+ * Reading order follows the front desk's job:
+ * - Header: day status (badge + date/opening line) and the day's actions
+ * - Summary strip led by "Por cobrar" — T093
+ * - Live ticket board, grouped by status
+ * - Side rail (≥1280px): pending edit requests — T041 — and upcoming birthdays.
+ *   Below that width the rail stacks above the board and only shows sections
+ *   that have something in them.
+ *
+ * Failed reads are passed down as `*Failed` flags so the client retries and
+ * shows an error, instead of rendering an empty list or "day not open".
  */
 
 import { Suspense } from "react";
 import { getTranslations } from "next-intl/server";
+import { CalendarCheckIcon } from "lucide-react";
 import { getCurrentBusinessDay, getLastClosedBusinessDay } from "@/lib/business-day";
-import { BusinessDayPanel } from "@/components/business-day-panel";
+import {
+  BusinessDayActions,
+  BusinessDayStatusBadge,
+  BusinessDayStatusLine,
+} from "@/components/business-day-panel";
 import { listOpenTickets } from "@/app/(protected)/tickets/actions";
 import { listPendingEditRequests } from "@/app/(protected)/tickets/edit-requests/actions";
 import { getDayStats } from "@/app/(protected)/cashier/actions/day-stats";
@@ -21,21 +31,26 @@ import {
   PendingEditRequests,
   PendingEditRequestsSkeleton,
 } from "@/components/pending-edit-requests";
-import { DayAtAGlance } from "@/components/day-at-a-glance";
+import { DayAtAGlance, DayAtAGlanceSkeleton } from "@/components/day-at-a-glance";
 import { PageHeader } from "@/components/page-header";
-import { Skeleton } from "@/components/ui/loading-skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 import { UpcomingBirthdays } from "@/components/upcoming-birthdays";
 
 async function EditRequestsPanel() {
   const result = await listPendingEditRequests();
-  const requests = result.success ? result.data : [];
-  return <PendingEditRequests initialRequests={requests} />;
+  return (
+    <PendingEditRequests
+      initialRequests={result.success ? result.data : []}
+      loadFailed={!result.success}
+    />
+  );
 }
 
 async function BirthdaysPanel() {
   const result = await getUpcomingBirthdays(14);
-  const birthdays = result.success ? result.data : [];
-  return <UpcomingBirthdays birthdays={birthdays} />;
+  // Birthdays are a courtesy, not an operation: on failure the section stays hidden.
+  if (!result.success) return null;
+  return <UpcomingBirthdays birthdays={result.data} />;
 }
 
 async function StatsAndBoard() {
@@ -48,26 +63,41 @@ async function StatsAndBoard() {
 
   return (
     <>
-      <DayAtAGlance initialStats={stats} initialOpenTickets={openTickets} />
-      <CashierDashboard initialTickets={openTickets} />
+      <DayAtAGlance
+        initialStats={stats}
+        initialOpenTickets={openTickets}
+        statsFailed={!statsResult.success}
+        ticketsFailed={!openResult.success}
+      />
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem] xl:items-start xl:gap-8">
+        <CashierDashboard initialTickets={openTickets} loadFailed={!openResult.success} />
+        <SideRail />
+      </div>
     </>
+  );
+}
+
+async function SideRail() {
+  const t = await getTranslations("cashierBoard");
+  return (
+    <aside
+      aria-label={t("pendingAside")}
+      className="order-first flex flex-col gap-6 xl:sticky xl:top-8 xl:order-none xl:border-l xl:pl-8"
+    >
+      <Suspense fallback={<PendingEditRequestsSkeleton />}>
+        <EditRequestsPanel />
+      </Suspense>
+      <Suspense fallback={null}>
+        <BirthdaysPanel />
+      </Suspense>
+    </aside>
   );
 }
 
 function StatsAndBoardSkeleton() {
   return (
     <>
-      {/* Stats skeleton */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="flex flex-col gap-3 border-t border-border pt-5 pr-6">
-            <Skeleton className="h-3 w-24" />
-            <Skeleton className="h-12 w-40" />
-            <Skeleton className="h-3 w-36" />
-          </div>
-        ))}
-      </div>
-      {/* Board skeleton */}
+      <DayAtAGlanceSkeleton />
       <CashierDashboardSkeleton />
     </>
   );
@@ -85,22 +115,25 @@ export default async function CashierHomePage() {
     <div className="flex flex-col gap-6 p-4 md:p-6 lg:p-8">
       <PageHeader
         title={t("home.cashierTitle")}
-        description={t("home.cashierSubtitle")}
-        actions={<BusinessDayPanel currentDay={currentDay} lastClosedDay={lastClosedDay} />}
+        meta={<BusinessDayStatusBadge currentDay={currentDay} />}
+        description={
+          <BusinessDayStatusLine currentDay={currentDay} lastClosedDay={lastClosedDay} />
+        }
+        actions={<BusinessDayActions currentDay={currentDay} lastClosedDay={lastClosedDay} />}
       />
 
-      {/* Pending edit requests — T041 */}
-      <Suspense fallback={<PendingEditRequestsSkeleton />}>
-        <EditRequestsPanel />
-      </Suspense>
-      {/* Upcoming birthdays — 5R.9 */}
-      <Suspense fallback={<Skeleton className="h-24 w-full" />}>
-        <BirthdaysPanel />
-      </Suspense>
-      {/* Day-at-a-glance stats + ticket board */}
-      <Suspense fallback={<StatsAndBoardSkeleton />}>
-        <StatsAndBoard />
-      </Suspense>
+      {currentDay ? (
+        <Suspense fallback={<StatsAndBoardSkeleton />}>
+          <StatsAndBoard />
+        </Suspense>
+      ) : (
+        <EmptyState
+          icon={CalendarCheckIcon}
+          title={t("dayAtAGlance.noDayOpenTitle")}
+          description={t("dayAtAGlance.noDayOpenDescription")}
+          className="rounded-xl border border-dashed"
+        />
+      )}
     </div>
   );
 }

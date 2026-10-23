@@ -239,7 +239,7 @@ export function ClosedTicketHistory({
       {!isPending && tickets.length > 0 && (
         <div className="rounded-lg border overflow-hidden">
           {/* Desktop table */}
-          <table className="w-full text-sm hidden md:table">
+          <table className="w-full text-sm hidden lg:table">
             <thead className="bg-muted/50 border-b">
               <tr>
                 <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">
@@ -264,14 +264,17 @@ export function ClosedTicketHistory({
             </thead>
             <tbody className="divide-y">
               {visibleTickets.map((ticket) => (
-                <tr
-                  key={ticket.id}
-                  className="hover:bg-muted/30 cursor-pointer transition-colors"
-                  onClick={() => openDetail(ticket.id)}
-                >
+                <tr key={ticket.id} className="relative transition-colors hover:bg-muted/30">
                   <td className="px-4 py-3 font-medium">
                     <span className="flex items-center gap-1.5">
-                      {ticket.clientName}
+                      {/* Stretched button: the whole row opens the ticket, keyboard included */}
+                      <button
+                        type="button"
+                        onClick={() => openDetail(ticket.id)}
+                        className="text-left after:absolute after:inset-0 focus-visible:outline-none focus-visible:after:rounded-sm focus-visible:after:ring-3 focus-visible:after:ring-ring/50"
+                      >
+                        {ticket.clientName}
+                      </button>
                       {ticket.hasOverride && (
                         <TriangleAlertIcon
                           className="size-3.5 text-status-attention-foreground"
@@ -298,7 +301,7 @@ export function ClosedTicketHistory({
                     {formatMoney(ticket.total)}
                   </td>
                   <td
-                    className="px-4 py-3 text-right text-muted-foreground"
+                    className="whitespace-nowrap px-4 py-3 text-right text-muted-foreground tabular-nums"
                     suppressHydrationWarning
                   >
                     {ticket.closedAt
@@ -315,7 +318,7 @@ export function ClosedTicketHistory({
           </table>
 
           {/* Mobile card list */}
-          <ul className="divide-y md:hidden">
+          <ul className="divide-y lg:hidden">
             {visibleTickets.map((ticket) => (
               <li key={ticket.id}>
                 <button

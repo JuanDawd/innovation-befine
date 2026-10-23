@@ -10,7 +10,12 @@ import { hasRole } from "@/lib/middleware-helpers";
 import { CheckoutForm } from "@/components/checkout-form";
 import { PageHeader } from "@/components/page-header";
 
-export default async function CheckoutPage() {
+export default async function CheckoutPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ ticket?: string }>;
+}) {
+  const { ticket } = await searchParams;
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session || !hasRole(session.user, "cashier", "admin")) redirect("/cashier");
   const t = await getTranslations();
@@ -23,7 +28,7 @@ export default async function CheckoutPage() {
         backHref="/cashier"
         backLabel={t("common.back")}
       />
-      <CheckoutForm />
+      <CheckoutForm preselectTicketId={ticket} />
     </div>
   );
 }

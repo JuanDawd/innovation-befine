@@ -3,127 +3,178 @@
 /**
  * DayAtAGlance — T093
  *
- * Admin home stats panel: revenue today, open/closed ticket counts (live), quick actions.
- * When no business day is open, renders an empty state instead of zero-stats.
+ * Cashier home summary strip. Leads with what the front desk acts on next —
+ * "Por cobrar" (awaiting-payment total + count, with a shortcut to checkout) —
+ * followed by revenue, charged tickets and work in progress.
+ *
+ * Shares `tickets.open` with CashierDashboard (one cached query) and reads
+ * `businessDay.stats` for revenue / closed count. A failed server read is never
+ * shown as zeros: the strip fetches on the client and shows an error with retry.
  */
 
+import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { TrendingUpIcon, TicketIcon, CheckCircleIcon, CalendarCheckIcon } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { EmptyState } from "@/components/ui/empty-state";
-import { cn } from "@/lib/utils";
+import { AlertTriangleIcon, ChevronRightIcon } from "lucide-react";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { type DashboardTicket } from "@/app/(protected)/tickets/actions";
 import { type DayStats } from "@/app/(protected)/cashier/actions/day-stats";
+import { ticketTotal } from "@/components/cashier-dashboard-helpers";
 import { queryKeys } from "@/lib/query-keys";
 import { formatMoney } from "@/i18n";
 import { fetchQuery } from "@/lib/action-query";
-
-// ─── Props ────────────────────────────────────────────────────────────────────
+import { cn } from "@/lib/utils";
 
 interface DayAtAGlanceProps {
   initialStats: DayStats;
   /** Same list the CashierDashboard receives — both seed `tickets.open`. */
   initialOpenTickets: DashboardTicket[];
+  statsFailed?: boolean;
+  ticketsFailed?: boolean;
 }
 
-// ─── Stat card ────────────────────────────────────────────────────────────────
+const STRIP =
+  "grid gap-px overflow-hidden rounded-xl border bg-border sm:grid-cols-2 lg:grid-cols-[minmax(0,1.5fr)_repeat(3,minmax(0,1fr))]";
+const CELL = "flex min-w-0 flex-col bg-card p-4 lg:p-5";
+const DISPLAY_NUMBER = "font-display font-light leading-none tracking-[-0.02em] tabular-nums";
 
-function StatCard({
-  icon: Icon,
-  label,
-  value,
-  sub,
-  accent,
-}: {
-  icon: React.ElementType;
-  label: string;
-  value: string;
-  sub?: string;
-  accent?: boolean;
-}) {
+/** A compact label/value row on phones; a stacked stat from `sm` up. */
+function SecondaryStat({ label, value, sub }: { label: string; value: string; sub: string }) {
   return (
     <div
       className={cn(
-        "flex flex-col gap-3 border-t border-border pt-5 pr-6",
-        accent && "border-t-primary",
+        CELL,
+        "flex-row items-baseline justify-between gap-3 py-3 sm:flex-col sm:items-stretch sm:justify-start sm:gap-2 sm:py-4 lg:py-5",
       )}
     >
-      <div className="flex items-center gap-2 text-muted-foreground">
-        <Icon className="size-3.5 shrink-0" aria-hidden="true" />
-        <span className="text-xs font-medium uppercase tracking-[0.22em]">{label}</span>
-      </div>
+      <p className="text-xs font-medium tracking-[0.12em] text-muted-foreground uppercase">
+        {label}
+      </p>
       <p
-        className={cn(
-          "text-5xl font-light leading-[0.95] tracking-[-0.035em] tabular-nums",
-          accent ? "text-primary" : "text-foreground",
-        )}
-        style={{ fontFamily: "var(--font-display)", fontVariantNumeric: "tabular-nums" }}
+        className={cn(DISPLAY_NUMBER, "text-xl text-foreground sm:text-2xl xl:text-3xl")}
         suppressHydrationWarning
       >
         {value}
       </p>
-      {sub && <p className="border-t border-border/60 pt-2 text-xs text-muted-foreground">{sub}</p>}
+      <p className="hidden text-xs text-muted-foreground sm:block">{sub}</p>
     </div>
   );
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
+function SkeletonCell({ lead = false }: { lead?: boolean }) {
+  return (
+    <div className={cn(CELL, "gap-3", lead && "sm:col-span-2 lg:col-span-1")}>
+      <div className="h-3 w-20 rounded bg-muted animate-pulse" />
+      <div className={cn("rounded bg-muted animate-pulse", lead ? "h-9 w-40" : "h-7 w-24")} />
+      <div className="h-3 w-28 rounded bg-muted animate-pulse" />
+    </div>
+  );
+}
 
-export function DayAtAGlance({ initialStats, initialOpenTickets }: DayAtAGlanceProps) {
+export function DayAtAGlanceSkeleton() {
+  return (
+    <div className={STRIP}>
+      <SkeletonCell lead />
+      <SkeletonCell />
+      <SkeletonCell />
+      <SkeletonCell />
+    </div>
+  );
+}
+
+export function DayAtAGlance({
+  initialStats,
+  initialOpenTickets,
+  statsFailed = false,
+  ticketsFailed = false,
+}: DayAtAGlanceProps) {
   const t = useTranslations("dayAtAGlance");
 
   // Shared with CashierDashboard — one cached query, one fetch.
-  const { data: openTickets = initialOpenTickets } = useQuery({
+  const { data: openTickets } = useQuery({
     queryKey: queryKeys.tickets.open,
     queryFn: () => fetchQuery("openTickets"),
-    initialData: initialOpenTickets,
+    initialData: ticketsFailed ? undefined : initialOpenTickets,
     refetchInterval: 30_000,
   });
   // Revenue/closed change on checkout — invalidated with "businessDay".
-  const { data: stats = initialStats } = useQuery({
+  const {
+    data: stats,
+    isError: statsError,
+    refetch: refetchStats,
+  } = useQuery({
     queryKey: queryKeys.businessDay.stats,
     queryFn: () => fetchQuery("dayStats"),
-    initialData: initialStats,
+    initialData: statsFailed ? undefined : initialStats,
     refetchInterval: 30_000,
   });
 
-  const openCount = openTickets.length;
-  const isDayOpen = stats.businessDayId !== null;
+  if (!openTickets || (!stats && !statsError)) return <DayAtAGlanceSkeleton />;
 
-  if (!isDayOpen) {
-    return (
-      <EmptyState
-        icon={CalendarCheckIcon}
-        title={t("noDayOpenTitle")}
-        description={t("noDayOpenDescription")}
-      />
-    );
-  }
+  const awaiting = openTickets.filter((tk) => tk.status === "awaiting_payment");
+  const awaitingTotal = awaiting.reduce((s, tk) => s + ticketTotal(tk), 0);
+  const inProgressCount = openTickets.length - awaiting.length;
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* Stats grid */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          icon={TrendingUpIcon}
-          label={t("revenueToday")}
-          value={formatMoney(stats.revenue)}
-          sub={t("revenueSubOpen")}
-          accent={stats.revenue > 0}
-        />
-        <StatCard
-          icon={TicketIcon}
-          label={t("openTickets")}
-          value={String(openCount)}
-          sub={t("openTicketsSub")}
-        />
-        <StatCard
-          icon={CheckCircleIcon}
-          label={t("closedTickets")}
-          value={String(stats.closedCount)}
-          sub={t("closedTicketsSub")}
-        />
+    <section aria-label={t("summaryLabel")} className={STRIP}>
+      {/* Lead: what the front desk acts on next */}
+      <div className={cn(CELL, "gap-3 sm:col-span-2 lg:col-span-1")}>
+        <p className="text-sm font-semibold text-foreground">{t("awaitingPayment")}</p>
+        <p className={cn(DISPLAY_NUMBER, "text-4xl text-foreground")} suppressHydrationWarning>
+          {formatMoney(awaitingTotal)}
+        </p>
+        <div className="mt-auto flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+          <p className="text-sm text-muted-foreground">
+            {t("awaitingSub", { count: awaiting.length })}
+          </p>
+          {awaiting.length > 0 && (
+            <Link
+              href="/cashier/checkout"
+              scroll={false}
+              className={cn(buttonVariants({ size: "sm" }), "gap-1 pointer-coarse:h-11")}
+            >
+              {t("chargeAction")}
+              <ChevronRightIcon className="size-4" aria-hidden="true" />
+            </Link>
+          )}
+        </div>
       </div>
-    </div>
+
+      {stats ? (
+        <>
+          <SecondaryStat
+            label={t("revenueToday")}
+            value={formatMoney(stats.revenue)}
+            sub={t("revenueSubOpen")}
+          />
+          <SecondaryStat
+            label={t("closedTickets")}
+            value={String(stats.closedCount)}
+            sub={t("closedTicketsSub")}
+          />
+        </>
+      ) : (
+        <div role="alert" className={cn(CELL, "gap-2 sm:col-span-2 lg:col-span-2")}>
+          <p className="flex items-center gap-1.5 text-sm font-medium text-status-negative-foreground">
+            <AlertTriangleIcon className="size-4 shrink-0" aria-hidden="true" />
+            {t("statsErrorTitle")}
+          </p>
+          <p className="text-xs text-muted-foreground">{t("statsErrorDescription")}</p>
+          <Button
+            size="sm"
+            variant="outline"
+            className="mt-auto self-start"
+            onClick={() => void refetchStats()}
+          >
+            {t("retry")}
+          </Button>
+        </div>
+      )}
+      <SecondaryStat
+        label={t("inProgress")}
+        value={String(inProgressCount)}
+        sub={t("inProgressSub", { count: inProgressCount })}
+      />
+    </section>
   );
 }

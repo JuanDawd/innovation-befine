@@ -210,6 +210,9 @@ async function captureScreen(page: Page, screen: ScreenDef, outPath: string): Pr
   await page.keyboard.press("Escape");
   await page.waitForTimeout(100);
 
+  // Hide the Next.js dev-tools badge ("N issues"); it only exists under `next dev`
+  await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
+
   await page.screenshot({
     path: outPath,
     fullPage: true,

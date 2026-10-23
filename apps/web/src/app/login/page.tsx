@@ -1,9 +1,12 @@
 /**
  * Login page — T016
+ *
+ * Each tenant deployment's staff entry point (`/` redirects here). Branding
+ * comes from lib/brand and the tenant's /brand/wordmark.svg.
  */
 import { getTranslations } from "next-intl/server";
-import Link from "next/link";
 import Image from "next/image";
+import { BRAND_NAME } from "@/lib/brand";
 import { LoginShell } from "./login-shell";
 
 export default async function LoginPage() {
@@ -14,16 +17,6 @@ export default async function LoginPage() {
       className="relative h-dvh overflow-hidden flex"
       style={{ background: "var(--brand-ink)", color: "var(--brand-bone)" }}
     >
-      {/* ─── Grain overlay ─── */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none fixed inset-0 z-50 opacity-[0.032]"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E")`,
-          backgroundRepeat: "repeat",
-        }}
-      />
-
       {/* ─── Left decorative panel (lg+) ─── */}
       <div
         className="hidden lg:flex lg:w-[52%] xl:w-[55%] relative flex-col justify-center px-12 xl:px-16 flex-shrink-0"
@@ -62,7 +55,7 @@ export default async function LoginPage() {
           </svg>
           <Image
             src="/brand/wordmark.svg"
-            alt="Innovation Befine"
+            alt={BRAND_NAME}
             width={120}
             height={24}
             priority
@@ -72,24 +65,7 @@ export default async function LoginPage() {
 
         {/* Editorial headline — vertically centered */}
         <div className="relative z-10 space-y-6">
-          <div className="flex items-center gap-2.5">
-            <span
-              className="h-px w-8"
-              style={{ background: "var(--brand-pink)" }}
-              aria-hidden="true"
-            />
-            <span
-              className="text-xs font-semibold tracking-[0.25em] uppercase"
-              style={{
-                color: "var(--brand-pink)",
-                fontFamily: "var(--font-sans)",
-              }}
-            >
-              Plataforma interna
-            </span>
-          </div>
-
-          <h1
+          <p
             className="text-[clamp(2.4rem,3.8vw,3.8rem)] leading-[0.95] tracking-tight font-bold"
             style={{
               fontFamily: "var(--font-display)",
@@ -98,19 +74,8 @@ export default async function LoginPage() {
           >
             <span style={{ color: "var(--brand-bone)" }}>Gestión operativa</span>
             <br />
-            <em
-              className="not-italic"
-              style={{
-                background:
-                  "linear-gradient(100deg, var(--brand-pink) 0%, var(--brand-pink-soft) 60%, var(--brand-pink) 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
-              }}
-            >
-              para tu salón y taller.
-            </em>
-          </h1>
+            <span style={{ color: "var(--brand-pink)" }}>para tu salón y taller.</span>
+          </p>
 
           <p
             className="text-sm leading-relaxed max-w-xs"
@@ -119,8 +84,7 @@ export default async function LoginPage() {
               fontFamily: "var(--font-sans)",
             }}
           >
-            Tickets, confección, nómina y más — todo en un solo lugar diseñado para el ritmo de
-            Innovation Befine.
+            Tickets, confección, nómina y más, en un solo lugar para el equipo de {BRAND_NAME}.
           </p>
         </div>
       </div>
@@ -142,7 +106,7 @@ export default async function LoginPage() {
           </svg>
           <Image
             src="/brand/wordmark.svg"
-            alt="Innovation Befine"
+            alt={BRAND_NAME}
             width={110}
             height={22}
             className="h-5 w-auto brightness-0 invert"
@@ -168,16 +132,7 @@ export default async function LoginPage() {
           <div className="w-full max-w-[340px]">
             {/* Heading */}
             <div className="mb-8 space-y-1">
-              <p
-                className="text-xs font-semibold tracking-[0.22em] uppercase"
-                style={{
-                  color: "var(--brand-pink)",
-                  fontFamily: "var(--font-sans)",
-                }}
-              >
-                Acceso
-              </p>
-              <h2
+              <h1
                 className="text-2xl font-bold tracking-tight"
                 style={{
                   fontFamily: "var(--font-display)",
@@ -185,34 +140,11 @@ export default async function LoginPage() {
                 }}
               >
                 {t("auth.login")}
-              </h2>
+              </h1>
             </div>
 
             <LoginShell />
           </div>
-        </div>
-
-        {/* Footer back link */}
-        <div
-          className="relative z-10 px-8 py-5"
-          style={{ borderTop: "1px solid color-mix(in srgb, var(--brand-bone) 5%, transparent)" }}
-        >
-          <Link
-            href="/"
-            className="group flex items-center gap-2 text-xs w-fit transition-colors"
-            style={{
-              color: "var(--brand-taupe)",
-              fontFamily: "var(--font-sans)",
-            }}
-          >
-            <span
-              className="transition-[translate,color] group-hover:-translate-x-0.5 group-hover:text-brand-pink"
-              aria-hidden="true"
-            >
-              ←
-            </span>
-            <span className="group-hover:text-brand-stone transition-colors">Volver al inicio</span>
-          </Link>
         </div>
       </div>
     </div>

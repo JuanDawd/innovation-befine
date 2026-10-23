@@ -589,9 +589,13 @@ function PieceRow({
           <PieceDialog
             config={{ mode: "edit", piece: localPiece }}
             trigger={
-              <span className="text-muted-foreground hover:text-foreground cursor-pointer">
-                <PencilIcon className="size-4" aria-label={t("editClothPiece")} />
-              </span>
+              <button
+                type="button"
+                className="rounded-md p-1 text-muted-foreground hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+                aria-label={`${t("editClothPiece")}: ${localPiece.name}`}
+              >
+                <PencilIcon className="size-4" aria-hidden="true" />
+              </button>
             }
             onSuccess={(updated) => update({ ...updated, variants: localPiece.variants })}
           />

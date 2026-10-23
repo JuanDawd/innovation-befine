@@ -773,7 +773,6 @@ function ServiceCard({
         onOpenChange={(open) => {
           if (!open) setPendingSlot(null);
         }}
-        trigger={<span />}
         title={t("discardChanges")}
         description={t("discardChangesDescription")}
         confirmLabel={t("discard")}

@@ -1,5 +1,6 @@
 "use client";
 
+import { capitalizeFirst } from "@/lib/utils";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
@@ -99,10 +100,12 @@ export function AbsenceCalendar({ year, month, absences, employees }: Props) {
     });
   }
 
-  const monthName = new Date(year, month - 1, 1).toLocaleDateString("es-CO", {
-    month: "long",
-    year: "numeric",
-  });
+  const monthName = capitalizeFirst(
+    new Date(year, month - 1, 1).toLocaleDateString("es-CO", {
+      month: "long",
+      year: "numeric",
+    }),
+  );
 
   return (
     <div className="space-y-4">
@@ -117,7 +120,7 @@ export function AbsenceCalendar({ year, month, absences, employees }: Props) {
         >
           <ChevronLeftIcon className="size-4" aria-hidden="true" />
         </Button>
-        <h2 className="text-lg font-semibold capitalize">{monthName}</h2>
+        <h2 className="text-lg font-semibold">{monthName}</h2>
         <Button
           variant="outline"
           size="sm"

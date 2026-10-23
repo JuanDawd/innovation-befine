@@ -8,6 +8,7 @@ import { getLocale, getMessages } from "next-intl/server";
 import { SwUpdatePrompt } from "@/components/sw-update-prompt";
 import { QueryProvider } from "@/components/query-provider";
 import { Toaster } from "sonner";
+import { BRAND_FULL_NAME } from "@/lib/brand";
 
 const interTight = Inter_Tight({
   subsets: ["latin"],
@@ -29,12 +30,12 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Innovation Befine",
-  description: "Plataforma de operaciones internas — Innovation Befine",
+  title: BRAND_FULL_NAME,
+  description: `Plataforma de operaciones internas · ${BRAND_FULL_NAME}`,
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Innovation Befine",
+    title: BRAND_FULL_NAME,
   },
 };
 

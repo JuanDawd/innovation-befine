@@ -21,6 +21,7 @@
   --color-sidebar-accent: var(--sidebar-accent);
   --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-brand: var(--sidebar-brand);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar: var(--sidebar);
   --color-chart-5: var(--chart-5);
@@ -150,6 +151,7 @@
   --sidebar: oklch(0.08 0.002 60);
   --sidebar-foreground: oklch(0.94 0.013 80);
   --sidebar-primary: oklch(0.598 0.23 1); /* white text 4.5:1 */
+  --sidebar-brand: oklch(0.7 0.19 1); /* wordmark as text on the sidebar, ≥4.5:1 */
   --sidebar-primary-foreground: oklch(1 0 0);
   --sidebar-accent: oklch(0.18 0.015 10);
   --sidebar-accent-foreground: oklch(0.96 0.015 80);
@@ -216,6 +218,7 @@
   --sidebar: oklch(0.02 0 0);
   --sidebar-foreground: oklch(0.94 0.013 80);
   --sidebar-primary: oklch(0.598 0.23 1);
+  --sidebar-brand: oklch(0.7 0.19 1);
   --sidebar-primary-foreground: oklch(1 0 0);
   --sidebar-accent: oklch(0.14 0.015 10);
   --sidebar-accent-foreground: oklch(0.96 0.013 80);

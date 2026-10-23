@@ -1,5 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { optimisticStatusReducer } from "./cashier-dashboard-helpers";
+import {
+  daysSince,
+  formatAge,
+  groupByStatus,
+  isStale,
+  matchesQuery,
+  optimisticStatusReducer,
+} from "./cashier-dashboard-helpers";
 import type { DashboardTicket } from "@/app/(protected)/tickets/actions";
 
 const ticket = (over: Partial<DashboardTicket> = {}): DashboardTicket => ({
@@ -68,5 +75,60 @@ describe("revert-on-error contract (T10R-R2)", () => {
     // After the action settles (failure path) React rerenders with `source`,
     // which still reflects the original status because we never mutated it.
     expect(source[0].status).toBe("logged");
+  });
+});
+
+describe("groupByStatus", () => {
+  it("orders groups charge-first and drops empty ones", () => {
+    const groups = groupByStatus([
+      ticket({ id: "a", status: "reopened" }),
+      ticket({ id: "b", status: "awaiting_payment" }),
+    ]);
+    expect(groups.map((g) => g.status)).toEqual(["awaiting_payment", "reopened"]);
+  });
+
+  it("sorts oldest first inside a group", () => {
+    const groups = groupByStatus([
+      ticket({ id: "new", createdAt: new Date("2026-04-24T12:00:00Z") }),
+      ticket({ id: "old", createdAt: new Date("2026-04-24T09:00:00Z") }),
+    ]);
+    expect(groups[0].tickets.map((t) => t.id)).toEqual(["old", "new"]);
+  });
+});
+
+describe("formatAge", () => {
+  const min = 60_000;
+  it.each([
+    [30_000, "< 1 min"],
+    [45 * min, "45 min"],
+    [120 * min, "2 h"],
+    [190 * min, "3 h 10 min"],
+    [125 * 24 * 60 * min, "125 d"],
+  ])("formats %d ms as %s", (ms, expected) => {
+    expect(formatAge(ms)).toBe(expected);
+  });
+
+  it("flags tickets open two hours or more as stale", () => {
+    expect(isStale(119 * min)).toBe(false);
+    expect(isStale(120 * min)).toBe(true);
+  });
+});
+
+describe("daysSince", () => {
+  it("counts whole days", () => {
+    const now = new Date("2026-04-27T10:00:00Z").getTime();
+    expect(daysSince(new Date("2026-04-24T11:00:00Z"), now)).toBe(2);
+    expect(daysSince(new Date("2026-04-27T08:00:00Z"), now)).toBe(0);
+  });
+});
+
+describe("matchesQuery", () => {
+  it("matches client, service and employee, ignoring case and accents", () => {
+    const t = ticket({ clientName: "María Gómez", serviceName: "Tinte", employeeName: "Sofía" });
+    expect(matchesQuery(t, "maria")).toBe(true);
+    expect(matchesQuery(t, "TINTE")).toBe(true);
+    expect(matchesQuery(t, "sofia")).toBe(true);
+    expect(matchesQuery(t, "pedro")).toBe(false);
+    expect(matchesQuery(t, "  ")).toBe(true);
   });
 });
