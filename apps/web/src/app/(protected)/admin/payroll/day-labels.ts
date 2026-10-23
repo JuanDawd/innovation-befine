@@ -14,3 +14,19 @@ export function sameDateSuffixes(
     days.map((d) => [d.id, (counts.get(d.date) ?? 0) > 1 ? ` · ${formatTime(d.openedAt)}` : ""]),
   );
 }
+
+/** Chronological order: by opening time, so two days on one date keep their order. */
+export function byOpenedAt<T extends { openedAt: string }>(days: T[]): T[] {
+  return [...days].sort((a, b) => a.openedAt.localeCompare(b.openedAt));
+}
+
+/**
+ * The last business day on `date` — "pay through today" must reach the latest
+ * session when the day was closed and reopened, not stop at the first one.
+ */
+export function lastDayOn<T extends { date: string; openedAt: string }>(
+  days: T[],
+  date: string,
+): T | undefined {
+  return byOpenedAt(days.filter((d) => d.date === date)).at(-1);
+}

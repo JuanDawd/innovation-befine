@@ -17,7 +17,7 @@ import {
 import type { EmployeeOption } from "../absences/actions";
 import { NativeSelect } from "@/components/ui/native-select";
 import { formatDate, formatMoney } from "@/i18n";
-import { sameDateSuffixes } from "./day-labels";
+import { byOpenedAt, lastDayOn, sameDateSuffixes } from "./day-labels";
 
 type Props = {
   days: BusinessDayOption[];
@@ -38,9 +38,7 @@ export function PayrollScreen({ days, employees, history, initialEmployeeId }: P
   // so the selection is a range: oldest unsettled day → chosen end day.
   // `days` is employee-scoped server-side; picking another employee triggers a
   // router refresh which remounts this component with fresh data.
-  const unsettledDays = days
-    .filter((d) => !d.isSettled)
-    .sort((a, b) => a.date.localeCompare(b.date));
+  const unsettledDays = byOpenedAt(days.filter((d) => !d.isSettled));
   const settledDays = days.filter((d) => d.isSettled);
   const sameDate = sameDateSuffixes(unsettledDays);
   const [rangeEndId, setRangeEndId] = useState(() =>
@@ -118,7 +116,7 @@ export function PayrollScreen({ days, employees, history, initialEmployeeId }: P
   const todayStr = new Intl.DateTimeFormat("sv-SE", { timeZone: "America/Bogota" }).format(
     new Date(),
   );
-  const todayUnsettledDay = unsettledDays.find((d) => d.date === todayStr);
+  const todayUnsettledDay = lastDayOn(unsettledDays, todayStr);
 
   // Determine role-aware earnings descriptor
   const selectedEmployeeObj = employees.find((e) => e.id === selectedEmployee);

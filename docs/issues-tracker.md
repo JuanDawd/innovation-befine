@@ -962,6 +962,16 @@
 
 ---
 
+### M-75 — "Pagar hasta hoy" stops at the first session when the day was closed and reopened
+
+- **Severity:** Medium
+- **Status:** Resolved (2026-10-23)
+- **Affected:** T066/T067 `admin/payroll/payroll-screen.tsx`
+- **Description:** Found by the new payroll E2E (M-71). Unsettled days were sorted by calendar date only and "today" was `find(d => d.date === today)` — the first business day on today's date. When the day had been closed and reopened (the H-53 scenario), "Pagar hasta hoy" paid only through the first session and left the later ones unsettled; the order of same-date days in the range picker was also arbitrary.
+- **Fix:** `day-labels.ts` `byOpenedAt()` (chronological, stable for same-date days) and `lastDayOn()` (latest session of a date) drive the range and the shortcut. Tests: `admin/payroll/__tests__/day-labels.test.ts`; covered end-to-end by `e2e/payroll-settlement.spec.ts`.
+
+---
+
 ## Low-priority issues
 
 ### L-09 — No file/image storage research
@@ -1779,3 +1789,4 @@
 | L-08     | 2026-10-23    | Version check every 15 min; focus re-check throttled to 1/min (shared salon IP)                                 | fix/vikunja-backlog          |
 | L-04     | 2026-10-23    | Soft warning above 10 active variants per service (create + detail)                                             | fix/vikunja-backlog          |
 | L-03     | 2026-10-23    | Catalog audit log paged (20, keyset cursor) with Zod-validated input; labels via next-intl                      | fix/vikunja-backlog          |
+| M-75     | 2026-10-23    | "Pagar hasta hoy" reaches the latest session of today; days ordered by opening time                             | fix/vikunja-backlog          |
