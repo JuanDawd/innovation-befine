@@ -239,52 +239,13 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
-  # Production deployment gate — runs only on push to main after both ci and e2e pass.
-  # Requires a GitHub Environment named "production" with protection rules:
-  #   → Required reviewers: at least 1 (set in repo Settings → Environments → production)
-  #   → Wait timer: 0 min (optional delay before deploy)
-  # This gives the team a manual approval step before Vercel promotes to production.
-  #
-  # Setup:
-  #   1. In GitHub: Settings → Environments → New environment → name: "production"
-  #   2. Enable "Required reviewers" and add team members
-  #   3. Add all production secrets to the "production" environment (not just repo secrets)
-  #   4. In Vercel: disable automatic production branch deployment (Settings → Git)
-  #      so only this workflow triggers the production deploy via `vercel --prod`
-  deploy-production:
-    name: Deploy to Production
-    runs-on: ubuntu-latest
-    needs: [ci, e2e, db-integration]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    environment: production
-    timeout-minutes: 15
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v6
-
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 24
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Deploy to Vercel production
-        run: npx vercel --prod --token=${{ secrets.VERCEL_TOKEN }} --yes
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-
   # Post-deployment smoke tests against the live Vercel production URL.
   # Activated by adding VERCEL_PRODUCTION_URL to repo secrets.
   # e2e-deploy:
   #   name: Post-deploy Smoke Tests
   #   runs-on: ubuntu-latest
   #   timeout-minutes: 15
-  #   needs: deploy-production
+  #   needs: e2e  # Vercel Git integration deploys main; run after it is live
   #
   #   steps:
   #     - uses: actions/checkout@v4
