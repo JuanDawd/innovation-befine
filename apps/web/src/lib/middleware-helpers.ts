@@ -17,7 +17,7 @@ export const PUBLIC_PATHS = ["/login", "/reset-password", "/api/auth", "/403", "
  * `/api/version` would otherwise expose any future `/api/health-admin` or
  * `/api/version-internal` route to the public (T10R-R9).
  */
-export const PUBLIC_EXACT_PATHS = ["/", "/api/health", "/api/version"];
+export const PUBLIC_EXACT_PATHS = ["/", "/api/health", "/api/version", "/robots.txt"];
 
 /**
  * API paths that bypass session and role-path checks entirely (truly public).

@@ -922,6 +922,26 @@
 
 ---
 
+### M-50 — `robots.txt` has 2 validation errors
+
+- **Severity:** Medium
+- **Status:** Resolved (2026-10-23)
+- **Affected:** `apps/web/src/app/robots.ts`, `lib/middleware-helpers.ts`
+- **Description:** Lighthouse: "robots.txt is not valid — 2 errors found." There was no robots.txt at all; middleware redirected `/robots.txt` to `/login`, so crawlers parsed the login page HTML.
+- **Fix:** `app/robots.ts` serves `User-agent: * / Disallow: /` (internal app) and `/robots.txt` is an exact-match public path. Test in `lib/__tests__/middleware-helpers.test.ts`.
+
+---
+
+### M-49 — Missing meta description on all pages (SEO score 83)
+
+- **Severity:** Medium
+- **Status:** Resolved (verified 2026-10-23 — fixed earlier, untracked)
+- **Affected:** `apps/web/src/app/layout.tsx`
+- **Description:** Lighthouse flagged "Document does not have a meta description."
+- **Fix:** Already in place: root `metadata.description` = "Plataforma de operaciones internas · {brand}", inherited by every page. No code change in this pass.
+
+---
+
 ## Low-priority issues
 
 ### L-09 — No file/image storage research
@@ -1669,3 +1689,5 @@
 | L-47     | 2026-10-23    | createTicket idempotency via INSERT … ON CONFLICT DO NOTHING + fetch                                            | fix/vikunja-backlog          |
 | M-58     | 2026-10-23    | Per-clothier stable order for claimable pieces; lost claim refetches board with a clear toast                   | fix/vikunja-backlog          |
 | M-59     | 2026-10-23    | Rate limits actually enforced (fake eval contract fixed); Upstash when configured; per-limiter prefix; eviction | fix/vikunja-backlog          |
+| M-50     | 2026-10-23    | robots.txt served by app/robots.ts (disallow all) and public in middleware                                      | fix/vikunja-backlog          |
+| M-49     | 2026-10-23    | Verified root metadata already sets a description (fixed earlier)                                               | fix/vikunja-backlog          |
