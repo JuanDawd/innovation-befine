@@ -10,7 +10,7 @@
  *   SQL aggregation for efficiency.
  */
 
-import { and, eq, inArray, or, sql } from "drizzle-orm";
+import { and, eq, inArray, or, sql, type SQL } from "drizzle-orm";
 import type { Database } from "../index";
 import {
   tickets,
@@ -24,6 +24,23 @@ import {
   employeeAbsences,
   clothSales,
 } from "../schema";
+
+/**
+ * M-77 — round half to even, like payroll's bankersRound(): Postgres ROUND()
+ * rounds halves away from zero, so a commission of exactly ½ peso came out
+ * $1 higher in analytics than in the payout. Inputs are non-negative.
+ */
+function bankersRoundSql(x: SQL): SQL {
+  return sql`(CASE WHEN ${x} - FLOOR(${x}) = 0.5
+    THEN FLOOR(${x}) + (FLOOR(${x})::bigint % 2)
+    ELSE ROUND(${x}) END)`;
+}
+
+const commissionSql = bankersRoundSql(
+  sql`(COALESCE(${ticketItems.overridePrice}, ${ticketItems.unitPrice}))::numeric
+    * ${ticketItems.commissionPct} / 100
+    * ${ticketItems.quantity}`,
+);
 
 const clothSaleTotal = sql<number>`COALESCE(SUM(
   COALESCE(${clothSales.priceOverride}, ${clothSales.unitPrice}) * ${clothSales.quantity}
@@ -174,7 +191,7 @@ export async function jobsCountByEmployee(
 
 /**
  * Total earnings + job count per active employee for the given business days.
- * Stylist: commission on closed ticket items (SQL ROUND, display only).
+ * Stylist: commission on closed ticket items, banker's rounding per item (as payroll).
  * Clothier: sum of piece_rate for approved batch_pieces.
  * Secretary: daysWorked × daily_rate with ISO-week expected_work_days cap,
  *   excluding vacation/approved_absence days.
@@ -197,13 +214,7 @@ export async function earningsByEmployee(
       employeeName: users.name,
       role: employees.role,
       totalEarnings: sql<number>`
-        COALESCE(SUM(
-          ROUND(
-            (COALESCE(${ticketItems.overridePrice}, ${ticketItems.unitPrice}))::numeric
-            * ${ticketItems.commissionPct} / 100
-            * ${ticketItems.quantity}
-          )
-        ), 0)::bigint`,
+        COALESCE(SUM(${commissionSql}), 0)::bigint`,
       jobCount: sql<number>`COUNT(DISTINCT ${tickets.id})::int`,
     })
     .from(tickets)
@@ -550,13 +561,7 @@ export async function employeeDayBreakdown(
         openedAt: businessDays.openedAt,
         jobs: sql<number>`COUNT(DISTINCT ${tickets.id})::int`,
         earnings: sql<number>`
-          COALESCE(SUM(
-            ROUND(
-              (COALESCE(${ticketItems.overridePrice}, ${ticketItems.unitPrice}))::numeric
-              * ${ticketItems.commissionPct} / 100
-              * ${ticketItems.quantity}
-            )
-          ), 0)::bigint`,
+          COALESCE(SUM(${commissionSql}), 0)::bigint`,
       })
       .from(tickets)
       .innerJoin(ticketItems, eq(ticketItems.ticketId, tickets.id))

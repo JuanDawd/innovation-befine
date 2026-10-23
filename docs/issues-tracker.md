@@ -998,6 +998,16 @@
 
 ---
 
+### M-77 — Analytics commission rounds halves up; payroll rounds half to even
+
+- **Severity:** Medium
+- **Status:** Resolved (2026-10-23)
+- **Affected:** T071/T074 `packages/db/src/queries/analytics.ts` (`earningsByEmployee`, `employeeDayBreakdown`)
+- **Description:** Found while writing M-70b integration tests. Analytics computed stylist commission with Postgres `ROUND()` (half away from zero) while payroll uses `bankersRound()` (half to even, CLAUDE.md). A line whose commission is exactly ½ peso (e.g. $25.005 × 10 % = 2.500,5) showed $2.501 in analytics and paid $2.500 — totals drifted by $1 per such line.
+- **Fix:** `bankersRoundSql()` (CASE on the .5 fraction → even floor) used for both commission sums, still per item like payroll. Integration tests pin 25.005 → 2.500 and 25.015 → 2.502; they fail against the old `ROUND()`.
+
+---
+
 ## Low-priority issues
 
 ### L-09 — No file/image storage research
@@ -1820,3 +1830,4 @@
 | M-75     | 2026-10-23    | "Pagar hasta hoy" reaches the latest session of today; days ordered by opening time                             | fix/vikunja-backlog          |
 | M-76     | 2026-10-23    | Payroll lines labelled by service (+ non-default variant), not "Estándar"                                       | fix/vikunja-backlog          |
 | M-71     | 2026-10-23    | Checkout + payroll E2E with axe; throwaway DB (Postgres + Neon proxy) in CI; screenshots opt-in                 | fix/vikunja-backlog          |
+| M-77     | 2026-10-23    | Analytics commission uses banker's rounding per item (matches payroll)                                          | fix/vikunja-backlog          |
