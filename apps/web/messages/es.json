@@ -19,7 +19,8 @@
     "required": "obligatorio",
     "yes": "Sí",
     "no": "No",
-    "showMore": "Mostrar {count, plural, one {# más} other {# más}}"
+    "showMore": "Mostrar {count, plural, one {# más} other {# más}}",
+    "networkError": "No se pudo conectar. Revisa la conexión e inténtalo de nuevo."
   },
   "roles": {
     "cashier": "Cajero",

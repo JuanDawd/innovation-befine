@@ -942,6 +942,16 @@
 
 ---
 
+### M-68 — Silent failures: forms do nothing on non-secure origins; unexplained logout
+
+- **Severity:** Medium
+- **Status:** Resolved (2026-10-23) — partial fix 2026-10-11 (`newUuid()` fallback); cookie loss attributed to the test tool
+- **Affected:** `log-service-form.tsx`, `sell-cloth-piece-modal.tsx`
+- **Description:** Source: training-manual walkthrough, 2026-10-11. Over plain HTTP `crypto.randomUUID` was undefined and "Registrar ticket" failed silently. More generally, a thrown server-action call (network drop, deploy skew) produced no toast, and each retry generated a new idempotency key, so retrying after a lost response could duplicate the ticket.
+- **Fix:** Both forms catch a thrown action and toast `common.networkError`. The idempotency key is tied to the submitted inputs (same inputs → same key → the server returns the ticket/sale already created; changed inputs or success → new key). Remaining `crypto.randomUUID()` uses are server-side only.
+
+---
+
 ## Low-priority issues
 
 ### L-09 — No file/image storage research
@@ -1724,3 +1734,4 @@
 | L-48     | 2026-10-23    | trustedOrigins derived from BETTER_AUTH_URL / NEXT_PUBLIC_APP_URL / BETTER_AUTH_TRUSTED_ORIGINS                 | fix/vikunja-backlog          |
 | L-49     | 2026-10-23    | Transaction pool size configurable via DB_TX_POOL_MAX (default 5)                                               | fix/vikunja-backlog          |
 | L-52     | 2026-10-23    | Notification badge clears on panel close; manifest + service worker no longer redirected to /login              | fix/vikunja-backlog          |
+| M-68     | 2026-10-23    | Ticket and cloth-sale forms toast thrown errors; retries reuse an input-tied idempotency key                    | fix/vikunja-backlog          |

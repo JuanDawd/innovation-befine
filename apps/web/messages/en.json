@@ -19,7 +19,8 @@
     "required": "required",
     "yes": "Yes",
     "no": "No",
-    "showMore": "Show {count} more"
+    "showMore": "Show {count} more",
+    "networkError": "Couldn't connect. Check the connection and try again."
   },
   "roles": {
     "cashier": "Cashier",
