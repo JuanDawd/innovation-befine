@@ -26,11 +26,22 @@ export default defineConfig({
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
       dependencies: ["setup"],
+      testIgnore: /payroll-settlement\.spec\.ts/,
     },
     {
       name: "mobile-chrome",
       use: { ...devices["Pixel 7"] },
       dependencies: ["setup"],
+      testIgnore: /payroll-settlement\.spec\.ts/,
+    },
+    // Closes the business day (only closed days can be paid), so it must run
+    // after every other spec: select it explicitly, e.g.
+    //   playwright test --project=chromium --project=settlement
+    {
+      name: "settlement",
+      testMatch: /payroll-settlement\.spec\.ts/,
+      use: { ...devices["Desktop Chrome"] },
+      dependencies: ["setup", "chromium"],
     },
   ],
   webServer: process.env.PLAYWRIGHT_BASE_URL

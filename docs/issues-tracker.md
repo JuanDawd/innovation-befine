@@ -982,6 +982,22 @@
 
 ---
 
+### M-71 — E2E missing checkout and payroll settlement specs
+
+- **Severity:** Medium (surfaced H-54, M-75, M-76 and a broken migration chain)
+- **Status:** Resolved (2026-10-23)
+- **Affected:** `apps/web/e2e`, `playwright.config.ts`, `.github/workflows/ci.yml`, `packages/db` (migrations, seeds)
+- **Description:** CLAUDE.md requires checkout E2E (Phase 4A) and payroll settlement E2E (Phase 7); neither existed and axe ran only in `smoke.spec.ts`. The CI E2E job used `secrets.DATABASE_URL`, which turned out to be production (H-54).
+- **Fix:**
+  - `e2e/checkout.spec.ts` — logged → awaiting → charged in cash (board, Cobrar dialog, success), axe on the dialog; close-day blocked with an unpaid ticket (H-49) and voiding a walk-out with the reason validation.
+  - `e2e/payroll-settlement.spec.ts` — paid service → stylist commission $20.000 per line and total, axe on the screen, payout recorded, nothing left unsettled. Runs in a `settlement` Playwright project after `chromium` because it closes the business day (voids leftovers first).
+  - Throwaway database: `e2e/db/compose.yaml` (Postgres 17 + local Neon proxy), `NEON_LOCAL_PROXY=1` mode in `packages/db`, `seed-e2e.ts` (deterministic "E2E Corte" $50.000 / 40 %; refuses to run without the proxy flag). Migrations fixed to apply from empty (0027).
+  - CI E2E job: service containers, migrate + seed in the job, dummy secrets only (no prod DB, no real email).
+  - `screenshots.spec.ts` now opt-in (`CAPTURE_SCREENSHOTS=1`) — every E2E run was overwriting `docs/training/screenshots`.
+  - Verified locally against ct-dev: 31 passed, twice (fresh DB with 1 worker, then 5 workers, no retries).
+
+---
+
 ## Low-priority issues
 
 ### L-09 — No file/image storage research
@@ -1677,6 +1693,8 @@
 
 - **Fakes must honour the real contract (M-59).** The in-memory Redis for `@upstash/ratelimit` returned a shape the library didn't expect, so every request was "allowed" and nobody noticed for months because no test ever asserted a rejection. When faking a dependency, test the fake through the real library and include at least one negative case (limit hit, conflict, rejection).
 
+- **E2E must own its database (M-71 / H-54).** A spec that "requires a seeded DB with an open day" silently depended on production having one — CI had been creating test tickets in production for four months. E2E now migrates and seeds a throwaway Postgres in the job; a seed or test that can write money records refuses to run unless it is pointed at that database.
+
 ## Resolution log
 
 > When an issue is resolved, update its status above and add an entry here.
@@ -1801,3 +1819,4 @@
 | L-03     | 2026-10-23    | Catalog audit log paged (20, keyset cursor) with Zod-validated input; labels via next-intl                      | fix/vikunja-backlog          |
 | M-75     | 2026-10-23    | "Pagar hasta hoy" reaches the latest session of today; days ordered by opening time                             | fix/vikunja-backlog          |
 | M-76     | 2026-10-23    | Payroll lines labelled by service (+ non-default variant), not "Estándar"                                       | fix/vikunja-backlog          |
+| M-71     | 2026-10-23    | Checkout + payroll E2E with axe; throwaway DB (Postgres + Neon proxy) in CI; screenshots opt-in                 | fix/vikunja-backlog          |

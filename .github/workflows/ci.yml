@@ -84,8 +84,38 @@ jobs:
   e2e:
     name: E2E Tests
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     needs: ci
+
+    # M-71: E2E runs against a throwaway Postgres behind a local Neon proxy —
+    # never against a shared or production database (it creates tickets,
+    # payments and payouts). Same stack as apps/web/e2e/db/compose.yaml.
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: main
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres -d main"
+          --health-interval 2s --health-retries 30
+      neon-proxy:
+        image: ghcr.io/timowilhelm/local-neon-http-proxy:main
+        env:
+          PG_CONNECTION_STRING: postgres://postgres:postgres@postgres:5432/main
+        ports: ["4444:4444"]
+
+    # Dummy secrets on purpose: nothing here may reach production or send email.
+    env:
+      NEON_LOCAL_PROXY: "1"
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/main
+      BETTER_AUTH_SECRET: e2e-only-secret-0123456789abcdef0123456789
+      BETTER_AUTH_URL: http://localhost:3000
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      RESEND_API_KEY: re_e2e_dummy
+      RESEND_FROM_EMAIL: "E2E <e2e@example.com>"
 
     steps:
       - uses: actions/checkout@v4
@@ -109,23 +139,24 @@ jobs:
             turbo-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
             turbo-${{ runner.os }}-
 
+      - name: Migrate and seed the E2E database
+        run: |
+          npx wait-on tcp:4444 --timeout 60000
+          pnpm --filter @befine/db exec node --import tsx/esm src/migrate.ts
+          pnpm --filter @befine/db exec node --import tsx/esm src/seed.ts
+          pnpm --filter @befine/db exec node --import tsx/esm src/seed-e2e.ts
+
       - name: Install Playwright browsers
         run: pnpm --filter @befine/web exec playwright install --with-deps chromium
 
       - name: Clean Next.js build cache
         run: rm -rf apps/web/.next
 
-      # SKIP_ENV_VALIDATION: compile-time schema skip — runtime still requires secrets for `next start` + E2E.
+      # SKIP_ENV_VALIDATION: compile-time schema skip. Only the Sentry upload uses real secrets.
       - name: Build
         run: pnpm build
         env:
           SKIP_ENV_VALIDATION: "1"
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
-          BETTER_AUTH_URL: http://localhost:3000
-          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-          RESEND_FROM_EMAIL: ${{ secrets.RESEND_FROM_EMAIL }}
-          NEXT_PUBLIC_APP_URL: http://localhost:3000
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
@@ -134,35 +165,16 @@ jobs:
         run: pnpm --filter @befine/web exec next start &
         env:
           PORT: 3000
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
-          BETTER_AUTH_URL: http://localhost:3000
-          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-          RESEND_FROM_EMAIL: ${{ secrets.RESEND_FROM_EMAIL }}
-          NEXT_PUBLIC_APP_URL: http://localhost:3000
 
       - name: Wait for server
         run: npx wait-on http://localhost:3000 --timeout 30000
 
       - name: Run E2E tests
-        run: pnpm --filter @befine/web test:e2e --project=chromium
+        # settlement closes the business day, so it runs after chromium (playwright.config.ts)
+        run: pnpm --filter @befine/web test:e2e --project=chromium --project=settlement
         env:
           PLAYWRIGHT_BASE_URL: "http://localhost:3000"
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
-          BETTER_AUTH_URL: http://localhost:3000
-          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-          RESEND_FROM_EMAIL: ${{ secrets.RESEND_FROM_EMAIL }}
-          NEXT_PUBLIC_APP_URL: http://localhost:3000
-          # Seed user credentials — override via GitHub Secrets if seed passwords differ
-          E2E_ADMIN_EMAIL: "admin@befine.dev"
-          E2E_ADMIN_PASSWORD: ${{ secrets.E2E_ADMIN_PASSWORD || 'Admin123!' }}
-          E2E_SECRETARY_EMAIL: "secretary@befine.dev"
-          E2E_SECRETARY_PASSWORD: ${{ secrets.E2E_SECRETARY_PASSWORD || 'Secretary123!' }}
-          E2E_STYLIST_EMAIL: "hairdresser@befine.dev"
-          E2E_STYLIST_PASSWORD: ${{ secrets.E2E_STYLIST_PASSWORD || 'Stylist123!' }}
-          E2E_CLOTHIER_EMAIL: "clothier@befine.dev"
-          E2E_CLOTHIER_PASSWORD: ${{ secrets.E2E_CLOTHIER_PASSWORD || 'Clothier123!' }}
+          # Logins use the seed defaults (packages/db/src/seed.ts) — the database is throwaway.
 
       - name: Upload Playwright report
         if: failure()
