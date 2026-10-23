@@ -2,11 +2,14 @@ import { neon, neonConfig, Pool } from "@neondatabase/serverless";
 import { drizzle as drizzleHttp } from "drizzle-orm/neon-http";
 import { drizzle as drizzleWs } from "drizzle-orm/neon-serverless";
 import ws from "ws";
+import { configureLocalNeonProxy } from "./local-proxy";
 
 import * as schema from "./schema";
 
 // Required for neon-serverless WebSocket driver in Node.js runtime
 neonConfig.webSocketConstructor = ws;
+
+configureLocalNeonProxy();
 
 /**
  * HTTP driver — use for all reads, simple writes, Better Auth, and any
