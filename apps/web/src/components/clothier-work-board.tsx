@@ -120,7 +120,14 @@ export function ClothierWorkBoard({ employeeId }: { employeeId: string }) {
     const res = await claimPiece(piece.id, piece.version);
     setPendingId(null);
     if (!res.success) {
-      setErrorMap((m) => ({ ...m, [piece.id]: t("claimError") }));
+      if (res.error.code === "CONFLICT") {
+        // M-58: someone else got it — drop it from the list instead of
+        // leaving a dead row to tap again.
+        toast.info(t("claimTaken", { piece: piece.clothPieceName }));
+        notifyDataChanged("products");
+      } else {
+        setErrorMap((m) => ({ ...m, [piece.id]: res.error.message }));
+      }
     } else {
       toast.success(t("claimSuccess", { piece: piece.clothPieceName }));
       notifyDataChanged("products");

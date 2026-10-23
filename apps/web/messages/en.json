@@ -452,7 +452,6 @@
     "myPieces": "My pieces",
     "available": "Available to claim",
     "claim": "Claim",
-    "claimError": "Already claimed",
     "markDone": "Done",
     "markDoneError": "Could not update",
     "staleError": "Status changed — please reload",
@@ -470,7 +469,8 @@
     "groupToDo": "To do",
     "groupDone": "Finished",
     "fromDate": "From {date}",
-    "allDone": "You finished all your pieces for today."
+    "allDone": "You finished all your pieces for today.",
+    "claimTaken": "Someone else took {piece} — pick another"
   },
   "products": {
     "pageTitle": "Products",

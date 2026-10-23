@@ -494,7 +494,6 @@
     "myPieces": "Mis piezas",
     "available": "Disponibles para reclamar",
     "claim": "Reclamar",
-    "claimError": "Ya fue reclamada",
     "markDone": "Listo",
     "markDoneError": "No se pudo actualizar",
     "staleError": "Estado cambiado — recarga la página",
@@ -512,7 +511,8 @@
     "groupToDo": "Por hacer",
     "groupDone": "Terminadas",
     "fromDate": "Del {date}",
-    "allDone": "Terminaste todas tus piezas de hoy."
+    "allDone": "Terminaste todas tus piezas de hoy.",
+    "claimTaken": "Otra persona tomó {piece} — elige otra"
   },
   "products": {
     "pageTitle": "Productos",

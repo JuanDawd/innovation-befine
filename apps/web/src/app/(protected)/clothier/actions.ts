@@ -18,6 +18,7 @@ import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
 import { getCurrentBusinessDay } from "@/lib/business-day";
 import { businessDateOf } from "@/lib/dates";
+import { spreadForClaimer } from "@/lib/piece-order";
 import { revalidatePath } from "next/cache";
 import { createNotification } from "@/lib/notifications";
 import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
@@ -118,7 +119,15 @@ export async function listTodayProductPieces(): Promise<ActionResult<ProductPiec
     carriedOver: businessDayId !== businessDay?.id,
   }));
 
-  return { success: true, data };
+  // M-58: claimable pieces in this clothier's own order so they don't all race
+  // for the top one; their own pieces keep the query order.
+  const mine = data.filter((p) => p.assignedToEmployeeId !== null);
+  const claimable = spreadForClaimer(
+    data.filter((p) => p.assignedToEmployeeId === null),
+    ctx.employeeId,
+  );
+
+  return { success: true, data: [...mine, ...claimable] };
 }
 
 // ─── Self-claim an unassigned piece ──────────────────────────────────────────

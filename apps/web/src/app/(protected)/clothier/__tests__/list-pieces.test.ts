@@ -73,7 +73,11 @@ describe("listTodayProductPieces", () => {
 
   it("flags pieces from an earlier business day as carried over", async () => {
     state.pieceRows = [
-      row({ id: "old", businessDayId: "monday" }),
+      row({
+        id: "old",
+        businessDayId: "monday",
+        productCreatedAt: new Date("2026-10-20T15:00:00Z"),
+      }),
       row({ id: "new", businessDayId: "today" }),
     ];
     const res = await listTodayProductPieces();

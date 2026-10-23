@@ -902,6 +902,16 @@
 
 ---
 
+### M-58 — Clothiers race for the same unassigned piece
+
+- **Severity:** Medium
+- **Status:** Resolved (2026-10-23)
+- **Affected:** T047/T048 `clothier/actions.ts` `listTodayProductPieces`, `claimPiece`; `clothier-work-board.tsx`
+- **Description:** Source: k6 load test 2026-10-11. Every clothier received the same ordered list of unassigned pieces, picked from the top and collided; optimistic locking rejected the loser (1,094 rejected claims in the full run, no corruption), each one a wasted tap and an error for a real person — and the lost piece stayed on screen until the 30 s refetch.
+- **Fix:** Claimable pieces are ordered per clothier (`lib/piece-order.ts`: older days first, then a stable FNV-1a hash of employee + piece), so simultaneous claims spread across the list. A lost claim (`CONFLICT`) shows "Otra persona tomó … — elige otra" and refetches the board immediately; other errors show the server message. Chose this over a blind "claim next" button because clothiers pick by piece type. Tests: `lib/__tests__/piece-order.test.ts`.
+
+---
+
 ## Low-priority issues
 
 ### L-09 — No file/image storage research
@@ -1645,3 +1655,4 @@
 | M-56     | 2026-10-23    | createAssignment locks the order_items row (FOR UPDATE) before the capacity SUM                          | fix/vikunja-backlog          |
 | M-61     | 2026-10-23    | createTicket catch logs + Sentry.captureException; generic message kept                                  | fix/vikunja-backlog          |
 | L-47     | 2026-10-23    | createTicket idempotency via INSERT … ON CONFLICT DO NOTHING + fetch                                     | fix/vikunja-backlog          |
+| M-58     | 2026-10-23    | Per-clothier stable order for claimable pieces; lost claim refetches board with a clear toast            | fix/vikunja-backlog          |
