@@ -3,20 +3,14 @@ import { describe, it, expect } from "vitest";
 /**
  * Concurrent over-assignment simulation.
  *
- * NOTE: The createAssignment server action uses a DB transaction with a
- * SUM aggregate check but currently does NOT acquire a row-level lock
- * (SELECT ... FOR UPDATE) on the order_items row. This means two concurrent
- * transactions can both pass the capacity check if they race between the
- * SELECT and the INSERT.
+ * The createAssignment server action locks the order_items row
+ * (SELECT ... FOR UPDATE, M-56) before the SUM capacity check, so concurrent
+ * assignments for the same item serialize: under READ COMMITTED the waiting
+ * transaction's SUM runs after the first one commits and sees its insert.
  *
- * These tests model the serialized behavior that a proper
- * SELECT ... FOR UPDATE would guarantee. They serve as a contract test:
- * if a FOR UPDATE lock is added, these invariants must hold. If it is not
- * added, the race window in the real DB means the CONFLICT branch may never
- * fire under concurrent load.
- *
- * See also: docs/issues-tracker.md — track this as a medium-severity gap
- * if concurrent assignment throughput becomes a concern.
+ * These tests model that serialized behavior (and the racy alternative it
+ * prevents) as a contract. The SQL itself is asserted in
+ * apps/web/src/app/(protected)/large-orders/__tests__/create-assignment.test.ts.
  */
 
 // ─── Simulated assignment store ───────────────────────────────────────────────

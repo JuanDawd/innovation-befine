@@ -882,6 +882,16 @@
 
 ---
 
+### M-56 — createAssignment lacks SELECT ... FOR UPDATE; concurrent over-assignment race window exists
+
+- **Severity:** Medium
+- **Status:** Resolved (2026-10-23)
+- **Affected:** T4.7 `large-orders/assignment-actions.ts` `createAssignment`
+- **Description:** `createAssignment` read `SUM(assigned_quantity)` inside a transaction without locking the `order_items` row, so two concurrent requests could both pass the capacity check and together exceed `order_items.quantity`.
+- **Fix:** The order-item read is `.for("update")`; concurrent assignments for the same item serialize and the waiting one's SUM (a new statement under READ COMMITTED) sees the committed insert. Test asserts the lock precedes the SUM: `large-orders/__tests__/create-assignment.test.ts`.
+
+---
+
 ## Low-priority issues
 
 ### L-09 — No file/image storage research
@@ -1612,3 +1622,4 @@
 | H-52     | 2026-10-23    | Clothier board keeps unfinished pieces from earlier days (dated tag); works with no open day             | fix/vikunja-backlog          |
 | H-49     | 2026-10-23    | Close day blocked atomically while tickets are unpaid; `voided` status + `voidTicket` with reason        | fix/vikunja-backlog          |
 | H-50     | 2026-10-23    | Cloth sales: idempotency key + required payment method; counted in analytics and day revenue             | fix/vikunja-backlog          |
+| M-56     | 2026-10-23    | createAssignment locks the order_items row (FOR UPDATE) before the capacity SUM                          | fix/vikunja-backlog          |
