@@ -6,7 +6,7 @@
  *   "E2E Corte" / "Estándar" — $50.000, 40 % commission → stylist earns $20.000
  *
  * Refuses to run unless NEON_LOCAL_PROXY=1: it is only for the throwaway
- * database in apps/web/e2e/db/compose.yaml, never a Neon branch.
+ * database from scripts/test-db.sh, never a Neon branch.
  *
  * Run with: NEON_LOCAL_PROXY=1 DATABASE_URL=… node --import tsx/esm src/seed-e2e.ts
  */

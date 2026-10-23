@@ -1,8 +1,8 @@
 /**
  * M-70b — integration-test harness for packages/db/src/queries.
  *
- * Runs against the throwaway Postgres from apps/web/e2e/db/compose.yaml (or the
- * CI service containers): set TEST_DATABASE_URL and NEON_LOCAL_PROXY=1. Without
+ * Runs against the throwaway Postgres from scripts/test-db.sh (which prints
+ * TEST_DATABASE_URL and NEON_LOCAL_PROXY=1; CI does the same). Without
  * them the suites are skipped, so `turbo test` still works with no database.
  *
  * Every test runs inside one transaction that first TRUNCATEs the app tables

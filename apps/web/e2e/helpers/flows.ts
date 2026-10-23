@@ -2,7 +2,7 @@ import { expect, type Browser, type Page } from "@playwright/test";
 
 /**
  * Shared E2E flows (M-71). Specs run against the throwaway database from
- * e2e/db/compose.yaml, seeded by packages/db/src/seed.ts + seed-e2e.ts:
+ * scripts/test-db.sh, seeded by packages/db/src/seed.ts + seed-e2e.ts:
  *   stylist "Estilista" (hairdresser@befine.dev), service "E2E Corte" /
  *   "Estándar" at $50.000 with 40 % commission.
  */

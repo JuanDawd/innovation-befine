@@ -991,8 +991,8 @@
 - **Fix:**
   - `e2e/checkout.spec.ts` — logged → awaiting → charged in cash (board, Cobrar dialog, success), axe on the dialog; close-day blocked with an unpaid ticket (H-49) and voiding a walk-out with the reason validation.
   - `e2e/payroll-settlement.spec.ts` — paid service → stylist commission $20.000 per line and total, axe on the screen, payout recorded, nothing left unsettled. Runs in a `settlement` Playwright project after `chromium` because it closes the business day (voids leftovers first).
-  - Throwaway database: `e2e/db/compose.yaml` (Postgres 17 + local Neon proxy), `NEON_LOCAL_PROXY=1` mode in `packages/db`, `seed-e2e.ts` (deterministic "E2E Corte" $50.000 / 40 %; refuses to run without the proxy flag). Migrations fixed to apply from empty (0027).
-  - CI E2E job: service containers, migrate + seed in the job, dummy secrets only (no prod DB, no real email).
+  - Throwaway database: `scripts/test-db.sh` (Postgres 17 on tmpfs + local Neon proxy, random password per run), `NEON_LOCAL_PROXY=1` mode in `packages/db`, `seed-e2e.ts` (deterministic "E2E Corte" $50.000 / 40 %; refuses to run without the proxy flag). Migrations fixed to apply from empty (0027).
+  - CI E2E job: database from `scripts/test-db.sh`, migrate + seed in the job; auth secret, Resend key and seeded users' passwords generated per run with `openssl` and masked — no credential is committed (no prod DB, no real email).
   - `screenshots.spec.ts` now opt-in (`CAPTURE_SCREENSHOTS=1`) — every E2E run was overwriting `docs/training/screenshots`.
   - Verified locally against ct-dev: 31 passed, twice (fresh DB with 1 worker, then 5 workers, no retries).
 
