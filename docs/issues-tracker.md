@@ -488,6 +488,16 @@
 
 ---
 
+### H-52 — Clothiers can't see unfinished pieces from previous days
+
+- **Severity:** High
+- **Status:** Resolved (2026-10-23)
+- **Affected:** T046 `clothier/actions.ts` `listTodayProductPieces`, `clothier-work-board.tsx`
+- **Description:** Found while verifying UX fixes (2026-10-11). The query filtered `products.business_day_id = current day`, so every pending piece created on an earlier day disappeared from the clothiers' phones once a new day was opened (7 such pieces in the demo DB were invisible), while the secretary still listed them under "En progreso". With no open day the board was empty.
+- **Fix:** The board returns today's pieces plus any non-approved piece from earlier days (also when no day is open), oldest product first within each status; carried-over pieces show a "Del 21 oct" tag. Tests: `clothier/__tests__/list-pieces.test.ts`.
+
+---
+
 ### H-53 — Secretary paid twice for a date with two business days; payroll dates computed in UTC
 
 - **Severity:** High
@@ -1579,3 +1589,4 @@
 | H-53     | 2026-10-12    | Distinct-date secretary pay + sibling-payout exclusion; Bogota dates in payroll; same-date labels        | fix/payroll-same-date-days   |
 | M-64     | 2026-10-12    | Client reads via parallel GET /api/q (allowlist over existing read fns); Cobrar dialog ~1.5 s            | fix/payroll-same-date-days   |
 | UI-audit | 2026-10-12    | Long lists paged 50 at a time (clients, ticket history); global-error localized + styled                 | fix/payroll-same-date-days   |
+| H-52     | 2026-10-23    | Clothier board keeps unfinished pieces from earlier days (dated tag); works with no open day             | fix/vikunja-backlog          |

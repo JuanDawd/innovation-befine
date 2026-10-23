@@ -511,6 +511,7 @@
     "statusPendingApproval": "Pendiente aprobación",
     "groupToDo": "Por hacer",
     "groupDone": "Terminadas",
+    "fromDate": "Del {date}",
     "allDone": "Terminaste todas tus piezas de hoy."
   },
   "products": {

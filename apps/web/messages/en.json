@@ -469,6 +469,7 @@
     "statusPendingApproval": "Pending approval",
     "groupToDo": "To do",
     "groupDone": "Finished",
+    "fromDate": "From {date}",
     "allDone": "You finished all your pieces for today."
   },
   "products": {
