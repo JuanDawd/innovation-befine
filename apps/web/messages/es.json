@@ -304,7 +304,14 @@
     "discard": "Descartar",
     "sellingPriceTitle": "Precio de venta",
     "removeVariant": "Eliminar variante",
-    "variantLimitWarning": "Este servicio tiene {count} variantes. Más de {limit} se vuelven difíciles de elegir en el celular — considera dividirlo en varios servicios."
+    "variantLimitWarning": "Este servicio tiene {count} variantes. Más de {limit} se vuelven difíciles de elegir en el celular — considera dividirlo en varios servicios.",
+    "auditLogMore": "Ver más",
+    "auditAction": {
+      "create": "Creado",
+      "update": "Editado",
+      "soft_delete": "Desactivado",
+      "restore": "Restaurado"
+    }
   },
   "clients": {
     "pageTitle": "Clientes",

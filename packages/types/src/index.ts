@@ -15,6 +15,8 @@ export {
   addVariantSchema,
   createClothPieceSchema,
   editClothPieceSchema,
+  auditLogPageSchema,
+  type AuditLogPageInput,
   type CreateServiceInput,
   type EditServiceInput,
   type EditServiceVariantInput,

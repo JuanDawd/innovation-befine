@@ -52,3 +52,10 @@ export type EditServiceVariantInput = z.infer<typeof editServiceVariantSchema>;
 export type AddVariantInput = z.infer<typeof addVariantSchema>;
 export type CreateClothPieceInput = z.infer<typeof createClothPieceSchema>;
 export type EditClothPieceInput = z.infer<typeof editClothPieceSchema>;
+
+/** L-03 — one page of an entity's audit log; `beforeId` is the oldest entry already shown. */
+export const auditLogPageSchema = z.object({
+  entityId: z.uuid("ID inválido"),
+  beforeId: z.uuid("ID inválido").optional(),
+});
+export type AuditLogPageInput = z.infer<typeof auditLogPageSchema>;

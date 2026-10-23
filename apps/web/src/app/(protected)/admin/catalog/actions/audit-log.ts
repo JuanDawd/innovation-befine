@@ -8,12 +8,18 @@
  */
 
 import { headers } from "next/headers";
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { catalogAuditLog, users } from "@befine/db/schema";
 import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
+import { auditLogPageSchema } from "@befine/types";
+
+/** Entries per page — "Ver más" loads the next page (L-03). */
+const PAGE_SIZE = 20;
+
+export type AuditLogPage = { entries: AuditLogEntry[]; hasMore: boolean };
 
 export type AuditLogEntry = {
   id: string;
@@ -24,12 +30,17 @@ export type AuditLogEntry = {
   newData: unknown;
 };
 
-export async function getEntityAuditLog(entityId: string): Promise<ActionResult<AuditLogEntry[]>> {
+export async function getEntityAuditLog(rawInput: unknown): Promise<ActionResult<AuditLogPage>> {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session)
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
   if (!hasRole(session.user, "admin"))
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
+
+  const parsed = auditLogPageSchema.safeParse(rawInput);
+  if (!parsed.success)
+    return { success: false, error: { code: "VALIDATION_ERROR", message: "Datos inválidos" } };
+  const { entityId, beforeId } = parsed.data;
 
   const db = getDb();
   const rows = await db
@@ -43,9 +54,23 @@ export async function getEntityAuditLog(entityId: string): Promise<ActionResult<
     })
     .from(catalogAuditLog)
     .innerJoin(users, eq(catalogAuditLog.changedBy, users.id))
-    .where(eq(catalogAuditLog.entityId, entityId))
-    .orderBy(desc(catalogAuditLog.createdAt))
-    .limit(50);
+    .where(
+      and(
+        eq(catalogAuditLog.entityId, entityId),
+        // Keyset on (created_at, id), resolved in the DB so timestamps keep
+        // microsecond precision (a JS Date would round them).
+        beforeId
+          ? sql`(${catalogAuditLog.createdAt}, ${catalogAuditLog.id}) < (
+              SELECT created_at, id FROM catalog_audit_log WHERE id = ${beforeId}
+            )`
+          : undefined,
+      ),
+    )
+    .orderBy(desc(catalogAuditLog.createdAt), desc(catalogAuditLog.id))
+    .limit(PAGE_SIZE + 1);
 
-  return { success: true, data: rows };
+  return {
+    success: true,
+    data: { entries: rows.slice(0, PAGE_SIZE), hasMore: rows.length > PAGE_SIZE },
+  };
 }

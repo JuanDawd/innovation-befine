@@ -303,7 +303,14 @@
     "discard": "Discard",
     "sellingPriceTitle": "Selling price",
     "removeVariant": "Remove variant",
-    "variantLimitWarning": "This service has {count} variants. More than {limit} get hard to pick on a phone — consider splitting it into several services."
+    "variantLimitWarning": "This service has {count} variants. More than {limit} get hard to pick on a phone — consider splitting it into several services.",
+    "auditLogMore": "Show more",
+    "auditAction": {
+      "create": "Created",
+      "update": "Edited",
+      "soft_delete": "Deactivated",
+      "restore": "Restored"
+    }
   },
   "clients": {
     "pageTitle": "Clients",
