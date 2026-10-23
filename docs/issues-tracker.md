@@ -1571,6 +1571,16 @@
 
 ---
 
+### L-52 — Mobile and small UX polish
+
+- **Severity:** Low
+- **Status:** Resolved (2026-10-23) — (5) moved to M-62
+- **Affected:** notifications bell, clothier "Listo", PWA manifest / service worker, mobile shells
+- **Description:** Source: training-manual walkthrough with agent-browser, 2026-10-11. (1) Floating name/bell pill overlapped the H1 at 390 px. (2) The unread badge didn't clear after opening notifications. (3) Clothier "Listo" applied with no confirmation. (4) `/manifest.webmanifest` was redirected to `/login` (manifest requests carry no cookies), so the PWA manifest was unreachable. (5) "Abrir día" spun ~5 s.
+- **Fix:** (1) 2026-10-12 in-flow top bar. (3) 2026-10-11 confirmation + toast + idempotency key. (2) Closing the panel marks what was shown as read (dots stay visible while it's open). (4) Middleware matcher skips `.js` and `.webmanifest` static files — also fixes `/sw.js` and `/workbox-*.js`, which were redirected the same way for signed-out visitors; test with Next's `unstable_doesMiddlewareMatch` in `lib/__tests__/middleware-matcher.test.ts`. (5) is sequential-query latency → tracked under M-62.
+
+---
+
 ## Lessons learned
 
 > This section is populated during development. Each entry documents what went wrong, the root cause, and how to prevent it in the future.
@@ -1713,3 +1723,4 @@
 | M-49     | 2026-10-23    | Verified root metadata already sets a description (fixed earlier)                                               | fix/vikunja-backlog          |
 | L-48     | 2026-10-23    | trustedOrigins derived from BETTER_AUTH_URL / NEXT_PUBLIC_APP_URL / BETTER_AUTH_TRUSTED_ORIGINS                 | fix/vikunja-backlog          |
 | L-49     | 2026-10-23    | Transaction pool size configurable via DB_TX_POOL_MAX (default 5)                                               | fix/vikunja-backlog          |
+| L-52     | 2026-10-23    | Notification badge clears on panel close; manifest + service worker no longer redirected to /login              | fix/vikunja-backlog          |
