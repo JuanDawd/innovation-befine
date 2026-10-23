@@ -81,6 +81,58 @@ jobs:
   # Seed credentials can be overridden via:
   #   E2E_ADMIN_PASSWORD, E2E_SECRETARY_PASSWORD, E2E_CLOTHIER_PASSWORD, E2E_STYLIST_PASSWORD
   # Falls back to defaults (Admin123!, Secretary123!, etc.) if secrets are absent.
+  db-integration:
+    name: DB integration tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: ci
+
+    # M-70b: packages/db/src/queries against a real Postgres (behind the local
+    # Neon proxy); each test truncates and rolls back inside one transaction.
+    # Enforces the 80 % coverage threshold from CLAUDE.md.
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: main
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres -d main"
+          --health-interval 2s --health-retries 30
+      neon-proxy:
+        image: ghcr.io/timowilhelm/local-neon-http-proxy:main
+        env:
+          PG_CONNECTION_STRING: postgres://postgres:postgres@postgres:5432/main
+        ports: ["4444:4444"]
+
+    env:
+      NEON_LOCAL_PROXY: "1"
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/main
+      TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/main
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Migrate (also proves the chain applies to an empty database)
+        run: |
+          npx wait-on tcp:4444 --timeout 60000
+          pnpm --filter @befine/db exec node --import tsx/esm src/migrate.ts
+
+      - name: Query tests with coverage
+        run: pnpm --filter @befine/db test:coverage
+
   e2e:
     name: E2E Tests
     runs-on: ubuntu-latest
@@ -202,7 +254,7 @@ jobs:
   deploy-production:
     name: Deploy to Production
     runs-on: ubuntu-latest
-    needs: [ci, e2e]
+    needs: [ci, e2e, db-integration]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     environment: production
     timeout-minutes: 15

@@ -1008,6 +1008,16 @@
 
 ---
 
+### M-70b — `packages/db/src/queries` coverage is ~4%; the 80% threshold in CLAUDE.md is not enforced
+
+- **Severity:** Medium
+- **Status:** Resolved (2026-10-23)
+- **Affected:** `packages/db/src/queries/` (analytics, order-items, products, payroll), `packages/db/vitest.config.ts`, CI
+- **Description:** CI pipeline review, 2026-10-12: 4–7 % statements / ~5 % branches for `queries/`, no thresholds, coverage never run in CI. Existing tests mirrored logic in pure functions instead of exercising the SQL.
+- **Fix:** Integration tests against a real Postgres (same local Neon proxy stack as E2E): `queries/__tests__/helpers/test-db.ts` runs each test in one transaction that TRUNCATEs the app tables first and always rolls back, plus fixture builders; suites skip unless `TEST_DATABASE_URL` + `NEON_LOCAL_PROXY=1` are set, so `turbo test` still runs without a database. 37 tests with known inputs and pre-computed peso outputs (revenue sources and exclusions, $0 override, 0 %/100 % commission, half-even rounding, clothier approved-only piece rates, secretary ISO-week cap + same-date sessions + absences, period windows, assignment progress/anomalies, products dashboard WIP/today and quantity weighting). Coverage now 98.8 % statements / 85.3 % branches / 100 % functions. `coverage.thresholds` 80 % in `vitest.config.ts`, `test:coverage` script, new CI job "DB integration tests" (also proves migrations apply from empty); deploy gate waits for it. Found M-77.
+
+---
+
 ## Low-priority issues
 
 ### L-09 — No file/image storage research
@@ -1831,3 +1841,4 @@
 | M-76     | 2026-10-23    | Payroll lines labelled by service (+ non-default variant), not "Estándar"                                       | fix/vikunja-backlog          |
 | M-71     | 2026-10-23    | Checkout + payroll E2E with axe; throwaway DB (Postgres + Neon proxy) in CI; screenshots opt-in                 | fix/vikunja-backlog          |
 | M-77     | 2026-10-23    | Analytics commission uses banker's rounding per item (matches payroll)                                          | fix/vikunja-backlog          |
+| M-70b    | 2026-10-23    | Query integration tests on real Postgres (rolled back); 98.8 % / 85.3 % coverage; 80 % threshold enforced in CI | fix/vikunja-backlog          |
