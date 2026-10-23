@@ -1020,7 +1020,8 @@
     "guestName": "Nombre del cliente",
     "linkedToTicket": "Esta venta quedará vinculada al ticket actual.",
     "submit": "Registrar venta",
-    "success": "Venta registrada — {total}"
+    "success": "Venta registrada — {total}",
+    "paymentMethod": "Método de pago"
   },
   "orderProgress": {
     "emptyTitle": "Sin ítems de producción",

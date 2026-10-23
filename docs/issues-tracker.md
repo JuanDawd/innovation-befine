@@ -488,6 +488,16 @@
 
 ---
 
+### H-50 — "Vender prenda": duplicate sales, no payment method, not counted as revenue
+
+- **Severity:** High
+- **Status:** Resolved (2026-10-23)
+- **Affected:** `sell-cloth-piece-modal.tsx`, `cashier/actions/cloth-sales.ts`, `cashier/actions/day-stats.ts`, `packages/db/src/queries/analytics.ts`
+- **Description:** Source: training-manual walkthrough with agent-browser, 2026-10-11. (1) One intended sale was stored twice; the action had no idempotency key. (2) Sales had no payment method and never went through Cobrar. (3) Analytics "Ingresos por venta de productos" only summed sold crafted pieces, so cloth sales showed $0. (4) Catalog variants had no sale price.
+- **Fix:** (1) `cloth_sales.idempotency_key` (unique, migration `0035`); the modal sends one key per sale attempt and the action does `INSERT … ON CONFLICT DO NOTHING` then returns the stored sale. Success toast was already in place. (2) `payment_method` is required on new sales (cash/card/transfer picker; null only on legacy rows); Sentry breadcrumb per sale. (3) Cloth sales `(price_override ?? unit_price) × quantity` added to `revenueByPeriod`, `dailyRevenueBreakdown` and the cashier's day revenue. (4) Data, not code: sale prices are set per variant in Catálogo → Prendas (owner task). Tests: `cashier/__tests__/cloth-sales.test.ts`, `packages/db/src/queries/__tests__/analytics-revenue.test.ts`.
+
+---
+
 ### H-51 — Lists don't refresh after mutations (risk of duplicate records)
 
 - **Severity:** High
@@ -1601,3 +1611,4 @@
 | UI-audit | 2026-10-12    | Long lists paged 50 at a time (clients, ticket history); global-error localized + styled                 | fix/payroll-same-date-days   |
 | H-52     | 2026-10-23    | Clothier board keeps unfinished pieces from earlier days (dated tag); works with no open day             | fix/vikunja-backlog          |
 | H-49     | 2026-10-23    | Close day blocked atomically while tickets are unpaid; `voided` status + `voidTicket` with reason        | fix/vikunja-backlog          |
+| H-50     | 2026-10-23    | Cloth sales: idempotency key + required payment method; counted in analytics and day revenue             | fix/vikunja-backlog          |

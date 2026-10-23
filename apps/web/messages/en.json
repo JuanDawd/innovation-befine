@@ -976,7 +976,8 @@
     "guestName": "Customer name",
     "linkedToTicket": "This sale will be linked to the current ticket.",
     "submit": "Record sale",
-    "success": "Sale recorded — {total}"
+    "success": "Sale recorded — {total}",
+    "paymentMethod": "Payment method"
   },
   "orderProgress": {
     "emptyTitle": "No production items",

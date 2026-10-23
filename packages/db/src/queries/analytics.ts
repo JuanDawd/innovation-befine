@@ -4,6 +4,8 @@
  * All queries accept businessDayIds[] so the caller controls the time window.
  * Revenue = sum of effective ticket item prices (override_price ?? unit_price) * quantity
  *   for closed, non-needs_review tickets.
+ * Product sales = sold crafted pieces (sold_price) + direct cloth sales
+ *   (price_override ?? unit_price) * quantity — H-50.
  * earningsByEmployee mirrors the compute-*-earnings logic but runs as a single
  *   SQL aggregation for efficiency.
  */
@@ -20,7 +22,12 @@ import {
   users,
   businessDays,
   employeeAbsences,
+  clothSales,
 } from "../schema";
+
+const clothSaleTotal = sql<number>`COALESCE(SUM(
+  COALESCE(${clothSales.priceOverride}, ${clothSales.unitPrice}) * ${clothSales.quantity}
+), 0)::bigint`;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -74,7 +81,7 @@ export async function revenueByPeriod(
   if (businessDayIds.length === 0)
     return { totalRevenue: 0, serviceRevenue: 0, productSalesRevenue: 0, totalJobs: 0 };
 
-  const [ticketRows, salesRows] = await Promise.all([
+  const [ticketRows, salesRows, clothSaleRows] = await Promise.all([
     db
       .select({
         revenue: sql<number>`
@@ -104,10 +111,15 @@ export async function revenueByPeriod(
           sql`${productPieces.soldAt} IS NOT NULL`,
         ),
       ),
+    db
+      .select({ revenue: clothSaleTotal })
+      .from(clothSales)
+      .where(inArray(clothSales.businessDayId, businessDayIds)),
   ]);
 
   const serviceRevenue = Number(ticketRows[0]?.revenue ?? 0);
-  const productSalesRevenue = Number(salesRows[0]?.revenue ?? 0);
+  const productSalesRevenue =
+    Number(salesRows[0]?.revenue ?? 0) + Number(clothSaleRows[0]?.revenue ?? 0);
 
   return {
     totalRevenue: serviceRevenue + productSalesRevenue,
@@ -352,7 +364,7 @@ export async function dailyRevenueBreakdown(
 ): Promise<DailyRevenueRow[]> {
   if (businessDayIds.length === 0) return [];
 
-  const [ticketRows, salesRows] = await Promise.all([
+  const [ticketRows, salesRows, clothSaleRows] = await Promise.all([
     db
       .select({
         businessDayId: tickets.businessDayId,
@@ -389,9 +401,16 @@ export async function dailyRevenueBreakdown(
         ),
       )
       .groupBy(products.businessDayId),
+    db
+      .select({ businessDayId: clothSales.businessDayId, revenue: clothSaleTotal })
+      .from(clothSales)
+      .where(inArray(clothSales.businessDayId, businessDayIds))
+      .groupBy(clothSales.businessDayId),
   ]);
 
   const salesByDay = new Map(salesRows.map((r) => [r.businessDayId, Number(r.revenue)]));
+  for (const r of clothSaleRows)
+    salesByDay.set(r.businessDayId, (salesByDay.get(r.businessDayId) ?? 0) + Number(r.revenue));
 
   return ticketRows.map((r) => {
     const serviceRevenue = Number(r.revenue);
