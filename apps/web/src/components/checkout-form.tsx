@@ -17,7 +17,7 @@
 import { newUuid } from "@/lib/uuid";
 import { notifyDataChanged } from "@/lib/data-events";
 import { useState, useTransition } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
@@ -71,6 +71,7 @@ export function CheckoutForm({
   const t = useTranslations("checkout");
   const tc = useTranslations("common");
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const { data: allTickets = [], isPending: isLoading } = useQuery({
     queryKey: queryKeys.tickets.awaitingPayment,
@@ -126,7 +127,21 @@ export function CheckoutForm({
       overrideReason: edit.reason.trim(),
     });
     if (result.success) {
-      // Reload tickets to reflect override
+      toast.success(t("adjustSuccess", { price: formatMoney(price) }));
+      // M-70: show the new price and total now; the refetch confirms it.
+      queryClient.setQueryData<AwaitingTicket[]>(queryKeys.tickets.awaitingPayment, (prev) =>
+        prev?.map((tk) => {
+          if (!tk.lineItems.some((li) => li.ticketItemId === ticketItemId)) return tk;
+          const lineItems = tk.lineItems.map((li) =>
+            li.ticketItemId === ticketItemId ? { ...li, overridePrice: price } : li,
+          );
+          const total = lineItems.reduce(
+            (sum, li) => sum + (li.overridePrice ?? li.unitPrice) * li.quantity,
+            0,
+          );
+          return { ...tk, lineItems, total };
+        }),
+      );
       notifyDataChanged("tickets");
       setOverrideEdits((prev) => {
         const next = { ...prev };

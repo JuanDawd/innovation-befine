@@ -996,7 +996,8 @@
     "nothingSelected": "Selecciona al menos un ticket",
     "confirmTitle": "¿Cobrar {amount} a {clients}?",
     "confirmDescription": "{count, plural, one {Se cerrará # ticket} other {Se cerrarán # tickets}} y se registrará el pago. Esta acción no se puede deshacer.",
-    "multiClientWarning": "Este cobro incluye {count} clientes distintos: {clients}. Confirma que una sola persona paga por todos."
+    "multiClientWarning": "Este cobro incluye {count} clientes distintos: {clients}. Confirma que una sola persona paga por todos.",
+    "adjustSuccess": "Precio ajustado a {price}"
   },
   "clothSale": {
     "title": "Vender prenda",

@@ -952,7 +952,8 @@
     "nothingSelected": "Select at least one ticket",
     "confirmTitle": "Charge {amount} to {clients}?",
     "confirmDescription": "{count, plural, one {# ticket will be closed} other {# tickets will be closed}} and the payment recorded. This cannot be undone.",
-    "multiClientWarning": "This checkout covers {count} different clients: {clients}. Make sure one person is paying for all of them."
+    "multiClientWarning": "This checkout covers {count} different clients: {clients}. Make sure one person is paying for all of them.",
+    "adjustSuccess": "Price adjusted to {price}"
   },
   "clothSale": {
     "title": "Sell garment",
