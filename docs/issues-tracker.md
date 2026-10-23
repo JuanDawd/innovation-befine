@@ -972,6 +972,16 @@
 
 ---
 
+### M-76 — Payroll breakdown lines show only the variant name ("Estándar ×1")
+
+- **Severity:** Medium
+- **Status:** Resolved (2026-10-23)
+- **Affected:** T065 `lib/payroll/compute-stylist-earnings.ts`, payroll preview
+- **Description:** Found by the new payroll E2E (M-71). `serviceName` on each stylist earnings line was the variant name; most salon services have a single "Estándar" variant, so the payroll preview was a column of identical "Estándar ×1" rows and the admin couldn't tell which service each commission came from.
+- **Fix:** The query joins `services`; `earningsLineLabel()` shows the service name, plus " — variant" only for non-default variants (same rule as the cashier board). Tests in `lib/payroll/__tests__/earnings.test.ts`.
+
+---
+
 ## Low-priority issues
 
 ### L-09 — No file/image storage research
@@ -1790,3 +1800,4 @@
 | L-04     | 2026-10-23    | Soft warning above 10 active variants per service (create + detail)                                             | fix/vikunja-backlog          |
 | L-03     | 2026-10-23    | Catalog audit log paged (20, keyset cursor) with Zod-validated input; labels via next-intl                      | fix/vikunja-backlog          |
 | M-75     | 2026-10-23    | "Pagar hasta hoy" reaches the latest session of today; days ordered by opening time                             | fix/vikunja-backlog          |
+| M-76     | 2026-10-23    | Payroll lines labelled by service (+ non-default variant), not "Estándar"                                       | fix/vikunja-backlog          |

@@ -9,7 +9,15 @@
 
 import { and, eq, inArray } from "drizzle-orm";
 import type { Database } from "@befine/db";
-import { tickets, ticketItems, serviceVariants } from "@befine/db/schema";
+import { tickets, ticketItems, serviceVariants, services } from "@befine/db/schema";
+
+/** Variant names that only restate the default — the service name alone says it. */
+const DEFAULT_VARIANTS = new Set(["Estándar", "Standard"]);
+
+/** "Corte" for the default variant, "Corte — Largo" otherwise. */
+export function earningsLineLabel(service: string, variant: string): string {
+  return DEFAULT_VARIANTS.has(variant) ? service : `${service} — ${variant}`;
+}
 
 export type StylistEarningsLine = {
   ticketId: string;
@@ -62,10 +70,12 @@ export async function computeStylistEarnings(
       commissionPct: ticketItems.commissionPct,
       overridePrice: ticketItems.overridePrice,
       variantName: serviceVariants.name,
+      serviceName: services.name,
     })
     .from(tickets)
     .innerJoin(ticketItems, eq(ticketItems.ticketId, tickets.id))
     .innerJoin(serviceVariants, eq(ticketItems.serviceVariantId, serviceVariants.id))
+    .innerJoin(services, eq(serviceVariants.serviceId, services.id))
     .where(
       and(
         eq(tickets.employeeId, employeeId),
@@ -96,7 +106,7 @@ export async function computeStylistEarnings(
     lines.push({
       ticketId: row.ticketId,
       serviceVariantId: row.serviceVariantId,
-      serviceName: row.variantName,
+      serviceName: earningsLineLabel(row.serviceName, row.variantName),
       quantity: row.quantity,
       effectivePrice,
       commissionPct: pct,
