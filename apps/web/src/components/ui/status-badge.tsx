@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
  * - progress (brand rose; see --status-progress): awaiting_payment, in_production, confirmed
  * - attention (amber): reopened, done_pending_approval, rescheduled
  * - success (green): closed, approved, delivered, paid_in_full, completed
- * - negative (red): cancelled, no_show
+ * - negative (red): cancelled, no_show, voided
  */
 const statusBadgeVariants = cva(
   "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors",
@@ -47,6 +47,7 @@ const entityStatusMap: Record<string, StatusCategory> = {
   paid_in_full: "success",
   completed: "success",
   cancelled: "negative",
+  voided: "negative",
   no_show: "negative",
 };
 

@@ -77,11 +77,13 @@ export {
   requestEditSchema,
   resolveEditRequestSchema,
   transitionTicketSchema,
+  voidTicketSchema,
   pieceActionSchema,
   markNotificationReadSchema,
   type RequestEditInput,
   type ResolveEditRequestInput,
   type TransitionTicketInput,
+  type VoidTicketInput,
   type PieceActionInput,
   type MarkNotificationReadInput,
 } from "./schemas/phase4";

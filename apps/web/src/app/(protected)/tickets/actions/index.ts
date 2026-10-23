@@ -20,7 +20,7 @@ import {
   clients,
   services,
 } from "@befine/db/schema";
-import { createTicketSchema, transitionTicketSchema } from "@befine/types";
+import { createTicketSchema, transitionTicketSchema, voidTicketSchema } from "@befine/types";
 import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
 import { getCurrentBusinessDay } from "@/lib/business-day";
@@ -35,7 +35,7 @@ export type TicketRow = {
   employeeName: string;
   clientId: string | null;
   guestName: string | null;
-  status: "logged" | "awaiting_payment" | "closed" | "reopened" | "paid_offline";
+  status: "logged" | "awaiting_payment" | "closed" | "reopened" | "paid_offline" | "voided";
   idempotencyKey: string | null;
   createdAt: Date;
 };
@@ -266,7 +266,7 @@ export type DashboardTicket = {
   variantName: string;
   unitPrice: number;
   quantity: number;
-  status: "logged" | "awaiting_payment" | "closed" | "reopened" | "paid_offline";
+  status: "logged" | "awaiting_payment" | "closed" | "reopened" | "paid_offline" | "voided";
   createdAt: Date;
 };
 
@@ -337,6 +337,7 @@ export async function listOpenTickets(): Promise<ActionResult<DashboardTicket[]>
  *   awaiting_payment → closed   : cashier/admin only (T038)
  *   closed → reopened            : cashier/admin only
  *   reopened → awaiting_payment : cashier/admin only
+ *   logged | awaiting_payment → voided : cashier/admin only, reason required (H-49)
  */
 type TransitionInput = { ticketId: string };
 
@@ -469,6 +470,86 @@ export async function transitionReopenedToAwaitingPayment(
 
   publishEvent("cashier", "ticket_updated", { ticketId: updated.id, status: updated.status });
   revalidatePath("/cashier");
+
+  return { success: true, data: { id: updated.id, status: updated.status } };
+}
+
+/** Ticket statuses that can still be voided — nothing has been charged yet. */
+const VOIDABLE_STATUSES = ["logged", "awaiting_payment"] as const;
+
+export async function voidTicket(
+  rawInput: unknown,
+): Promise<ActionResult<{ id: string; status: string }>> {
+  const parsedInput = voidTicketSchema.safeParse(rawInput);
+  if (!parsedInput.success)
+    return {
+      success: false,
+      error: {
+        code: "VALIDATION_ERROR",
+        message: "Por favor corrige los errores en el formulario.",
+        details: parsedInput.error.issues.map((e) => ({
+          field: e.path.join("."),
+          message: e.message,
+        })),
+      },
+    };
+  const { ticketId, reason } = parsedInput.data;
+
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session)
+    return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
+  if (!hasRole(session.user, "cashier", "admin"))
+    return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
+
+  const rl = await checkRateLimit(rateLimits.general, session.user.id);
+  if (!rl.allowed)
+    return {
+      success: false,
+      error: {
+        code: "RATE_LIMITED",
+        message: "Demasiadas solicitudes. Intenta de nuevo en un momento.",
+      },
+    };
+
+  const { ticket, employeeId } = await getTicketAndEmployee(ticketId, session.user.id);
+  if (!ticket)
+    return { success: false, error: { code: "NOT_FOUND", message: "Ticket no encontrado" } };
+  if (!employeeId) return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
+
+  if (!(VOIDABLE_STATUSES as readonly string[]).includes(ticket.status))
+    return {
+      success: false,
+      error: { code: "CONFLICT", message: "Solo se pueden anular tickets sin cobrar" },
+    };
+
+  const db = getDb();
+  const [updated] = await db
+    .update(tickets)
+    .set({
+      status: "voided",
+      voidedAt: new Date(),
+      voidedBy: employeeId,
+      voidReason: reason,
+      version: ticket.version + 1,
+    })
+    .where(
+      and(
+        eq(tickets.id, ticketId),
+        eq(tickets.version, ticket.version),
+        inArray(tickets.status, [...VOIDABLE_STATUSES]),
+      ),
+    )
+    .returning({ id: tickets.id, status: tickets.status });
+
+  if (!updated)
+    return {
+      success: false,
+      error: { code: "STALE_DATA", message: "El ticket fue modificado por otra sesión" },
+    };
+
+  publishEvent("cashier", "ticket_updated", { ticketId: updated.id, status: updated.status });
+  revalidatePath("/cashier");
+  revalidatePath("/secretary");
 
   return { success: true, data: { id: updated.id, status: updated.status } };
 }

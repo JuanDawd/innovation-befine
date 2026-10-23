@@ -478,6 +478,16 @@
 
 ---
 
+### H-49 — Closing the business day silently strands unpaid tickets
+
+- **Severity:** High
+- **Status:** Resolved (2026-10-23) — partial fix 2026-10-11 (count in the close dialog)
+- **Affected:** T019/T023 `closeBusinessDay`, `business-day-panel.tsx`, T036 cashier board, T038 checkout
+- **Description:** Source: training-manual walkthrough with agent-browser, 2026-10-11. The day could be closed with logged / awaiting_payment tickets; the board and `getAwaitingPaymentTickets` are scoped to the current day, so those services could never be charged. Charging them later on their original day would also land commission in a period that may already be settled.
+- **Fix:** `closeBusinessDay` closes in one `UPDATE … WHERE closed_at IS NULL AND NOT EXISTS (unpaid tickets)` and returns `CONFLICT` with the count (also on an already-closed day). The dialog drops "Cerrar de todos modos" and only offers "Ir a cobrar". New `voided` ticket status (`voided_at`, `voided_by`, `void_reason`, migration `0034`) + `voidTicket` (cashier/admin, reason 5–500 chars, optimistic lock, logged/awaiting_payment only) for walk-outs, from a button on the board cards. Revenue/earnings queries use status allowlists, so voided tickets never count. Tests: `cashier/__tests__/close-business-day.test.ts`, `tickets/__tests__/void-ticket.test.ts`.
+
+---
+
 ### H-51 — Lists don't refresh after mutations (risk of duplicate records)
 
 - **Severity:** High
@@ -1590,3 +1600,4 @@
 | M-64     | 2026-10-12    | Client reads via parallel GET /api/q (allowlist over existing read fns); Cobrar dialog ~1.5 s            | fix/payroll-same-date-days   |
 | UI-audit | 2026-10-12    | Long lists paged 50 at a time (clients, ticket history); global-error localized + styled                 | fix/payroll-same-date-days   |
 | H-52     | 2026-10-23    | Clothier board keeps unfinished pieces from earlier days (dated tag); works with no open day             | fix/vikunja-backlog          |
+| H-49     | 2026-10-23    | Close day blocked atomically while tickets are unpaid; `voided` status + `voidTicket` with reason        | fix/vikunja-backlog          |

@@ -92,6 +92,7 @@
     "paid_in_full": "Pagado completo",
     "completed": "Completado",
     "cancelled": "Cancelado",
+    "voided": "Anulado",
     "no_show": "No se presentó",
     "ready": "Listo"
   },
@@ -111,7 +112,7 @@
     "reopenError": "No se pudo reabrir el día",
     "confirmClose": "¿Cerrar el día?",
     "confirmCloseDescription": "El cierre queda registrado con estas cifras. Reabrir el día después exige un motivo y queda en el historial.",
-    "closeOpenTicketsWarning": "Hay {count, plural, one {# ticket sin cobrar} other {# tickets sin cobrar}}. Si cierras ahora, saldrán del tablero y de Cobrar.",
+    "closeOpenTicketsWarning": "Hay {count, plural, one {# ticket sin cobrar} other {# tickets sin cobrar}}. Cóbralos o anúlalos desde el tablero antes de cerrar el día.",
     "confirmReopen": "¿Reabrir el día?",
     "confirmReopenDescription": "Reabrir un día cerrado requiere un motivo. Esta acción queda registrada en el historial.",
     "reopenReason": "Motivo de reapertura",
@@ -119,7 +120,6 @@
     "noPreviousDay": "No hay días anteriores para reabrir",
     "closeChecking": "Revisando tickets sin cobrar…",
     "goCharge": "Ir a cobrar ({count})",
-    "closeAnyway": "Cerrar de todos modos",
     "summaryRevenue": "Ingresos",
     "summaryClosed": "Cobrados",
     "summaryOpen": "Sin cobrar",
@@ -1072,5 +1072,15 @@
     "retry": "Reintentar",
     "announceNew": "{count, plural, one {Nuevo ticket en el tablero} other {# tickets nuevos en el tablero}}",
     "pendingAside": "Pendientes"
+  },
+  "voidTicket": {
+    "triggerLabel": "Anular ticket de {client}",
+    "title": "¿Anular el ticket de {client}?",
+    "description": "Úsalo cuando el cliente se fue sin pagar. El ticket queda como anulado, no cuenta como ingreso ni comisión, y no se puede deshacer.",
+    "reason": "Motivo",
+    "reasonPlaceholder": "Ej: la clienta se fue sin pagar",
+    "reasonTooShort": "El motivo debe tener al menos 5 caracteres",
+    "confirm": "Anular ticket",
+    "success": "Ticket de {client} anulado"
   }
 }

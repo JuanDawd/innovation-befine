@@ -239,6 +239,13 @@
       "when": 1781568891729,
       "tag": "0033_rare_terror",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1792790285375,
+      "tag": "0034_void_tickets",
+      "breakpoints": true
     }
   ]
 }

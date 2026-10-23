@@ -11,7 +11,8 @@
  * Closing (H-49): the dialog never offers a confirmable state before it knows
  * how many tickets are still unpaid. It refetches the shared `tickets.open`
  * and `businessDay.stats` queries on open and keeps confirm disabled until
- * both settle. With unpaid tickets, the primary action is "go charge them".
+ * both settle. With unpaid tickets the day can't be closed (the server refuses
+ * too): the only action is "go charge them" — or void them from the board.
  *
  * Client components driven by server data (passed as props).
  * After each mutation the server revalidates and Next.js re-renders the page.
@@ -173,7 +174,8 @@ function CloseDayDialog({
 
   const failed = !checking && (tickets.isError || stats.isError);
   const known = !checking && !failed && tickets.data !== undefined && stats.data !== undefined;
-  const openCount = tickets.data?.length ?? 0;
+  // Rows are per ticket line; count tickets.
+  const openCount = new Set(tickets.data?.map((tk) => tk.id)).size;
   const revenue = stats.data?.revenue ?? 0;
   const closedCount = stats.data?.closedCount ?? 0;
 
@@ -253,12 +255,7 @@ function CloseDayDialog({
           <DialogFooter>
             <DialogClose render={<Button variant="outline" />}>{tCommon("cancel")}</DialogClose>
             {known && openCount > 0 ? (
-              <>
-                <Button variant="destructive" onClick={confirmClose}>
-                  {t("closeAnyway")}
-                </Button>
-                <Button onClick={goCharge}>{t("goCharge", { count: openCount })}</Button>
-              </>
+              <Button onClick={goCharge}>{t("goCharge", { count: openCount })}</Button>
             ) : (
               <Button onClick={confirmClose} disabled={!known}>
                 {t("close")}
