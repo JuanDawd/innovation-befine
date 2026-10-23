@@ -1561,6 +1561,16 @@
 
 ---
 
+### L-49 — Transaction pool capped at 5 connections per instance
+
+- **Severity:** Low
+- **Status:** Resolved (2026-10-23)
+- **Affected:** `packages/db/src/index.ts` `createTxDb`
+- **Description:** Transactions queued behind 5 sockets per instance — fine on Vercel, a bottleneck for a single self-hosted process at closing time.
+- **Fix:** `DB_TX_POOL_MAX` (1–100, default 5; invalid values fall back to 5) via `txPoolMax()`; documented in `.env.example`. Test: `packages/db/src/__tests__/tx-pool.test.ts`.
+
+---
+
 ## Lessons learned
 
 > This section is populated during development. Each entry documents what went wrong, the root cause, and how to prevent it in the future.
@@ -1702,3 +1712,4 @@
 | M-50     | 2026-10-23    | robots.txt served by app/robots.ts (disallow all) and public in middleware                                      | fix/vikunja-backlog          |
 | M-49     | 2026-10-23    | Verified root metadata already sets a description (fixed earlier)                                               | fix/vikunja-backlog          |
 | L-48     | 2026-10-23    | trustedOrigins derived from BETTER_AUTH_URL / NEXT_PUBLIC_APP_URL / BETTER_AUTH_TRUSTED_ORIGINS                 | fix/vikunja-backlog          |
+| L-49     | 2026-10-23    | Transaction pool size configurable via DB_TX_POOL_MAX (default 5)                                               | fix/vikunja-backlog          |
