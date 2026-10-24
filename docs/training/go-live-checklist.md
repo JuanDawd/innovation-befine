@@ -82,15 +82,29 @@ Perform with real staff before announcing go-live:
   - Staff fallback: revert to spreadsheets for up to 24 hours if critical bug found
 - [ ] Rollback drill completed on staging: deployed a "bad" version, rolled back, confirmed recovery
 
+## 8b. Phased rollout (L-11)
+
+Go live in stages instead of all at once; each stage runs for at least one full business week and moves on only when its exit check holds. Spreadsheets stay as the fallback until stage 4 passes.
+
+| Stage | Who uses the app                                 | Exit check before the next stage                                                     |
+| ----- | ------------------------------------------------ | ------------------------------------------------------------------------------------ |
+| 1     | Admin + cashier only (open/close day, Cobrar)    | Every day's revenue in the app matches the cash drawer; no Sentry errors left unread |
+| 2     | + secretary (tickets for stylists, appointments) | No ticket logged twice or lost; secretary needs no help for a full day               |
+| 3     | + stylists and clothiers on their phones         | Each stylist's earnings in the app match the paper record for the week               |
+| 4     | First payroll paid from the app                  | Payout amounts match a hand calculation for every employee; then retire spreadsheets |
+
+If a stage fails its exit check, stay on it (or drop back one stage), fix, and re-run the week.
+
 ## 9. Go / No-go decision
 
-| Criteria                                                    | Status | Sign-off |
-| ----------------------------------------------------------- | ------ | -------- |
-| All checklist items above ticked                            |        |          |
-| No open Critical or High issues in `docs/issues-tracker.md` |        |          |
-| Contrast issue H-28 resolved                                |        |          |
-| UAT sign-off received from all 4 role representatives       |        |          |
-| Business owner approves go-live                             |        |          |
+| Criteria                                               | Status | Sign-off |
+| ------------------------------------------------------ | ------ | -------- |
+| All checklist items above ticked                       |        |          |
+| No open Critical or High issues (Vikunja project #9)   |        |          |
+| Phased rollout plan (section 8b) agreed with the owner |        |          |
+| Contrast issue H-28 resolved                           |        |          |
+| UAT sign-off received from all 4 role representatives  |        |          |
+| Business owner approves go-live                        |        |          |
 
 **Go-live date:** **\*\***\_\_\_**\*\***  
 **Signed off by:** **\*\***\_\_\_**\*\***

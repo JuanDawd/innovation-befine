@@ -1877,6 +1877,16 @@
 
 ---
 
+### L-11 — T089 — No soft-launch / canary rollout strategy
+
+- **Severity:** Low
+- **Status:** Resolved (2026-10-23)
+- **Affected:** T089 `docs/training/go-live-checklist.md`
+- **Description:** The cutover checklist was all-or-nothing.
+- **Fix:** New section 8b "Phased rollout": four stages (admin + cashier → + secretary → + stylists and clothiers → first payroll), at least a business week each, each with a concrete exit check (cash drawer matches, no duplicate tickets, earnings match paper, payouts match a hand calculation); spreadsheets stay as fallback until stage 4 passes. Go/No-go table now references Vikunja for open issues and requires agreeing the rollout plan.
+
+---
+
 ## Lessons learned
 
 > This section is populated during development. Each entry documents what went wrong, the root cause, and how to prevent it in the future.
@@ -2051,3 +2061,4 @@
 | L-05     | 2026-10-23    | WhatsApp pricing marked approximate                                                                             | fix/backlog-batch-2          |
 | L-06     | 2026-10-23    | SMS pricing: Colombia rate, not US                                                                              | fix/backlog-batch-2          |
 | L-02     | 2026-10-23    | Password policy documented: length-only (NIST 800-63B)                                                          | fix/backlog-batch-2          |
+| L-11     | 2026-10-23    | Phased rollout with exit checks in the go-live checklist                                                        | fix/backlog-batch-2          |
