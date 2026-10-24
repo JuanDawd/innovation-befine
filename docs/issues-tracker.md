@@ -550,6 +550,14 @@
 - **Description:** Found in the back-office design critique (verified live: "Bata de spa" priced $8.000 — its piece rate — instead of its $35.000 selling price). Picking a piece set the line's unit price from `pieceRate`, and the order total is computed from the lines, so totals, deposits and balances came out at the clothier's pay instead of the client's price.
 - **Fix:** lines prefill from the variant's `sellingPrice` via `orderUnitPrice()` (tested); pieces without a selling price start at 0 so the price is typed in. Phase 11 (Pedidos, `docs/pedidos-spec` branch) replaces this flow and keeps the selling-price snapshot.
 
+### H-59 — Payouts recorded the client's computed amount without recomputing
+
+- **Severity:** High
+- **Status:** Resolved (2026-10-24)
+- **Affected:** T067 `recordPayout`, payroll screen
+- **Description:** Found in the back-office design critique. `recordPayout` compared the paid amount with the `originalComputedAmount` sent by the browser and stored it as the audit figure — it never recomputed. A ticket reopened or a piece approved between preview and confirm was paid at the stale amount with no reason required, against the CLAUDE.md rule "settlement amounts must be recomputed server-side". A $0 payout was also accepted, marking days settled with nothing paid (compounds H-57).
+- **Fix:** `recordPayout` recomputes earnings for the employee and days; `checkPayout()` (tested) returns STALE_DATA with the new figure when it differs from the preview, refuses $0, and requires a reason against the server figure; the server figure is what's stored as `original_computed_amount`.
+
 ---
 
 ## Medium-priority issues
@@ -2144,3 +2152,4 @@
 | H-55     | 2026-10-24    | createTicket requires an active stylist; staff pick one explicitly; commission hidden from the secretary        | feat/redesign                  |
 | H-56     | 2026-10-24    | Approval board lists finished pieces from every day, with quantity and order context                            | feat/redesign                  |
 | H-58     | 2026-10-24    | Large-order lines priced from the variant's selling price, never the piece rate                                 | feat/redesign                  |
+| H-59     | 2026-10-24    | recordPayout recomputes server-side; stale preview → STALE_DATA; $0 payouts refused                             | feat/redesign                  |

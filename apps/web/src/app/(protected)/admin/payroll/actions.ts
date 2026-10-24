@@ -38,6 +38,7 @@ import { markPayoutReviewedSchema, recordPayoutSchema } from "@befine/types";
 import { getUnpaidPastBusinessDays } from "@befine/db";
 import { computeStylistEarnings, earningsLineLabel } from "@/lib/payroll/compute-stylist-earnings";
 import { earningsPeriods } from "@/lib/payroll/my-earnings-days";
+import { checkPayout } from "@/lib/payroll/payout-check";
 import { computeClothierEarnings } from "@/lib/payroll/compute-clothier-earnings";
 import { computeSecretaryEarnings } from "@/lib/payroll/compute-secretary-earnings";
 import { businessDateOf } from "@/lib/dates";
@@ -215,6 +216,20 @@ export async function previewEarnings(
   };
 }
 
+/** Total earnings for an employee over the given business days, by earnings model. */
+async function computeEarningsTotal(
+  db: ReturnType<typeof getDb>,
+  role: string,
+  employeeId: string,
+  businessDayIds: string[],
+): Promise<number> {
+  if (role === "stylist")
+    return (await computeStylistEarnings(db, employeeId, businessDayIds)).totalEarnings;
+  if (role === "clothier")
+    return (await computeClothierEarnings(db, employeeId, businessDayIds)).totalEarnings;
+  return (await computeSecretaryEarnings(db, employeeId, businessDayIds)).totalEarnings;
+}
+
 // ─── Record payout (T067 + T068 double-pay via junction unique constraint) ────
 
 export async function recordPayout(rawInput: unknown): Promise<ActionResult<{ id: string }>> {
@@ -248,15 +263,6 @@ export async function recordPayout(rawInput: unknown): Promise<ActionResult<{ id
 
   const input = parsed.data;
 
-  if (input.amount !== input.originalComputedAmount && !input.adjustmentReason?.trim())
-    return {
-      success: false,
-      error: {
-        code: "VALIDATION_ERROR",
-        message: "Se requiere motivo cuando el monto difiere del calculado",
-      },
-    };
-
   const db = getDb();
   const [adminEmp] = await db
     .select({ id: employees.id })
@@ -273,6 +279,16 @@ export async function recordPayout(rawInput: unknown): Promise<ActionResult<{ id
     .limit(1);
   if (!emp)
     return { success: false, error: { code: "NOT_FOUND", message: "Empleado no encontrado" } };
+
+  // H-59: never trust the preview the client saw — recompute for these days.
+  const serverComputedAmount = await computeEarningsTotal(
+    db,
+    emp.role,
+    input.employeeId,
+    input.businessDayIds,
+  );
+  const checkError = checkPayout({ ...input, serverComputedAmount });
+  if (checkError) return { success: false, error: checkError };
 
   // Stabilization-1: block payouts that skip past unpaid days. If any unpaid
   // day is strictly older than the earliest day in this payout, the cashier
@@ -314,7 +330,7 @@ export async function recordPayout(rawInput: unknown): Promise<ActionResult<{ id
           idempotencyKey: input.idempotencyKey,
           employeeId: input.employeeId,
           amount: input.amount,
-          originalComputedAmount: input.originalComputedAmount,
+          originalComputedAmount: serverComputedAmount,
           adjustmentReason: input.adjustmentReason ?? null,
           method: input.method,
           recordedBy: adminEmp.id,
