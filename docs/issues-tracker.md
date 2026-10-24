@@ -1847,6 +1847,26 @@
 
 ---
 
+### L-05 — WhatsApp pricing data is outdated
+
+- **Severity:** Low
+- **Status:** Resolved (2026-10-23)
+- **Affected:** `docs/research/notification-channels.md`
+- **Description:** The WhatsApp section quoted 2025 pricing in a document dated April 2026.
+- **Fix:** Marked "approximate — verify before implementation" with a pointer to re-quote Meta's current Colombia rates when roadmap task A.3 starts.
+
+---
+
+### L-06 — SMS pricing uses US rates for Latin American business
+
+- **Severity:** Low
+- **Status:** Resolved (2026-10-23)
+- **Affected:** `docs/research/notification-channels.md`
+- **Description:** SMS pricing referenced the US Twilio rate ($0.0079) for a business in Colombia.
+- **Fix:** Note that Colombia is billed at its own per-segment rate and the US figure isn't representative; check Twilio's Colombia page (or a local aggregator) at build time. SMS remains "do not prioritize".
+
+---
+
 ## Lessons learned
 
 > This section is populated during development. Each entry documents what went wrong, the root cause, and how to prevent it in the future.
@@ -2018,3 +2038,5 @@
 | M-10     | 2026-10-23    | iPhone/Android install steps in the training guide                                                              | fix/backlog-batch-2          |
 | M-12     | 2026-10-23    | Email volume method + Resend thresholds in roadmap A.3                                                          | fix/backlog-batch-2          |
 | L-14     | 2026-10-23    | Client confirm-link security design in roadmap A.3                                                              | fix/backlog-batch-2          |
+| L-05     | 2026-10-23    | WhatsApp pricing marked approximate                                                                             | fix/backlog-batch-2          |
+| L-06     | 2026-10-23    | SMS pricing: Colombia rate, not US                                                                              | fix/backlog-batch-2          |
