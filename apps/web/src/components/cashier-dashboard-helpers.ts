@@ -36,8 +36,9 @@ export function groupByStatus(
   })).filter((g) => g.tickets.length > 0);
 }
 
+/** What the client pays: the cashier's adjusted price when there is one. */
 export function ticketTotal(ticket: DashboardTicket): number {
-  return ticket.unitPrice * ticket.quantity;
+  return (ticket.overridePrice ?? ticket.unitPrice) * ticket.quantity;
 }
 
 // ─── Ticket age ──────────────────────────────────────────────────────────────

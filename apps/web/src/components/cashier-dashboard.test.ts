@@ -6,6 +6,7 @@ import {
   isStale,
   matchesQuery,
   optimisticStatusReducer,
+  ticketTotal,
 } from "./cashier-dashboard-helpers";
 import type { DashboardTicket } from "@/app/(protected)/tickets/actions";
 
@@ -17,6 +18,7 @@ const ticket = (over: Partial<DashboardTicket> = {}): DashboardTicket => ({
   serviceName: "Corte",
   variantName: "Estándar",
   unitPrice: 20000,
+  overridePrice: null,
   quantity: 1,
   status: "logged",
   createdAt: new Date("2026-04-24T10:00:00Z"),
@@ -130,5 +132,16 @@ describe("matchesQuery", () => {
     expect(matchesQuery(t, "sofia")).toBe(true);
     expect(matchesQuery(t, "pedro")).toBe(false);
     expect(matchesQuery(t, "  ")).toBe(true);
+  });
+});
+
+describe("ticketTotal", () => {
+  it("is unit price × quantity", () => {
+    expect(ticketTotal(ticket({ unitPrice: 20_000, quantity: 3 }))).toBe(60_000);
+  });
+
+  it("uses the cashier's adjusted price, including an adjustment to $0", () => {
+    expect(ticketTotal(ticket({ unitPrice: 50_000, overridePrice: 42_000 }))).toBe(42_000);
+    expect(ticketTotal(ticket({ unitPrice: 50_000, overridePrice: 0, quantity: 2 }))).toBe(0);
   });
 });

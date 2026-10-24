@@ -1058,6 +1058,26 @@
 
 ---
 
+### M-70 — Price adjustment ("Ajustar") UX
+
+- **Severity:** Medium
+- **Status:** Resolved (2026-10-23) — partial fix 2026-10-23 (instant total + toast), now verified end to end
+- **Affected:** `components/checkout-form.tsx` override row
+- **Description:** Source: training-manual walkthrough, 2026-10-11. "OK" stayed disabled with no spinner while saving, and a saved override closed the whole Cobrar dialog, forcing the cashier to reopen it.
+- **Fix:** Spinner on Guardar (already present); the new total appears at once (query-cache update) with a "Precio ajustado a …" toast; the dialog stays open (reads via TanStack Query since M-64 — no remount on refetch). New E2E `checkout.spec.ts` "adjusting a price keeps Cobrar open and updates the total" proves it, and that the board card then shows the adjusted amount (found M-79).
+
+---
+
+### M-79 — Cashier board shows the original price after a price adjustment
+
+- **Severity:** Medium (cashier sees one amount on the card, charges another)
+- **Status:** Resolved (2026-10-23)
+- **Affected:** `tickets/actions` `listOpenTickets`, `components/cashier-dashboard-helpers.ts` `ticketTotal`
+- **Description:** Found by the M-70 E2E. `listOpenTickets` didn't select `override_price` and `ticketTotal()` was `unit_price × quantity`, so after "Ajustar" the board card, its "Cobrar a …" label and the group totals kept showing the original price while Cobrar charged the adjusted one.
+- **Fix:** `DashboardTicket.overridePrice` is loaded and `ticketTotal()` uses `override_price ?? unit_price` (an adjustment to $0 counts). Unit tests in `cashier-dashboard.test.ts`; covered by the M-70 E2E.
+
+---
+
 ## Low-priority issues
 
 ### L-09 — No file/image storage research
@@ -1941,3 +1961,5 @@
 | L-41     | 2026-10-23    | Measured: modern browserslist saves 0 kB (Next polyfills); defaults kept                                        | fix/backlog-batch-2          |
 | M-09     | 2026-10-23    | Client import validates like the form; ids file + --undo to back out an import                                  | fix/backlog-batch-2          |
 | L-01     | 2026-10-23    | Login 429: clear message + 60 s countdown on the button                                                         | fix/backlog-batch-2          |
+| M-70     | 2026-10-23    | Ajustar keeps Cobrar open with the new total — verified by E2E                                                  | fix/backlog-batch-2          |
+| M-79     | 2026-10-23    | Board totals use the adjusted price (override_price ?? unit_price)                                              | fix/backlog-batch-2          |

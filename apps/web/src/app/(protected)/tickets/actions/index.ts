@@ -266,6 +266,8 @@ export type DashboardTicket = {
   serviceName: string;
   variantName: string;
   unitPrice: number;
+  /** Cashier price adjustment — when set, it is what the client pays. */
+  overridePrice: number | null;
   quantity: number;
   status: "logged" | "awaiting_payment" | "closed" | "reopened" | "paid_offline" | "voided";
   createdAt: Date;
@@ -294,6 +296,7 @@ export async function listOpenTickets(): Promise<ActionResult<DashboardTicket[]>
       serviceName: services.name,
       variantName: serviceVariants.name,
       unitPrice: ticketItems.unitPrice,
+      overridePrice: ticketItems.overridePrice,
       quantity: ticketItems.quantity,
       status: tickets.status,
       createdAt: tickets.createdAt,
@@ -323,6 +326,7 @@ export async function listOpenTickets(): Promise<ActionResult<DashboardTicket[]>
       serviceName: r.serviceName,
       variantName: r.variantName,
       unitPrice: r.unitPrice,
+      overridePrice: r.overridePrice,
       quantity: r.quantity,
       status: r.status,
       createdAt: r.createdAt,
