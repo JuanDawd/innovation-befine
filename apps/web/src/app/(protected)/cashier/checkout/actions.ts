@@ -431,9 +431,11 @@ export async function processCheckout(rawInput: unknown): Promise<ActionResult<C
     });
 
     // Publish real-time events for each closed ticket
-    for (const id of input.ticketIds) {
-      publishEvent("cashier", "ticket_updated", { ticketId: id, status: "closed" });
-    }
+    await Promise.all(
+      input.ticketIds.map((id) =>
+        publishEvent("cashier", "ticket_updated", { ticketId: id, status: "closed" }),
+      ),
+    );
     revalidatePath("/cashier");
 
     return { success: true, data: result };
@@ -582,9 +584,11 @@ export async function processPaidOfflineCheckout(
       return { sessionId, closedAt };
     });
 
-    for (const id of input.ticketIds) {
-      publishEvent("cashier", "ticket_updated", { ticketId: id, status: "paid_offline" });
-    }
+    await Promise.all(
+      input.ticketIds.map((id) =>
+        publishEvent("cashier", "ticket_updated", { ticketId: id, status: "paid_offline" }),
+      ),
+    );
     revalidatePath("/cashier");
 
     return { success: true, data: { sessionId: result.sessionId } };

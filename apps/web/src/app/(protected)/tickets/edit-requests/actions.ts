@@ -184,7 +184,10 @@ export async function requestEdit(
     .returning({ id: ticketEditRequests.id });
 
   // Fire SSE so cashier dashboard badge updates
-  publishEvent("cashier", "ticket_updated", { ticketId: item.ticketId, status: "edit_requested" });
+  await publishEvent("cashier", "ticket_updated", {
+    ticketId: item.ticketId,
+    status: "edit_requested",
+  });
   revalidatePath("/cashier");
 
   return { success: true, data: { id: req.id } };
@@ -410,7 +413,7 @@ export async function resolveEditRequest(
   });
 
   if (ticketId) {
-    publishEvent("cashier", "ticket_updated", { ticketId, status: "edit_resolved" });
+    await publishEvent("cashier", "ticket_updated", { ticketId, status: "edit_resolved" });
   }
   revalidatePath("/cashier");
 

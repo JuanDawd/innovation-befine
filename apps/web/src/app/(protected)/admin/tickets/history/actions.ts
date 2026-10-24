@@ -449,7 +449,7 @@ export async function reopenTicket(rawTicketId: unknown): Promise<ActionResult<{
   // once the ticket is edited and re-closed — flag it for the admin to review.
   await flagPayoutsCoveringTicket(db, ticketId);
 
-  publishEvent("cashier", "ticket_updated", { ticketId: updated.id, status: updated.status });
+  await publishEvent("cashier", "ticket_updated", { ticketId: updated.id, status: updated.status });
   revalidatePath("/cashier");
   revalidatePath("/cashier/tickets/history");
   revalidatePath("/admin/tickets/history");

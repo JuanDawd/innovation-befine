@@ -10,6 +10,8 @@
  *   notifications → any authenticated employee; events scoped to caller's employee_id
  */
 export const dynamic = "force-dynamic";
+// Streams stay open ~280 s (STREAM_TIMEOUT_MS) — needs Fluid compute (M-60).
+export const maxDuration = 300;
 
 import { auth } from "@/lib/auth";
 import { createSSEHandler, createScopedSSEHandler } from "@befine/realtime/server";

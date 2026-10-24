@@ -9,8 +9,8 @@
  * - For long-lived SSE, we close the stream before the timeout and let the
  *   browser's EventSource reconnect automatically (built-in reconnect with
  *   Last-Event-ID header so the server can resume from where it left off).
- * - Production streams in packages/realtime will close every 25s (safe under
- *   any Vercel plan) and clients reconnect seamlessly.
+ * - Production streams in packages/realtime close every ~280 s (maxDuration 300
+ *   with Fluid compute, M-60) and clients reconnect seamlessly.
  */
 export const dynamic = "force-dynamic";
 
