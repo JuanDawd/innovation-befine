@@ -73,7 +73,7 @@ function UserInitials({ name, size = "md" }: { name: string; size?: "sm" | "md" 
   return (
     <span
       className={cn(
-        "flex shrink-0 items-center justify-center rounded-full bg-linear-to-br from-primary to-primary/60 font-semibold text-primary-foreground",
+        "flex shrink-0 items-center justify-center rounded-full bg-primary font-semibold text-primary-foreground",
         size === "sm" ? "size-7 text-xs" : "size-8 text-xs",
       )}
       aria-hidden="true"
