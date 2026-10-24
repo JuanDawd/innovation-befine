@@ -1867,6 +1867,16 @@
 
 ---
 
+### L-02 — T091 — No password complexity rules beyond minimum length
+
+- **Severity:** Low
+- **Status:** Resolved (2026-10-23) — documented as a conscious decision; owner may override
+- **Affected:** T091 `docs/Business/tasks/phase-01-identity.md`
+- **Description:** Only a minimum length of 8 was specified; complexity was neither required nor explicitly ruled out.
+- **Fix:** Policy recorded in T091: length-only (≥ 8), no composition or rotation rules, per NIST SP 800-63B — composition rules on shared salon devices lead to predictable or written-down passwords. Protection comes from the sign-in rate limit + lockout countdown (L-01), admin-issued temporary passwords and admin deactivation. Revisit with a breached-password check if clients ever get accounts (roadmap Phase B).
+
+---
+
 ## Lessons learned
 
 > This section is populated during development. Each entry documents what went wrong, the root cause, and how to prevent it in the future.
@@ -2040,3 +2050,4 @@
 | L-14     | 2026-10-23    | Client confirm-link security design in roadmap A.3                                                              | fix/backlog-batch-2          |
 | L-05     | 2026-10-23    | WhatsApp pricing marked approximate                                                                             | fix/backlog-batch-2          |
 | L-06     | 2026-10-23    | SMS pricing: Colombia rate, not US                                                                              | fix/backlog-batch-2          |
+| L-02     | 2026-10-23    | Password policy documented: length-only (NIST 800-63B)                                                          | fix/backlog-batch-2          |
