@@ -25,6 +25,7 @@ import {
   businessDays,
   checkoutSessions,
 } from "@befine/db/schema";
+import { flagPayoutsCoveringTicket } from "@befine/db";
 import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
 import { revalidatePath } from "next/cache";
@@ -351,7 +352,7 @@ export async function getClosedTicketDetail(
  * - Detaches the ticket from its checkout_session (set to null).
  * - If the session still has other closed tickets, marks it `is_partially_reopened`.
  * - Fires a `ticket_updated` SSE event so the cashier dashboard updates live.
- * - Payout `needs_review` flag is a stub — payouts table is created in Phase 7 (T066).
+ * - Flags payouts that already covered this ticket's items as `needs_review` (M-28).
  */
 export async function reopenTicket(rawTicketId: unknown): Promise<ActionResult<{ id: string }>> {
   const parsed = transitionTicketSchema.safeParse({ ticketId: rawTicketId });
@@ -444,9 +445,9 @@ export async function reopenTicket(rawTicketId: unknown): Promise<ActionResult<{
     }
   }
 
-  // NOTE (T066 stub): When the payouts table is created in Phase 7,
-  // any payout record whose period includes this ticket's closed_at date
-  // should be flagged `needs_review = true` here.
+  // M-28: a payout that already paid commission on this ticket may no longer match
+  // once the ticket is edited and re-closed — flag it for the admin to review.
+  await flagPayoutsCoveringTicket(db, ticketId);
 
   publishEvent("cashier", "ticket_updated", { ticketId: updated.id, status: updated.status });
   revalidatePath("/cashier");

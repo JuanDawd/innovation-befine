@@ -7,7 +7,10 @@ import { useTranslations } from "next-intl";
 import { Loader2Icon, CheckIcon, ZapIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { toast } from "sonner";
 import {
+  markPayoutReviewed,
   previewEarnings,
   recordPayout,
   type BusinessDayOption,
@@ -54,6 +57,19 @@ export function PayrollScreen({ days, employees, history, initialEmployeeId }: P
   const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [reviewingId, setReviewingId] = useState<string | null>(null);
+
+  async function handleMarkReviewed(payoutId: string) {
+    setReviewingId(payoutId);
+    const result = await markPayoutReviewed(payoutId);
+    setReviewingId(null);
+    if (!result.success) {
+      toast.error(result.error.message);
+      return;
+    }
+    toast.success(t("markedReviewed"));
+    router.refresh();
+  }
 
   function changeRangeEnd(id: string) {
     setRangeEndId(id);
@@ -432,7 +448,30 @@ export function PayrollScreen({ days, employees, history, initialEmployeeId }: P
               <tbody className="divide-y divide-border">
                 {history.map((p) => (
                   <tr key={p.id} className="hover:bg-muted/20">
-                    <td className="px-3 py-2 font-medium">{p.employeeName}</td>
+                    <td className="px-3 py-2 font-medium">
+                      {p.employeeName}
+                      {p.needsReview && (
+                        <div className="mt-1 flex flex-wrap items-center gap-2">
+                          <StatusBadge
+                            status="attention"
+                            label={t("payoutNeedsReview")}
+                            title={t("payoutNeedsReviewHint")}
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            disabled={reviewingId === p.id}
+                            onClick={() => handleMarkReviewed(p.id)}
+                          >
+                            {reviewingId === p.id && (
+                              <Loader2Icon className="size-3.5 animate-spin" aria-hidden="true" />
+                            )}
+                            {t("markReviewed")}
+                          </Button>
+                        </div>
+                      )}
+                    </td>
                     <td className="px-3 py-2 text-right font-mono tabular-nums">
                       {formatMoney(p.amount)}
                       {p.adjustmentReason && (

@@ -658,6 +658,16 @@
 - **Description:** Three hardcoded strings bypass i18n: two `aria-label="Quitar selección"` (lines 282, 304) and one `OK` button label (line 336). All user-facing strings must use `next-intl` per CLAUDE.md conventions.
 - **Fix:** Add i18n keys (`clients.clearSelection`, `common.ok`) and replace hardcoded strings. Tracked as T03R-R2.
 
+### M-28 — T042 payout `needs_review` flag is a stub, AC silently unmet
+
+- **Severity:** Medium
+- **Status:** Resolved (2026-10-23)
+- **Affected:** T042 `reopenTicket`, T066 `payouts`, admin payroll screen
+- **Description:** T042 AC: "Payout records that included this ticket are flagged `needs_review`." Payouts didn't exist when T042 shipped, so `reopenTicket` only had a stub comment — and Phase 7 shipped without wiring it. Reopening a ticket a stylist was already paid for left no trace on the payout.
+- **Fix:** Migration `0036` adds `payouts.needs_review`. `reopenTicket` calls `flagPayoutsCoveringTicket` (payouts linked via `payout_ticket_items` to the ticket's items). Payout history shows a "Revisar" badge with "Marcar revisado" (`markPayoutReviewed`, admin only). DB integration tests for the query.
+
+---
+
 ### M-29 — `resolveEditRequest` is not wrapped in a transaction
 
 - **Severity:** Medium
@@ -2083,4 +2093,5 @@
 | L-02     | 2026-10-23    | Password policy documented: length-only (NIST 800-63B)                                                          | fix/backlog-batch-2          |
 | L-11     | 2026-10-23    | Phased rollout with exit checks in the go-live checklist                                                        | fix/backlog-batch-2          |
 | L-07     | 2026-10-23    | Verified: no-show count increments since Phase 5                                                                | fix/backlog-batch-2          |
+| M-28     | 2026-10-23    | Reopening a paid ticket flags its payout needs_review; admin clears it from payout history                      | fix/m28-payout-needs-review  |
 | L-20     | 2026-10-23    | Process note acknowledged; one commit per issue going forward                                                   | fix/backlog-batch-2          |

@@ -10,9 +10,19 @@
  * idempotency_key: client-generated UUID; UNIQUE prevents duplicate inserts on retry.
  * original_computed_amount: what the system computed before any admin adjustment.
  * adjustment_reason: required when amount ≠ original_computed_amount.
+ * needs_review: set when a ticket it covered is reopened (T042 / M-28); admin clears it.
  */
 
-import { bigint, index, pgTable, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";
+import {
+  bigint,
+  boolean,
+  index,
+  pgTable,
+  text,
+  timestamp,
+  unique,
+  uuid,
+} from "drizzle-orm/pg-core";
 import { employees } from "./employees";
 import { businessDays } from "./business-days";
 import { ticketItems } from "./ticket-items";
@@ -36,6 +46,7 @@ export const payouts = pgTable(
       .notNull()
       .references(() => employees.id, { onDelete: "restrict" }),
     notes: text("notes"),
+    needsReview: boolean("needs_review").notNull().default(false),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [index("idx_payouts_employee").on(table.employeeId)],
