@@ -59,9 +59,12 @@ function statusLabel(status: MyEditRequest["status"], t: (k: string) => string) 
 export function MyEditRequests({
   initialItems,
   initialRequests,
+  frontDesk = false,
 }: {
   initialItems: OpenTicketItem[];
   initialRequests: MyEditRequest[];
+  /** Secretary view: everyone's tickets, so cards name the stylist; no day revenue totals */
+  frontDesk?: boolean;
 }) {
   const t = useTranslations("editRequests");
   const tt = useTranslations("tickets");
@@ -156,17 +159,19 @@ export function MyEditRequests({
       <section aria-labelledby="my-services-heading" className="flex flex-col gap-4">
         <div>
           <h2 id="my-services-heading" className="text-lg font-semibold">
-            {t("sectionTitle")}
+            {frontDesk ? t("sectionTitleDesk") : t("sectionTitle")}
           </h2>
           {items.length > 0 && (
             <p className="mt-0.5 text-sm text-muted-foreground tabular-nums">
-              {charged.length > 0
-                ? t("daySummarySplit", {
-                    count: items.length,
-                    charged: formatPrice(amount(charged)),
-                    pending: formatPrice(amount(open)),
-                  })
-                : t("daySummary", { count: items.length, total: formatPrice(amount(items)) })}
+              {frontDesk
+                ? t("daySummaryDesk", { count: items.length, charged: charged.length })
+                : charged.length > 0
+                  ? t("daySummarySplit", {
+                      count: items.length,
+                      charged: formatPrice(amount(charged)),
+                      pending: formatPrice(amount(open)),
+                    })
+                  : t("daySummary", { count: items.length, total: formatPrice(amount(items)) })}
             </p>
           )}
         </div>
@@ -205,6 +210,7 @@ export function MyEditRequests({
                       </p>
                     </div>
                     <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                      {frontDesk && `${item.employeeName} · `}
                       {serviceLabel(item)}
                       {item.quantity > 1 ? ` × ${item.quantity}` : ""}
                     </p>
@@ -258,10 +264,12 @@ export function MyEditRequests({
             <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2.5 rounded-xl px-3.5 py-2 [&::-webkit-details-marker]:hidden">
               <StatusBadge status="closed" label={t("groupCharged")} />
               <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground tabular-nums">
-                {t("chargedSummary", {
-                  count: charged.length,
-                  total: formatPrice(amount(charged)),
-                })}
+                {frontDesk
+                  ? t("itemCount", { count: charged.length })
+                  : t("chargedSummary", {
+                      count: charged.length,
+                      total: formatPrice(amount(charged)),
+                    })}
               </span>
               <ChevronDownIcon
                 className="size-4 shrink-0 text-muted-foreground transition-transform group-open/charged:rotate-180"
@@ -277,6 +285,7 @@ export function MyEditRequests({
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium">{item.clientName}</p>
                     <p className="truncate text-xs text-muted-foreground">
+                      {frontDesk && `${item.employeeName} · `}
                       {serviceLabel(item)}
                       {item.quantity > 1 ? ` × ${item.quantity}` : ""}
                     </p>

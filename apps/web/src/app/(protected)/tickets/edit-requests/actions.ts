@@ -460,6 +460,8 @@ export type OpenTicketItem = {
   /** closed / paid_offline = charged today — listed so the stylist can see it was paid */
   ticketStatus: "logged" | "awaiting_payment" | "reopened" | "closed" | "paid_offline";
   clientName: string;
+  /** Stylist who did the service — the front desk sees everyone's tickets */
+  employeeName: string;
   serviceVariantId: string;
   serviceName: string;
   variantName: string;
@@ -496,9 +498,12 @@ export async function listMyOpenTicketItems(): Promise<ActionResult<OpenTicketIt
       variantName: serviceVariants.name,
       unitPrice: ticketItems.unitPrice,
       quantity: ticketItems.quantity,
+      employeeName: users.name,
     })
     .from(ticketItems)
     .innerJoin(tickets, eq(ticketItems.ticketId, tickets.id))
+    .innerJoin(employees, eq(tickets.employeeId, employees.id))
+    .innerJoin(users, eq(employees.userId, users.id))
     .innerJoin(serviceVariants, eq(ticketItems.serviceVariantId, serviceVariants.id))
     .innerJoin(services, eq(serviceVariants.serviceId, services.id))
     .where(
@@ -549,6 +554,7 @@ export async function listMyOpenTicketItems(): Promise<ActionResult<OpenTicketIt
       itemId: r.itemId,
       ticketId: r.ticketId,
       ticketStatus: r.ticketStatus as OpenTicketItem["ticketStatus"],
+      employeeName: r.employeeName,
       clientName: r.clientId ? (clientNameMap.get(r.clientId) ?? "—") : (r.guestName ?? "—"),
       serviceVariantId: r.serviceVariantId,
       serviceName: r.serviceName,

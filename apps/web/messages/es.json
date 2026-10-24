@@ -458,7 +458,23 @@
     "grouped": "{count} nuevas — {message}",
     "view": "Ver"
   },
+  "frontDesk": {
+    "pageTitle": "Recepción",
+    "upcomingTitle": "Próximas citas",
+    "openAgenda": "Ver agenda",
+    "noUpcoming": "No quedan citas por atender hoy.",
+    "approvalsTitle": "Piezas por aprobar",
+    "approvalsHint": "Revísalas para que cuenten en el pago.",
+    "approvalsNone": "Nada esperando aprobación.",
+    "ordersTitle": "Pedidos por entregar",
+    "openOrders": "Ver pedidos",
+    "ordersNone": "Ningún pedido listo o por entregar esta semana.",
+    "dueOn": "Entrega {date}",
+    "balance": "Saldo"
+  },
   "editRequests": {
+    "sectionTitleDesk": "Servicios de hoy",
+    "daySummaryDesk": "{count, plural, =0 {Sin servicios hoy} one {# servicio hoy} other {# servicios hoy}} · {charged} cobrados",
     "sectionTitle": "Mis servicios de hoy",
     "sectionEmpty": "No hay servicios activos hoy.",
     "requestEdit": "Solicitar cambio",

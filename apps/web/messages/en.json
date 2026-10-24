@@ -1052,7 +1052,23 @@
     "colProgress": "Progress",
     "colActions": "Actions"
   },
+  "frontDesk": {
+    "pageTitle": "Front desk",
+    "upcomingTitle": "Upcoming appointments",
+    "openAgenda": "Open agenda",
+    "noUpcoming": "No more appointments today.",
+    "approvalsTitle": "Pieces to approve",
+    "approvalsHint": "Review them so they count toward pay.",
+    "approvalsNone": "Nothing waiting for approval.",
+    "ordersTitle": "Orders to deliver",
+    "openOrders": "Open orders",
+    "ordersNone": "No orders ready or due this week.",
+    "dueOn": "Due {date}",
+    "balance": "Balance"
+  },
   "editRequests": {
+    "sectionTitleDesk": "Today's services",
+    "daySummaryDesk": "{count, plural, =0 {No services today} one {# service today} other {# services today}} · {charged} charged",
     "approveLabel": "Approve {client}'s change",
     "rejectLabel": "Reject {client}'s change",
     "loadError": "Requests could not be loaded.",
