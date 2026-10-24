@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { bankersRound, earningsLineLabel } from "@/lib/payroll/compute-stylist-earnings";
 import { businessDateOf, isoWeekKey } from "@/lib/dates";
 import { countSecretaryDays } from "@/lib/payroll/secretary-days";
+import { clothierEarningsLine } from "@/lib/payroll/compute-clothier-earnings";
 
 // ─── T063 stylist earnings — bankersRound ─────────────────────────────────────
 
@@ -81,6 +82,27 @@ describe("Stylist earnings computation", () => {
 });
 
 // ─── T064 clothier earnings ───────────────────────────────────────────────────
+
+describe("clothierEarningsLine", () => {
+  const base = {
+    productId: "p",
+    productPieceId: "pp",
+    pieceName: "Bata",
+    variantName: "Estándar",
+  };
+
+  it("pays the piece rate per garment — Bata ×3 pays three rates (M-78)", () => {
+    expect(clothierEarningsLine({ ...base, quantity: 3, pieceRate: 8_000 }).earnings).toBe(24_000);
+  });
+
+  it("quantity 1 pays one rate", () => {
+    expect(clothierEarningsLine({ ...base, quantity: 1, pieceRate: 8_000 }).earnings).toBe(8_000);
+  });
+
+  it("a $0 piece rate pays $0 whatever the quantity", () => {
+    expect(clothierEarningsLine({ ...base, quantity: 5, pieceRate: 0 }).earnings).toBe(0);
+  });
+});
 
 describe("Clothier earnings computation", () => {
   it("single approved piece", () => {

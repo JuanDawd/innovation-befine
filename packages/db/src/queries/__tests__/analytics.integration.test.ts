@@ -146,7 +146,7 @@ describeDb("earningsByEmployee", () => {
         dayId: day,
         createdBy: admin.id,
         pieces: [
-          { cloth: bata, assignedTo: clothier.id, status: "approved" },
+          { cloth: bata, assignedTo: clothier.id, status: "approved", quantity: 3 },
           { cloth: falda, assignedTo: clothier.id, status: "approved" },
           { cloth: bata, assignedTo: clothier.id, status: "done_pending_approval" },
           { cloth: bata, assignedTo: clothier.id, status: "pending" },
@@ -160,9 +160,9 @@ describeDb("earningsByEmployee", () => {
           employeeId: clothier.id,
           employeeName: "Confección",
           role: "clothier",
-          totalEarnings: 13_000,
-          jobCount: 2,
-          earningsBySource: { service: 0, pieceCreated: 13_000, workedDay: 0 },
+          totalEarnings: 29_000, // Bata ×3 at 8.000 + Falda 5.000 — per garment (M-78)
+          jobCount: 4,
+          earningsBySource: { service: 0, pieceCreated: 29_000, workedDay: 0 },
         },
       ]);
     }));
@@ -370,12 +370,12 @@ describeDb("employeeDayBreakdown", () => {
         createdBy: clothier.id,
         pieces: [
           { cloth: bata, assignedTo: clothier.id, status: "approved" },
-          { cloth: bata, assignedTo: clothier.id, status: "approved" },
+          { cloth: bata, assignedTo: clothier.id, status: "approved", quantity: 2 },
           { cloth: bata, assignedTo: clothier.id, status: "pending" },
         ],
       });
       expect(await employeeDayBreakdown(db, clothier.id, [day])).toEqual([
-        { businessDayId: day, date: "2026-10-21", jobs: 2, earnings: 16_000 },
+        { businessDayId: day, date: "2026-10-21", jobs: 3, earnings: 24_000 },
       ]);
     }));
 
