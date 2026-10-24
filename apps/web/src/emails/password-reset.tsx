@@ -3,6 +3,8 @@
  *
  * Sent when a user requests a password reset.
  * Uses React Email components for cross-client compatibility.
+ * L-13: brand header (logo + tenant name). Email clients need an absolute
+ * image URL, so the logo is served from NEXT_PUBLIC_APP_URL.
  */
 
 import {
@@ -13,10 +15,14 @@ import {
   Heading,
   Hr,
   Html,
+  Img,
   Preview,
   Section,
   Text,
 } from "@react-email/components";
+import { BRAND_FULL_NAME } from "@/lib/brand";
+
+const APP_URL = (process.env.NEXT_PUBLIC_APP_URL ?? "").replace(/\/$/, "");
 
 interface PasswordResetEmailProps {
   resetUrl: string;
@@ -29,10 +35,19 @@ export function PasswordResetEmail({ resetUrl, userName }: PasswordResetEmailPro
   return (
     <Html lang="es">
       <Head />
-      <Preview>Restablecer tu contraseña — Innovation Befine</Preview>
+      <Preview>Restablecer tu contraseña — {BRAND_FULL_NAME}</Preview>
       <Body style={main}>
         <Container style={container}>
-          <Heading style={h1}>Innovation Befine</Heading>
+          {APP_URL && (
+            <Img
+              src={`${APP_URL}/brand/icon-192.png`}
+              width="48"
+              height="48"
+              alt={BRAND_FULL_NAME}
+              style={logo}
+            />
+          )}
+          <Heading style={h1}>{BRAND_FULL_NAME}</Heading>
           <Text style={text}>{greeting}</Text>
           <Text style={text}>
             Recibimos una solicitud para restablecer la contraseña de tu cuenta. Haz clic en el
@@ -48,12 +63,17 @@ export function PasswordResetEmail({ resetUrl, userName }: PasswordResetEmailPro
             la misma.
           </Text>
           <Hr style={hr} />
-          <Text style={footer}>Innovation Befine · Sistema de operaciones internas</Text>
+          <Text style={footer}>{BRAND_FULL_NAME} · Sistema de operaciones internas</Text>
         </Container>
       </Body>
     </Html>
   );
 }
+
+const logo: React.CSSProperties = {
+  borderRadius: "12px",
+  marginBottom: "16px",
+};
 
 const main: React.CSSProperties = {
   backgroundColor: "#f6f9fc",

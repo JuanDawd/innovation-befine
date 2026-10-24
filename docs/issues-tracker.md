@@ -1807,6 +1807,16 @@
 
 ---
 
+### L-13 — T055 — No brand logo in email template
+
+- **Severity:** Low
+- **Status:** Resolved (2026-10-23)
+- **Affected:** `apps/web/src/emails/password-reset.tsx`, `lib/auth.ts`; roadmap task A.3
+- **Description:** The email templates had no brand header. Appointment confirmation emails (T055/T056) were moved post-MVP; the only live email is password reset, which showed a hard-coded name and no logo.
+- **Fix:** Password-reset email: logo header (`/brand/icon-192.png`, absolute URL from `NEXT_PUBLIC_APP_URL`, omitted when unknown) and the tenant name from `lib/brand` in preview, heading, footer and subject. Render test `emails/__tests__/password-reset.test.tsx`. Roadmap task A.3 now says to reuse this header.
+
+---
+
 ## Lessons learned
 
 > This section is populated during development. Each entry documents what went wrong, the root cause, and how to prevent it in the future.
@@ -1974,3 +1984,4 @@
 | M-70     | 2026-10-23    | Ajustar keeps Cobrar open with the new total — verified by E2E                                                  | fix/backlog-batch-2          |
 | M-79     | 2026-10-23    | Board totals use the adjusted price (override_price ?? unit_price)                                              | fix/backlog-batch-2          |
 | M-04     | 2026-10-23    | Cashier reads cloth pieces (large orders); RBAC matrix matches the code                                         | fix/backlog-batch-2          |
+| L-13     | 2026-10-23    | Password-reset email has the brand logo + tenant name                                                           | fix/backlog-batch-2          |

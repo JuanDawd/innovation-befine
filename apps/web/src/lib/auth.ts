@@ -6,6 +6,7 @@ import { accounts, sessions, users, verifications } from "@befine/db/schema";
 import { getDb } from "./db";
 import { sendEmail } from "./email";
 import { PasswordResetEmail } from "@/emails/password-reset";
+import { BRAND_FULL_NAME } from "@/lib/brand";
 import { resolveTrustedOrigins } from "@/lib/trusted-origins";
 
 /**
@@ -51,7 +52,7 @@ export const auth = betterAuth({
     sendResetPassword: async ({ user, url }) => {
       await sendEmail({
         to: user.email,
-        subject: "Restablecer tu contraseña — Innovation Befine",
+        subject: `Restablecer tu contraseña — ${BRAND_FULL_NAME}`,
         react: PasswordResetEmail({ resetUrl: url, userName: user.name }),
       });
     },
