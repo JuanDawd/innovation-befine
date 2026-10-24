@@ -52,7 +52,12 @@ export function ProductApprovalBoard() {
     if (!res.success) {
       setErrorMap((m) => ({
         ...m,
-        [piece.id]: res.error.code === "STALE_DATA" ? t("staleError") : t("approveError"),
+        [piece.id]:
+          res.error.code === "STALE_DATA"
+            ? t("staleError")
+            : res.error.code === "CONFLICT"
+              ? res.error.message
+              : t("approveError"),
       }));
       if (res.error.code === "STALE_DATA") notifyDataChanged("products");
     } else {

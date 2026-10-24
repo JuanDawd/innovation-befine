@@ -231,9 +231,10 @@ export async function markPieceDone(
   if (!pieceRow)
     return { success: false, error: { code: "NOT_FOUND", message: "Pieza no encontrada" } };
 
-  const newStatus = pieceRow.autoApproved
-    ? ("approved" as const)
-    : ("done_pending_approval" as const);
+  // H-57: auto-approved pay belongs to the open business day; with no day
+  // open the piece waits on the approval board instead.
+  const openDay = pieceRow.autoApproved ? await getCurrentBusinessDay() : null;
+  const newStatus = openDay ? ("approved" as const) : ("done_pending_approval" as const);
   const now = new Date();
 
   // T09R-R12: storeIdempotency runs inside the same transaction as the mutation
@@ -244,7 +245,9 @@ export async function markPieceDone(
       .set({
         status: newStatus,
         completedAt: now,
-        ...(newStatus === "approved" ? { approvedAt: now, approvedBy: ctx.employeeId } : {}),
+        ...(openDay
+          ? { approvedAt: now, approvedBy: ctx.employeeId, approvedBusinessDayId: openDay.id }
+          : {}),
         version: expectedVersion + 1,
       })
       .where(

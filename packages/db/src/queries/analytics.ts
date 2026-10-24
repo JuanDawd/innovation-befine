@@ -250,7 +250,7 @@ export async function earningsByEmployee(
     .innerJoin(users, eq(employees.userId, users.id))
     .where(
       and(
-        inArray(products.businessDayId, businessDayIds),
+        inArray(productPieces.approvedBusinessDayId, businessDayIds),
         eq(productPieces.status, "approved"),
         activeFilter,
       ),
@@ -635,27 +635,26 @@ export async function employeeDayBreakdown(
   if (emp.role === "clothier") {
     const rows = await db
       .select({
-        businessDayId: products.businessDayId,
+        businessDayId: productPieces.approvedBusinessDayId,
         openedAt: businessDays.openedAt,
         jobs: sql<number>`COALESCE(SUM(${productPieces.quantity}), 0)::int`,
         earnings: sql<number>`COALESCE(SUM(${clothPieceVariants.pieceRate} * ${productPieces.quantity}), 0)::bigint`,
       })
       .from(productPieces)
-      .innerJoin(products, eq(productPieces.productId, products.id))
       .innerJoin(clothPieceVariants, eq(productPieces.clothPieceVariantId, clothPieceVariants.id))
-      .innerJoin(businessDays, eq(products.businessDayId, businessDays.id))
+      .innerJoin(businessDays, eq(productPieces.approvedBusinessDayId, businessDays.id))
       .where(
         and(
           eq(productPieces.assignedToEmployeeId, employeeId),
-          inArray(products.businessDayId, businessDayIds),
+          inArray(productPieces.approvedBusinessDayId, businessDayIds),
           eq(productPieces.status, "approved"),
         ),
       )
-      .groupBy(products.businessDayId, businessDays.openedAt)
+      .groupBy(productPieces.approvedBusinessDayId, businessDays.openedAt)
       .orderBy(businessDays.openedAt);
 
     return rows.map((r) => ({
-      businessDayId: r.businessDayId,
+      businessDayId: r.businessDayId!, // filtered by approval day above
       date: toBogotaDate(new Date(r.openedAt)),
       jobs: Number(r.jobs),
       earnings: Number(r.earnings),

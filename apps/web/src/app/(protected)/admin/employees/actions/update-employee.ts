@@ -324,14 +324,14 @@ export async function getUnsettledPeriodsForEmployee(
     );
   } else if (emp.role === "clothier") {
     const workDays = await db
-      .selectDistinct({ businessDayId: products.businessDayId })
+      .selectDistinct({ businessDayId: productPieces.approvedBusinessDayId })
       .from(productPieces)
       .innerJoin(products, eq(productPieces.productId, products.id))
       .where(
         and(
           eq(productPieces.assignedToEmployeeId, employeeId),
           eq(productPieces.status, "approved"),
-          inArray(products.businessDayId, closedDayIds),
+          inArray(productPieces.approvedBusinessDayId, closedDayIds),
         ),
       );
     unsettledDays = closedDays.filter(

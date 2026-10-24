@@ -364,7 +364,7 @@ export async function recordPayout(rawInput: unknown): Promise<ActionResult<{ id
             and(
               eq(productPieces.assignedToEmployeeId, input.employeeId),
               eq(productPieces.status, "approved"),
-              inArray(products.businessDayId, input.businessDayIds),
+              inArray(productPieces.approvedBusinessDayId, input.businessDayIds),
             ),
           );
         if (pieces.length > 0)
@@ -558,14 +558,14 @@ export async function getUnsettledEmployees(): Promise<ActionResult<UnsettledEmp
       );
     } else if (emp.role === "clothier") {
       const workDays = await db
-        .selectDistinct({ businessDayId: products.businessDayId })
+        .selectDistinct({ businessDayId: productPieces.approvedBusinessDayId })
         .from(productPieces)
         .innerJoin(products, eq(productPieces.productId, products.id))
         .where(
           and(
             eq(productPieces.assignedToEmployeeId, emp.id),
             eq(productPieces.status, "approved"),
-            inArray(products.businessDayId, closedDayIds),
+            inArray(productPieces.approvedBusinessDayId, closedDayIds),
           ),
         );
       unsettledDays = closedDays.filter(

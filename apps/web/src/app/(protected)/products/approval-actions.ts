@@ -23,6 +23,7 @@ import {
   clients,
 } from "@befine/db/schema";
 import type { ActionResult } from "@/lib/action-result";
+import { getCurrentBusinessDay } from "@/lib/business-day";
 import { hasRole } from "@/lib/middleware-helpers";
 import { revalidatePath } from "next/cache";
 import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
@@ -131,6 +132,18 @@ export async function approveProductPiece(
       },
     };
 
+  // H-57: the piece's pay belongs to the day it is approved on
+  const businessDay = await getCurrentBusinessDay();
+  if (!businessDay)
+    return {
+      success: false,
+      error: {
+        code: "CONFLICT",
+        message:
+          "Abre el día laboral para aprobar piezas: el pago queda en el día de la aprobación.",
+      },
+    };
+
   const db = getDb();
 
   const result = await db
@@ -139,6 +152,7 @@ export async function approveProductPiece(
       status: "approved",
       approvedAt: new Date(),
       approvedBy: ctx.employeeId,
+      approvedBusinessDayId: businessDay.id,
       version: expectedVersion + 1,
     })
     .where(
@@ -197,6 +211,18 @@ export async function adminMarkProductPieceApproved(
   if (!emp)
     return { success: false, error: { code: "NOT_FOUND", message: "Empleado no encontrado" } };
 
+  // H-57: the piece's pay belongs to the day it is approved on
+  const businessDay = await getCurrentBusinessDay();
+  if (!businessDay)
+    return {
+      success: false,
+      error: {
+        code: "CONFLICT",
+        message:
+          "Abre el día laboral para aprobar piezas: el pago queda en el día de la aprobación.",
+      },
+    };
+
   const result = await db
     .update(productPieces)
     .set({
@@ -204,6 +230,7 @@ export async function adminMarkProductPieceApproved(
       completedAt: new Date(),
       approvedAt: new Date(),
       approvedBy: emp.id,
+      approvedBusinessDayId: businessDay.id,
       version: expectedVersion + 1,
     })
     .where(

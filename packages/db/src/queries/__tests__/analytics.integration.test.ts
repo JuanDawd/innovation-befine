@@ -169,6 +169,42 @@ describeDb("earningsByEmployee", () => {
       ]);
     }));
 
+  it("piece pay lands on the day it was approved, not its product's day (H-57)", () =>
+    withCleanDb(async (db) => {
+      const clothier = await makeEmployee(db, { role: "clothier" });
+      const admin = await makeEmployee(db, { role: "admin" });
+      const monday = await makeDay(db, "2026-10-19T13:00:00Z");
+      const wednesday = await makeDay(db, "2026-10-21T13:00:00Z");
+      const bata = await makeClothVariant(db, { pieceRate: 8_000 });
+      // Product created Monday; one piece approved Monday, one only on Wednesday
+      await makeProduct(db, {
+        dayId: monday,
+        createdBy: admin.id,
+        pieces: [
+          { cloth: bata, assignedTo: clothier.id, status: "approved" },
+          {
+            cloth: bata,
+            assignedTo: clothier.id,
+            status: "approved",
+            quantity: 2,
+            approvedDayId: wednesday,
+          },
+        ],
+      });
+
+      const pay = async (dayId: string) =>
+        (await earningsByEmployee(db, [dayId])).find((r) => r.employeeId === clothier.id)
+          ?.totalEarnings ?? 0;
+      expect(await pay(monday)).toBe(8_000);
+      expect(await pay(wednesday)).toBe(16_000);
+
+      const days = await employeeDayBreakdown(db, clothier.id, [monday, wednesday]);
+      expect(days.map((d) => [d.businessDayId, d.earnings])).toEqual([
+        [monday, 8_000],
+        [wednesday, 16_000],
+      ]);
+    }));
+
   it("secretary: distinct dates × daily rate, capped per ISO week, vacations excluded", () =>
     withCleanDb(async (db) => {
       const sec = await makeEmployee(db, {
@@ -422,15 +458,13 @@ describeDb("revenueByMethod", () => {
           .insert(schema.checkoutSessions)
           .values({ businessDayId: dayId, cashierId: cashier.id, totalAmount: total })
           .returning({ id: schema.checkoutSessions.id });
-        await db
-          .insert(schema.ticketPayments)
-          .values(
-            payments.map(([method, amount]) => ({
-              checkoutSessionId: session!.id,
-              method,
-              amount,
-            })),
-          );
+        await db.insert(schema.ticketPayments).values(
+          payments.map(([method, amount]) => ({
+            checkoutSessionId: session!.id,
+            method,
+            amount,
+          })),
+        );
       };
       await pay(day, [
         ["cash", 20_000],

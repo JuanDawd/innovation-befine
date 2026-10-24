@@ -558,6 +558,14 @@
 - **Description:** Found in the back-office design critique. `recordPayout` compared the paid amount with the `originalComputedAmount` sent by the browser and stored it as the audit figure — it never recomputed. A ticket reopened or a piece approved between preview and confirm was paid at the stale amount with no reason required, against the CLAUDE.md rule "settlement amounts must be recomputed server-side". A $0 payout was also accepted, marking days settled with nothing paid (compounds H-57).
 - **Fix:** `recordPayout` recomputes earnings for the employee and days; `checkPayout()` (tested) returns STALE_DATA with the new figure when it differs from the preview, refuses $0, and requires a reason against the server figure; the server figure is what's stored as `original_computed_amount`.
 
+### H-57 — A piece approved after its product's day was paid was never paid
+
+- **Severity:** High
+- **Status:** Resolved (2026-10-24)
+- **Affected:** T064 `compute-clothier-earnings`, T066/T067 payroll (unsettled detection, payout piece links), T074 analytics, employee termination, approval board / clothier auto-approve
+- **Description:** Clothier pay was attributed to the business day the _product_ was created on, and payouts settle whole days. Since H-52 clothiers finish pieces from earlier days and since H-56 those pieces reach approval — if the product's day was already settled, the newly approved piece was excluded from unsettled detection and from every later payout.
+- **Fix:** migration 0037 adds `craftable_pieces.approved_business_day_id` (backfilled with the product's day for pieces already approved, so existing payouts are unchanged) and a CHECK that approved pieces carry it. Approving (board, admin direct approve, clothier auto-approve) stamps the open business day; with no day open the board refuses and auto-approve leaves the piece for the board. Clothier earnings, unsettled detection, payout piece links, termination and analytics all read the approval day. Integration test: Monday's product, piece approved Wednesday → paid on Wednesday.
+
 ---
 
 ## Medium-priority issues
@@ -2153,3 +2161,4 @@
 | H-56     | 2026-10-24    | Approval board lists finished pieces from every day, with quantity and order context                            | feat/redesign                  |
 | H-58     | 2026-10-24    | Large-order lines priced from the variant's selling price, never the piece rate                                 | feat/redesign                  |
 | H-59     | 2026-10-24    | recordPayout recomputes server-side; stale preview → STALE_DATA; $0 payouts refused                             | feat/redesign                  |
+| H-57     | 2026-10-24    | Piece pay belongs to the day it's approved (approved_business_day_id, migration 0037)                           | feat/redesign                  |
