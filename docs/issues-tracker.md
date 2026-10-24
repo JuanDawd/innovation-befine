@@ -1018,6 +1018,16 @@
 
 ---
 
+### M-62 — Several sequential DB round trips per server action
+
+- **Severity:** Medium
+- **Status:** Resolved (2026-10-23) — includes L-52 item (5), "Abrir día" slow
+- **Affected:** 13 server-action modules + realtime route (employee lookup), `createTicket`, ticket transitions, `openBusinessDay`
+- **Description:** Source: k6 load test 2026-10-11 — with ~155 ms per query on the test rig, `getCurrentEmployeeId` took ~800 ms idle: session, employee lookup, business day, then the real query, one after another.
+- **Fix:** `lib/employee-ref.ts` `getEmployeeRef()` replaces 20 copies of the user→employee query: request-deduped (`cache()`) and cached per process for hits only (the mapping never changes; misses aren't cached). `createTicket` runs business day + variant + employee in one `Promise.all`; ticket transitions read ticket + employee in parallel; `openBusinessDay` is one `INSERT … SELECT … WHERE NOT EXISTS (open day)` instead of check-then-insert (also guards production while the unique index is missing, H-48). Full E2E suite on real Postgres: 31 passed, 1.6 → 1.2 min. Tests: `lib/__tests__/employee-ref.test.ts`, `cashier/__tests__/close-business-day.test.ts`.
+
+---
+
 ## Low-priority issues
 
 ### L-09 — No file/image storage research
@@ -1853,3 +1863,4 @@
 | M-77     | 2026-10-23    | Analytics commission uses banker's rounding per item (matches payroll)                                          | fix/vikunja-backlog          |
 | M-70b    | 2026-10-23    | Query integration tests on real Postgres (rolled back); 98.8 % / 85.3 % coverage; 80 % threshold enforced in CI | fix/vikunja-backlog          |
 | L-53     | 2026-10-23    | Products dashboard loads only today + WIP candidates in SQL                                                     | fix/backlog-batch-2          |
+| M-62     | 2026-10-23    | Cached employee lookup, parallel independent reads, single-statement openBusinessDay                            | fix/backlog-batch-2          |

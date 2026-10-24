@@ -25,7 +25,7 @@ vi.mock("@/lib/db", () => ({
     }),
 }));
 
-import { closeBusinessDay } from "../actions/business-day";
+import { closeBusinessDay, openBusinessDay } from "../actions/business-day";
 
 const DAY_ID = "00000000-0000-4000-8000-000000000001";
 
@@ -84,6 +84,36 @@ describe("closeBusinessDay", () => {
   it("returns FORBIDDEN for a stylist", async () => {
     state.role = "stylist";
     const res = await closeBusinessDay(DAY_ID);
+    expect(!res.success && res.error.code).toBe("FORBIDDEN");
+    expect(state.queries).toHaveLength(0);
+  });
+});
+
+describe("openBusinessDay", () => {
+  beforeEach(() => {
+    state.role = "cashier";
+    state.queries = [];
+    state.respond = () => [];
+  });
+
+  it("opens the day in one statement guarded by NOT EXISTS an open day (M-62)", async () => {
+    state.respond = (sql) => (sql.startsWith("insert") ? [dayRow({ closedAt: null })] : []);
+    const res = await openBusinessDay();
+    expect(res.success).toBe(true);
+    expect(state.queries).toHaveLength(1);
+    expect(state.queries[0]).toMatch(
+      /^insert into "business_days" .* select .* where not exists \(select .*"closed_at" is null\)/s,
+    );
+  });
+
+  it("returns CONFLICT when a day is already open", async () => {
+    const res = await openBusinessDay();
+    expect(!res.success && res.error.code).toBe("CONFLICT");
+  });
+
+  it("returns FORBIDDEN for a stylist", async () => {
+    state.role = "stylist";
+    const res = await openBusinessDay();
     expect(!res.success && res.error.code).toBe("FORBIDDEN");
     expect(state.queries).toHaveLength(0);
   });

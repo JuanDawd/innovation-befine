@@ -8,25 +8,18 @@
 import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
-import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { hasRole } from "@/lib/middleware-helpers";
-import { getDb } from "@/lib/db";
-import { employees } from "@befine/db/schema";
 import { ClothierWorkBoard } from "@/components/clothier-work-board";
 import { PageHeader } from "@/components/page-header";
+import { getEmployeeRef } from "@/lib/employee-ref";
 
 export default async function ClothierHomePage() {
   const t = await getTranslations("clothierWork");
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session || !hasRole(session.user, "clothier")) redirect("/login");
 
-  const db = getDb();
-  const [emp] = await db
-    .select({ id: employees.id })
-    .from(employees)
-    .where(eq(employees.userId, session.user.id))
-    .limit(1);
+  const emp = await getEmployeeRef(session.user.id);
 
   if (!emp) redirect("/login");
 

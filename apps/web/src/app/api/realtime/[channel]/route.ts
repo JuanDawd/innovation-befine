@@ -12,13 +12,11 @@
 export const dynamic = "force-dynamic";
 
 import { auth } from "@/lib/auth";
-import { getDb } from "@/lib/db";
-import { employees } from "@befine/db/schema";
-import { eq } from "drizzle-orm";
 import { createSSEHandler, createScopedSSEHandler } from "@befine/realtime/server";
 import type { RealtimeChannel } from "@befine/realtime/types";
 import { hasRole } from "@/lib/middleware-helpers";
 import type { AppRole } from "@befine/types";
+import { getEmployeeRef } from "@/lib/employee-ref";
 
 const VALID_CHANNELS: RealtimeChannel[] = ["cashier", "clothier", "notifications"];
 
@@ -51,12 +49,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ channel:
 
   // For the notifications channel: scope events to the caller's employee_id
   if (ch === "notifications") {
-    const db = getDb();
-    const [emp] = await db
-      .select({ id: employees.id })
-      .from(employees)
-      .where(eq(employees.userId, session.user.id))
-      .limit(1);
+    const emp = await getEmployeeRef(session.user.id);
 
     if (!emp) {
       return new Response("Employee not found", { status: 403 });

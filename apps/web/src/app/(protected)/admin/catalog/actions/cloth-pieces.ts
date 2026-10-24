@@ -14,17 +14,12 @@ import { revalidatePath } from "next/cache";
 import { eq, and } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import {
-  clothPieces,
-  clothPieceVariants,
-  catalogAuditLog,
-  productPieces,
-  employees,
-} from "@befine/db/schema";
+import { clothPieces, clothPieceVariants, catalogAuditLog, productPieces } from "@befine/db/schema";
 import { createClothPieceSchema, editClothPieceSchema } from "@befine/types";
 import { z } from "zod";
 import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
+import { getEmployeeRef } from "@/lib/employee-ref";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -426,11 +421,7 @@ export async function sellProductPiece(
 
   const db = getDb();
 
-  const [emp] = await db
-    .select({ id: employees.id })
-    .from(employees)
-    .where(eq(employees.userId, session.user.id))
-    .limit(1);
+  const emp = await getEmployeeRef(session.user.id);
 
   const [piece] = await db
     .select({

@@ -14,7 +14,6 @@ import { getDb, getTxDb } from "@/lib/db";
 import {
   tickets,
   ticketItems,
-  employees,
   clients,
   checkoutSessions,
   ticketPayments,
@@ -29,6 +28,7 @@ import { getCurrentBusinessDay } from "@/lib/business-day";
 import { revalidatePath } from "next/cache";
 import { publishEvent } from "@befine/realtime/server";
 import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
+import { getEmployeeRef } from "@/lib/employee-ref";
 
 export type CheckoutLineItem = {
   ticketItemId: string;
@@ -179,12 +179,7 @@ export async function processCheckout(rawInput: unknown): Promise<ActionResult<C
     };
 
   // Get cashier employee ID
-  const db = getDb();
-  const [cashierEmp] = await db
-    .select({ id: employees.id })
-    .from(employees)
-    .where(eq(employees.userId, session.user.id))
-    .limit(1);
+  const cashierEmp = await getEmployeeRef(session.user.id);
   if (!cashierEmp)
     return { success: false, error: { code: "NOT_FOUND", message: "Empleado no encontrado" } };
 
@@ -514,12 +509,7 @@ export async function processPaidOfflineCheckout(
 
   const input = parsed.data;
 
-  const db = getDb();
-  const [cashierEmp] = await db
-    .select({ id: employees.id })
-    .from(employees)
-    .where(eq(employees.userId, session.user.id))
-    .limit(1);
+  const cashierEmp = await getEmployeeRef(session.user.id);
   if (!cashierEmp)
     return { success: false, error: { code: "NOT_FOUND", message: "Empleado no encontrado" } };
 

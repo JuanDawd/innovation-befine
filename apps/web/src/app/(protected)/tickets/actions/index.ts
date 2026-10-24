@@ -29,6 +29,7 @@ import { getCurrentBusinessDay } from "@/lib/business-day";
 import { revalidatePath } from "next/cache";
 import { publishEvent } from "@befine/realtime/server";
 import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
+import { getEmployeeRef } from "@/lib/employee-ref";
 
 export type TicketRow = {
   id: string;
@@ -56,12 +57,7 @@ export async function getCurrentEmployeeId(): Promise<ActionResult<{ employeeId:
   if (!session)
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
 
-  const db = getDb();
-  const [emp] = await db
-    .select({ id: employees.id })
-    .from(employees)
-    .where(eq(employees.userId, session.user.id))
-    .limit(1);
+  const emp = await getEmployeeRef(session.user.id);
 
   if (!emp)
     return { success: false, error: { code: "NOT_FOUND", message: "Empleado no encontrado" } };
@@ -131,52 +127,43 @@ export async function createTicket(rawInput: unknown): Promise<ActionResult<Tick
 
   // Stylists can only create tickets for themselves
   if (isStylist && !isStaff) {
-    const db = getDb();
-    const emp = await db
-      .select({ id: employees.id })
-      .from(employees)
-      .where(eq(employees.userId, session.user.id))
-      .limit(1);
-    if (!emp[0] || emp[0].id !== input.employeeId)
+    const emp = await getEmployeeRef(session.user.id);
+    if (!emp || emp.id !== input.employeeId)
       return {
         success: false,
         error: { code: "FORBIDDEN", message: "Solo puedes crear tickets para ti mismo" },
       };
   }
 
-  // Require open business day
-  const businessDay = await getCurrentBusinessDay();
+  // M-62: these lookups are independent — one round trip instead of three.
+  const db = getDb();
+  const [businessDay, [variant], emp] = await Promise.all([
+    getCurrentBusinessDay(),
+    // Snapshot price/commission from the variant
+    db
+      .select({
+        customerPrice: serviceVariants.customerPrice,
+        commissionPct: serviceVariants.commissionPct,
+        isActive: serviceVariants.isActive,
+      })
+      .from(serviceVariants)
+      .where(eq(serviceVariants.id, input.serviceVariantId))
+      .limit(1),
+    // The creator's employee id for createdBy
+    getEmployeeRef(session.user.id),
+  ]);
+
   if (!businessDay)
     return {
       success: false,
       error: { code: "CONFLICT", message: "No hay un día laboral abierto" },
     };
 
-  const db = getDb();
-
-  // Fetch variant to snapshot price/commission
-  const [variant] = await db
-    .select({
-      customerPrice: serviceVariants.customerPrice,
-      commissionPct: serviceVariants.commissionPct,
-      isActive: serviceVariants.isActive,
-    })
-    .from(serviceVariants)
-    .where(eq(serviceVariants.id, input.serviceVariantId))
-    .limit(1);
-
   if (!variant || !variant.isActive)
     return {
       success: false,
       error: { code: "NOT_FOUND", message: "Servicio no encontrado o inactivo" },
     };
-
-  // Get the employee's userId for createdBy
-  const [emp] = await db
-    .select({ id: employees.id })
-    .from(employees)
-    .where(eq(employees.userId, session.user.id))
-    .limit(1);
 
   const createdByEmployeeId = emp?.id ?? input.employeeId;
 
@@ -357,22 +344,20 @@ type TransitionInput = { ticketId: string };
 
 async function getTicketAndEmployee(ticketId: string, userId: string) {
   const db = getDb();
-  const [ticket] = await db
-    .select({
-      id: tickets.id,
-      status: tickets.status,
-      employeeId: tickets.employeeId,
-      version: tickets.version,
-    })
-    .from(tickets)
-    .where(eq(tickets.id, ticketId))
-    .limit(1);
-
-  const [emp] = await db
-    .select({ id: employees.id })
-    .from(employees)
-    .where(eq(employees.userId, userId))
-    .limit(1);
+  // M-62: independent reads, one round trip.
+  const [[ticket], emp] = await Promise.all([
+    db
+      .select({
+        id: tickets.id,
+        status: tickets.status,
+        employeeId: tickets.employeeId,
+        version: tickets.version,
+      })
+      .from(tickets)
+      .where(eq(tickets.id, ticketId))
+      .limit(1),
+    getEmployeeRef(userId),
+  ]);
 
   return { ticket, employeeId: emp?.id };
 }

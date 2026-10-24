@@ -27,6 +27,7 @@ import { getCurrentBusinessDay } from "@/lib/business-day";
 import { revalidatePath } from "next/cache";
 import { createNotification } from "@/lib/notifications";
 import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
+import { getEmployeeRef } from "@/lib/employee-ref";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -107,12 +108,7 @@ export async function createProduct(rawInput: unknown): Promise<ActionResult<{ i
     };
 
   // Resolve creator employee id
-  const db = getDb();
-  const [creatorEmployee] = await db
-    .select({ id: employees.id })
-    .from(employees)
-    .where(eq(employees.userId, session.user.id))
-    .limit(1);
+  const creatorEmployee = await getEmployeeRef(session.user.id);
 
   if (!creatorEmployee)
     return { success: false, error: { code: "NOT_FOUND", message: "Empleado no encontrado" } };

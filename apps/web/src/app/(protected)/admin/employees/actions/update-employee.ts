@@ -28,6 +28,7 @@ import type { ActionResult } from "@/lib/action-result";
 import type { EmployeeListItem } from "./list-employees";
 import { hasRole } from "@/lib/middleware-helpers";
 import { businessDateOf } from "@/lib/dates";
+import { getEmployeeRef } from "@/lib/employee-ref";
 
 // ---------------------------------------------------------------------------
 // Edit employee (name, role, subtype, daily rate) — T014
@@ -386,12 +387,7 @@ export async function terminateEmployee(
 
   const { employeeId, terminationAmount, method, reason } = parsed.data;
 
-  const db = getDb();
-  const [adminEmp] = await db
-    .select({ id: employees.id })
-    .from(employees)
-    .where(eq(employees.userId, session.user.id))
-    .limit(1);
+  const adminEmp = await getEmployeeRef(session.user.id);
   if (!adminEmp)
     return { success: false, error: { code: "NOT_FOUND", message: "Empleado no encontrado" } };
 

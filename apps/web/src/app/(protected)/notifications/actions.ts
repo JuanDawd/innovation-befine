@@ -15,8 +15,9 @@ import { headers } from "next/headers";
 import { eq, and, desc, gte, lt } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import { notifications, employees } from "@befine/db/schema";
+import { notifications } from "@befine/db/schema";
 import type { ActionResult } from "@/lib/action-result";
+import { getEmployeeRef } from "@/lib/employee-ref";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -36,12 +37,7 @@ async function getEmployeeId(): Promise<string | null> {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) return null;
 
-  const db = getDb();
-  const [emp] = await db
-    .select({ id: employees.id })
-    .from(employees)
-    .where(eq(employees.userId, session.user.id))
-    .limit(1);
+  const emp = await getEmployeeRef(session.user.id);
 
   return emp?.id ?? null;
 }

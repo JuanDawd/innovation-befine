@@ -30,6 +30,7 @@ import { publishEvent } from "@befine/realtime/server";
 import { revalidatePath } from "next/cache";
 import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
 import { requestEditSchema, resolveEditRequestSchema } from "@befine/types";
+import { getEmployeeRef } from "@/lib/employee-ref";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -66,12 +67,7 @@ async function getSessionAndEmployee() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) return null;
 
-  const db = getDb();
-  const [emp] = await db
-    .select({ id: employees.id })
-    .from(employees)
-    .where(eq(employees.userId, session.user.id))
-    .limit(1);
+  const emp = await getEmployeeRef(session.user.id);
 
   if (!emp) return null;
   return { session, employeeId: emp.id };

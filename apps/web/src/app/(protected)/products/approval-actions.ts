@@ -26,6 +26,7 @@ import { getCurrentBusinessDay } from "@/lib/business-day";
 import { revalidatePath } from "next/cache";
 import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
 import { pieceActionSchema } from "@befine/types";
+import { getEmployeeRef } from "@/lib/employee-ref";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -48,12 +49,7 @@ async function getStaffEmployee(): Promise<{ employeeId: string; userId: string 
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session || !hasRole(session.user, "admin", "secretary")) return null;
 
-  const db = getDb();
-  const [emp] = await db
-    .select({ id: employees.id })
-    .from(employees)
-    .where(eq(employees.userId, session.user.id))
-    .limit(1);
+  const emp = await getEmployeeRef(session.user.id);
 
   return emp ? { employeeId: emp.id, userId: session.user.id } : null;
 }
@@ -189,11 +185,7 @@ export async function adminMarkProductPieceApproved(
     };
 
   const db = getDb();
-  const [emp] = await db
-    .select({ id: employees.id })
-    .from(employees)
-    .where(eq(employees.userId, session.user.id))
-    .limit(1);
+  const emp = await getEmployeeRef(session.user.id);
 
   if (!emp)
     return { success: false, error: { code: "NOT_FOUND", message: "Empleado no encontrado" } };
