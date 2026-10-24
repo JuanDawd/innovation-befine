@@ -5,8 +5,10 @@ import {
   employeeDayBreakdown,
   getBusinessDayIdsByPeriod,
   jobsCountByEmployee,
+  revenueByMethod,
   revenueByPeriod,
 } from "../analytics";
+import * as schema from "../../schema";
 import {
   describeDb,
   makeAbsence,
@@ -405,5 +407,61 @@ describeDb("employeeDayBreakdown", () => {
       expect(await employeeDayBreakdown(db, crypto.randomUUID(), [day])).toEqual([]);
       const stylist = await makeEmployee(db);
       expect(await employeeDayBreakdown(db, stylist.id, [])).toEqual([]);
+    }));
+});
+
+describeDb("revenueByMethod", () => {
+  it("adds checkout payments and cloth sales per method for the period's days only", () =>
+    withCleanDb(async (db) => {
+      const cashier = await makeEmployee(db, { role: "admin" });
+      const day = await makeDay(db, "2026-10-22T13:00:00Z");
+      const otherDay = await makeDay(db, "2026-10-21T13:00:00Z");
+      const pay = async (dayId: string, payments: ["cash" | "card" | "transfer", number][]) => {
+        const total = payments.reduce((sum, [, amount]) => sum + amount, 0);
+        const [session] = await db
+          .insert(schema.checkoutSessions)
+          .values({ businessDayId: dayId, cashierId: cashier.id, totalAmount: total })
+          .returning({ id: schema.checkoutSessions.id });
+        await db
+          .insert(schema.ticketPayments)
+          .values(
+            payments.map(([method, amount]) => ({
+              checkoutSessionId: session!.id,
+              method,
+              amount,
+            })),
+          );
+      };
+      await pay(day, [
+        ["cash", 20_000],
+        ["transfer", 100_000],
+      ]);
+      await pay(day, [["card", 55_000]]);
+      await pay(otherDay, [["cash", 999_000]]); // outside the period
+      const bata = await makeClothVariant(db);
+      await makeClothSale(db, {
+        dayId: day,
+        soldBy: cashier.id,
+        cloth: bata,
+        unitPrice: 35_000,
+        quantity: 2,
+      });
+
+      expect(await revenueByMethod(db, [day])).toEqual({
+        cash: 90_000, // 20.000 + 2 × 35.000 cloth sale
+        card: 55_000,
+        transfer: 100_000,
+        unrecorded: 0,
+      });
+    }));
+
+  it("is all zeros with no days", () =>
+    withCleanDb(async (db) => {
+      expect(await revenueByMethod(db, [])).toEqual({
+        cash: 0,
+        card: 0,
+        transfer: 0,
+        unrecorded: 0,
+      });
     }));
 });

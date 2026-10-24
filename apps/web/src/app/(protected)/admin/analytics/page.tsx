@@ -35,6 +35,7 @@ export default async function AnalyticsPage({
         prior: emptyMetrics,
         dailyBreakdown: [],
         earningsTable: [],
+        byMethod: { cash: 0, card: 0, transfer: 0, unrecorded: 0 },
       };
 
   return (

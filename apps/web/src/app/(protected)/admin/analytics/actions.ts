@@ -19,6 +19,8 @@ import {
   type DailyRevenueRow,
   type EarningsByEmployee,
   type EmployeeDayBreakdown,
+  revenueByMethod,
+  type RevenueByMethod,
 } from "@befine/db";
 import {
   analyticsQuerySchema,
@@ -58,6 +60,8 @@ export type AnalyticsSummary = {
   prior: PeriodMetrics;
   dailyBreakdown: DailyRevenueRow[];
   earningsTable: EarningsByEmployee[];
+  /** Money taken per payment method in the current period — to reconcile the till */
+  byMethod: RevenueByMethod;
 };
 
 export type EmployeeDrillDownResult = {
@@ -102,13 +106,14 @@ export async function getAnalyticsSummary(
   const today = todayInBogota();
   const { current, prior } = await getBusinessDayIdsByPeriod(db, period, today);
 
-  const [currentRevenue, priorRevenue, currentEarnings, priorEarnings, dailyBreakdown] =
+  const [currentRevenue, priorRevenue, currentEarnings, priorEarnings, dailyBreakdown, byMethod] =
     await Promise.all([
       revenueByPeriod(db, current),
       revenueByPeriod(db, prior),
       earningsByEmployee(db, current, { activeOnly: !includeInactive }),
       earningsByEmployee(db, prior, { activeOnly: !includeInactive }),
       dailyRevenueBreakdown(db, current),
+      revenueByMethod(db, current),
     ]);
 
   const sumEarnings = (rows: EarningsByEmployee[]) => rows.reduce((s, r) => s + r.totalEarnings, 0);
@@ -147,6 +152,7 @@ export async function getAnalyticsSummary(
       },
       dailyBreakdown,
       earningsTable: currentEarnings,
+      byMethod,
     },
   };
 }

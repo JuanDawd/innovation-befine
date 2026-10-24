@@ -23,6 +23,8 @@ import {
   businessDays,
   employeeAbsences,
   clothSales,
+  ticketPayments,
+  checkoutSessions,
 } from "../schema";
 
 /**
@@ -362,6 +364,51 @@ export async function earningsByEmployee(
   }
 
   return Array.from(result.values()).sort((a, b) => b.totalEarnings - a.totalEarnings);
+}
+
+// ─── Money taken by payment method ──────────────────────────────────────────
+
+export type RevenueByMethod = {
+  cash: number;
+  card: number;
+  transfer: number;
+  /** Cloth sales recorded before the payment method was captured (H-50) */
+  unrecorded: number;
+};
+
+/**
+ * What came in through the till per method — checkout payments plus cloth
+ * sales — for the given business days. It is what the drawer, the card
+ * terminal and the bank should show, so the day can be reconciled.
+ */
+export async function revenueByMethod(
+  db: Database,
+  businessDayIds: string[],
+): Promise<RevenueByMethod> {
+  const result: RevenueByMethod = { cash: 0, card: 0, transfer: 0, unrecorded: 0 };
+  if (businessDayIds.length === 0) return result;
+
+  const [paymentRows, saleRows] = await Promise.all([
+    db
+      .select({
+        method: ticketPayments.method,
+        amount: sql<number>`COALESCE(SUM(${ticketPayments.amount}), 0)::bigint`,
+      })
+      .from(ticketPayments)
+      .innerJoin(checkoutSessions, eq(ticketPayments.checkoutSessionId, checkoutSessions.id))
+      .where(inArray(checkoutSessions.businessDayId, businessDayIds))
+      .groupBy(ticketPayments.method),
+    db
+      .select({ method: clothSales.paymentMethod, amount: clothSaleTotal })
+      .from(clothSales)
+      .where(inArray(clothSales.businessDayId, businessDayIds))
+      .groupBy(clothSales.paymentMethod),
+  ]);
+
+  for (const r of [...paymentRows, ...saleRows]) {
+    result[r.method ?? "unrecorded"] += Number(r.amount);
+  }
+  return result;
 }
 
 // ─── Daily revenue breakdown ──────────────────────────────────────────────────
