@@ -48,7 +48,7 @@
     "emailInvalid": "Enter a valid email address",
     "passwordRequired": "Password is required",
     "invalidCredentials": "Incorrect email or password",
-    "tooManyAttempts": "Too many attempts. Please try again later.",
+    "tooManyAttempts": "Too many attempts from this network. Wait a minute and try again.",
     "loginError": "Could not sign in. Please try again.",
     "forgotPasswordTitle": "Reset password",
     "forgotPasswordDescription": "Enter your email and we'll send you a reset link.",
@@ -74,7 +74,8 @@
       "confirmPasswordRequired": "Confirm your password",
       "passwordsDontMatch": "Passwords don't match",
       "emailInvalid": "Enter a valid email address"
-    }
+    },
+    "retryIn": "Try again in {seconds} s"
   },
   "status": {
     "logged": "Logged",

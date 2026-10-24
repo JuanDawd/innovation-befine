@@ -10,16 +10,27 @@
  *
  * Only `name` is required. Other columns are optional.
  *
+ * Rows are validated like the app's client form (M-09): name 1–100 chars,
+ * phone 7–15 digits (≤ 20 chars), valid email (≤ 150), notes ≤ 500. Invalid
+ * rows are reported and not imported.
+ *
+ * Rollback (M-09): the import is one transaction (all or nothing), and every
+ * run writes the inserted ids to `<file>.import-<timestamp>.ids`. To undo a
+ * bad import, run with `--undo <ids-file>`: those clients are deactivated
+ * (is_active = false — the soft-delete policy; deleting would fail once they
+ * have tickets). Before a large import, also create a Neon branch as a backup.
+ *
  * Usage:
  *   DATABASE_URL=postgres://... tsx packages/db/src/import-clients.ts clients.csv
  *   DATABASE_URL=postgres://... tsx packages/db/src/import-clients.ts clients.csv --dry-run
+ *   DATABASE_URL=postgres://... tsx packages/db/src/import-clients.ts --undo clients.csv.import-….ids
  */
 
-import { createReadStream } from "node:fs";
+import { createReadStream, readFileSync, writeFileSync } from "node:fs";
 import { createInterface } from "node:readline";
 import { createTxDb } from "./index";
 import { clients } from "./schema";
-import { or, eq } from "drizzle-orm";
+import { or, eq, inArray } from "drizzle-orm";
 
 // ─── CSV parser ───────────────────────────────────────────────────────────────
 
@@ -79,6 +90,28 @@ export function parseCsvLine(line: string): string[] {
   return out;
 }
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/**
+ * Same limits as createClientSchema (packages/types). Returns the reason the
+ * row is invalid, or null when it can be imported.
+ */
+export function validateClientRow(row: ClientRow): string | null {
+  if (row.name.length > 100) return "Name is longer than 100 characters.";
+  if (row.phone !== null) {
+    if (row.phone.length > 20) return "Phone is longer than 20 characters.";
+    if (!/^\+?[\d\s().-]+$/.test(row.phone)) return `Phone "${row.phone}" has invalid characters.`;
+    const digits = row.phone.replace(/\D/g, "").length;
+    if (digits < 7 || digits > 15) return `Phone "${row.phone}" must have 7–15 digits.`;
+  }
+  if (row.email !== null) {
+    if (row.email.length > 150) return "Email is longer than 150 characters.";
+    if (!EMAIL_RE.test(row.email)) return `Email "${row.email}" is not valid.`;
+  }
+  if (row.notes !== null && row.notes.length > 500) return "Notes are longer than 500 characters.";
+  return null;
+}
+
 function parseRow(headers: string[], values: string[]): ClientRow | null {
   const get = (key: string) => values[headers.indexOf(key)]?.trim() ?? "";
 
@@ -130,6 +163,8 @@ async function readCsv(filePath: string): Promise<ClientRow[]> {
 
 async function main() {
   const args = process.argv.slice(2);
+  const undoIdx = args.indexOf("--undo");
+  if (undoIdx >= 0) return undo(args[undoIdx + 1]);
   const filePath = args.find((a) => !a.startsWith("--"));
   const dryRun = args.includes("--dry-run");
 
@@ -159,6 +194,11 @@ async function main() {
   const preErrors: Array<{ row: ClientRow; reason: string }> = [];
 
   for (const row of rows) {
+    const invalid = validateClientRow(row);
+    if (invalid) {
+      preErrors.push({ row, reason: invalid });
+      continue;
+    }
     if (!row.phone && !row.email) {
       preErrors.push({
         row,
@@ -183,7 +223,8 @@ async function main() {
     for (const row of candidates.slice(0, 5)) console.log(" ", JSON.stringify(row));
     if (candidates.length > 5) console.log(`  … and ${candidates.length - 5} more`);
     console.log(`\nIntra-file duplicates : ${intraFileSkipped}`);
-    console.log(`Rows missing phone+email: ${preErrors.length}`);
+    console.log(`Rejected rows         : ${preErrors.length}`);
+    for (const { row, reason } of preErrors) console.error(`  ERROR [${row.name}]: ${reason}`);
     return;
   }
 
@@ -191,6 +232,7 @@ async function main() {
 
   let imported = 0;
   let dbSkipped = 0;
+  const importedIds: string[] = [];
   const errors: Array<{ row: ClientRow; reason: string }> = [...preErrors];
 
   try {
@@ -211,14 +253,18 @@ async function main() {
           continue;
         }
 
-        await tx.insert(clients).values({
-          name: row.name,
-          phone: row.phone,
-          email: row.email,
-          notes: row.notes,
-          noShowCount: row.noShowCount,
-        });
+        const [inserted] = await tx
+          .insert(clients)
+          .values({
+            name: row.name,
+            phone: row.phone,
+            email: row.email,
+            notes: row.notes,
+            noShowCount: row.noShowCount,
+          })
+          .returning({ id: clients.id });
 
+        importedIds.push(inserted!.id);
         imported++;
       }
     });
@@ -226,6 +272,12 @@ async function main() {
     console.error("\nImport aborted; transaction rolled back.");
     console.error(err instanceof Error ? err.message : String(err));
     process.exit(1);
+  }
+
+  if (importedIds.length > 0) {
+    const idsFile = `${filePath}.import-${new Date().toISOString().replace(/[:.]/g, "-")}.ids`;
+    writeFileSync(idsFile, importedIds.join("\n") + "\n");
+    console.log(`\nInserted ids written to ${idsFile} (undo with --undo ${idsFile})`);
   }
 
   console.log(`\nImport complete:`);
@@ -239,6 +291,30 @@ async function main() {
   }
 
   if (errors.length > 0) process.exit(1);
+}
+
+/** Deactivates the clients listed in an ids file written by a previous import. */
+async function undo(idsFile: string | undefined) {
+  const databaseUrl = process.env.DATABASE_URL;
+  if (!idsFile || !databaseUrl) {
+    console.error("Usage: DATABASE_URL=… tsx import-clients.ts --undo <file.ids>");
+    process.exit(1);
+  }
+  const ids = readFileSync(idsFile, "utf8")
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
+  if (ids.length === 0) {
+    console.log("No ids in file — nothing to undo.");
+    return;
+  }
+  const db = createTxDb(databaseUrl);
+  const rows = await db
+    .update(clients)
+    .set({ isActive: false })
+    .where(inArray(clients.id, ids))
+    .returning({ id: clients.id });
+  console.log(`Deactivated ${rows.length} of ${ids.length} imported client(s).`);
 }
 
 const isCli =

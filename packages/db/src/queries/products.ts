@@ -8,7 +8,7 @@
  * Sort: WIP first (oldest day first), then today's (newest first).
  */
 
-import { and, eq, inArray, isNull, ne, sql } from "drizzle-orm";
+import { and, eq, exists, inArray, isNull, ne, or, sql } from "drizzle-orm";
 import type { Database } from "../index";
 import {
   products,
@@ -57,8 +57,15 @@ export async function getProductsDashboard(db: Database): Promise<ProductDashboa
 
   const todayId = openDay?.id ?? null;
 
-  // 2. Fetch products: today's OR from any past day — we'll filter WIP in JS
-  //    We need the business day's openedAt for sorting.
+  // 2. Fetch only candidates (L-53): today's products, or products that still
+  //    have a non-approved piece. Past fully-approved work never loads, so the
+  //    query no longer grows with history. Classification stays in JS below.
+  const hasUnapprovedPiece = exists(
+    db
+      .select({ one: sql`1` })
+      .from(productPieces)
+      .where(and(eq(productPieces.productId, products.id), ne(productPieces.status, "approved"))),
+  );
   const productRows = await db
     .select({
       id: products.id,
@@ -72,7 +79,10 @@ export async function getProductsDashboard(db: Database): Promise<ProductDashboa
       largeOrderId: products.largeOrderId,
     })
     .from(products)
-    .innerJoin(businessDays, eq(products.businessDayId, businessDays.id));
+    .innerJoin(businessDays, eq(products.businessDayId, businessDays.id))
+    .where(
+      todayId ? or(eq(products.businessDayId, todayId), hasUnapprovedPiece) : hasUnapprovedPiece,
+    );
 
   if (productRows.length === 0) return [];
 

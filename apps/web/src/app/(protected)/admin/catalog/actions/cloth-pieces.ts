@@ -14,17 +14,12 @@ import { revalidatePath } from "next/cache";
 import { eq, and } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import {
-  clothPieces,
-  clothPieceVariants,
-  catalogAuditLog,
-  productPieces,
-  employees,
-} from "@befine/db/schema";
+import { clothPieces, clothPieceVariants, catalogAuditLog, productPieces } from "@befine/db/schema";
 import { createClothPieceSchema, editClothPieceSchema } from "@befine/types";
 import { z } from "zod";
 import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
+import { getEmployeeRef } from "@/lib/employee-ref";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -99,7 +94,9 @@ export async function listActiveClothPieces(): Promise<ActionResult<ClothPieceRo
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session)
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
-  if (!hasRole(session.user, "admin", "secretary"))
+  // M-04: cashier opens large orders too (SHARED_APP_PATHS) and needs the piece
+  // list there. Clothiers get piece names through their own board instead.
+  if (!hasRole(session.user, "admin", "cashier", "secretary"))
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
 
   const db = getDb();
@@ -426,11 +423,7 @@ export async function sellProductPiece(
 
   const db = getDb();
 
-  const [emp] = await db
-    .select({ id: employees.id })
-    .from(employees)
-    .where(eq(employees.userId, session.user.id))
-    .limit(1);
+  const emp = await getEmployeeRef(session.user.id);
 
   const [piece] = await db
     .select({

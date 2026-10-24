@@ -68,6 +68,47 @@ test.describe("checkout", () => {
     await expect(page.getByRole("link", { name: containing(`Cobrar a ${guest}`) })).toHaveCount(0);
   });
 
+  test("adjusting a price keeps Cobrar open and updates the total (M-70)", async ({
+    page,
+    browser,
+  }) => {
+    const guest = guestName("Ajuste");
+    await ensureDayOpen(page);
+    const secretary = await asRole(browser, "secretary");
+    await logGuestTicket(secretary.page, guest);
+    await secretary.context.close();
+    await markReady(page, guest);
+
+    await page.getByRole("link", { name: containing(`Cobrar a ${guest}`) }).click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog.getByText(guest).first()).toBeVisible({ timeout: 15_000 });
+    const total = dialog.getByText("Total a cobrar").locator("..");
+    await expect(total).toContainText(cop(E2E_SERVICE.price));
+
+    // This guest's group only — the dialog lists every awaiting ticket.
+    const group = dialog
+      .getByRole("checkbox", { name: containing(guest) })
+      .locator("xpath=ancestor::div[contains(@class,'rounded-lg')][1]");
+    await group.getByRole("button", { name: "Ajustar" }).click();
+    await group.getByLabel("Nuevo precio").fill("42000");
+    await group.getByLabel("Motivo del ajuste").fill("Descuento de prueba");
+    await group.getByRole("button", { name: "Guardar" }).click();
+
+    await expect(page.getByText(`Precio ajustado a ${cop(42_000)}`)).toBeVisible({
+      timeout: 10_000,
+    });
+    // Same dialog, new total — no reopening Cobrar
+    await expect(dialog).toBeVisible();
+    await expect(total).toContainText(cop(42_000));
+    // Persisted: the board card now charges the adjusted amount
+    await page.goto("/cashier");
+    await expect(
+      page.getByRole("link", {
+        name: containing(`Cobrar a ${guest}: ${E2E_SERVICE.name}, ${cop(42_000)}`),
+      }),
+    ).toBeVisible({ timeout: 15_000 });
+  });
+
   test("can't close the day while a ticket is unpaid; a walk-out ticket can be voided", async ({
     page,
     browser,

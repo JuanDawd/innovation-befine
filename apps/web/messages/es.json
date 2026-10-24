@@ -49,7 +49,7 @@
     "emailInvalid": "Ingresa un correo electrónico válido",
     "passwordRequired": "La contraseña es obligatoria",
     "invalidCredentials": "Correo o contraseña incorrectos",
-    "tooManyAttempts": "Demasiados intentos. Intenta de nuevo más tarde.",
+    "tooManyAttempts": "Demasiados intentos desde esta red. Espera un minuto e inténtalo de nuevo.",
     "loginError": "No se pudo iniciar sesión. Intenta de nuevo.",
     "forgotPasswordTitle": "Restablecer contraseña",
     "forgotPasswordDescription": "Ingresa tu correo y te enviaremos un enlace para restablecer tu contraseña.",
@@ -75,7 +75,8 @@
       "confirmPasswordRequired": "Confirma tu contraseña",
       "passwordsDontMatch": "Las contraseñas no coinciden",
       "emailInvalid": "Ingresa un correo electrónico válido"
-    }
+    },
+    "retryIn": "Intenta de nuevo en {seconds} s"
   },
   "status": {
     "logged": "Registrado",

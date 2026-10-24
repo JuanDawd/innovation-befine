@@ -1018,6 +1018,96 @@
 
 ---
 
+### M-62 — Several sequential DB round trips per server action
+
+- **Severity:** Medium
+- **Status:** Resolved (2026-10-23) — includes L-52 item (5), "Abrir día" slow
+- **Affected:** 13 server-action modules + realtime route (employee lookup), `createTicket`, ticket transitions, `openBusinessDay`
+- **Description:** Source: k6 load test 2026-10-11 — with ~155 ms per query on the test rig, `getCurrentEmployeeId` took ~800 ms idle: session, employee lookup, business day, then the real query, one after another.
+- **Fix:** `lib/employee-ref.ts` `getEmployeeRef()` replaces 20 copies of the user→employee query: request-deduped (`cache()`) and cached per process for hits only (the mapping never changes; misses aren't cached). `createTicket` runs business day + variant + employee in one `Promise.all`; ticket transitions read ticket + employee in parallel; `openBusinessDay` is one `INSERT … SELECT … WHERE NOT EXISTS (open day)` instead of check-then-insert (also guards production while the unique index is missing, H-48). Full E2E suite on real Postgres: 31 passed, 1.6 → 1.2 min. Tests: `lib/__tests__/employee-ref.test.ts`, `cashier/__tests__/close-business-day.test.ts`.
+
+---
+
+### M-72 — `packages/realtime` has no tests; post-deploy smoke job disabled
+
+- **Severity:** Medium (found a listener leak)
+- **Status:** Resolved (2026-10-23)
+- **Affected:** `packages/realtime` (server + client), `apps/web/playwright.config.ts`, `.github/workflows/post-deploy-smoke.yml`
+- **Description:** CI pipeline review, 2026-10-12: the SSE package had no test script, so `turbo test` skipped it; the post-deploy smoke job was commented out pending a `VERCEL_PRODUCTION_URL` secret. While testing: when a stream closed itself at 25 s, its bus listeners were never removed (`cancel()` doesn't run after a server-side close), so every client reconnect leaked 5 listeners until the 300-listener cap.
+- **Fix:** Timer close now runs the cleanup first (both handlers). 16 tests (`src/__tests__/server.test.ts`, `client.test.ts` with a fake EventSource under jsdom): frame format, channel isolation, per-recipient notification scoping, malformed payloads, listener cleanup on disconnect and on the 25 s close (fail against the old code), 30 s polling, single poll timer on repeated errors, latest-callback refs, disabled state. `test` script added. Smoke: new `smoke` Playwright project (no auth setup, read-only) and `post-deploy-smoke.yml` on Vercel's `deployment_status` for Production, using the deployed URL — no secret needed; verified locally against production (3 passed).
+
+---
+
+### M-51 — Browser console errors logged (Lighthouse Best Practices: 96)
+
+- **Severity:** Medium
+- **Status:** Resolved (verified 2026-10-23 — fixed by earlier work, untracked)
+- **Affected:** all pages
+- **Description:** Lighthouse Best Practices flagged "Browser errors were logged to the console."
+- **Fix:** No change needed now. Verified with Playwright capturing `console` errors/warnings and `pageerror`: production `/` and `/login` clean; on a production build with the E2E database, every role's main screens (admin: cashier, analytics, payroll, catalog, employees, ticket history; secretary: dashboard, appointments, products; stylist and clothier: home and earnings) clean.
+
+---
+
+### M-09 — T100 — No data validation or rollback for spreadsheet import
+
+- **Severity:** Medium
+- **Status:** Resolved (2026-10-23)
+- **Affected:** T100 `packages/db/src/import-clients.ts`
+- **Description:** The import deduplicated rows but did not validate them (phone, email, name length), and there was no way to back out a bad import once committed.
+- **Fix:** `validateClientRow()` applies the client form's limits (name ≤ 100, phone 7–15 digits and ≤ 20 chars, valid email ≤ 150, notes ≤ 500); invalid rows are reported, not imported, and shown in `--dry-run`. The import stays one transaction; each run writes the inserted ids to `<file>.import-<timestamp>.ids`, and `--undo <ids-file>` deactivates exactly those clients (soft-delete). Header documents taking a Neon branch before large imports. Tests: unit cases in `import-clients.test.ts`, CLI end to end against the test database in `__tests__/import-clients.integration.test.ts`.
+
+---
+
+### M-70 — Price adjustment ("Ajustar") UX
+
+- **Severity:** Medium
+- **Status:** Resolved (2026-10-23) — partial fix 2026-10-23 (instant total + toast), now verified end to end
+- **Affected:** `components/checkout-form.tsx` override row
+- **Description:** Source: training-manual walkthrough, 2026-10-11. "OK" stayed disabled with no spinner while saving, and a saved override closed the whole Cobrar dialog, forcing the cashier to reopen it.
+- **Fix:** Spinner on Guardar (already present); the new total appears at once (query-cache update) with a "Precio ajustado a …" toast; the dialog stays open (reads via TanStack Query since M-64 — no remount on refetch). New E2E `checkout.spec.ts` "adjusting a price keeps Cobrar open and updates the total" proves it, and that the board card then shows the adjusted amount (found M-79).
+
+---
+
+### M-79 — Cashier board shows the original price after a price adjustment
+
+- **Severity:** Medium (cashier sees one amount on the card, charges another)
+- **Status:** Resolved (2026-10-23)
+- **Affected:** `tickets/actions` `listOpenTickets`, `components/cashier-dashboard-helpers.ts` `ticketTotal`
+- **Description:** Found by the M-70 E2E. `listOpenTickets` didn't select `override_price` and `ticketTotal()` was `unit_price × quantity`, so after "Ajustar" the board card, its "Cobrar a …" label and the group totals kept showing the original price while Cobrar charged the adjusted one.
+- **Fix:** `DashboardTicket.overridePrice` is loaded and `ticketTotal()` uses `override_price ?? unit_price` (an adjustment to $0 counts). Unit tests in `cashier-dashboard.test.ts`; covered by the M-70 E2E.
+
+---
+
+### M-04 — T028 missing cashier and clothier read access
+
+- **Severity:** Medium
+- **Status:** Resolved (2026-10-23)
+- **Affected:** T028 `admin/catalog/actions/cloth-pieces.ts` `listActiveClothPieces`, `docs/testing/rbac-matrix.md`
+- **Description:** T028 listed only stylists and secretary as catalog readers. Checked against the code: services were already readable by every signed-in role (`listActiveServices`), but `listActiveClothPieces` refused `cashier` — and cashiers can open large orders (`SHARED_APP_PATHS`), whose detail page then silently got an empty piece list. The RBAC matrix also had no cashier column and claimed clothier read access the code never had.
+- **Fix:** `listActiveClothPieces` allows admin, cashier and secretary (contract test updated). Clothiers don't need the catalog — their board joins piece names. RBAC matrix rows corrected to match the code, with a note on how cashier and clothier reads work.
+
+---
+
+### M-10 — T082 — iOS PWA limitations not addressed
+
+- **Severity:** Medium
+- **Status:** Resolved (2026-10-23)
+- **Affected:** T082/T081, `docs/training/common.md`
+- **Description:** The PWA spec covered Android Chrome's install prompt only; iPhones show no prompt and can only install from Safari.
+- **Fix:** Training guide "Tener la app en el celular": iPhone steps (Safari only → Compartir → "Agregar a pantalla de inicio"), Android steps (Chrome ⋮ → "Instalar app"), and a note that notifications live in the in-app bell, not as phone alerts (the app has no web push). The manifest and service worker are now reachable signed out (L-52).
+
+---
+
+### M-12 — Resend free tier may not cover daily email volume
+
+- **Severity:** Medium
+- **Status:** Resolved (2026-10-23) — folded into roadmap task A.3
+- **Affected:** T054/T056, `roadmaps/PostMVP.md` task A.3
+- **Description:** No volume estimate existed for confirmation/reschedule emails against Resend's free tier.
+- **Fix:** Appointment emails were moved post-MVP (task A.3); today the only email is password reset (a few per month). Task A.3 now carries the estimate method and thresholds (100/day, 3 000/month free; e.g. 40 bookings/day ≈ 52 emails/day fits, 80/day with reminders needs Pro), plus logging sends and alerting at 80 % of the daily cap.
+
+---
+
 ## Low-priority issues
 
 ### L-09 — No file/image storage research
@@ -1687,6 +1777,136 @@
 
 ---
 
+### L-53 — Products dashboard loads every product ever created
+
+- **Severity:** Low (performance)
+- **Status:** Resolved (2026-10-23)
+- **Affected:** `packages/db/src/queries/products.ts` `getProductsDashboard`
+- **Description:** Found while writing M-70b tests. Step 2 selected every product ever created and classified today/WIP in JS, then aggregated pieces for all of them — cost grew with history on every dashboard load.
+- **Fix:** SQL now loads only candidates: products of the open day, or with at least one non-approved piece (`EXISTS`, uses `idx_craftable_pieces_craftable_id`). JS classification unchanged; covered by `production.integration.test.ts`.
+
+---
+
+### L-43 — Page prevents bfcache restoration (2 failure reasons)
+
+- **Severity:** Low
+- **Status:** Resolved (2026-10-23) — by design, no code change
+- **Affected:** all authenticated pages, `/login`
+- **Description:** Lighthouse: the page blocked back/forward cache for 2 reasons.
+- **Fix:** Investigated with Playwright (navigate away and back; `PerformanceNavigationTiming.type` = `back_forward`, i.e. not restored). The blockers are `Cache-Control: private, no-cache, no-store` (Next.js on dynamic, session-reading pages) and the open SSE connections on authenticated screens. Kept on purpose: the app runs on shared salon devices, and after a logout the Back button must not restore a cached cashier/payroll page. No `unload` listeners exist. Revisit only if a public, static page is added.
+
+---
+
+### L-42 — Unused JavaScript (est. −78 KB savings)
+
+- **Severity:** Low
+- **Status:** Resolved (2026-10-23)
+- **Affected:** `admin/analytics/analytics-dashboard.tsx`
+- **Description:** Lighthouse flagged ~78 KB of unused JavaScript on initial load; Recharts was imported eagerly by the analytics dashboard.
+- **Fix:** The three charts moved to `analytics-charts.tsx`, loaded with `next/dynamic` (`ssr: false`) and fixed-height placeholders (no layout shift). `/admin/analytics` First Load JS 323 kB → 213 kB; verified the chart renders after the lazy load.
+
+---
+
+### L-41 — Legacy JavaScript (est. −13 KB savings)
+
+- **Severity:** Low
+- **Status:** Resolved (2026-10-23) — no change; not actionable in app config
+- **Affected:** Next.js build output
+- **Description:** Lighthouse flagged ~13 KB of legacy JavaScript (polyfills/transpiled syntax).
+- **Fix:** Measured: a modern `.browserslistrc` (Chrome/Edge/Firefox ≥ 100, Safari/iOS ≥ 15.4) left "First Load JS shared by all" unchanged at 166 kB — the flagged code is Next.js's built-in polyfill set, which modern browsers skip at runtime, not our transpilation targets. Kept the default targets rather than risk older staff phones for no gain. Revisit with a Next.js upgrade.
+
+---
+
+### L-01 — T016 — No account lockout UX after rate limiting
+
+- **Severity:** Low
+- **Status:** Resolved (2026-10-23)
+- **Affected:** T016 `components/login-form.tsx`
+- **Description:** After too many sign-ins the form said only "Intenta de nuevo más tarde", and retrying immediately kept extending the block — all staff share the salon's public IP (H-46).
+- **Fix:** On 429 the message says to wait a minute (the `/sign-in/email` rule's window, `lib/auth.ts`) and the button is disabled with a countdown ("Intenta de nuevo en 60 s"). Wrong passwords still show the credentials error without locking. Component test `components/__tests__/login-form.test.ts`; Vitest now compiles JSX (automatic runtime) so components can be tested.
+
+---
+
+### L-13 — T055 — No brand logo in email template
+
+- **Severity:** Low
+- **Status:** Resolved (2026-10-23)
+- **Affected:** `apps/web/src/emails/password-reset.tsx`, `lib/auth.ts`; roadmap task A.3
+- **Description:** The email templates had no brand header. Appointment confirmation emails (T055/T056) were moved post-MVP; the only live email is password reset, which showed a hard-coded name and no logo.
+- **Fix:** Password-reset email: logo header (`/brand/icon-192.png`, absolute URL from `NEXT_PUBLIC_APP_URL`, omitted when unknown) and the tenant name from `lib/brand` in preview, heading, footer and subject. Render test `emails/__tests__/password-reset.test.tsx`. Roadmap task A.3 now says to reuse this header.
+
+---
+
+### L-14 — Confirmation email endpoint security for non-users
+
+- **Severity:** Low
+- **Status:** Resolved (2026-10-23) — design recorded in roadmap task A.3
+- **Affected:** `roadmaps/PostMVP.md` task A.3, `docs/research/notification-channels.md`
+- **Description:** The research mentioned a confirm/cancel link for clients, who have no account; how such a public endpoint would be secured was undefined.
+- **Fix:** No such endpoint exists (emails are post-MVP). Task A.3 now defines it: default is no client-facing link (the secretary confirms in the app); if one is added, a signed single-use token (≥ 128 bits, stored hashed) bound to one appointment, expiring at the appointment time, rate-limited, revealing only that appointment's date/time/service.
+
+---
+
+### L-05 — WhatsApp pricing data is outdated
+
+- **Severity:** Low
+- **Status:** Resolved (2026-10-23)
+- **Affected:** `docs/research/notification-channels.md`
+- **Description:** The WhatsApp section quoted 2025 pricing in a document dated April 2026.
+- **Fix:** Marked "approximate — verify before implementation" with a pointer to re-quote Meta's current Colombia rates when roadmap task A.3 starts.
+
+---
+
+### L-06 — SMS pricing uses US rates for Latin American business
+
+- **Severity:** Low
+- **Status:** Resolved (2026-10-23)
+- **Affected:** `docs/research/notification-channels.md`
+- **Description:** SMS pricing referenced the US Twilio rate ($0.0079) for a business in Colombia.
+- **Fix:** Note that Colombia is billed at its own per-segment rate and the US figure isn't representative; check Twilio's Colombia page (or a local aggregator) at build time. SMS remains "do not prioritize".
+
+---
+
+### L-02 — T091 — No password complexity rules beyond minimum length
+
+- **Severity:** Low
+- **Status:** Resolved (2026-10-23) — documented as a conscious decision; owner may override
+- **Affected:** T091 `docs/Business/tasks/phase-01-identity.md`
+- **Description:** Only a minimum length of 8 was specified; complexity was neither required nor explicitly ruled out.
+- **Fix:** Policy recorded in T091: length-only (≥ 8), no composition or rotation rules, per NIST SP 800-63B — composition rules on shared salon devices lead to predictable or written-down passwords. Protection comes from the sign-in rate limit + lockout countdown (L-01), admin-issued temporary passwords and admin deactivation. Revisit with a breached-password check if clients ever get accounts (roadmap Phase B).
+
+---
+
+### L-11 — T089 — No soft-launch / canary rollout strategy
+
+- **Severity:** Low
+- **Status:** Resolved (2026-10-23)
+- **Affected:** T089 `docs/training/go-live-checklist.md`
+- **Description:** The cutover checklist was all-or-nothing.
+- **Fix:** New section 8b "Phased rollout": four stages (admin + cashier → + secretary → + stylists and clothiers → first payroll), at least a business week each, each with a concrete exit check (cash drawer matches, no duplicate tickets, earnings match paper, payouts match a hand calculation); spreadsheets stay as fallback until stage 4 passes. Go/No-go table now references Vikunja for open issues and requires agreeing the rollout plan.
+
+---
+
+### L-07 — T032 displays a no-show count that's always 0 until Phase 5
+
+- **Severity:** Low
+- **Status:** Resolved (verified 2026-10-23 — Phase 5 shipped it)
+- **Affected:** T032, T032b
+- **Description:** The client no-show count was displayed in Phase 3 before anything incremented it.
+- **Fix:** No change needed: `appointments/actions.ts` increments `clients.no_show_count` when an appointment is marked no-show and decrements it (never below 0) when that is undone.
+
+---
+
+### L-20 — T032 work bundled into T030/T031 commits
+
+- **Severity:** Low
+- **Status:** Resolved (2026-10-23) — process note, no history rewrite
+- **Affected:** commit convention
+- **Description:** T032 had no dedicated commit; its work landed in the T030/T031 commits.
+- **Fix:** Acknowledged; rewriting published history isn't worth it. The one-commit-per-task rule in CLAUDE.md stands, and the backlog fixes since 2026-10-23 follow it (one commit per issue, ID in the subject).
+
+---
+
 ## Lessons learned
 
 > This section is populated during development. Each entry documents what went wrong, the root cause, and how to prevent it in the future.
@@ -1842,3 +2062,25 @@
 | M-71     | 2026-10-23    | Checkout + payroll E2E with axe; throwaway DB (Postgres + Neon proxy) in CI; screenshots opt-in                 | fix/vikunja-backlog          |
 | M-77     | 2026-10-23    | Analytics commission uses banker's rounding per item (matches payroll)                                          | fix/vikunja-backlog          |
 | M-70b    | 2026-10-23    | Query integration tests on real Postgres (rolled back); 98.8 % / 85.3 % coverage; 80 % threshold enforced in CI | fix/vikunja-backlog          |
+| L-53     | 2026-10-23    | Products dashboard loads only today + WIP candidates in SQL                                                     | fix/backlog-batch-2          |
+| M-62     | 2026-10-23    | Cached employee lookup, parallel independent reads, single-statement openBusinessDay                            | fix/backlog-batch-2          |
+| M-72     | 2026-10-23    | Realtime package tested (16); stream-close listener leak fixed; post-deploy smoke on deployment_status          | fix/backlog-batch-2          |
+| M-51     | 2026-10-23    | Verified: no console errors/warnings on prod public pages or any role screen                                    | fix/backlog-batch-2          |
+| L-43     | 2026-10-23    | bfcache blocked by no-store + SSE on authenticated pages — kept on purpose (shared devices)                     | fix/backlog-batch-2          |
+| L-42     | 2026-10-23    | Recharts loaded on demand; /admin/analytics first load 323 → 213 kB                                             | fix/backlog-batch-2          |
+| L-41     | 2026-10-23    | Measured: modern browserslist saves 0 kB (Next polyfills); defaults kept                                        | fix/backlog-batch-2          |
+| M-09     | 2026-10-23    | Client import validates like the form; ids file + --undo to back out an import                                  | fix/backlog-batch-2          |
+| L-01     | 2026-10-23    | Login 429: clear message + 60 s countdown on the button                                                         | fix/backlog-batch-2          |
+| M-70     | 2026-10-23    | Ajustar keeps Cobrar open with the new total — verified by E2E                                                  | fix/backlog-batch-2          |
+| M-79     | 2026-10-23    | Board totals use the adjusted price (override_price ?? unit_price)                                              | fix/backlog-batch-2          |
+| M-04     | 2026-10-23    | Cashier reads cloth pieces (large orders); RBAC matrix matches the code                                         | fix/backlog-batch-2          |
+| L-13     | 2026-10-23    | Password-reset email has the brand logo + tenant name                                                           | fix/backlog-batch-2          |
+| M-10     | 2026-10-23    | iPhone/Android install steps in the training guide                                                              | fix/backlog-batch-2          |
+| M-12     | 2026-10-23    | Email volume method + Resend thresholds in roadmap A.3                                                          | fix/backlog-batch-2          |
+| L-14     | 2026-10-23    | Client confirm-link security design in roadmap A.3                                                              | fix/backlog-batch-2          |
+| L-05     | 2026-10-23    | WhatsApp pricing marked approximate                                                                             | fix/backlog-batch-2          |
+| L-06     | 2026-10-23    | SMS pricing: Colombia rate, not US                                                                              | fix/backlog-batch-2          |
+| L-02     | 2026-10-23    | Password policy documented: length-only (NIST 800-63B)                                                          | fix/backlog-batch-2          |
+| L-11     | 2026-10-23    | Phased rollout with exit checks in the go-live checklist                                                        | fix/backlog-batch-2          |
+| L-07     | 2026-10-23    | Verified: no-show count increments since Phase 5                                                                | fix/backlog-batch-2          |
+| L-20     | 2026-10-23    | Process note acknowledged; one commit per issue going forward                                                   | fix/backlog-batch-2          |

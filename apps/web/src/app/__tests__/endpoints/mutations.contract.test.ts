@@ -393,8 +393,8 @@ describe("Role gate: admin/catalog/actions/cloth-pieces", () => {
     expectOnlyRoles(["admin"], "admin");
   });
 
-  it("listActiveClothPieces — allowed: admin, secretary", () => {
-    expectOnlyRoles(["admin", "secretary"], "admin", "secretary");
+  it("listActiveClothPieces — allowed: admin, cashier, secretary (M-04)", () => {
+    expectOnlyRoles(["admin", "cashier", "secretary"], "admin", "cashier", "secretary");
   });
 });
 

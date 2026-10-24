@@ -24,6 +24,7 @@ import { getOrderItemsWithProgress, type OrderItemWithProgress } from "@befine/d
 import { revalidatePath } from "next/cache";
 import { format } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
+import { getEmployeeRef } from "@/lib/employee-ref";
 
 // ─── Auth helpers ─────────────────────────────────────────────────────────────
 
@@ -42,12 +43,7 @@ async function requireAssignmentRole() {
   if (!hasRole(session.user, "admin", "secretary", "clothier"))
     return { ok: false as const, code: "FORBIDDEN" as const, session: null, employeeId: null };
 
-  const db = getDb();
-  const [emp] = await db
-    .select({ id: employees.id })
-    .from(employees)
-    .where(eq(employees.userId, session.user.id))
-    .limit(1);
+  const emp = await getEmployeeRef(session.user.id);
 
   return { ok: true as const, code: null, session, employeeId: emp?.id ?? null };
 }
@@ -365,12 +361,7 @@ export async function getCurrentUserProductionContext(): Promise<ProductionUserC
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) return { role: "other", employeeId: null };
 
-  const db = getDb();
-  const [emp] = await db
-    .select({ id: employees.id })
-    .from(employees)
-    .where(eq(employees.userId, session.user.id))
-    .limit(1);
+  const emp = await getEmployeeRef(session.user.id);
 
   const user = session.user as { role?: string };
   const role = (user.role ?? "") as ProductionUserContext["role"];

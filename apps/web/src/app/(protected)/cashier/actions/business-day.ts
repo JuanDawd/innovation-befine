@@ -12,7 +12,7 @@
 
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
-import { and, eq, isNull, desc, isNotNull, inArray, notExists, count } from "drizzle-orm";
+import { and, eq, isNull, desc, isNotNull, inArray, notExists, count, sql } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { businessDays, tickets } from "@befine/db/schema";
@@ -36,26 +36,43 @@ export async function openBusinessDay(): Promise<ActionResult<BusinessDay>> {
 
   const db = getDb();
 
-  // App-level guard (DB partial unique index is the real safety net)
-  const existing = await db
-    .select({ id: businessDays.id })
-    .from(businessDays)
-    .where(isNull(businessDays.closedAt))
-    .limit(1);
+  // One statement (M-62): insert only if no day is open. The partial unique
+  // index uq_business_days_single_open is the real safety net — this also
+  // holds where it is missing (H-48).
+  const rows = await db
+    .insert(businessDays)
+    .select(
+      db
+        .select({
+          id: sql`gen_random_uuid()`.as("id"),
+          openedAt: sql`now()`.as("opened_at"),
+          closedAt: sql`NULL::timestamptz`.as("closed_at"),
+          openedBy: sql`${session.user.id}`.as("opened_by"),
+          closedBy: sql`NULL`.as("closed_by"),
+          reopenedBy: sql`NULL`.as("reopened_by"),
+          reopenedAt: sql`NULL::timestamptz`.as("reopened_at"),
+          reopenReason: sql`NULL`.as("reopen_reason"),
+          createdAt: sql`now()`.as("created_at"),
+          updatedAt: sql`now()`.as("updated_at"),
+        })
+        .from(sql`(SELECT 1) AS one`)
+        .where(
+          notExists(
+            db
+              .select({ id: businessDays.id })
+              .from(businessDays)
+              .where(isNull(businessDays.closedAt)),
+          ),
+        ),
+    )
+    .returning();
 
-  if (existing.length > 0) {
+  if (rows.length === 0) {
     return {
       success: false,
       error: { code: "CONFLICT", message: "Ya hay un día abierto" },
     };
   }
-
-  const rows = await db
-    .insert(businessDays)
-    .values({
-      openedBy: session.user.id,
-    })
-    .returning();
 
   const day = rows[0];
   if (!day) {

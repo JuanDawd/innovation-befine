@@ -56,6 +56,8 @@
 
 ### Pricing (2025)
 
+> **Approximate — verify before implementation (L-05).** Meta changes WhatsApp pricing often (per-conversation → per-message in 2025). Re-quote current Colombia rates from Meta's pricing page when roadmap task A.3 is picked up.
+
 - Per-conversation pricing effective July 2025 (Meta model). Rates vary by country; Latin American rates typically $0.03–$0.07/conversation.
 - Twilio adds their own per-message markup on top of Meta's rates.
 
@@ -81,6 +83,7 @@
 ### Pricing
 
 - US: ~$0.0079/SMS outbound via Twilio.
+- **Colombia is billed at its own per-segment rate (L-06)** — the US figure above is not representative. Check Twilio's Colombia pricing page (or a local aggregator) at build time; SMS stays "do not prioritize".
 - Latin American rates vary: ~$0.02–$0.08/message depending on country.
 
 ### Pros

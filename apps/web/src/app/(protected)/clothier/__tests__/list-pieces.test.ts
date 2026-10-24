@@ -18,9 +18,8 @@ vi.mock("@/lib/business-day", () => ({ getCurrentBusinessDay: async () => state.
 vi.mock("@/lib/notifications", () => ({ createNotification: vi.fn() }));
 vi.mock("@/lib/rate-limit", () => ({ checkRateLimit: vi.fn(), rateLimits: {} }));
 vi.mock("@/lib/idempotency", () => ({ checkIdempotency: vi.fn(), storeIdempotency: vi.fn() }));
+vi.mock("@/lib/employee-ref", () => ({ getEmployeeRef: async () => ({ id: "emp1" }) }));
 vi.mock("@/lib/db", () => {
-  // First select() is the employee lookup, the second the pieces query.
-  let call = 0;
   const chain = (rows: () => unknown[]) => {
     const c: Record<string, unknown> = {};
     for (const m of ["from", "innerJoin"]) c[m] = () => c;
@@ -35,8 +34,7 @@ vi.mock("@/lib/db", () => {
   return {
     getTxDb: vi.fn(),
     getDb: () => ({
-      select: () =>
-        call++ % 2 === 0 ? chain(() => [{ id: "emp1" }]) : chain(() => state.pieceRows),
+      select: () => chain(() => state.pieceRows),
     }),
   };
 });

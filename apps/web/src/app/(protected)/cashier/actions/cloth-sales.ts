@@ -20,6 +20,7 @@ import { hasRole } from "@/lib/middleware-helpers";
 import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
 import type { ActionResult } from "@/lib/action-result";
 import { revalidatePath } from "next/cache";
+import { getEmployeeRef } from "@/lib/employee-ref";
 
 export type ClientOption = { id: string; name: string; phone: string | null };
 
@@ -173,11 +174,7 @@ export async function createClothSale(
   const db = getDb();
 
   // Resolve the selling employee
-  const [emp] = await db
-    .select({ id: employees.id })
-    .from(employees)
-    .where(eq(employees.userId, session.user.id))
-    .limit(1);
+  const emp = await getEmployeeRef(session.user.id);
   if (!emp)
     return { success: false, error: { code: "NOT_FOUND", message: "Empleado no encontrado" } };
 

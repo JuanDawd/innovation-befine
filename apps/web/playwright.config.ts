@@ -34,6 +34,14 @@ export default defineConfig({
       dependencies: ["setup"],
       testIgnore: /payroll-settlement\.spec\.ts/,
     },
+    // Read-only checks safe to run against a live deployment (M-72): no auth
+    // setup, so it never logs in or writes anything.
+    //   PLAYWRIGHT_BASE_URL=https://… playwright test --project=smoke
+    {
+      name: "smoke",
+      testMatch: /smoke\.spec\.ts/,
+      use: { ...devices["Desktop Chrome"] },
+    },
     // Closes the business day (only closed days can be paid), so it must run
     // after every other spec: select it explicitly, e.g.
     //   playwright test --project=chromium --project=settlement

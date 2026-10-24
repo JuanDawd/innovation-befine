@@ -58,6 +58,11 @@
   - As stylist: action is not visible.
   - Re-send within 24h → warning dialog shown before sending.
 - **Dependencies:** T054/T055 (Resend integration), Resend domain verification for production sender.
+- **Open questions folded in from the backlog (2026-10-23):**
+  - **Volume / Resend tier (M-12):** the free tier allows 100 emails/day and 3 000/month. Estimate before building: appointments per day × (confirmation + reschedule + cancellation) — e.g. 40 bookings/day with 1.3 emails each ≈ 52/day ≈ 1 400/month, inside the free tier; 80/day with reminders would exceed it → Pro ($20/mo). Log actual sends (the `confirmation_emails` table) and alert at 80 % of the daily cap.
+  - **Confirm / cancel link for clients (L-14):** clients have no account. Default: no client-facing link — the email gives the salon's WhatsApp/phone and the secretary confirms in the app. If a link is added: a signed, single-use token (≥ 128 bits, stored hashed) tied to one appointment, expiring at the appointment time, rate-limited, revealing only that appointment's date/time/service (no client PII beyond the first name).
+  - **Brand (L-13):** reuse the logo header from `apps/web/src/emails/password-reset.tsx` (absolute URL from `NEXT_PUBLIC_APP_URL`, brand colours from T105).
+  - **WhatsApp / SMS alternatives (L-05, L-06):** the prices in `docs/research/notification-channels.md` are 2025 US figures — re-quote Meta's per-conversation pricing and Twilio's Colombia SMS rate at build time before choosing a channel.
 
 ---
 

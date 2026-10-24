@@ -258,6 +258,9 @@ Add a "Change password" option inside the user's profile or settings screen. The
 - [ ] Any authenticated user can access the change-password form
 - [ ] Current password is verified server-side before accepting the new password
 - [ ] Weak passwords (< 8 characters) are rejected with a clear message
+
+> **Password policy — documented 2026-10-23 (L-02; owner may override):** length only — minimum 8 characters (Better Auth's limit for every password, incl. temporary ones), no mandatory upper/lower/digit/symbol mix and no periodic rotation. This follows NIST SP 800-63B: composition rules push staff to predictable patterns ("Befine2026!") and to writing passwords down on shared salon devices, without adding real strength. What protects accounts here instead: the sign-in rate limit (`/sign-in/email`, 30/min per IP) with the lockout countdown (L-01), admin-issued temporary passwords, and admin-only account deactivation. Revisit if the app is exposed to clients (roadmap Phase B): then add a breached-password check (e.g. k-anonymity lookup) rather than composition rules.
+
 - [ ] On success: session remains active; no logout required
 
 ---
