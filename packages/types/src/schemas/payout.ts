@@ -13,6 +13,10 @@ export const recordPayoutSchema = z.object({
 
 export type RecordPayoutInput = z.infer<typeof recordPayoutSchema>;
 
+export const markPayoutReviewedSchema = z.object({
+  payoutId: z.uuid("ID de pago inválido"),
+});
+
 export const terminateEmployeeSchema = z.object({
   employeeId: z.uuid("ID de empleado inválido"),
   terminationAmount: z.number().int().nonnegative("El monto de liquidación no puede ser negativo"),

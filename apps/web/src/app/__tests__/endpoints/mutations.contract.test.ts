@@ -222,6 +222,10 @@ describe("Role gate: admin/payroll/actions", () => {
   it("getUnsettledEmployees — admin only", () => {
     expectOnlyRoles(["admin"], "admin");
   });
+
+  it("markPayoutReviewed — admin only", () => {
+    expectOnlyRoles(["admin"], "admin");
+  });
 });
 
 describe("Role gate: products/actions", () => {
@@ -452,6 +456,7 @@ describe("UNAUTHORIZED: null session denied on all mutation gates", () => {
     { name: "processCheckout", roles: ["cashier", "admin"] },
     { name: "processPaidOfflineCheckout", roles: ["cashier", "admin"] },
     { name: "recordPayout", roles: ["admin"] },
+    { name: "markPayoutReviewed", roles: ["admin"] },
     { name: "createProduct", roles: ["admin", "secretary"] },
     { name: "markPieceDone", roles: ["clothier"] },
     { name: "createAppointment", roles: ["admin", "secretary"] },

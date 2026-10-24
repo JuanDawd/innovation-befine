@@ -9,6 +9,7 @@
  * getUnsettledEmployees:    admin — employees with approved work and no covering payout (T070)
  * getMyEarnings:            any role — own earnings view gated by show_earnings (T069)
  * getPayoutHistory:         admin + own-view — payout records per employee
+ * markPayoutReviewed:       admin — clear a payout's needs_review flag (M-28)
  */
 
 import { headers } from "next/headers";
@@ -33,7 +34,7 @@ import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
 import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
 import { revalidatePath } from "next/cache";
-import { recordPayoutSchema } from "@befine/types";
+import { markPayoutReviewedSchema, recordPayoutSchema } from "@befine/types";
 import { getUnpaidPastBusinessDays } from "@befine/db";
 import { computeStylistEarnings } from "@/lib/payroll/compute-stylist-earnings";
 import { computeClothierEarnings } from "@/lib/payroll/compute-clothier-earnings";
@@ -80,6 +81,7 @@ export type PayoutRow = {
   paidAt: Date;
   periodDayCount: number;
   notes: string | null;
+  needsReview: boolean;
   createdAt: Date;
 };
 
@@ -413,6 +415,7 @@ export async function listPayouts(employeeId?: string): Promise<ActionResult<Pay
       method: payouts.method,
       paidAt: payouts.paidAt,
       notes: payouts.notes,
+      needsReview: payouts.needsReview,
       createdAt: payouts.createdAt,
     })
     .from(payouts)
@@ -444,6 +447,43 @@ export async function listPayouts(employeeId?: string): Promise<ActionResult<Pay
     success: true,
     data: rows.map((r) => ({ ...r, periodDayCount: countMap.get(r.id) ?? 0 })),
   };
+}
+
+// ─── Payout review (M-28) ─────────────────────────────────────────────────────
+
+/** Clears needs_review once the admin has checked a payout after a ticket reopen. */
+export async function markPayoutReviewed(rawPayoutId: unknown): Promise<ActionResult<null>> {
+  const parsed = markPayoutReviewedSchema.safeParse({ payoutId: rawPayoutId });
+  if (!parsed.success)
+    return { success: false, error: { code: "VALIDATION_ERROR", message: "Datos inválidos" } };
+
+  const guard = await requireAdmin();
+  if (!guard.ok)
+    return {
+      success: false,
+      error: {
+        code: guard.code,
+        message: guard.code === "UNAUTHORIZED" ? "No autenticado" : "Sin permisos",
+      },
+    };
+
+  const rl = await checkRateLimit(rateLimits.general, guard.userId);
+  if (!rl.allowed)
+    return {
+      success: false,
+      error: { code: "RATE_LIMITED", message: "Demasiadas solicitudes. Intenta de nuevo." },
+    };
+
+  const [updated] = await getDb()
+    .update(payouts)
+    .set({ needsReview: false })
+    .where(eq(payouts.id, parsed.data.payoutId))
+    .returning({ id: payouts.id });
+  if (!updated)
+    return { success: false, error: { code: "NOT_FOUND", message: "Pago no encontrado" } };
+
+  revalidatePath("/admin/payroll");
+  return { success: true, data: null };
 }
 
 // ─── Unsettled employees alert (T070) ────────────────────────────────────────
@@ -668,6 +708,7 @@ export async function getMyEarnings(): Promise<ActionResult<MyEarningsSummary>> 
       method: payouts.method,
       paidAt: payouts.paidAt,
       notes: payouts.notes,
+      needsReview: payouts.needsReview,
       createdAt: payouts.createdAt,
     })
     .from(payouts)

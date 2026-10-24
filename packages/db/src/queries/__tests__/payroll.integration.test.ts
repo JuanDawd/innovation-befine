@@ -1,6 +1,16 @@
 import { it, expect } from "vitest";
-import { getUnpaidPastBusinessDays } from "../payroll";
-import { describeDb, makeDay, makeEmployee, makePayout, withCleanDb } from "./helpers/test-db";
+import { eq } from "drizzle-orm";
+import { flagPayoutsCoveringTicket, getUnpaidPastBusinessDays } from "../payroll";
+import * as s from "../../schema";
+import {
+  describeDb,
+  makeDay,
+  makeEmployee,
+  makePayout,
+  makeTicket,
+  makeVariant,
+  withCleanDb,
+} from "./helpers/test-db";
 
 describeDb("getUnpaidPastBusinessDays", () => {
   it("returns closed days without a covering payout, oldest first, in Bogota dates", () =>
@@ -46,5 +56,64 @@ describeDb("getUnpaidPastBusinessDays", () => {
       const stylist = await makeEmployee(db);
       await makeDay(db, "2026-10-23T13:00:00Z", { open: true });
       expect(await getUnpaidPastBusinessDays(db, stylist.id)).toEqual([]);
+    }));
+});
+
+describeDb("flagPayoutsCoveringTicket", () => {
+  it("flags only the payout that paid the reopened ticket's items", () =>
+    withCleanDb(async (db) => {
+      const stylist = await makeEmployee(db);
+      const admin = await makeEmployee(db, { role: "admin" });
+      const variantId = await makeVariant(db);
+      const d1 = await makeDay(db, "2026-10-20T13:00:00Z");
+      const d2 = await makeDay(db, "2026-10-21T13:00:00Z");
+      const t1 = await makeTicket(db, { dayId: d1, employeeId: stylist.id, variantId });
+      const t2 = await makeTicket(db, { dayId: d2, employeeId: stylist.id, variantId });
+      const p1 = await makePayout(db, {
+        employeeId: stylist.id,
+        recordedBy: admin.id,
+        dayIds: [d1],
+      });
+      const p2 = await makePayout(db, {
+        employeeId: stylist.id,
+        recordedBy: admin.id,
+        dayIds: [d2],
+      });
+      await db.insert(s.payoutTicketItems).values([
+        { payoutId: p1, ticketItemId: t1.itemId },
+        { payoutId: p2, ticketItemId: t2.itemId },
+      ]);
+
+      expect(await flagPayoutsCoveringTicket(db, t1.ticketId)).toEqual([p1]);
+      const rows = await db
+        .select({ id: s.payouts.id, needsReview: s.payouts.needsReview })
+        .from(s.payouts);
+      expect(new Map(rows.map((r) => [r.id, r.needsReview]))).toEqual(
+        new Map([
+          [p1, true],
+          [p2, false],
+        ]),
+      );
+    }));
+
+  it("flags nothing when the ticket was never paid out", () =>
+    withCleanDb(async (db) => {
+      const stylist = await makeEmployee(db);
+      const admin = await makeEmployee(db, { role: "admin" });
+      const variantId = await makeVariant(db);
+      const day = await makeDay(db, "2026-10-20T13:00:00Z");
+      const t = await makeTicket(db, { dayId: day, employeeId: stylist.id, variantId });
+      const payout = await makePayout(db, {
+        employeeId: stylist.id,
+        recordedBy: admin.id,
+        dayIds: [],
+      });
+
+      expect(await flagPayoutsCoveringTicket(db, t.ticketId)).toEqual([]);
+      const [row] = await db
+        .select({ needsReview: s.payouts.needsReview })
+        .from(s.payouts)
+        .where(eq(s.payouts.id, payout));
+      expect(row?.needsReview).toBe(false);
     }));
 });
