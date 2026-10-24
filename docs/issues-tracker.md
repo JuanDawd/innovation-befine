@@ -1747,6 +1747,16 @@
 
 ---
 
+### L-41 — Legacy JavaScript (est. −13 KB savings)
+
+- **Severity:** Low
+- **Status:** Resolved (2026-10-23) — no change; not actionable in app config
+- **Affected:** Next.js build output
+- **Description:** Lighthouse flagged ~13 KB of legacy JavaScript (polyfills/transpiled syntax).
+- **Fix:** Measured: a modern `.browserslistrc` (Chrome/Edge/Firefox ≥ 100, Safari/iOS ≥ 15.4) left "First Load JS shared by all" unchanged at 166 kB — the flagged code is Next.js's built-in polyfill set, which modern browsers skip at runtime, not our transpilation targets. Kept the default targets rather than risk older staff phones for no gain. Revisit with a Next.js upgrade.
+
+---
+
 ## Lessons learned
 
 > This section is populated during development. Each entry documents what went wrong, the root cause, and how to prevent it in the future.
@@ -1908,3 +1918,4 @@
 | M-51     | 2026-10-23    | Verified: no console errors/warnings on prod public pages or any role screen                                    | fix/backlog-batch-2          |
 | L-43     | 2026-10-23    | bfcache blocked by no-store + SSE on authenticated pages — kept on purpose (shared devices)                     | fix/backlog-batch-2          |
 | L-42     | 2026-10-23    | Recharts loaded on demand; /admin/analytics first load 323 → 213 kB                                             | fix/backlog-batch-2          |
+| L-41     | 2026-10-23    | Measured: modern browserslist saves 0 kB (Next polyfills); defaults kept                                        | fix/backlog-batch-2          |
