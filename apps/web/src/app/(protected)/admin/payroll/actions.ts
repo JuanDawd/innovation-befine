@@ -13,7 +13,7 @@
  */
 
 import { headers } from "next/headers";
-import { and, eq, inArray, not, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, not, sql } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { getDb, getTxDb } from "@/lib/db";
 import {
@@ -36,7 +36,8 @@ import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
 import { revalidatePath } from "next/cache";
 import { markPayoutReviewedSchema, recordPayoutSchema } from "@befine/types";
 import { getUnpaidPastBusinessDays } from "@befine/db";
-import { computeStylistEarnings } from "@/lib/payroll/compute-stylist-earnings";
+import { computeStylistEarnings, earningsLineLabel } from "@/lib/payroll/compute-stylist-earnings";
+import { earningsPeriods } from "@/lib/payroll/my-earnings-days";
 import { computeClothierEarnings } from "@/lib/payroll/compute-clothier-earnings";
 import { computeSecretaryEarnings } from "@/lib/payroll/compute-secretary-earnings";
 import { businessDateOf } from "@/lib/dates";
@@ -608,10 +609,21 @@ export async function getUnsettledEmployees(): Promise<ActionResult<UnsettledEmp
 
 // ─── My earnings (T069 — gated by show_earnings) ─────────────────────────────
 
+export type MyEarningsLine = {
+  label: string;
+  quantity: number;
+  basis: { kind: "commission"; pct: number; price: number } | { kind: "pieceRate"; rate: number };
+  amount: number;
+};
+
 export type MyEarningsSummary = {
   today: number;
   thisWeek: number;
   thisMonth: number;
+  /** Part of the totals earned on the business day still open — final at close; null when no day is open */
+  inProgress: number | null;
+  /** What makes up "Hoy" — empty for the daily-rate model */
+  todayLines: MyEarningsLine[];
   payoutHistory: PayoutRow[];
 };
 
@@ -634,17 +646,16 @@ export async function getMyEarnings(): Promise<ActionResult<MyEarningsSummary>> 
   if (!emp || !emp.showEarnings)
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
 
-  // Fetch recent closed business days — today, this week (ISO Mon), this month
-  // All boundaries anchored to America/Bogota to match the business day (T07R-R7)
-  const { todayInBogota, isoWeekStartInBogota, monthStartInBogota } = await import("@/lib/dates");
-  const todayStr = todayInBogota();
-  const weekStart = isoWeekStartInBogota();
-  const monthStart = monthStartInBogota();
-
-  const closedDays = await db
-    .select({ id: businessDays.id, openedAt: businessDays.openedAt })
-    .from(businessDays)
-    .where(not(sql`${businessDays.closedAt} IS NULL`));
+  // Every business day, open or closed — the open one is today's work in
+  // progress, so "Hoy" isn't $0 until close. Periods use Bogota dates (T07R-R7).
+  const { todayInBogota } = await import("@/lib/dates");
+  const allDays = await db
+    .select({
+      id: businessDays.id,
+      openedAt: businessDays.openedAt,
+      closedAt: businessDays.closedAt,
+    })
+    .from(businessDays);
 
   // T07R-R6: exclude already-paid days from summaries
   const paidDayRows = await db
@@ -653,47 +664,57 @@ export async function getMyEarnings(): Promise<ActionResult<MyEarningsSummary>> 
     .where(eq(payoutPeriodDays.employeeId, emp.id));
   const paidDayIds = new Set(paidDayRows.map((r) => r.businessDayId));
 
-  function filterDays(from: Date) {
-    return closedDays
-      .filter((d) => new Date(d.openedAt) >= from && !paidDayIds.has(d.id))
-      .map((d) => d.id);
-  }
-
-  const todayDays = filterDays(new Date(todayStr));
-  const weekDays = filterDays(weekStart);
-  const monthDays = filterDays(monthStart);
+  const periods = earningsPeriods(allDays, paidDayIds, todayInBogota());
+  const openDays = periods.openDayId ? [periods.openDayId] : [];
 
   let todayAmt = 0;
   let weekAmt = 0;
   let monthAmt = 0;
+  let openAmt = 0;
+  let todayLines: MyEarningsLine[] = [];
 
   if (emp.role === "stylist") {
-    const [t, w, m] = await Promise.all([
-      computeStylistEarnings(db, emp.id, todayDays),
-      computeStylistEarnings(db, emp.id, weekDays),
-      computeStylistEarnings(db, emp.id, monthDays),
+    const [t, w, m, o] = await Promise.all([
+      computeStylistEarnings(db, emp.id, periods.today),
+      computeStylistEarnings(db, emp.id, periods.week),
+      computeStylistEarnings(db, emp.id, periods.month),
+      computeStylistEarnings(db, emp.id, openDays),
     ]);
-    todayAmt = t.totalEarnings;
-    weekAmt = w.totalEarnings;
-    monthAmt = m.totalEarnings;
+    [todayAmt, weekAmt, monthAmt, openAmt] = [t, w, m, o].map((r) => r.totalEarnings);
+    todayLines = t.lines.flatMap((l) =>
+      l.excluded
+        ? []
+        : [
+            {
+              label: l.serviceName ?? "—",
+              quantity: l.quantity,
+              basis: { kind: "commission" as const, pct: l.commissionPct, price: l.effectivePrice },
+              amount: l.earnings,
+            },
+          ],
+    );
   } else if (emp.role === "clothier") {
-    const [t, w, m] = await Promise.all([
-      computeClothierEarnings(db, emp.id, todayDays),
-      computeClothierEarnings(db, emp.id, weekDays),
-      computeClothierEarnings(db, emp.id, monthDays),
+    const [t, w, m, o] = await Promise.all([
+      computeClothierEarnings(db, emp.id, periods.today),
+      computeClothierEarnings(db, emp.id, periods.week),
+      computeClothierEarnings(db, emp.id, periods.month),
+      computeClothierEarnings(db, emp.id, openDays),
     ]);
-    todayAmt = t.totalEarnings;
-    weekAmt = w.totalEarnings;
-    monthAmt = m.totalEarnings;
+    [todayAmt, weekAmt, monthAmt, openAmt] = [t, w, m, o].map((r) => r.totalEarnings);
+    todayLines = t.lines.map((l) => ({
+      label: earningsLineLabel(l.pieceName, l.variantName),
+      quantity: l.quantity,
+      basis: { kind: "pieceRate" as const, rate: l.pieceRate },
+      amount: l.earnings,
+    }));
   } else {
-    const [t, w, m] = await Promise.all([
-      computeSecretaryEarnings(db, emp.id, todayDays),
-      computeSecretaryEarnings(db, emp.id, weekDays),
-      computeSecretaryEarnings(db, emp.id, monthDays),
+    const [t, w, m, o] = await Promise.all([
+      computeSecretaryEarnings(db, emp.id, periods.today),
+      computeSecretaryEarnings(db, emp.id, periods.week),
+      computeSecretaryEarnings(db, emp.id, periods.month),
+      computeSecretaryEarnings(db, emp.id, openDays),
     ]);
-    todayAmt = t.totalEarnings;
-    weekAmt = w.totalEarnings;
-    monthAmt = m.totalEarnings;
+    [todayAmt, weekAmt, monthAmt, openAmt] = [t, w, m, o].map((r) => r.totalEarnings);
   }
 
   // Payout history
@@ -715,7 +736,7 @@ export async function getMyEarnings(): Promise<ActionResult<MyEarningsSummary>> 
     .innerJoin(employees, eq(payouts.employeeId, employees.id))
     .innerJoin(users, eq(employees.userId, users.id))
     .where(eq(payouts.employeeId, emp.id))
-    .orderBy(payouts.paidAt);
+    .orderBy(desc(payouts.paidAt));
 
   // Day counts per payout
   const dayCounts = await db
@@ -738,6 +759,8 @@ export async function getMyEarnings(): Promise<ActionResult<MyEarningsSummary>> 
       today: todayAmt,
       thisWeek: weekAmt,
       thisMonth: monthAmt,
+      inProgress: periods.openDayId ? openAmt : null,
+      todayLines,
       payoutHistory: history.map((h) => ({ ...h, periodDayCount: dayCountMap.get(h.id) ?? 0 })),
     },
   };

@@ -457,7 +457,8 @@ export async function listActiveServiceVariants(): Promise<ActionResult<ActiveSe
 export type OpenTicketItem = {
   itemId: string;
   ticketId: string;
-  ticketStatus: "logged" | "awaiting_payment" | "reopened";
+  /** closed / paid_offline = charged today — listed so the stylist can see it was paid */
+  ticketStatus: "logged" | "awaiting_payment" | "reopened" | "closed" | "paid_offline";
   clientName: string;
   serviceVariantId: string;
   serviceName: string;
@@ -503,7 +504,13 @@ export async function listMyOpenTicketItems(): Promise<ActionResult<OpenTicketIt
     .where(
       and(
         eq(tickets.businessDayId, businessDay.id),
-        inArray(tickets.status, ["logged", "awaiting_payment", "reopened"]),
+        inArray(tickets.status, [
+          "logged",
+          "awaiting_payment",
+          "reopened",
+          "closed",
+          "paid_offline",
+        ]),
         isStylist ? eq(tickets.employeeId, employeeId) : undefined,
       ),
     )

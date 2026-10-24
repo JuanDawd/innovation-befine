@@ -30,6 +30,13 @@ export function isoWeekStartInBogota(): Date {
   return today;
 }
 
+/** Monday (YYYY-MM-DD) of the ISO week a YYYY-MM-DD date falls in — timezone-free */
+export function isoWeekStartOf(dateStr: string): string {
+  const d = new Date(dateStr + "T12:00:00Z");
+  d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() || 7) - 1));
+  return d.toISOString().slice(0, 10);
+}
+
 /** Start of the current calendar month in Bogota TZ */
 export function monthStartInBogota(): Date {
   const today = new Date(todayInBogota() + "T00:00:00-05:00");
