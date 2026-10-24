@@ -93,13 +93,20 @@ function writeAuditLog(
 
 // ─── Read actions (T028) ─────────────────────────────────────────────────────
 
+export type ActiveService = Omit<
+  ServiceRow,
+  "isActive" | "createdAt" | "updatedAt" | "variants"
+> & {
+  /** commissionPct is left out for roles that may not see payroll data */
+  variants: (Omit<ServiceVariantRow, "commissionPct"> & { commissionPct?: string })[];
+};
+
 /**
  * List all active services with their active variants.
- * Available to all authenticated roles.
+ * Available to all authenticated roles; commission rates only to admin,
+ * cashier and stylists (the secretary has no access to payroll data).
  */
-export async function listActiveServices(): Promise<
-  ActionResult<Omit<ServiceRow, "isActive" | "createdAt" | "updatedAt">[]>
-> {
+export async function listActiveServices(): Promise<ActionResult<ActiveService[]>> {
   const session = await getAuthSession();
   if (!session)
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
@@ -116,7 +123,18 @@ export async function listActiveServices(): Promise<
     orderBy: (s, { asc }) => [asc(s.name)],
   });
 
-  return { success: true, data: rows };
+  if (hasRole(session.user, "admin", "cashier", "stylist")) return { success: true, data: rows };
+  return {
+    success: true,
+    data: rows.map((service) => ({
+      ...service,
+      variants: service.variants.map((variant) => {
+        const { commissionPct, ...visible } = variant;
+        void commissionPct;
+        return visible;
+      }),
+    })),
+  };
 }
 
 /**

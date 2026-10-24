@@ -526,6 +526,14 @@
 - **Description:** Found from a duplicate "2026-10-11" row in the payroll status grid (demo data: day closed 14:53, new day opened 15:48 the same date). (1) Secretary pay counted business-day rows, so a closed-and-reopened date paid two daily rates (within the weekly cap); paying the two sibling days in separate payouts would also pay the date twice. Analytics had the same overcount. (2) Every payroll date was `toISOString().slice(0, 10)` — the UTC date — so a day opened after 19:00 Bogota would be filed under the next date (wrong absence match, wrong ISO week). (3) The grid/range picker showed two identical date labels.
 - **Fix:** `businessDateOf()` (Bogota) replaces UTC slicing; `countSecretaryDays()` counts distinct dates and is now what the tests exercise (they previously tested a copy); dates already paid via a sibling business day are excluded; analytics dedupes by date; same-date rows show the opening time ("2026-10-11 · 15:48").
 
+### H-55 — Staff could log a ticket for a non-stylist; secretary saw commission rates
+
+- **Severity:** High
+- **Status:** Resolved (2026-10-24)
+- **Affected:** T035 `createTicket`, `log-service-form.tsx`, `listActiveServices`
+- **Description:** Found in the secretary design critique. (1) `createTicket` checked the target employee only when a stylist logged her own ticket; staff could create a ticket for any employee id — the secretary, a clothier, an inactive stylist — and its revenue and commission would be attributed to them. (2) The register-service form started `employeeId` as the logged-in staff member's own id while the select only lists stylists, so the placeholder showed but the form was submittable and booked the ticket to the secretary. (3) The form showed "Comisión: 40%" and `listActiveServices` returned every variant's `commissionPct` to the secretary, who must not see payroll data.
+- **Fix:** `createTicket` rejects (VALIDATION_ERROR, nothing written) unless the target is an active stylist; staff start with no employee selected; commission is shown only to the stylist and stripped from `listActiveServices` for roles other than admin, cashier and stylist.
+
 ---
 
 ## Medium-priority issues
@@ -2117,3 +2125,4 @@
 | M-78     | 2026-10-23    | Clothier pay and analytics use piece_rate × quantity (per garment); no past payout underpaid                    | fix/m78-piece-rate-quantity    |
 | L-20     | 2026-10-23    | Process note acknowledged; one commit per issue going forward                                                   | fix/backlog-batch-2            |
 | M-60     | 2026-10-23    | Realtime across instances via Postgres LISTEN/NOTIFY; streams 280 s + heartbeat                                 | fix/m60-realtime-listen-notify |
+| H-55     | 2026-10-24    | createTicket requires an active stylist; staff pick one explicitly; commission hidden from the secretary        | feat/redesign                  |

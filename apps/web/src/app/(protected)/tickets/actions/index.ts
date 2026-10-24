@@ -137,7 +137,7 @@ export async function createTicket(rawInput: unknown): Promise<ActionResult<Tick
 
   // M-62: these lookups are independent — one round trip instead of three.
   const db = getDb();
-  const [businessDay, [variant], emp] = await Promise.all([
+  const [businessDay, [variant], emp, [target]] = await Promise.all([
     getCurrentBusinessDay(),
     // Snapshot price/commission from the variant
     db
@@ -151,6 +151,12 @@ export async function createTicket(rawInput: unknown): Promise<ActionResult<Tick
       .limit(1),
     // The creator's employee id for createdBy
     getEmployeeRef(session.user.id),
+    // Who the ticket is for — only an active stylist earns commission on it
+    db
+      .select({ role: employees.role, isActive: employees.isActive })
+      .from(employees)
+      .where(eq(employees.id, input.employeeId))
+      .limit(1),
   ]);
 
   if (!businessDay)
@@ -163,6 +169,12 @@ export async function createTicket(rawInput: unknown): Promise<ActionResult<Tick
     return {
       success: false,
       error: { code: "NOT_FOUND", message: "Servicio no encontrado o inactivo" },
+    };
+
+  if (!target || target.role !== "stylist" || !target.isActive)
+    return {
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "El servicio debe ser de una estilista activa" },
     };
 
   const createdByEmployeeId = emp?.id ?? input.employeeId;
