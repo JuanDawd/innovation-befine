@@ -8,6 +8,8 @@ interface SwitchProps {
   onCheckedChange: (checked: boolean) => void;
   disabled?: boolean;
   "aria-label"?: string;
+  "aria-labelledby"?: string;
+  "aria-describedby"?: string;
 }
 
 export function Switch({
@@ -16,6 +18,8 @@ export function Switch({
   onCheckedChange,
   disabled,
   "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
+  "aria-describedby": ariaDescribedBy,
 }: SwitchProps) {
   return (
     <button
@@ -24,6 +28,8 @@ export function Switch({
       role="switch"
       aria-checked={checked}
       aria-label={ariaLabel}
+      aria-labelledby={ariaLabelledBy}
+      aria-describedby={ariaDescribedBy}
       disabled={disabled}
       onClick={() => onCheckedChange(!checked)}
       className={[

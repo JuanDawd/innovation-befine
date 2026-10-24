@@ -179,6 +179,8 @@
     "footer": "© 2026 Innovation Befine. Todos los derechos reservados."
   },
   "employees": {
+    "earningsShown": "Ahora ve sus ganancias",
+    "earningsHidden": "Ya no ve sus ganancias",
     "pageTitle": "Empleados",
     "createEmployee": "Crear empleado",
     "createEmployeeDescription": "Completa los datos para crear una nueva cuenta de empleado.",
@@ -230,6 +232,11 @@
     "transfer": "Transferencia"
   },
   "catalog": {
+    "payShort": "Pago",
+    "saleShort": "Venta",
+    "notForSale": "no se vende",
+    "priceShort": "Precio",
+    "commissionShort": "Comisión {pct} %",
     "pageTitle": "Catálogo",
     "servicesTab": "Servicios",
     "clothPiecesTab": "Piezas de confección",
@@ -851,6 +858,9 @@
     "emptyTryPeriod": "Ver {period, select, week {esta semana} other {este mes}}"
   },
   "absences": {
+    "deleted": "Ausencia de {name} eliminada",
+    "undo": "Deshacer",
+    "deleteAbsenceOf": "Eliminar la ausencia de {name} el {date}",
     "pageTitle": "Ausencias y vacaciones",
     "logAbsence": "Registrar ausencia",
     "selectDate": "Seleccionar fecha",
@@ -1031,19 +1041,20 @@
     "swClose": "Cerrar aviso"
   },
   "settings": {
+    "unsaved": "Cambios sin guardar",
     "pageTitle": "Configuración",
     "pageSubtitle": "Ajustes de comportamiento del sistema para el negocio.",
     "saved": "Configuración guardada",
     "saveChanges": "Guardar cambios",
     "authSection": "Autenticación de empleados",
-    "requireEmail": "Requerir correo electrónico",
-    "requireEmailHelp": "Cuando está activo, los empleados deben registrarse con un correo. Al desactivarlo, pueden usar un nombre de usuario en su lugar.",
+    "requireEmail": "Entrar con correo",
+    "requireEmailHelp": "Activo: cada empleado entra con su correo. Inactivo: puede entrar con un nombre de usuario.",
     "accessSection": "Control de acceso",
-    "cashierAdmin": "Permitir al cajero acceder a rutas de administración",
-    "cashierAdminHelp": "Cuando está activo, los usuarios con rol <strong>cajero</strong> pueden navegar a secciones de administración (analítica, nómina, empleados, etc.). Solo relevante después de separar los roles cajero y admin.",
+    "cashierAdmin": "Caja puede ver la administración",
+    "cashierAdminHelp": "Activo: quien tenga el rol <strong>cajero</strong> también ve analítica, nómina y empleados. Úsalo solo si caja y administración son personas distintas.",
     "subtypeSection": "Servicios por subtipo",
-    "subtypeRestriction": "Restringir servicios por subtipo de estilista",
-    "subtypeRestrictionHelp": "Cuando está activo, cada estilista solo puede registrar servicios que coincidan con su subtipo. Al desactivarlo, todos los servicios están disponibles para cualquier estilista."
+    "subtypeRestriction": "Cada estilista registra solo sus servicios",
+    "subtypeRestrictionHelp": "Activo: una manicurista solo ve servicios de manicure, un peluquero solo de peluquería. Inactivo: cualquiera puede registrar cualquier servicio."
   },
   "checkout": {
     "selectTicket": "Cobrar {services} · {amount}",

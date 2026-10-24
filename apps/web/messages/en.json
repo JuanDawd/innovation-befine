@@ -178,6 +178,8 @@
     "footer": "© 2026 Innovation Befine. All rights reserved."
   },
   "employees": {
+    "earningsShown": "They can now see their earnings",
+    "earningsHidden": "They can no longer see their earnings",
     "pageTitle": "Employees",
     "createEmployee": "Create employee",
     "createEmployeeDescription": "Fill in the details to create a new employee account.",
@@ -229,6 +231,11 @@
     "transfer": "Transfer"
   },
   "catalog": {
+    "payShort": "Pay",
+    "saleShort": "Sale",
+    "notForSale": "not for sale",
+    "priceShort": "Price",
+    "commissionShort": "Commission {pct} %",
     "pageTitle": "Catalog",
     "servicesTab": "Services",
     "clothPiecesTab": "Cloth pieces",
@@ -789,6 +796,9 @@
     "emptyTryPeriod": "View {period, select, week {this week} other {this month}}"
   },
   "absences": {
+    "deleted": "Removed {name}'s absence",
+    "undo": "Undo",
+    "deleteAbsenceOf": "Remove {name}'s absence on {date}",
     "pageTitle": "Absences & Vacation",
     "logAbsence": "Log absence",
     "selectDate": "Select date",
@@ -967,19 +977,20 @@
     "swClose": "Dismiss"
   },
   "settings": {
+    "unsaved": "Unsaved changes",
     "pageTitle": "Settings",
     "pageSubtitle": "Business-wide system behaviour settings.",
     "saved": "Settings saved",
     "saveChanges": "Save changes",
     "authSection": "Employee sign-in",
-    "requireEmail": "Require email",
-    "requireEmailHelp": "When on, employees must register with an email. When off, they can use a username instead.",
+    "requireEmail": "Sign in with email",
+    "requireEmailHelp": "On: each employee signs in with their email. Off: they can use a username.",
     "accessSection": "Access control",
-    "cashierAdmin": "Allow the cashier to open admin pages",
-    "cashierAdminHelp": "When on, users with the <strong>cashier</strong> role can open admin sections (analytics, payroll, employees, etc.). Only relevant once the cashier and admin roles are separated.",
+    "cashierAdmin": "Front desk can see administration",
+    "cashierAdminHelp": "On: anyone with the <strong>cashier</strong> role also sees analytics, payroll and employees. Use it only if the front desk and the admin are different people.",
     "subtypeSection": "Services by subtype",
-    "subtypeRestriction": "Restrict services by stylist subtype",
-    "subtypeRestrictionHelp": "When on, each stylist can only log services matching their subtype. When off, every service is available to every stylist."
+    "subtypeRestriction": "Stylists log only their own services",
+    "subtypeRestrictionHelp": "On: a manicurist only sees manicure services, a hairdresser only hair. Off: anyone can log any service."
   },
   "checkout": {
     "selectTicket": "Charge {services} · {amount}",

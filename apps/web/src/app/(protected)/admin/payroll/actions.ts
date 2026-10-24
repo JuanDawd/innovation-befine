@@ -39,6 +39,7 @@ import { getUnpaidPastBusinessDays } from "@befine/db";
 import { computeStylistEarnings, earningsLineLabel } from "@/lib/payroll/compute-stylist-earnings";
 import { earningsPeriods } from "@/lib/payroll/my-earnings-days";
 import { checkPayout } from "@/lib/payroll/payout-check";
+import { computeEarningsTotal } from "@/lib/payroll/compute-total";
 import { computeClothierEarnings } from "@/lib/payroll/compute-clothier-earnings";
 import { computeSecretaryEarnings } from "@/lib/payroll/compute-secretary-earnings";
 import { businessDateOf } from "@/lib/dates";
@@ -214,20 +215,6 @@ export async function previewEarnings(
       breakdown,
     },
   };
-}
-
-/** Total earnings for an employee over the given business days, by earnings model. */
-async function computeEarningsTotal(
-  db: ReturnType<typeof getDb>,
-  role: string,
-  employeeId: string,
-  businessDayIds: string[],
-): Promise<number> {
-  if (role === "stylist")
-    return (await computeStylistEarnings(db, employeeId, businessDayIds)).totalEarnings;
-  if (role === "clothier")
-    return (await computeClothierEarnings(db, employeeId, businessDayIds)).totalEarnings;
-  return (await computeSecretaryEarnings(db, employeeId, businessDayIds)).totalEarnings;
 }
 
 // ─── Record payout (T067 + T068 double-pay via junction unique constraint) ────

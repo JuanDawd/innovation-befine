@@ -7,6 +7,7 @@
  * Lists all services with variants, allows create/edit/deactivate/restore.
  */
 
+import { useRouter } from "next/navigation";
 import { notifyDataChanged } from "@/lib/data-events";
 import { useState, useTransition, useEffect } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
@@ -193,7 +194,7 @@ function CreateServiceDialog({ onSuccess }: { onSuccess: (service: ServiceRow) =
                         <button
                           type="button"
                           onClick={() => remove(idx)}
-                          className="text-muted-foreground hover:text-destructive"
+                          className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-destructive focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none max-md:size-11"
                           aria-label={t("removeVariant")}
                         >
                           <Trash2Icon className="size-3.5" aria-hidden="true" />
@@ -332,7 +333,7 @@ function EditServiceDialog({
     <>
       <button
         onClick={handleOpen}
-        className="text-muted-foreground hover:text-foreground"
+        className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none max-md:size-11"
         aria-label={t("editService")}
       >
         <PencilIcon className="size-4" />
@@ -402,7 +403,7 @@ function VariantEditRow({
   onDirtyChange,
 }: {
   variant: VariantRow;
-  onSave: () => void;
+  onSave: (saved: AddVariantInput) => void;
   onCancel: () => void;
   onDirtyChange: (dirty: boolean) => void;
 }) {
@@ -436,7 +437,7 @@ function VariantEditRow({
       if (result.success) {
         showToast("success", t("editVariantSuccess"));
         notifyDataChanged("catalog");
-        onSave();
+        onSave(data);
       } else {
         setServerError(result.error.message);
       }
@@ -670,6 +671,12 @@ function ServiceCard({
   const [expanded, setExpanded] = useState(true);
   const [isPending, startTransition] = useTransition();
   const [localService, setLocalService] = useState(service);
+  // Fresh server data after a save (router.refresh) replaces the local copy
+  const [syncedService, setSyncedService] = useState(service);
+  if (service !== syncedService) {
+    setSyncedService(service);
+    setLocalService(service);
+  }
   const [serviceImpact, setServiceImpact] = useState<number | null>(null);
   const [variantImpact, setVariantImpact] = useState<Record<string, number>>({});
 
@@ -832,7 +839,7 @@ function ServiceCard({
               <ConfirmationDialog
                 trigger={
                   <button
-                    className="text-muted-foreground hover:text-destructive"
+                    className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-destructive focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none max-md:size-11"
                     aria-label={t("deactivate")}
                     disabled={isPending}
                     onClick={() => loadServiceImpact()}
@@ -855,7 +862,7 @@ function ServiceCard({
               <button
                 onClick={handleRestoreService}
                 disabled={isPending}
-                className="text-muted-foreground hover:text-foreground"
+                className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none max-md:size-11"
                 aria-label={t("restore")}
               >
                 <RotateCcwIcon className="size-4" />
@@ -888,16 +895,23 @@ function ServiceCard({
                           )}
                         </div>
                         <div className="flex items-center gap-3">
-                          <span className="font-mono tabular-nums text-xs">
-                            {formatMoney(v.customerPrice)}
+                          <span className="text-xs">
+                            <span className="text-muted-foreground">{t("priceShort")} </span>
+                            <span className="font-mono tabular-nums">
+                              {formatMoney(v.customerPrice)}
+                            </span>
                           </span>
-                          <span className="text-xs text-muted-foreground">
-                            {parseFloat(v.commissionPct).toFixed(1)}%
+                          <span className="text-xs text-muted-foreground tabular-nums">
+                            {t("commissionShort", {
+                              pct: Number(v.commissionPct).toLocaleString("es-CO", {
+                                maximumFractionDigits: 2,
+                              }),
+                            })}
                           </span>
                           {v.isActive ? (
                             <>
                               <button
-                                className={`text-muted-foreground hover:text-foreground ${isEditOpen ? "text-primary" : ""}`}
+                                className={`inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none max-md:size-11 ${isEditOpen ? "text-primary" : ""}`}
                                 aria-label={t("editVariant")}
                                 aria-expanded={isEditOpen}
                                 onClick={() =>
@@ -913,7 +927,7 @@ function ServiceCard({
                               <ConfirmationDialog
                                 trigger={
                                   <button
-                                    className="text-muted-foreground hover:text-destructive"
+                                    className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-destructive focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none max-md:size-11"
                                     aria-label={t("deactivate")}
                                     onClick={() => loadVariantImpact(v.id)}
                                   >
@@ -936,7 +950,7 @@ function ServiceCard({
                             <button
                               onClick={() => handleRestoreVariant(v.id)}
                               disabled={isPending}
-                              className="text-muted-foreground hover:text-foreground"
+                              className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none max-md:size-11"
                               aria-label={t("restore")}
                             >
                               <RotateCcwIcon className="size-3.5" />
@@ -951,9 +965,23 @@ function ServiceCard({
                           <VariantEditRow
                             variant={v}
                             onDirtyChange={setSlotIsDirty}
-                            onSave={() => {
+                            onSave={(saved) => {
                               setOpenSlot({ type: "none" });
                               setSlotIsDirty(false);
+                              // Show the saved values at once; the refresh confirms them
+                              setLocalService((prev) => ({
+                                ...prev,
+                                variants: prev.variants.map((pv) =>
+                                  pv.id === v.id
+                                    ? {
+                                        ...pv,
+                                        name: saved.name,
+                                        customerPrice: saved.customerPrice,
+                                        commissionPct: saved.commissionPct.toFixed(2),
+                                      }
+                                    : pv,
+                                ),
+                              }));
                               onChange();
                             }}
                             onCancel={() => {
@@ -1017,7 +1045,13 @@ function ServiceCard({
 
 export function ServiceCatalog({ initialServices }: { initialServices: ServiceRow[] }) {
   const t = useTranslations("catalog");
+  const router = useRouter();
   const [services, setServices] = useState<ServiceRow[]>(initialServices);
+  const [syncedServices, setSyncedServices] = useState(initialServices);
+  if (initialServices !== syncedServices) {
+    setSyncedServices(initialServices);
+    setServices(initialServices);
+  }
   const [showInactive, setShowInactive] = useState(false);
 
   const visible = showInactive ? services : services.filter((s) => s.isActive);
@@ -1050,9 +1084,8 @@ export function ServiceCatalog({ initialServices }: { initialServices: ServiceRo
               key={service.id}
               service={service}
               showInactive={showInactive}
-              onChange={() => {
-                // Trigger rerender — server revalidation handles data refresh on next load
-              }}
+              // Re-read the catalog so an edited price or a new variant shows at once
+              onChange={() => router.refresh()}
             />
           ))}
         </div>

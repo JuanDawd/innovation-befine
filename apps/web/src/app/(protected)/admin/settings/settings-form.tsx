@@ -43,6 +43,8 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
   const t = useTranslations("settings");
   const [isPending, startTransition] = useTransition();
   const [settings, setSettings] = useState<BusinessSettingsData>(initialSettings);
+  // Last saved values — what "Cambios sin guardar" compares against
+  const [saved, setSaved] = useState<BusinessSettingsData>(initialSettings);
 
   function handleToggle(key: SettingKey) {
     setSettings((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -57,22 +59,23 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
         return;
       }
       setSettings(res.data);
+      setSaved(res.data);
       toast.success(t("saved"));
     });
   }
 
-  return (
-    <form onSubmit={handleSubmit} className="space-y-6 max-w-xl">
-      {SECTIONS.map((section) => (
-        <div key={section.key} className="rounded-lg border bg-card p-6 space-y-6">
-          <h2 className="text-lg font-semibold">{t(section.title)}</h2>
+  const dirty = SECTIONS.some((section) => settings[section.key] !== saved[section.key]);
 
-          <div className="flex items-start justify-between gap-4">
+  return (
+    <form onSubmit={handleSubmit} className="max-w-2xl space-y-4">
+      <div className="divide-y rounded-xl border bg-card">
+        {SECTIONS.map((section) => (
+          <div key={section.key} className="flex items-start justify-between gap-6 p-5">
             <div className="space-y-1">
               <p className="text-sm font-medium" id={`${section.id}-label`}>
                 {t(section.label)}
               </p>
-              <p className="text-xs text-muted-foreground" id={`${section.id}-help`}>
+              <p className="max-w-prose text-sm text-muted-foreground" id={`${section.id}-help`}>
                 {t.rich(section.help, { strong: (chunks) => <strong>{chunks}</strong> })}
               </p>
             </div>
@@ -84,11 +87,12 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
               aria-describedby={`${section.id}-help`}
             />
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
 
-      <div className="flex justify-end">
-        <Button type="submit" disabled={isPending}>
+      <div className="flex items-center justify-end gap-3">
+        {dirty && <p className="text-sm text-muted-foreground">{t("unsaved")}</p>}
+        <Button type="submit" disabled={isPending || !dirty}>
           {isPending && <Loader2Icon className="size-4 animate-spin mr-2" aria-hidden="true" />}
           {t("saveChanges")}
         </Button>
