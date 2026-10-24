@@ -31,10 +31,14 @@ function deriveProductStatus(pieces: ProductPieceDetailRow[]): ProductStatusKey 
   return "not_started";
 }
 
+/** Garments approved over garments ordered — the same measure as the products list. */
 function productProgressPct(pieces: ProductPieceDetailRow[]): number {
-  if (pieces.length === 0) return 0;
-  const approved = pieces.filter((p) => p.status === "approved").length;
-  return Math.round((approved / pieces.length) * 100);
+  const total = pieces.reduce((sum, p) => sum + p.quantity, 0);
+  if (total === 0) return 0;
+  const approved = pieces
+    .filter((p) => p.status === "approved")
+    .reduce((sum, p) => sum + p.quantity, 0);
+  return Math.round((approved / total) * 100);
 }
 
 // ─── Collapsible notes ────────────────────────────────────────────────────────

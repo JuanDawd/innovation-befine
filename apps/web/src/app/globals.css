@@ -264,21 +264,21 @@
 }
 
 /* Phones, every role: 44px touch targets for every standard control,
-   dialogs included. */
+   dialogs and menus included. Buttons rendered as dialog/menu triggers keep
+   data-size but take the trigger's data-slot, hence the suffix matches. */
 @media (max-width: 767px) {
-  :is(
-    [data-slot="button"]:is([data-size="default"], [data-size="sm"], [data-size="lg"]),
-    [data-slot="input"],
-    [data-slot="native-select"],
-    [data-slot="dropdown-menu-item"]
-  ) {
+  :is([data-slot="button"], [data-slot$="-trigger"], [data-slot$="-close"]):is(
+    [data-size="default"],
+    [data-size="sm"],
+    [data-size="lg"]
+  ),
+  :is([data-slot="input"], [data-slot="native-select"], [data-slot="dropdown-menu-item"]) {
     min-height: 2.75rem;
   }
-  :is(
-    [data-slot="button"]:is([data-size="icon"], [data-size="icon-sm"], [data-size="icon-lg"]),
-    [data-slot="dialog-close"][data-size],
-    [data-slot="dropdown-menu-trigger"][data-size],
-    [data-slot="sheet-close"][data-size]
+  :is([data-slot="button"], [data-slot$="-trigger"], [data-slot$="-close"]):is(
+    [data-size="icon"],
+    [data-size="icon-sm"],
+    [data-size="icon-lg"]
   ) {
     min-width: 2.75rem;
     min-height: 2.75rem;
