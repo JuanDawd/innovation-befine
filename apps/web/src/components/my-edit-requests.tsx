@@ -112,6 +112,7 @@ export function MyEditRequests({
       );
     } else {
       toast.success(tt("markReadySuccess", { client }), {
+        duration: 6000,
         action: { label: tt("undo"), onClick: () => handleUndo(ticketId) },
       });
       refresh();

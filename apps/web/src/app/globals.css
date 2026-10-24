@@ -252,6 +252,38 @@
 :root:has([data-bottom-nav]) {
   --app-bottom-inset: calc(4rem + env(safe-area-inset-bottom));
 }
+/* A floating primary action above the bottom nav (stylist home) — toasts rise
+   above it too. */
+:root {
+  --app-fab-inset: 0px;
+}
+@media (max-width: 767px) {
+  :root:has([data-fab]) {
+    --app-fab-inset: 4rem;
+  }
+}
+
+/* Stylist / clothier phones: 44px touch targets for every standard control,
+   dialogs included (they portal outside the shell, hence :has on the root). */
+@media (max-width: 767px) {
+  :root:has([data-touch-shell])
+    :is(
+      [data-slot="button"]:is([data-size="default"], [data-size="sm"], [data-size="lg"]),
+      [data-slot="input"],
+      [data-slot="native-select"]
+    ) {
+    min-height: 2.75rem;
+  }
+  :root:has([data-touch-shell])
+    :is(
+      [data-slot="button"]:is([data-size="icon"], [data-size="icon-sm"], [data-size="icon-lg"]),
+      [data-slot="dialog-close"][data-size],
+      [data-slot="sheet-close"][data-size]
+    ) {
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+  }
+}
 
 /* Respect "reduce motion": kill animations/transitions app-wide (pulses,
    spinners still show state via their static frame). */

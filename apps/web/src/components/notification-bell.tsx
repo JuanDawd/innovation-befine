@@ -214,13 +214,13 @@ export function NotificationBell({
         }
         aria-expanded={open}
         aria-haspopup="true"
-        className="relative rounded-md p-1.5 opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="relative inline-flex size-11 items-center justify-center rounded-md opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <BellIcon className="size-5" aria-hidden="true" />
         {unreadCount > 0 && (
           <span
             aria-hidden="true"
-            className="absolute right-0.5 top-0.5 flex size-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground"
+            className="absolute right-1.5 top-1.5 flex size-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground"
           >
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>

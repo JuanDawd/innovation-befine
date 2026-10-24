@@ -77,7 +77,9 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
               closeButton
               duration={4000}
               position="bottom-right"
-              mobileOffset={{ bottom: "calc(var(--app-bottom-inset) + 16px)" }}
+              mobileOffset={{
+                bottom: "calc(var(--app-bottom-inset) + var(--app-fab-inset) + 16px)",
+              }}
             />
           </QueryProvider>
         </NextIntlClientProvider>

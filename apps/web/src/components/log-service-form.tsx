@@ -253,14 +253,15 @@ export function LogServiceForm({
       </div>
 
       {/* Actions */}
-      <div className="flex gap-3 pt-2">
-        <Button type="submit" disabled={!canSubmit}>
+      <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row">
+        <Button type="submit" disabled={!canSubmit} className="max-sm:w-full">
           {isPending && <Loader2Icon className="mr-2 size-4 animate-spin" />}
           {t("submit")}
         </Button>
         <Button
           type="button"
           variant="outline"
+          className="max-sm:w-full"
           onClick={() => (onClose ? onClose() : router.push(redirectPath))}
           disabled={isPending}
         >

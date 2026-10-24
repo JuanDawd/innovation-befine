@@ -148,10 +148,10 @@ function UserMenu({
         id="user-menu-trigger"
         aria-label={t("nav.openUserMenu")}
         className={cn(
-          "flex min-w-0 items-center gap-2.5 rounded-md p-1 text-left outline-none transition-colors",
+          "flex min-w-0 items-center gap-2.5 rounded-md text-left outline-none transition-colors",
           variant === "sidebar"
-            ? "flex-1 hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-sidebar-ring"
-            : "rounded-full hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50",
+            ? "flex-1 p-1 hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+            : "rounded-full p-1.5 hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50",
         )}
       >
         <UserInitials name={userName} />
@@ -309,6 +309,7 @@ export function AppShell({
 
   const navItems = NAV_ITEMS[role].filter((item) => item.key !== "myEarnings" || showEarnings);
   const grouped = resolveGroups(navItems);
+  const hasBottomNav = navItems.length > 1;
 
   const usesBottomNav = MOBILE_BOTTOM_NAV_ROLES.includes(role);
 
@@ -345,7 +346,11 @@ export function AppShell({
   // Stylist / clothier: mobile-first bottom tabs, no sidebar
   if (usesBottomNav) {
     return (
-      <div data-bottom-nav className="flex h-dvh flex-col overflow-hidden bg-background">
+      <div
+        data-touch-shell
+        data-bottom-nav={hasBottomNav ? "" : undefined}
+        className="flex h-dvh flex-col overflow-hidden bg-background"
+      >
         <a href="#main" className={SKIP_LINK_CLASS}>
           {t("nav.skipToContent")}
         </a>
@@ -370,14 +375,17 @@ export function AppShell({
           {children}
         </main>
 
-        <nav
-          className="fixed inset-x-0 bottom-0 z-30 flex border-t border-border bg-background pb-[env(safe-area-inset-bottom)]"
-          aria-label={t("nav.mainNavigation")}
-        >
-          {navItems.map((item) => (
-            <BottomTabLink key={item.href} item={item} active={isActive(item, activeHref)} />
-          ))}
-        </nav>
+        {/* One destination needs no tab bar */}
+        {hasBottomNav && (
+          <nav
+            className="fixed inset-x-0 bottom-0 z-30 flex border-t border-border bg-background pb-[env(safe-area-inset-bottom)]"
+            aria-label={t("nav.mainNavigation")}
+          >
+            {navItems.map((item) => (
+              <BottomTabLink key={item.href} item={item} active={isActive(item, activeHref)} />
+            ))}
+          </nav>
+        )}
       </div>
     );
   }
