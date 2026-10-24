@@ -1767,6 +1767,16 @@
 
 ---
 
+### L-01 — T016 — No account lockout UX after rate limiting
+
+- **Severity:** Low
+- **Status:** Resolved (2026-10-23)
+- **Affected:** T016 `components/login-form.tsx`
+- **Description:** After too many sign-ins the form said only "Intenta de nuevo más tarde", and retrying immediately kept extending the block — all staff share the salon's public IP (H-46).
+- **Fix:** On 429 the message says to wait a minute (the `/sign-in/email` rule's window, `lib/auth.ts`) and the button is disabled with a countdown ("Intenta de nuevo en 60 s"). Wrong passwords still show the credentials error without locking. Component test `components/__tests__/login-form.test.ts`; Vitest now compiles JSX (automatic runtime) so components can be tested.
+
+---
+
 ## Lessons learned
 
 > This section is populated during development. Each entry documents what went wrong, the root cause, and how to prevent it in the future.
@@ -1930,3 +1940,4 @@
 | L-42     | 2026-10-23    | Recharts loaded on demand; /admin/analytics first load 323 → 213 kB                                             | fix/backlog-batch-2          |
 | L-41     | 2026-10-23    | Measured: modern browserslist saves 0 kB (Next polyfills); defaults kept                                        | fix/backlog-batch-2          |
 | M-09     | 2026-10-23    | Client import validates like the form; ids file + --undo to back out an import                                  | fix/backlog-batch-2          |
+| L-01     | 2026-10-23    | Login 429: clear message + 60 s countdown on the button                                                         | fix/backlog-batch-2          |

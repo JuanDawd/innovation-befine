@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
@@ -14,10 +14,20 @@ import { Input } from "@/components/ui/input";
 import { signIn } from "@/lib/auth-client";
 import { ROLE_HOME } from "@/lib/middleware-helpers";
 
+const SIGN_IN_LOCK_SECONDS = 60;
+
 export function LoginForm() {
   const t = useTranslations("auth");
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
+  // L-01: after a 429 the sign-in rule blocks for its whole window (60 s,
+  // lib/auth.ts). Count it down instead of letting retries extend the block.
+  const [lockedFor, setLockedFor] = useState(0);
+  useEffect(() => {
+    if (lockedFor <= 0) return;
+    const timer = setTimeout(() => setLockedFor((s) => s - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [lockedFor]);
 
   const {
     register,
@@ -39,6 +49,7 @@ export function LoginForm() {
       const status = result.error.status;
       if (status === 429) {
         setServerError(t("tooManyAttempts"));
+        setLockedFor(SIGN_IN_LOCK_SECONDS);
       } else if (status === 401 || status === 403) {
         setServerError(t("invalidCredentials"));
       } else {
@@ -105,9 +116,11 @@ export function LoginForm() {
         </p>
       )}
 
-      <Button type="submit" className="w-full" disabled={isSubmitting}>
+      <Button type="submit" className="w-full" disabled={isSubmitting || lockedFor > 0}>
         {isSubmitting ? (
           <Loader2Icon className="size-4 animate-spin" aria-hidden="true" />
+        ) : lockedFor > 0 ? (
+          t("retryIn", { seconds: lockedFor })
         ) : (
           t("login")
         )}
