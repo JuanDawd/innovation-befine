@@ -1048,6 +1048,16 @@
 
 ---
 
+### M-09 — T100 — No data validation or rollback for spreadsheet import
+
+- **Severity:** Medium
+- **Status:** Resolved (2026-10-23)
+- **Affected:** T100 `packages/db/src/import-clients.ts`
+- **Description:** The import deduplicated rows but did not validate them (phone, email, name length), and there was no way to back out a bad import once committed.
+- **Fix:** `validateClientRow()` applies the client form's limits (name ≤ 100, phone 7–15 digits and ≤ 20 chars, valid email ≤ 150, notes ≤ 500); invalid rows are reported, not imported, and shown in `--dry-run`. The import stays one transaction; each run writes the inserted ids to `<file>.import-<timestamp>.ids`, and `--undo <ids-file>` deactivates exactly those clients (soft-delete). Header documents taking a Neon branch before large imports. Tests: unit cases in `import-clients.test.ts`, CLI end to end against the test database in `__tests__/import-clients.integration.test.ts`.
+
+---
+
 ## Low-priority issues
 
 ### L-09 — No file/image storage research
@@ -1919,3 +1929,4 @@
 | L-43     | 2026-10-23    | bfcache blocked by no-store + SSE on authenticated pages — kept on purpose (shared devices)                     | fix/backlog-batch-2          |
 | L-42     | 2026-10-23    | Recharts loaded on demand; /admin/analytics first load 323 → 213 kB                                             | fix/backlog-batch-2          |
 | L-41     | 2026-10-23    | Measured: modern browserslist saves 0 kB (Next polyfills); defaults kept                                        | fix/backlog-batch-2          |
+| M-09     | 2026-10-23    | Client import validates like the form; ids file + --undo to back out an import                                  | fix/backlog-batch-2          |
