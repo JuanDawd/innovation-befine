@@ -1727,6 +1727,16 @@
 
 ---
 
+### L-43 — Page prevents bfcache restoration (2 failure reasons)
+
+- **Severity:** Low
+- **Status:** Resolved (2026-10-23) — by design, no code change
+- **Affected:** all authenticated pages, `/login`
+- **Description:** Lighthouse: the page blocked back/forward cache for 2 reasons.
+- **Fix:** Investigated with Playwright (navigate away and back; `PerformanceNavigationTiming.type` = `back_forward`, i.e. not restored). The blockers are `Cache-Control: private, no-cache, no-store` (Next.js on dynamic, session-reading pages) and the open SSE connections on authenticated screens. Kept on purpose: the app runs on shared salon devices, and after a logout the Back button must not restore a cached cashier/payroll page. No `unload` listeners exist. Revisit only if a public, static page is added.
+
+---
+
 ## Lessons learned
 
 > This section is populated during development. Each entry documents what went wrong, the root cause, and how to prevent it in the future.
@@ -1886,3 +1896,4 @@
 | M-62     | 2026-10-23    | Cached employee lookup, parallel independent reads, single-statement openBusinessDay                            | fix/backlog-batch-2          |
 | M-72     | 2026-10-23    | Realtime package tested (16); stream-close listener leak fixed; post-deploy smoke on deployment_status          | fix/backlog-batch-2          |
 | M-51     | 2026-10-23    | Verified: no console errors/warnings on prod public pages or any role screen                                    | fix/backlog-batch-2          |
+| L-43     | 2026-10-23    | bfcache blocked by no-store + SSE on authenticated pages — kept on purpose (shared devices)                     | fix/backlog-batch-2          |
