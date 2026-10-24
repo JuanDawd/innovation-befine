@@ -534,6 +534,14 @@
 - **Description:** Found in the secretary design critique. (1) `createTicket` checked the target employee only when a stylist logged her own ticket; staff could create a ticket for any employee id — the secretary, a clothier, an inactive stylist — and its revenue and commission would be attributed to them. (2) The register-service form started `employeeId` as the logged-in staff member's own id while the select only lists stylists, so the placeholder showed but the form was submittable and booked the ticket to the secretary. (3) The form showed "Comisión: 40%" and `listActiveServices` returned every variant's `commissionPct` to the secretary, who must not see payroll data.
 - **Fix:** `createTicket` rejects (VALIDATION_ERROR, nothing written) unless the target is an active stylist; staff start with no employee selected; commission is shown only to the stylist and stripped from `listActiveServices` for roles other than admin, cashier and stylist.
 
+### H-56 — Finished pieces from earlier days never reached approval
+
+- **Severity:** High
+- **Status:** Resolved (2026-10-24)
+- **Affected:** T047 `listPendingProductPieceApprovals`, product approval board; H-52 carried-over work, multi-day large orders
+- **Description:** Found in the secretary design critique. The approval board listed only `done_pending_approval` pieces whose product belonged to the open business day. Since H-52 clothiers see and finish pieces from earlier days, but those pieces never showed up to approve — and an unapproved piece is never paid. The board is the only approval path.
+- **Fix:** the list returns every finished piece regardless of its product's day, with quantity, product notes and large-order client so the approver knows what she is approving. Follow-up H-57 (Vikunja): a piece approved after its product's day was already paid is still not picked up by payroll.
+
 ---
 
 ## Medium-priority issues
@@ -2126,3 +2134,4 @@
 | L-20     | 2026-10-23    | Process note acknowledged; one commit per issue going forward                                                   | fix/backlog-batch-2            |
 | M-60     | 2026-10-23    | Realtime across instances via Postgres LISTEN/NOTIFY; streams 280 s + heartbeat                                 | fix/m60-realtime-listen-notify |
 | H-55     | 2026-10-24    | createTicket requires an active stylist; staff pick one explicitly; commission hidden from the secretary        | feat/redesign                  |
+| H-56     | 2026-10-24    | Approval board lists finished pieces from every day, with quantity and order context                            | feat/redesign                  |
