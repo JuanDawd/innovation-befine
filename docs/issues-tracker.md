@@ -1687,6 +1687,16 @@
 
 ---
 
+### L-53 — Products dashboard loads every product ever created
+
+- **Severity:** Low (performance)
+- **Status:** Resolved (2026-10-23)
+- **Affected:** `packages/db/src/queries/products.ts` `getProductsDashboard`
+- **Description:** Found while writing M-70b tests. Step 2 selected every product ever created and classified today/WIP in JS, then aggregated pieces for all of them — cost grew with history on every dashboard load.
+- **Fix:** SQL now loads only candidates: products of the open day, or with at least one non-approved piece (`EXISTS`, uses `idx_craftable_pieces_craftable_id`). JS classification unchanged; covered by `production.integration.test.ts`.
+
+---
+
 ## Lessons learned
 
 > This section is populated during development. Each entry documents what went wrong, the root cause, and how to prevent it in the future.
@@ -1842,3 +1852,4 @@
 | M-71     | 2026-10-23    | Checkout + payroll E2E with axe; throwaway DB (Postgres + Neon proxy) in CI; screenshots opt-in                 | fix/vikunja-backlog          |
 | M-77     | 2026-10-23    | Analytics commission uses banker's rounding per item (matches payroll)                                          | fix/vikunja-backlog          |
 | M-70b    | 2026-10-23    | Query integration tests on real Postgres (rolled back); 98.8 % / 85.3 % coverage; 80 % threshold enforced in CI | fix/vikunja-backlog          |
+| L-53     | 2026-10-23    | Products dashboard loads only today + WIP candidates in SQL                                                     | fix/backlog-batch-2          |
