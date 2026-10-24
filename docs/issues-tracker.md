@@ -1887,6 +1887,26 @@
 
 ---
 
+### L-07 — T032 displays a no-show count that's always 0 until Phase 5
+
+- **Severity:** Low
+- **Status:** Resolved (verified 2026-10-23 — Phase 5 shipped it)
+- **Affected:** T032, T032b
+- **Description:** The client no-show count was displayed in Phase 3 before anything incremented it.
+- **Fix:** No change needed: `appointments/actions.ts` increments `clients.no_show_count` when an appointment is marked no-show and decrements it (never below 0) when that is undone.
+
+---
+
+### L-20 — T032 work bundled into T030/T031 commits
+
+- **Severity:** Low
+- **Status:** Resolved (2026-10-23) — process note, no history rewrite
+- **Affected:** commit convention
+- **Description:** T032 had no dedicated commit; its work landed in the T030/T031 commits.
+- **Fix:** Acknowledged; rewriting published history isn't worth it. The one-commit-per-task rule in CLAUDE.md stands, and the backlog fixes since 2026-10-23 follow it (one commit per issue, ID in the subject).
+
+---
+
 ## Lessons learned
 
 > This section is populated during development. Each entry documents what went wrong, the root cause, and how to prevent it in the future.
@@ -2062,3 +2082,5 @@
 | L-06     | 2026-10-23    | SMS pricing: Colombia rate, not US                                                                              | fix/backlog-batch-2          |
 | L-02     | 2026-10-23    | Password policy documented: length-only (NIST 800-63B)                                                          | fix/backlog-batch-2          |
 | L-11     | 2026-10-23    | Phased rollout with exit checks in the go-live checklist                                                        | fix/backlog-batch-2          |
+| L-07     | 2026-10-23    | Verified: no-show count increments since Phase 5                                                                | fix/backlog-batch-2          |
+| L-20     | 2026-10-23    | Process note acknowledged; one commit per issue going forward                                                   | fix/backlog-batch-2          |
