@@ -76,6 +76,12 @@ export const tickets = pgTable(
       .notNull()
       .references(() => employees.id, { onDelete: "restrict" }),
     version: integer("version").notNull().default(1),
+    /**
+     * M-80 — what earlier checkouts already collected for this ticket. Set when
+     * a paid ticket is reopened; the next checkout charges only the difference
+     * (or refunds it), so the money is never counted twice.
+     */
+    prepaidAmount: bigint("prepaid_amount", { mode: "number" }).notNull().default(0),
     /** Set true when a ticket is reopened after payout — excluded from future earnings until reviewed */
     needsReview: boolean("needs_review").notNull().default(false),
   },

@@ -426,6 +426,9 @@
     "retry": "Retry"
   },
   "ticketHistory": {
+    "reopenConfirmTitle": "Reopen this paid ticket?",
+    "reopenConfirmDescription": "It goes back to “to charge” so it can be corrected. The {amount} already paid counts: charging it again only collects or refunds the difference. If its commission was already paid out, that payout is flagged for review.",
+    "reopenSuccess": "Ticket reopened; it's back in “to charge”",
     "pageTitle": "Ticket history",
     "pageSubtitle": "Closed tickets by business day",
     "prevDay": "Previous day",
@@ -996,6 +999,15 @@
     "subtypeRestrictionHelp": "On: a manicurist only sees manicure services, a hairdresser only hair. Off: anyone can log any service."
   },
   "checkout": {
+    "confirmRefundDescription": "{count, plural, one {# ticket will be closed} other {# tickets will be closed}} and the refund recorded. This can't be undone.",
+    "alreadyPaid": "Already paid {amount}",
+    "paidBefore": "Paid before",
+    "totalToRefund": "To refund",
+    "nothingDue": "Already paid: nothing to charge.",
+    "refundMethods": "Refund by",
+    "confirmRefundTitle": "Refund {amount} to {clients}?",
+    "confirmNoChargeTitle": "Close without charging {clients}?",
+    "refund": "Refund",
     "selectTicket": "Charge {services} · {amount}",
     "amountFor": "Amount by {method}",
     "cashReceived": "Received",

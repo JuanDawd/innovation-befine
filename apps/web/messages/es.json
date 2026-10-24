@@ -427,6 +427,9 @@
     "retry": "Reintentar"
   },
   "ticketHistory": {
+    "reopenConfirmTitle": "¿Reabrir este ticket pagado?",
+    "reopenConfirmDescription": "Vuelve a «por cobrar» para corregirlo. Los {amount} que ya pagó cuentan: al cobrarlo de nuevo solo se cobra o se devuelve la diferencia. Si ya se liquidó la comisión, ese pago quedará para revisar.",
+    "reopenSuccess": "Ticket reabierto; está en «por cobrar»",
     "pageTitle": "Historial de tickets",
     "pageSubtitle": "Tickets cerrados por día laboral",
     "prevDay": "Día anterior",
@@ -1060,6 +1063,15 @@
     "subtypeRestrictionHelp": "Activo: una manicurista solo ve servicios de manicure, un peluquero solo de peluquería. Inactivo: cualquiera puede registrar cualquier servicio."
   },
   "checkout": {
+    "confirmRefundDescription": "{count, plural, one {Se cerrará # ticket} other {Se cerrarán # tickets}} y se registrará la devolución. Esta acción no se puede deshacer.",
+    "alreadyPaid": "Ya pagado {amount}",
+    "paidBefore": "Pagado antes",
+    "totalToRefund": "A devolver",
+    "nothingDue": "Ya está pagado: no hay nada que cobrar.",
+    "refundMethods": "Devolver por",
+    "confirmRefundTitle": "¿Devolver {amount} a {clients}?",
+    "confirmNoChargeTitle": "¿Cerrar sin cobrar a {clients}?",
+    "refund": "Devolución",
     "selectTicket": "Cobrar {services} · {amount}",
     "amountFor": "Monto en {method}",
     "cashReceived": "Recibido",

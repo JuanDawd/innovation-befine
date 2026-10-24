@@ -20,6 +20,7 @@ import {
   services,
   serviceVariants,
 } from "@befine/db/schema";
+import { paymentsMatchDue } from "@/lib/checkout-due";
 import { checkoutSessionSchema, paidOfflineCheckoutSchema } from "@befine/types";
 import { z } from "zod";
 import type { ActionResult } from "@/lib/action-result";
@@ -47,6 +48,8 @@ export type CheckoutTicket = {
   clientName: string;
   lineItems: CheckoutLineItem[];
   total: number;
+  /** M-80: already paid in an earlier checkout (reopened ticket); only the rest is due */
+  prepaid: number;
 };
 
 export type AwaitingTicket = CheckoutTicket & {
@@ -58,6 +61,8 @@ export type CheckoutSummary = {
   sessionId: string;
   tickets: CheckoutTicket[];
   grandTotal: number;
+  /** Already paid before this checkout — grandTotal − prepaid is what this checkout moved */
+  prepaid: number;
   payments: { method: string; amount: number }[];
   closedAt: Date;
 };
@@ -85,6 +90,7 @@ export async function getAwaitingPaymentTickets(
       clientId: tickets.clientId,
       clientName: clients.name,
       guestName: tickets.guestName,
+      prepaidAmount: tickets.prepaidAmount,
       ticketItemId: ticketItems.id,
       serviceName: services.name,
       variantName: serviceVariants.name,
@@ -114,6 +120,7 @@ export async function getAwaitingPaymentTickets(
           : `guest:${(r.guestName ?? r.id).trim().toLowerCase()}`,
         lineItems: [],
         total: 0,
+        prepaid: r.prepaidAmount,
       });
     }
     const t = ticketMap.get(r.id)!;
@@ -275,6 +282,7 @@ export async function processCheckout(rawInput: unknown): Promise<ActionResult<C
               clientName: clientNames.get(item.ticketId) ?? "—",
               lineItems: [],
               total: 0,
+              prepaid: 0,
             });
           }
           const ct = byTicket.get(item.ticketId)!;
@@ -292,10 +300,14 @@ export async function processCheckout(rawInput: unknown): Promise<ActionResult<C
           ct.total += effectivePrice * item.quantity;
         }
 
+        // The session stores what it moved; the tickets' totals give the rest
+        const replayTickets = Array.from(byTicket.values());
+        const replayTotal = replayTickets.reduce((sum, tk) => sum + tk.total, 0);
         return {
           sessionId: existingSession.id,
-          tickets: Array.from(byTicket.values()),
-          grandTotal: existingSession.totalAmount,
+          tickets: replayTickets,
+          grandTotal: replayTotal,
+          prepaid: replayTotal - existingSession.totalAmount,
           payments: existingPayments,
           closedAt: existingTickets[0]?.closedAt ?? new Date(),
         };
@@ -311,6 +323,7 @@ export async function processCheckout(rawInput: unknown): Promise<ActionResult<C
           version: tickets.version,
           clientId: tickets.clientId,
           guestName: tickets.guestName,
+          prepaidAmount: tickets.prepaidAmount,
         })
         .from(tickets)
         .where(inArray(tickets.id, input.ticketIds));
@@ -340,8 +353,10 @@ export async function processCheckout(rawInput: unknown): Promise<ActionResult<C
         return sum + (item.overridePrice ?? item.unitPrice) * item.quantity;
       }, 0);
 
-      const paymentSum = input.payments.reduce((s, p) => s + p.amount, 0);
-      if (paymentSum !== grandTotal) throw new Error("PAYMENT_MISMATCH");
+      // M-80: reopened tickets were already paid — collect (or refund) only the difference
+      const prepaid = ticketRows.reduce((sum, t) => sum + t.prepaidAmount, 0);
+      const due = grandTotal - prepaid;
+      if (!paymentsMatchDue(due, input.payments)) throw new Error("PAYMENT_MISMATCH");
 
       const clientIds = [...new Set(ticketRows.map((t) => t.clientId).filter(Boolean))];
       const sessionClientId = clientIds.length === 1 ? (clientIds[0] ?? null) : null;
@@ -349,17 +364,18 @@ export async function processCheckout(rawInput: unknown): Promise<ActionResult<C
       // Back-fill totalAmount and clientId on the already-inserted session row
       await tx
         .update(checkoutSessions)
-        .set({ totalAmount: grandTotal, clientId: sessionClientId })
+        .set({ totalAmount: due, clientId: sessionClientId })
         .where(eq(checkoutSessions.id, sessionId));
 
-      // Insert payment records
-      await tx.insert(ticketPayments).values(
-        input.payments.map((p) => ({
-          checkoutSessionId: sessionId,
-          method: p.method,
-          amount: p.amount,
-        })),
-      );
+      // Insert payment records (none when a reopened ticket kept its price)
+      if (input.payments.length > 0)
+        await tx.insert(ticketPayments).values(
+          input.payments.map((p) => ({
+            checkoutSessionId: sessionId,
+            method: p.method,
+            amount: p.amount,
+          })),
+        );
 
       // Close all tickets atomically with optimistic locking
       const closedAt = new Date();
@@ -404,6 +420,7 @@ export async function processCheckout(rawInput: unknown): Promise<ActionResult<C
             clientName: clientNames.get(item.ticketId) ?? "—",
             lineItems: [],
             total: 0,
+            prepaid: ticketRows.find((t) => t.id === item.ticketId)?.prepaidAmount ?? 0,
           });
         }
         const ct = byTicket.get(item.ticketId)!;
@@ -425,6 +442,7 @@ export async function processCheckout(rawInput: unknown): Promise<ActionResult<C
         sessionId,
         tickets: Array.from(byTicket.values()),
         grandTotal,
+        prepaid,
         payments: input.payments,
         closedAt,
       };

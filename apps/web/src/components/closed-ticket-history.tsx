@@ -20,6 +20,8 @@ import {
   Loader2Icon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/loading-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -151,6 +153,7 @@ export function ClosedTicketHistory({
       // Remove the ticket from the current list and close dialog
       setTickets((prev) => prev.filter((t) => t.id !== selectedTicketId));
       closeDetail();
+      toast.success(t("reopenSuccess"));
     } else {
       setReopenError(result.error.message);
     }
@@ -486,19 +489,23 @@ export function ClosedTicketHistory({
                     {reopenError}
                   </p>
                 )}
-                <Button
-                  variant="outline"
-                  onClick={handleReopen}
-                  disabled={reopening}
-                  className="w-full"
-                >
-                  {reopening ? (
-                    <Loader2Icon className="size-4 mr-2 animate-spin" aria-hidden="true" />
-                  ) : (
-                    <RotateCcwIcon className="size-4 mr-2" aria-hidden="true" />
-                  )}
-                  {t("reopenAction")}
-                </Button>
+                {/* M-80: reopening a paid ticket moves money — say what happens first */}
+                <ConfirmationDialog
+                  trigger={
+                    <Button variant="outline" disabled={reopening} className="w-full">
+                      {reopening ? (
+                        <Loader2Icon className="size-4 mr-2 animate-spin" aria-hidden="true" />
+                      ) : (
+                        <RotateCcwIcon className="size-4 mr-2" aria-hidden="true" />
+                      )}
+                      {t("reopenAction")}
+                    </Button>
+                  }
+                  title={t("reopenConfirmTitle")}
+                  description={t("reopenConfirmDescription", { amount: formatMoney(detail.total) })}
+                  confirmLabel={t("reopenAction")}
+                  onConfirm={handleReopen}
+                />
                 <p className="text-xs text-muted-foreground mt-2 text-center">{t("reopenHint")}</p>
               </div>
             </div>

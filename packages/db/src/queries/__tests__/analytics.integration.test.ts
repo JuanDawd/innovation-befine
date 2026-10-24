@@ -489,6 +489,22 @@ describeDb("revenueByMethod", () => {
       });
     }));
 
+  it("nets a refund on a reopened ticket against the original payment (M-80)", () =>
+    withCleanDb(async (db) => {
+      const cashier = await makeEmployee(db, { role: "admin" });
+      const day = await makeDay(db, "2026-10-22T13:00:00Z");
+      for (const amount of [45_000, -15_000]) {
+        const [session] = await db
+          .insert(schema.checkoutSessions)
+          .values({ businessDayId: day, cashierId: cashier.id, totalAmount: amount })
+          .returning({ id: schema.checkoutSessions.id });
+        await db
+          .insert(schema.ticketPayments)
+          .values({ checkoutSessionId: session!.id, method: "cash", amount });
+      }
+      expect((await revenueByMethod(db, [day])).cash).toBe(30_000);
+    }));
+
   it("is all zeros with no days", () =>
     withCleanDb(async (db) => {
       expect(await revenueByMethod(db, [])).toEqual({
