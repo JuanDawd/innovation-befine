@@ -1098,6 +1098,16 @@
 
 ---
 
+### M-12 — Resend free tier may not cover daily email volume
+
+- **Severity:** Medium
+- **Status:** Resolved (2026-10-23) — folded into roadmap task A.3
+- **Affected:** T054/T056, `roadmaps/PostMVP.md` task A.3
+- **Description:** No volume estimate existed for confirmation/reschedule emails against Resend's free tier.
+- **Fix:** Appointment emails were moved post-MVP (task A.3); today the only email is password reset (a few per month). Task A.3 now carries the estimate method and thresholds (100/day, 3 000/month free; e.g. 40 bookings/day ≈ 52 emails/day fits, 80/day with reminders needs Pro), plus logging sends and alerting at 80 % of the daily cap.
+
+---
+
 ## Low-priority issues
 
 ### L-09 — No file/image storage research
@@ -1827,6 +1837,16 @@
 
 ---
 
+### L-14 — Confirmation email endpoint security for non-users
+
+- **Severity:** Low
+- **Status:** Resolved (2026-10-23) — design recorded in roadmap task A.3
+- **Affected:** `roadmaps/PostMVP.md` task A.3, `docs/research/notification-channels.md`
+- **Description:** The research mentioned a confirm/cancel link for clients, who have no account; how such a public endpoint would be secured was undefined.
+- **Fix:** No such endpoint exists (emails are post-MVP). Task A.3 now defines it: default is no client-facing link (the secretary confirms in the app); if one is added, a signed single-use token (≥ 128 bits, stored hashed) bound to one appointment, expiring at the appointment time, rate-limited, revealing only that appointment's date/time/service.
+
+---
+
 ## Lessons learned
 
 > This section is populated during development. Each entry documents what went wrong, the root cause, and how to prevent it in the future.
@@ -1996,3 +2016,5 @@
 | M-04     | 2026-10-23    | Cashier reads cloth pieces (large orders); RBAC matrix matches the code                                         | fix/backlog-batch-2          |
 | L-13     | 2026-10-23    | Password-reset email has the brand logo + tenant name                                                           | fix/backlog-batch-2          |
 | M-10     | 2026-10-23    | iPhone/Android install steps in the training guide                                                              | fix/backlog-batch-2          |
+| M-12     | 2026-10-23    | Email volume method + Resend thresholds in roadmap A.3                                                          | fix/backlog-batch-2          |
+| L-14     | 2026-10-23    | Client confirm-link security design in roadmap A.3                                                              | fix/backlog-batch-2          |
