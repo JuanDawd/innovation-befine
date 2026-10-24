@@ -40,7 +40,7 @@
     "date-fns-tz": "^3.2.0",
     "drizzle-orm": "^0.45.4",
     "import-in-the-middle": "^3.0.1",
-    "lucide-react": "^1.54.0",
+    "lucide-react": "^1.60.0",
     "next": "^15.5.28",
     "next-intl": "^4.9.0",
     "pino": "^10.3.1",
