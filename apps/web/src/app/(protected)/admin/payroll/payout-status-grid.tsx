@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { StatusBadge } from "@/components/ui/status-badge";
 import type { PayoutStatusRow } from "./actions";
 import { sameDateSuffixes } from "./day-labels";
+import { formatDate } from "@/i18n";
 
 type Props = { rows: PayoutStatusRow[] };
 
@@ -33,8 +34,8 @@ export function PayoutStatusGrid({ rows }: Props) {
           <tbody className="divide-y divide-border">
             {rows.map((row) => (
               <tr key={row.businessDayId} className="hover:bg-muted/20">
-                <td className="px-3 py-2 font-mono text-xs tabular-nums">
-                  {row.date}
+                <td className="px-3 py-2 text-xs tabular-nums">
+                  {formatDate(`${row.date}T12:00:00Z`, "es", "EEE dd/MM/yyyy")}
                   {suffix.get(row.businessDayId)}
                 </td>
                 <td className="px-3 py-2">

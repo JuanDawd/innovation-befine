@@ -12,6 +12,7 @@ import { productPieces, products, clothPieces, clothPieceVariants } from "@befin
 
 export type ClothierEarningsLine = {
   productId: string;
+  businessDayId: string;
   productPieceId: string;
   pieceName: string;
   variantName: string;
@@ -45,6 +46,7 @@ export async function computeClothierEarnings(
   const rows = await db
     .select({
       productId: products.id,
+      businessDayId: products.businessDayId,
       productPieceId: productPieces.id,
       pieceName: clothPieces.name,
       variantName: clothPieceVariants.name,
