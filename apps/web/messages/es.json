@@ -1039,6 +1039,11 @@
     "subtypeRestrictionHelp": "Cuando está activo, cada estilista solo puede registrar servicios que coincidan con su subtipo. Al desactivarlo, todos los servicios están disponibles para cualquier estilista."
   },
   "checkout": {
+    "selectTicket": "Cobrar {services} · {amount}",
+    "amountFor": "Monto en {method}",
+    "cashReceived": "Recibido",
+    "change": "Vuelto",
+    "cashShort": "Faltan {amount} en efectivo",
     "method": {
       "cash": "Efectivo",
       "card": "Tarjeta",

@@ -975,6 +975,11 @@
     "subtypeRestrictionHelp": "When on, each stylist can only log services matching their subtype. When off, every service is available to every stylist."
   },
   "checkout": {
+    "selectTicket": "Charge {services} · {amount}",
+    "amountFor": "Amount by {method}",
+    "cashReceived": "Received",
+    "change": "Change",
+    "cashShort": "{amount} short in cash",
     "method": {
       "cash": "Cash",
       "card": "Card",

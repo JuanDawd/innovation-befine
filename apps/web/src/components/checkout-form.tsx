@@ -25,6 +25,7 @@ import { toast } from "sonner";
 import { PlusIcon, Trash2Icon, Loader2Icon, PrinterIcon, TriangleAlertIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { MoneyInput } from "@/components/ui/money-input";
 import {
   Dialog,
   DialogContent,
@@ -107,6 +108,11 @@ export function CheckoutForm({
   const clientList = selectedClients.join(", ");
   const grandTotal = selected.reduce((s, tk) => s + tk.total, 0);
   const paymentSum = payments.reduce((s, p) => s + (parseInt(p.amount, 10) || 0), 0);
+  const cashAmount = payments
+    .filter((p) => p.method === "cash")
+    .reduce((s, p) => s + (parseInt(p.amount, 10) || 0), 0);
+  const [cashReceived, setCashReceived] = useState("");
+  const change = (parseInt(cashReceived, 10) || 0) - cashAmount;
   const paymentValid =
     paymentSum === grandTotal && payments.every((p) => parseInt(p.amount, 10) > 0);
   const canSubmit = selected.length > 0 && paymentValid && !isPending;
@@ -351,6 +357,10 @@ export function CheckoutForm({
                     type="checkbox"
                     checked={selectedIds.has(tk.id)}
                     onChange={() => toggleTicket(tk.id)}
+                    aria-label={t("selectTicket", {
+                      services: tk.lineItems.map((li) => li.serviceName).join(", "),
+                      amount: formatMoney(tk.total),
+                    })}
                     className="mt-0.5 size-4"
                   />
                   <div className="flex-1 min-w-0">
@@ -492,8 +502,9 @@ export function CheckoutForm({
       <section className="space-y-2">
         <h2 className="text-sm font-semibold">{t("paymentMethods")}</h2>
         {payments.map((p, i) => (
-          <div key={i} className="flex items-center gap-2">
+          <div key={i} className="flex flex-wrap items-center gap-2">
             <NativeSelect
+              className="min-w-[10.5rem]"
               value={p.method}
               onChange={(e) => updatePayment(i, "method", e.target.value)}
               selectClassName="text-sm"
@@ -505,14 +516,12 @@ export function CheckoutForm({
                 </option>
               ))}
             </NativeSelect>
-            <Input
-              type="number"
-              min={1}
+            <MoneyInput
               value={p.amount}
-              onChange={(e) => updatePayment(i, "amount", e.target.value)}
+              onValueChange={(digits) => updatePayment(i, "amount", digits)}
               placeholder={t("amount")}
               className="w-36"
-              aria-label={t("amount")}
+              aria-label={t("amountFor", { method: t(`method.${p.method}`) })}
             />
             <Button
               type="button"
@@ -536,10 +545,37 @@ export function CheckoutForm({
             )}
           </div>
         ))}
-        {paymentSum !== grandTotal && grandTotal > 0 && (
-          <p className="text-xs text-destructive">
-            {t("unassigned", { amount: formatMoney(grandTotal - paymentSum) })}
-          </p>
+        <p className="text-xs text-destructive" aria-live="polite">
+          {paymentSum !== grandTotal && grandTotal > 0
+            ? t("unassigned", { amount: formatMoney(grandTotal - paymentSum) })
+            : ""}
+        </p>
+        {/* Cash: what the client handed over, and the change to give back */}
+        {cashAmount > 0 && (
+          <div className="flex flex-wrap items-center gap-2">
+            <label htmlFor="cash-received" className="text-sm text-muted-foreground">
+              {t("cashReceived")}
+            </label>
+            <MoneyInput
+              id="cash-received"
+              value={cashReceived}
+              onValueChange={setCashReceived}
+              className="w-36"
+            />
+            <p className="text-sm tabular-nums" aria-live="polite">
+              {cashReceived !== "" &&
+                (change >= 0 ? (
+                  <>
+                    {t("change")}{" "}
+                    <span className="font-mono font-semibold">{formatMoney(change)}</span>
+                  </>
+                ) : (
+                  <span className="text-destructive">
+                    {t("cashShort", { amount: formatMoney(-change) })}
+                  </span>
+                ))}
+            </p>
+          </div>
         )}
         <Button type="button" variant="outline" size="sm" onClick={addPaymentRow}>
           <PlusIcon className="mr-1 size-3.5" aria-hidden="true" />
@@ -574,6 +610,25 @@ export function CheckoutForm({
               {t("multiClientWarning", { count: selectedClients.length, clients: clientList })}
             </p>
           )}
+          {/* Restate how it is being paid — the moment a wrong method gets caught */}
+          <ul className="space-y-1 rounded-lg border bg-muted/40 px-3 py-2 text-sm">
+            {payments
+              .filter((p) => (parseInt(p.amount, 10) || 0) > 0)
+              .map((p, i) => (
+                <li key={i} className="flex justify-between gap-4">
+                  <span>{t(`method.${p.method}`)}</span>
+                  <span className="font-mono tabular-nums">
+                    {formatMoney(parseInt(p.amount, 10))}
+                  </span>
+                </li>
+              ))}
+            {cashReceived !== "" && change > 0 && (
+              <li className="flex justify-between gap-4 text-muted-foreground">
+                <span>{t("change")}</span>
+                <span className="font-mono tabular-nums">{formatMoney(change)}</span>
+              </li>
+            )}
+          </ul>
           <p className="text-sm text-muted-foreground">
             {t("confirmDescription", { count: selected.length })}
           </p>
