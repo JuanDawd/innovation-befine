@@ -263,23 +263,23 @@
   }
 }
 
-/* Stylist / clothier phones: 44px touch targets for every standard control,
-   dialogs included (they portal outside the shell, hence :has on the root). */
+/* Phones, every role: 44px touch targets for every standard control,
+   dialogs included. */
 @media (max-width: 767px) {
-  :root:has([data-touch-shell])
-    :is(
-      [data-slot="button"]:is([data-size="default"], [data-size="sm"], [data-size="lg"]),
-      [data-slot="input"],
-      [data-slot="native-select"]
-    ) {
+  :is(
+    [data-slot="button"]:is([data-size="default"], [data-size="sm"], [data-size="lg"]),
+    [data-slot="input"],
+    [data-slot="native-select"],
+    [data-slot="dropdown-menu-item"]
+  ) {
     min-height: 2.75rem;
   }
-  :root:has([data-touch-shell])
-    :is(
-      [data-slot="button"]:is([data-size="icon"], [data-size="icon-sm"], [data-size="icon-lg"]),
-      [data-slot="dialog-close"][data-size],
-      [data-slot="sheet-close"][data-size]
-    ) {
+  :is(
+    [data-slot="button"]:is([data-size="icon"], [data-size="icon-sm"], [data-size="icon-lg"]),
+    [data-slot="dialog-close"][data-size],
+    [data-slot="dropdown-menu-trigger"][data-size],
+    [data-slot="sheet-close"][data-size]
+  ) {
     min-width: 2.75rem;
     min-height: 2.75rem;
   }

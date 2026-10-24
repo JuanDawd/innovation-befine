@@ -3,7 +3,9 @@
 /**
  * AppointmentList — T052
  *
- * Day-view appointment list with date navigation and stylist filter.
+ * Day agenda with date navigation and stylist filter — one row per
+ * appointment (time, client, stylist · service, status, next step), a "now"
+ * marker on today, the same layout on desktop and phone.
  * Used by secretary and admin.
  */
 
@@ -11,7 +13,7 @@ import { useState, useTransition } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { notifyDataChanged } from "@/lib/data-events";
 import { queryKeys } from "@/lib/query-keys";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -21,6 +23,7 @@ import {
   CalendarDaysIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { BookAppointmentForm } from "@/components/book-appointment-form";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -30,9 +33,12 @@ import {
 } from "@/app/(protected)/appointments/actions";
 import { AppointmentStatusActions } from "@/components/appointment-status-actions";
 import { NativeSelect } from "@/components/ui/native-select";
+import { Skeleton } from "@/components/ui/loading-skeleton";
+import { hasStarted } from "@/lib/appointment-timing";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { useSearchParamState } from "@/hooks/use-search-param-state";
 import { fetchQuery } from "@/lib/action-query";
+import { cn } from "@/lib/utils";
 
 // ─── Price change acknowledge inline widget (T109) ────────────────────────────
 
@@ -55,13 +61,13 @@ function PriceChangedAcknowledge({
   }
 
   return (
-    <div className="flex items-center gap-1 mt-0.5">
+    <div className="mt-1 flex flex-wrap items-center gap-1.5">
       <TriangleAlertIcon className="size-3 text-status-attention-foreground shrink-0" aria-hidden />
       <span className="text-xs text-status-attention-foreground">{t("priceChangedBadge")}</span>
       <Button
-        size="sm"
-        variant="ghost"
-        className="h-5 px-1.5 text-xs text-status-attention-foreground hover:bg-status-attention"
+        size="xs"
+        variant="outline"
+        className="text-status-attention-foreground"
         onClick={acknowledge}
         disabled={isPending}
         aria-label={t("acknowledgeAction")}
@@ -82,17 +88,15 @@ function shiftDate(dateStr: string, days: number): string {
   return d.toISOString().slice(0, 10);
 }
 
-function formatTime(date: Date): string {
-  return new Date(date).toLocaleTimeString("es-CO", {
-    timeZone: "America/Bogota",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
 export function AppointmentList() {
   const t = useTranslations("appointments");
-  const tc = useTranslations("common");
+  const format = useFormatter();
+  const formatTime = (date: Date) =>
+    format.dateTime(new Date(date), {
+      timeZone: "America/Bogota",
+      hour: "numeric",
+      minute: "2-digit",
+    });
 
   // Date and stylist live in the URL (?date=YYYY-MM-DD&stylist=<id>) — survive refresh, shareable.
   const [date, setDate] = useSearchParamState("date", todayBogota(), (raw) =>
@@ -139,6 +143,8 @@ export function AppointmentList() {
   }
 
   const isToday = date === todayBogota();
+  // On today's agenda, a "now" marker goes before the first appointment still ahead.
+  const nowIndex = isToday ? rows.findIndex((r) => !hasStarted(r.scheduledAt)) : -1;
 
   return (
     <div className="flex flex-col gap-4">
@@ -149,11 +155,11 @@ export function AppointmentList() {
           <Button variant="outline" size="icon" aria-label={t("prevDay")} onClick={prev}>
             <ChevronLeftIcon className="size-4" />
           </Button>
-          <input
+          <Input
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="h-9 rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm focus-visible:outline-none focus-visible:border-ring"
+            className="h-9 w-auto"
             aria-label={t("selectDate")}
           />
           <Button variant="outline" size="icon" aria-label={t("nextDay")} onClick={next}>
@@ -190,14 +196,17 @@ export function AppointmentList() {
         </div>
       </div>
 
-      {/* Table */}
+      {/* Agenda */}
       {isLoading ? (
-        <div className="flex items-center gap-2 text-sm text-muted-foreground py-8">
-          <Loader2Icon className="size-4 animate-spin" />
-          {tc("loading")}
+        <div className="flex flex-col gap-2" aria-busy="true">
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-16 w-full rounded-xl" />
+          ))}
         </div>
       ) : error ? (
-        <p className="text-sm text-destructive py-4">{error}</p>
+        <p className="text-sm text-destructive py-4" role="alert">
+          {error}
+        </p>
       ) : rows.length === 0 ? (
         <EmptyState
           icon={CalendarDaysIcon}
@@ -205,63 +214,73 @@ export function AppointmentList() {
           description={t("emptyDescription")}
         />
       ) : (
-        <div className="rounded-lg border overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-muted/50 text-muted-foreground">
-                <th className="px-3 py-2 text-left font-medium">{t("colTime")}</th>
-                <th className="px-3 py-2 text-left font-medium">{t("colClient")}</th>
-                <th className="px-3 py-2 text-left font-medium">{t("colStylist")}</th>
-                <th className="px-3 py-2 text-left font-medium">{t("colService")}</th>
-                <th className="px-3 py-2 text-left font-medium">{t("colStatus")}</th>
-                <th className="px-3 py-2 text-left font-medium">{t("colActions")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => {
-                const clientDisplay = row.clientName ?? row.guestName ?? "—";
-                const showPriceAlert =
-                  !row.priceChangeAcknowledged &&
-                  (row.status === "booked" || row.status === "confirmed");
-                return (
-                  <tr
-                    key={row.id}
-                    className={`border-t hover:bg-muted/30 transition-colors${showPriceAlert ? " bg-status-attention" : ""}`}
+        <ul className="divide-y divide-border overflow-hidden rounded-xl border bg-card">
+          {rows.map((row, index) => {
+            const clientDisplay = row.clientName ?? row.guestName ?? "—";
+            const showPriceAlert =
+              !row.priceChangeAcknowledged &&
+              (row.status === "booked" || row.status === "confirmed");
+            const closed =
+              row.status === "completed" ||
+              row.status === "cancelled" ||
+              row.status === "rescheduled";
+            return (
+              <li
+                key={row.id}
+                className={cn(
+                  "relative grid grid-cols-[4.5rem_1fr] gap-x-3 gap-y-2 px-3.5 py-3 sm:grid-cols-[5.5rem_1fr_auto] sm:items-center",
+                  showPriceAlert && "bg-status-attention/40",
+                  closed && "text-muted-foreground",
+                )}
+              >
+                {index === nowIndex && (
+                  <span
+                    className="absolute inset-x-0 -top-px flex items-center gap-2 text-xs font-medium text-primary"
+                    aria-hidden="true"
                   >
-                    <td className="px-3 py-2 font-mono tabular-nums whitespace-nowrap">
-                      {formatTime(row.scheduledAt)}
-                      <span className="text-muted-foreground ml-1 text-xs">
-                        {row.durationMinutes}min
-                      </span>
-                    </td>
-                    <td className="px-3 py-2">{clientDisplay}</td>
-                    <td className="px-3 py-2">{row.stylistName}</td>
-                    <td className="px-3 py-2 max-w-[200px]">
-                      <span className="truncate block">{row.serviceSummary}</span>
-                      {showPriceAlert && (
-                        <PriceChangedAcknowledge
-                          appointmentId={row.id}
-                          t={t}
-                          onAcknowledged={() => patchRow(row.id, { priceChangeAcknowledged: true })}
-                        />
-                      )}
-                    </td>
-                    <td className="px-3 py-2">
-                      <StatusBadge status={row.status} label={t(`status.${row.status}`)} />
-                    </td>
-                    <td className="px-3 py-2">
-                      <AppointmentStatusActions
-                        appointmentId={row.id}
-                        currentStatus={row.status}
-                        onUpdated={(newStatus) => patchRow(row.id, { status: newStatus })}
-                      />
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                    <span className="h-0.5 flex-1 bg-primary" />
+                  </span>
+                )}
+                {index === nowIndex && <span className="sr-only">{t("nowMarker")}</span>}
+                <p className="tabular-nums">
+                  <span className="block text-sm font-semibold text-foreground">
+                    {formatTime(row.scheduledAt)}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {t("durationShort", { minutes: row.durationMinutes })}
+                  </span>
+                </p>
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <p className="min-w-0 truncate text-sm font-medium text-foreground">
+                      {clientDisplay}
+                    </p>
+                    <StatusBadge status={row.status} label={t(`status.${row.status}`)} />
+                  </div>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {row.stylistName} · {row.serviceSummary}
+                  </p>
+                  {showPriceAlert && (
+                    <PriceChangedAcknowledge
+                      appointmentId={row.id}
+                      t={t}
+                      onAcknowledged={() => patchRow(row.id, { priceChangeAcknowledged: true })}
+                    />
+                  )}
+                </div>
+                <div className="col-span-2 sm:col-span-1">
+                  <AppointmentStatusActions
+                    appointmentId={row.id}
+                    currentStatus={row.status}
+                    clientName={clientDisplay}
+                    scheduledAt={row.scheduledAt}
+                    onUpdated={(newStatus) => patchRow(row.id, { status: newStatus })}
+                  />
+                </div>
+              </li>
+            );
+          })}
+        </ul>
       )}
 
       <Dialog open={bookOpen} onOpenChange={setBookOpen}>

@@ -565,6 +565,16 @@
     "openDetailLabel": "View product detail{order, select, none {} other { for {order}}}"
   },
   "appointments": {
+    "undo": "Undo",
+    "reopenLabel": "Reopen {client}'s appointment at {time}",
+    "completeLabel": "Complete {client}'s appointment at {time}",
+    "confirmLabel": "Confirm {client}'s appointment at {time}",
+    "moreActions": "More actions for {client}'s appointment at {time}",
+    "completeShort": "Complete",
+    "confirmShort": "Confirm",
+    "keepAppointment": "Back",
+    "nowMarker": "Now",
+    "durationShort": "{minutes} min",
     "pageTitle": "Appointments",
     "bookAppointment": "New appointment",
     "bookAppointmentDescription": "Book an appointment for a client.",

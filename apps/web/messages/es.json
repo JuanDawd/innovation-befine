@@ -611,6 +611,16 @@
     "openDetailLabel": "Ver detalle del producto{order, select, none {} other { de {order}}}"
   },
   "appointments": {
+    "undo": "Deshacer",
+    "reopenLabel": "Reabrir la cita de {client} a las {time}",
+    "completeLabel": "Completar la cita de {client} a las {time}",
+    "confirmLabel": "Confirmar la cita de {client} a las {time}",
+    "moreActions": "Más acciones para la cita de {client} a las {time}",
+    "completeShort": "Completar",
+    "confirmShort": "Confirmar",
+    "keepAppointment": "Volver",
+    "nowMarker": "Ahora",
+    "durationShort": "{minutes} min",
     "pageTitle": "Citas",
     "bookAppointment": "Nueva cita",
     "bookAppointmentDescription": "Reserva una cita para un cliente.",

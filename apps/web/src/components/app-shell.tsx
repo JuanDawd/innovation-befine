@@ -347,7 +347,6 @@ export function AppShell({
   if (usesBottomNav) {
     return (
       <div
-        data-touch-shell
         data-bottom-nav={hasBottomNav ? "" : undefined}
         className="flex h-dvh flex-col overflow-hidden bg-background"
       >
