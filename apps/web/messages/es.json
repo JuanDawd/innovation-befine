@@ -322,6 +322,9 @@
     }
   },
   "clients": {
+    "colName": "Cliente",
+    "colPhone": "Teléfono",
+    "colEmail": "Correo",
     "pageTitle": "Clientes",
     "searchPlaceholder": "Buscar por nombre, teléfono o email…",
     "addClient": "Agregar cliente",
@@ -337,7 +340,7 @@
     "notes": "Notas",
     "notesPlaceholder": "Preferencias, alergias, etc.",
     "noShowCount": "Inasistencias",
-    "noShowWarning": "{count} inasistencias",
+    "noShowWarning": "{count, plural, one {# inasistencia} other {# inasistencias}}",
     "archive": "Archivar",
     "unarchive": "Desarchivar",
     "archiveConfirmTitle": "¿Archivar a \"{name}\"?",

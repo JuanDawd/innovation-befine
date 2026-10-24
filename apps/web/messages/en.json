@@ -321,6 +321,9 @@
     }
   },
   "clients": {
+    "colName": "Client",
+    "colPhone": "Phone",
+    "colEmail": "Email",
     "pageTitle": "Clients",
     "searchPlaceholder": "Search by name, phone, or email…",
     "addClient": "Add client",
@@ -336,7 +339,7 @@
     "notes": "Notes",
     "notesPlaceholder": "Preferences, allergies, etc.",
     "noShowCount": "No-shows",
-    "noShowWarning": "{count} no-shows",
+    "noShowWarning": "{count, plural, one {# no-show} other {# no-shows}}",
     "archive": "Archive",
     "unarchive": "Unarchive",
     "archiveConfirmTitle": "Archive \"{name}\"?",

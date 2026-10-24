@@ -53,12 +53,20 @@ const NO_SHOW_WARNING_THRESHOLD = 3;
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
+/** Any no-show is worth seeing when booking; from the threshold on it's a warning. */
 function NoShowBadge({ count }: { count: number }) {
   const t = useTranslations("clients");
-  if (count < NO_SHOW_WARNING_THRESHOLD) return null;
+  if (count === 0) return null;
+  const warn = count >= NO_SHOW_WARNING_THRESHOLD;
   return (
-    <span className="flex items-center gap-1 rounded-full bg-status-attention px-2 py-0.5 text-xs font-medium text-status-attention-foreground">
-      <AlertTriangleIcon className="size-3" aria-hidden="true" />
+    <span
+      className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
+        warn
+          ? "bg-status-attention text-status-attention-foreground"
+          : "bg-muted text-muted-foreground"
+      }`}
+    >
+      {warn && <AlertTriangleIcon className="size-3" aria-hidden="true" />}
       {t("noShowWarning", { count })}
     </span>
   );
@@ -287,14 +295,13 @@ function ClientCard({
             {localClient.notes}
           </p>
         )}
-        {localClient.noShowCount > 0 && localClient.noShowCount < NO_SHOW_WARNING_THRESHOLD && (
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            {t("noShowCount")}: {localClient.noShowCount}
-          </p>
-        )}
       </div>
       <p className="truncate font-mono text-xs text-muted-foreground tabular-nums max-md:col-span-2 md:text-sm">
-        {localClient.phone ?? <span aria-hidden="true">—</span>}
+        {localClient.phone ?? (
+          <span className="font-sans" aria-hidden="true">
+            —
+          </span>
+        )}
       </p>
       {/* On phones an empty email takes no row; on desktop the column keeps its dash */}
       <p
@@ -460,11 +467,23 @@ export function ClientList({ initialClients }: { initialClients: ClientRow[] }) 
         )
       ) : (
         <div className="space-y-3">
-          <ul className="divide-y overflow-hidden rounded-xl border bg-card max-md:[&>li]:grid-cols-[minmax(0,1fr)_auto]">
-            {visible.map((client) => (
-              <ClientCard key={client.id} client={client} onUpdate={handleUpdated} />
-            ))}
-          </ul>
+          <div className="overflow-hidden rounded-xl border bg-card">
+            {/* Column headings for the desktop grid (rows label themselves on phones) */}
+            <div
+              className="grid grid-cols-[minmax(0,1.3fr)_minmax(0,0.8fr)_minmax(0,1.2fr)_auto] gap-x-6 border-b bg-muted/50 px-4 py-2 text-xs font-medium text-muted-foreground max-md:hidden"
+              aria-hidden="true"
+            >
+              <span>{t("colName")}</span>
+              <span>{t("colPhone")}</span>
+              <span>{t("colEmail")}</span>
+              <span className="w-[3.5rem]" />
+            </div>
+            <ul className="divide-y max-md:[&>li]:grid-cols-[minmax(0,1fr)_auto]">
+              {visible.map((client) => (
+                <ClientCard key={client.id} client={client} onUpdate={handleUpdated} />
+              ))}
+            </ul>
+          </div>
           <ShowMore remaining={remaining} onClick={showMore} />
         </div>
       )}
