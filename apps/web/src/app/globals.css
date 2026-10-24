@@ -272,7 +272,13 @@
     [data-size="sm"],
     [data-size="lg"]
   ),
-  :is([data-slot="input"], [data-slot="native-select"], [data-slot="dropdown-menu-item"]) {
+  :is([data-slot="input"], [data-slot="native-select"], [data-slot="dropdown-menu-item"]),
+  :is(
+    input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="hidden"]),
+    select,
+    textarea,
+    [role="tab"]
+  ) {
     min-height: 2.75rem;
   }
   :is([data-slot="button"], [data-slot$="-trigger"], [data-slot$="-close"]):is(

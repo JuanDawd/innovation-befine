@@ -194,7 +194,7 @@ function CreateServiceDialog({ onSuccess }: { onSuccess: (service: ServiceRow) =
                         <button
                           type="button"
                           onClick={() => remove(idx)}
-                          className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-destructive focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none max-md:size-11"
+                          className="inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-destructive focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none max-md:size-11"
                           aria-label={t("removeVariant")}
                         >
                           <Trash2Icon className="size-3.5" aria-hidden="true" />
@@ -333,7 +333,7 @@ function EditServiceDialog({
     <>
       <button
         onClick={handleOpen}
-        className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none max-md:size-11"
+        className="inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none max-md:size-11"
         aria-label={t("editService")}
       >
         <PencilIcon className="size-4" />
@@ -810,7 +810,7 @@ function ServiceCard({
         <div className="flex items-center gap-2 p-4">
           <button
             onClick={() => setExpanded((e) => !e)}
-            className="flex flex-1 items-center gap-2 text-left"
+            className="flex min-h-11 flex-1 items-center gap-2 text-left md:min-h-0"
             aria-expanded={expanded}
           >
             {expanded ? (
@@ -839,7 +839,7 @@ function ServiceCard({
               <ConfirmationDialog
                 trigger={
                   <button
-                    className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-destructive focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none max-md:size-11"
+                    className="inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-destructive focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none max-md:size-11"
                     aria-label={t("deactivate")}
                     disabled={isPending}
                     onClick={() => loadServiceImpact()}
@@ -862,7 +862,7 @@ function ServiceCard({
               <button
                 onClick={handleRestoreService}
                 disabled={isPending}
-                className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none max-md:size-11"
+                className="inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none max-md:size-11"
                 aria-label={t("restore")}
               >
                 <RotateCcwIcon className="size-4" />
@@ -927,7 +927,7 @@ function ServiceCard({
                               <ConfirmationDialog
                                 trigger={
                                   <button
-                                    className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-destructive focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none max-md:size-11"
+                                    className="inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-destructive focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none max-md:size-11"
                                     aria-label={t("deactivate")}
                                     onClick={() => loadVariantImpact(v.id)}
                                   >
@@ -950,7 +950,7 @@ function ServiceCard({
                             <button
                               onClick={() => handleRestoreVariant(v.id)}
                               disabled={isPending}
-                              className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none max-md:size-11"
+                              className="inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none max-md:size-11"
                               aria-label={t("restore")}
                             >
                               <RotateCcwIcon className="size-3.5" />

@@ -51,7 +51,7 @@ export default async function LargeOrderDetailPage({
     <div className="flex flex-col gap-5 p-4 md:p-6 max-w-2xl mx-auto w-full">
       <Link
         href="/large-orders"
-        className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors w-fit"
+        className="-my-2 flex min-h-11 w-fit items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground md:min-h-0"
       >
         <ChevronLeftIcon className="size-4" />
         {t("backToList")}

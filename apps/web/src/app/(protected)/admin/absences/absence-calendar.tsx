@@ -145,6 +145,7 @@ export function AbsenceCalendar({ year, month, absences, employees }: Props) {
           onClick={prevMonth}
           disabled={isPending}
           aria-label={t("prevMonth")}
+          className="max-md:min-w-11"
         >
           <ChevronLeftIcon className="size-4" aria-hidden="true" />
         </Button>
@@ -155,6 +156,7 @@ export function AbsenceCalendar({ year, month, absences, employees }: Props) {
           onClick={nextMonth}
           disabled={isPending}
           aria-label={t("nextMonth")}
+          className="max-md:min-w-11"
         >
           <ChevronRightIcon className="size-4" aria-hidden="true" />
         </Button>

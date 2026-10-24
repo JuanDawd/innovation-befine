@@ -168,7 +168,7 @@ function VariantRow({
           <button
             onClick={openEdit}
             disabled={isPending}
-            className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none max-md:size-11"
+            className="inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none max-md:size-11"
             aria-label={t("editVariant")}
           >
             <PencilIcon className="size-3.5" />
@@ -178,7 +178,7 @@ function VariantRow({
               trigger={
                 <button
                   disabled={isPending}
-                  className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-destructive focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none max-md:size-11"
+                  className="inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-destructive focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none max-md:size-11"
                   aria-label={t("deactivate")}
                 >
                   <Trash2Icon className="size-3.5" />
@@ -194,7 +194,7 @@ function VariantRow({
             <button
               onClick={handleRestore}
               disabled={isPending}
-              className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none max-md:size-11"
+              className="inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none max-md:size-11"
               aria-label={t("restore")}
             >
               <RotateCcwIcon className="size-3.5" />
@@ -577,7 +577,7 @@ function PieceRow({
         <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={() => setExpanded((v) => !v)}
-            className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none max-md:size-11"
+            className="inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none max-md:size-11"
             aria-label={expanded ? t("collapseVariants") : t("expandVariants")}
           >
             {expanded ? (
@@ -592,7 +592,7 @@ function PieceRow({
             trigger={
               <button
                 type="button"
-                className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none max-md:size-11"
+                className="inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none max-md:size-11"
                 aria-label={`${t("editClothPiece")}: ${localPiece.name}`}
               >
                 <PencilIcon className="size-4" aria-hidden="true" />
@@ -605,7 +605,7 @@ function PieceRow({
             <ConfirmationDialog
               trigger={
                 <button
-                  className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-destructive focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none max-md:size-11"
+                  className="inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-destructive focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none max-md:size-11"
                   aria-label={t("deactivate")}
                   disabled={isPending}
                 >
@@ -622,7 +622,7 @@ function PieceRow({
             <button
               onClick={handleRestore}
               disabled={isPending}
-              className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none max-md:size-11"
+              className="inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none max-md:size-11"
               aria-label={t("restore")}
             >
               <RotateCcwIcon className="size-4" />

@@ -478,7 +478,7 @@ export function LargeOrderDetail({
               <CreditCardIcon className="size-4 text-muted-foreground" />
               <span className="text-sm font-semibold">Resumen financiero</span>
             </div>
-            <div className="grid grid-cols-3 divide-x">
+            <div className="grid grid-cols-1 divide-y sm:grid-cols-3 sm:divide-x sm:divide-y-0">
               <div className="px-4 py-3 text-center">
                 <p className="text-xs text-muted-foreground mb-1">{t("totalPrice")}</p>
                 <p className="font-mono font-semibold tabular-nums">
@@ -687,7 +687,7 @@ export function LargeOrderDetail({
 
           {showPaymentForm && (
             <form onSubmit={recordPayment} className="px-4 py-4 space-y-3 border-b bg-muted/10">
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 <div className="space-y-1">
                   <label className="text-sm font-medium" htmlFor="amount">
                     {t("paymentAmount")} <span className="text-destructive">*</span>
@@ -742,45 +742,49 @@ export function LargeOrderDetail({
           )}
 
           {order.payments.length > 0 ? (
-            <table className="w-full text-sm">
-              <thead className="bg-muted/20">
-                <tr>
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
-                    {t("paymentDate")}
-                  </th>
-                  <th className="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground">
-                    {t("paymentAmount")}
-                  </th>
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
-                    {t("paymentMethod")}
-                  </th>
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground hidden sm:table-cell">
-                    {t("recordedBy")}
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {order.payments.map((p) => (
-                  <tr key={p.id}>
-                    <td className="px-4 py-2.5 text-muted-foreground text-sm">
-                      {new Date(p.paidAt).toLocaleDateString("es-CO", {
-                        timeZone: "America/Bogota",
-                        dateStyle: "medium",
-                      })}
-                    </td>
-                    <td className="px-4 py-2.5 text-right font-mono tabular-nums font-medium">
-                      {formatMoney(p.amount)}
-                    </td>
-                    <td className="px-4 py-2.5 capitalize text-sm">
-                      {t(p.method as Parameters<typeof t>[0])}
-                    </td>
-                    <td className="px-4 py-2.5 text-muted-foreground text-xs hidden sm:table-cell">
-                      {p.recordedBy}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="overflow-x-auto">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/20">
+                    <tr>
+                      <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
+                        {t("paymentDate")}
+                      </th>
+                      <th className="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground">
+                        {t("paymentAmount")}
+                      </th>
+                      <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
+                        {t("paymentMethod")}
+                      </th>
+                      <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground hidden sm:table-cell">
+                        {t("recordedBy")}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {order.payments.map((p) => (
+                      <tr key={p.id}>
+                        <td className="px-4 py-2.5 text-muted-foreground text-sm">
+                          {new Date(p.paidAt).toLocaleDateString("es-CO", {
+                            timeZone: "America/Bogota",
+                            dateStyle: "medium",
+                          })}
+                        </td>
+                        <td className="px-4 py-2.5 text-right font-mono tabular-nums font-medium">
+                          {formatMoney(p.amount)}
+                        </td>
+                        <td className="px-4 py-2.5 capitalize text-sm">
+                          {t(p.method as Parameters<typeof t>[0])}
+                        </td>
+                        <td className="px-4 py-2.5 text-muted-foreground text-xs hidden sm:table-cell">
+                          {p.recordedBy}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           ) : (
             <div className="px-4 py-6 text-center">
               <p className="text-sm text-muted-foreground">Sin pagos registrados</p>

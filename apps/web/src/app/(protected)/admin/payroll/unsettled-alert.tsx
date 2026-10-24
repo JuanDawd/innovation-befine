@@ -42,7 +42,7 @@ export function UnsettledAlert({ unsettled }: Props) {
             </span>
             <Link
               href={`/admin/payroll?employeeId=${e.employeeId}`}
-              className="-my-2 inline-flex min-h-11 items-center whitespace-nowrap text-xs underline md:min-h-0"
+              className="-my-2 inline-flex min-h-11 min-w-11 items-center justify-end whitespace-nowrap text-xs underline md:min-h-0"
             >
               {t("liquidate")}
             </Link>

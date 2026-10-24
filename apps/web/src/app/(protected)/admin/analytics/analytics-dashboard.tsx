@@ -159,7 +159,7 @@ function EmployeeRow({
             }}
             aria-expanded={open}
             aria-label={t("toggleDrillDown", { name: emp.employeeName })}
-            className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+            className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none max-md:size-11"
           >
             {open ? (
               <ChevronUpIcon className="size-4" aria-hidden="true" />
@@ -327,7 +327,7 @@ function SortHeader({
       <button
         type="button"
         onClick={onSort}
-        className="inline-flex items-center gap-1 rounded-sm hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+        className="inline-flex items-center gap-1 rounded-sm hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none max-md:min-h-11"
       >
         {label}
         <span aria-hidden="true" className="w-3 text-muted-foreground">

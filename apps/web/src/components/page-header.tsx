@@ -43,7 +43,7 @@ export function PageHeader({
           <Link
             href={backHref}
             aria-label={backLabel}
-            className="-ml-1.5 mt-0.5 inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+            className="-ml-1.5 mt-0.5 inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground max-md:size-11 transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
           >
             <ArrowLeftIcon className="size-4" aria-hidden="true" />
           </Link>

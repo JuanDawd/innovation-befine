@@ -301,7 +301,7 @@ export function CreateLargeOrderForm({ clients, clothPieces }: Props) {
         </label>
 
         {withDeposit && (
-          <div className="grid grid-cols-2 gap-3 pl-6">
+          <div className="grid grid-cols-1 gap-3 pl-6 sm:grid-cols-2">
             <div className="space-y-1">
               <label className="text-sm font-medium" htmlFor="initialDepositAmount">
                 {t("depositAmount")}

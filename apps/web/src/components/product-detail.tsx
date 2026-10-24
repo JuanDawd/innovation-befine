@@ -152,7 +152,7 @@ function EditPieceDialog({ piece, onSaved }: EditDialogProps) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="inline-flex size-8 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring max-md:size-11"
         aria-label={t("editPiece")}
       >
         <PencilIcon className="size-3.5" />
