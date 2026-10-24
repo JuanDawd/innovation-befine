@@ -1,8 +1,9 @@
 /**
  * T064 — Clothier earnings computation
  *
- * Sums cloth_piece_variants.piece_rate for all approved product pieces
- * assigned to the employee in the given business days.
+ * Sums cloth_piece_variants.piece_rate × product_pieces.quantity for all approved
+ * product pieces assigned to the employee in the given business days.
+ * piece_rate is per garment: "Bata ×3" pays three times the rate (M-78).
  */
 
 import { and, eq, inArray } from "drizzle-orm";
@@ -26,6 +27,13 @@ export type ClothierEarningsResult = {
   lines: ClothierEarningsLine[];
 };
 
+/** One payroll line per approved piece row — exported for unit tests. */
+export function clothierEarningsLine(
+  row: Omit<ClothierEarningsLine, "earnings">,
+): ClothierEarningsLine {
+  return { ...row, earnings: row.pieceRate * row.quantity };
+}
+
 export async function computeClothierEarnings(
   db: Database,
   employeeId: string,
@@ -41,6 +49,7 @@ export async function computeClothierEarnings(
       pieceName: clothPieces.name,
       variantName: clothPieceVariants.name,
       pieceRate: clothPieceVariants.pieceRate,
+      quantity: productPieces.quantity,
     })
     .from(productPieces)
     .innerJoin(products, eq(productPieces.productId, products.id))
@@ -54,27 +63,8 @@ export async function computeClothierEarnings(
       ),
     );
 
-  const lineMap = new Map<string, ClothierEarningsLine>();
-  let totalEarnings = 0;
+  const lines = rows.map(clothierEarningsLine);
+  const totalEarnings = lines.reduce((sum, l) => sum + l.earnings, 0);
 
-  for (const row of rows) {
-    const key = `${row.productId}:${row.productPieceId}`;
-    if (!lineMap.has(key)) {
-      lineMap.set(key, {
-        productId: row.productId,
-        productPieceId: row.productPieceId,
-        pieceName: row.pieceName,
-        variantName: row.variantName,
-        quantity: 0,
-        pieceRate: row.pieceRate,
-        earnings: 0,
-      });
-    }
-    const line = lineMap.get(key)!;
-    line.quantity += 1;
-    line.earnings += row.pieceRate;
-    totalEarnings += row.pieceRate;
-  }
-
-  return { employeeId, businessDayIds, totalEarnings, lines: Array.from(lineMap.values()) };
+  return { employeeId, businessDayIds, totalEarnings, lines };
 }

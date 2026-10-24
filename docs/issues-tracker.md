@@ -1078,6 +1078,16 @@
 
 ---
 
+### M-78 — Clothier pay ignores piece quantity (Bata ×3 pays one piece rate)
+
+- **Severity:** High (financial)
+- **Status:** Resolved (2026-10-23)
+- **Affected:** T065 `lib/payroll/compute-clothier-earnings.ts`, T074 `queries/analytics.ts` (`earningsByEmployee`, `employeeDayBreakdown`)
+- **Description:** Found while writing M-70b tests. A piece row has a `quantity` ("Bata ×3"), but payroll and analytics paid one `piece_rate` per row, underpaying clothiers whenever quantity > 1.
+- **Fix:** Owner decision: `piece_rate` is per garment. Payroll lines and both analytics queries pay `piece_rate × quantity`; clothier job counts are garments. Unit test for `clothierEarningsLine`; analytics integration tests use quantity > 1. Read-only prod check (2026-10-23): the one recorded clothier payout had no multi-quantity pieces — no back-pay owed; 3 approved unpaid multi-quantity pieces will pay correctly.
+
+---
+
 ### M-79 — Cashier board shows the original price after a price adjustment
 
 - **Severity:** Medium (cashier sees one amount on the card, charges another)
@@ -2094,4 +2104,5 @@
 | L-11     | 2026-10-23    | Phased rollout with exit checks in the go-live checklist                                                        | fix/backlog-batch-2          |
 | L-07     | 2026-10-23    | Verified: no-show count increments since Phase 5                                                                | fix/backlog-batch-2          |
 | M-28     | 2026-10-23    | Reopening a paid ticket flags its payout needs_review; admin clears it from payout history                      | fix/m28-payout-needs-review  |
+| M-78     | 2026-10-23    | Clothier pay and analytics use piece_rate × quantity (per garment); no past payout underpaid                    | fix/m78-piece-rate-quantity  |
 | L-20     | 2026-10-23    | Process note acknowledged; one commit per issue going forward                                                   | fix/backlog-batch-2          |

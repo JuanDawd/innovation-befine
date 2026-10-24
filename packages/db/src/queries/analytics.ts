@@ -192,7 +192,7 @@ export async function jobsCountByEmployee(
 /**
  * Total earnings + job count per active employee for the given business days.
  * Stylist: commission on closed ticket items, banker's rounding per item (as payroll).
- * Clothier: sum of piece_rate for approved batch_pieces.
+ * Clothier: piece_rate × quantity for approved product pieces (per garment, M-78).
  * Secretary: daysWorked × daily_rate with ISO-week expected_work_days cap,
  *   excluding vacation/approved_absence days.
  *
@@ -238,8 +238,8 @@ export async function earningsByEmployee(
       employeeId: productPieces.assignedToEmployeeId,
       employeeName: users.name,
       role: employees.role,
-      totalEarnings: sql<number>`COALESCE(SUM(${clothPieceVariants.pieceRate}), 0)::bigint`,
-      jobCount: sql<number>`COUNT(${productPieces.id})::int`,
+      totalEarnings: sql<number>`COALESCE(SUM(${clothPieceVariants.pieceRate} * ${productPieces.quantity}), 0)::bigint`,
+      jobCount: sql<number>`COALESCE(SUM(${productPieces.quantity}), 0)::int`,
     })
     .from(productPieces)
     .innerJoin(products, eq(productPieces.productId, products.id))
@@ -537,7 +537,7 @@ export type EmployeeDayBreakdown = {
 
 /**
  * Day-by-day jobs + earnings for a single employee in the given business days.
- * Stylist: commission sum per day. Clothier: piece_rate sum per day.
+ * Stylist: commission sum per day. Clothier: piece_rate × quantity per day.
  */
 export async function employeeDayBreakdown(
   db: Database,
@@ -590,8 +590,8 @@ export async function employeeDayBreakdown(
       .select({
         businessDayId: products.businessDayId,
         openedAt: businessDays.openedAt,
-        jobs: sql<number>`COUNT(${productPieces.id})::int`,
-        earnings: sql<number>`COALESCE(SUM(${clothPieceVariants.pieceRate}), 0)::bigint`,
+        jobs: sql<number>`COALESCE(SUM(${productPieces.quantity}), 0)::int`,
+        earnings: sql<number>`COALESCE(SUM(${clothPieceVariants.pieceRate} * ${productPieces.quantity}), 0)::bigint`,
       })
       .from(productPieces)
       .innerJoin(products, eq(productPieces.productId, products.id))
