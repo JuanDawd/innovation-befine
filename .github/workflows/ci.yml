@@ -205,24 +205,4 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
-  # Post-deployment smoke tests against the live Vercel production URL.
-  # Activated by adding VERCEL_PRODUCTION_URL to repo secrets.
-  # e2e-deploy:
-  #   name: Post-deploy Smoke Tests
-  #   runs-on: ubuntu-latest
-  #   timeout-minutes: 15
-  #   needs: e2e  # Vercel Git integration deploys main; run after it is live
-  #
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: pnpm/action-setup@v6
-  #     - uses: actions/setup-node@v7
-  #       with:
-  #         node-version: 24
-  #         cache: pnpm
-  #     - run: pnpm install --frozen-lockfile
-  #     - run: pnpm --filter @befine/web exec playwright install --with-deps chromium
-  #     - name: Run smoke tests against production
-  #       run: pnpm --filter @befine/web test:e2e --project=chromium e2e/smoke.spec.ts
-  #       env:
-  #         PLAYWRIGHT_BASE_URL: ${{ secrets.VERCEL_PRODUCTION_URL }}
+  # Post-deployment smoke tests: see post-deploy-smoke.yml (runs on Vercel's deployment_status).

@@ -1028,6 +1028,16 @@
 
 ---
 
+### M-72 — `packages/realtime` has no tests; post-deploy smoke job disabled
+
+- **Severity:** Medium (found a listener leak)
+- **Status:** Resolved (2026-10-23)
+- **Affected:** `packages/realtime` (server + client), `apps/web/playwright.config.ts`, `.github/workflows/post-deploy-smoke.yml`
+- **Description:** CI pipeline review, 2026-10-12: the SSE package had no test script, so `turbo test` skipped it; the post-deploy smoke job was commented out pending a `VERCEL_PRODUCTION_URL` secret. While testing: when a stream closed itself at 25 s, its bus listeners were never removed (`cancel()` doesn't run after a server-side close), so every client reconnect leaked 5 listeners until the 300-listener cap.
+- **Fix:** Timer close now runs the cleanup first (both handlers). 16 tests (`src/__tests__/server.test.ts`, `client.test.ts` with a fake EventSource under jsdom): frame format, channel isolation, per-recipient notification scoping, malformed payloads, listener cleanup on disconnect and on the 25 s close (fail against the old code), 30 s polling, single poll timer on repeated errors, latest-callback refs, disabled state. `test` script added. Smoke: new `smoke` Playwright project (no auth setup, read-only) and `post-deploy-smoke.yml` on Vercel's `deployment_status` for Production, using the deployed URL — no secret needed; verified locally against production (3 passed).
+
+---
+
 ## Low-priority issues
 
 ### L-09 — No file/image storage research
@@ -1864,3 +1874,4 @@
 | M-70b    | 2026-10-23    | Query integration tests on real Postgres (rolled back); 98.8 % / 85.3 % coverage; 80 % threshold enforced in CI | fix/vikunja-backlog          |
 | L-53     | 2026-10-23    | Products dashboard loads only today + WIP candidates in SQL                                                     | fix/backlog-batch-2          |
 | M-62     | 2026-10-23    | Cached employee lookup, parallel independent reads, single-statement openBusinessDay                            | fix/backlog-batch-2          |
+| M-72     | 2026-10-23    | Realtime package tested (16); stream-close listener leak fixed; post-deploy smoke on deployment_status          | fix/backlog-batch-2          |

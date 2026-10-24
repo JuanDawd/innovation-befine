@@ -1,0 +1,53 @@
+name: Post-deploy smoke
+
+# M-72: Vercel reports each deployment back to GitHub. When a Production
+# deployment succeeds, run the read-only smoke spec against the URL it was
+# deployed to. No secrets needed — the "smoke" project never logs in.
+on:
+  deployment_status:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: Smoke tests on the live deployment
+    if: >-
+      github.event.deployment_status.state == 'success' &&
+      github.event.deployment.environment == 'Production'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.deployment.sha }}
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm --filter @befine/web exec playwright install --with-deps chromium
+
+      - name: Run smoke tests
+        run: pnpm --filter @befine/web test:e2e --project=smoke
+        env:
+          PLAYWRIGHT_BASE_URL: ${{ github.event.deployment_status.environment_url }}
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: smoke-report
+          path: |
+            apps/web/playwright-report/
+            apps/web/test-results/
+          if-no-files-found: ignore
+          retention-days: 7

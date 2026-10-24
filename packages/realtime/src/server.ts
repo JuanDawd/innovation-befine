@@ -92,7 +92,10 @@ export function createSSEHandler(channel: RealtimeChannel): Response {
 
       // Close the stream before the Vercel function timeout.
       // The client EventSource reconnects automatically.
+      // M-72: closing from the server doesn't trigger cancel(), so drop the
+      // bus listeners here too — otherwise every reconnect leaked them.
       const timer = setTimeout(() => {
+        cleanup?.();
         try {
           controller.close();
         } catch {
@@ -156,7 +159,10 @@ export function createScopedSSEHandler(channel: "notifications", employeeId: str
       const key = `${channel}:notification_created`;
       bus.on(key, forwardIfRecipient);
 
+      // M-72: closing from the server doesn't trigger cancel(), so drop the
+      // bus listeners here too — otherwise every reconnect leaked them.
       const timer = setTimeout(() => {
+        cleanup?.();
         try {
           controller.close();
         } catch {
