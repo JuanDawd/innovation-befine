@@ -33,7 +33,7 @@ export async function createNotification(payload: {
     .returning({ id: notifications.id });
 
   if (row) {
-    publishEvent("notifications", "notification_created", {
+    await publishEvent("notifications", "notification_created", {
       notificationId: row.id,
       recipientEmployeeId: payload.recipientEmployeeId,
     });

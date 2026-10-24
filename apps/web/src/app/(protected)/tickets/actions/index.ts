@@ -221,7 +221,7 @@ export async function createTicket(rawInput: unknown): Promise<ActionResult<Tick
       return { ticket: newTicket, employeeName: empUser?.name ?? "" };
     });
 
-    publishEvent("cashier", "ticket_created", { ticketId: result.ticket.id });
+    await publishEvent("cashier", "ticket_created", { ticketId: result.ticket.id });
     revalidatePath("/cashier");
     revalidatePath("/secretary");
 
@@ -420,7 +420,7 @@ export async function transitionToAwaitingPayment(
       error: { code: "STALE_DATA", message: "El ticket fue modificado por otra sesión" },
     };
 
-  publishEvent("cashier", "ticket_updated", { ticketId: updated.id, status: updated.status });
+  await publishEvent("cashier", "ticket_updated", { ticketId: updated.id, status: updated.status });
   revalidatePath("/cashier");
   revalidatePath("/secretary");
 
@@ -471,7 +471,7 @@ export async function transitionReopenedToAwaitingPayment(
       error: { code: "STALE_DATA", message: "El ticket fue modificado por otra sesión" },
     };
 
-  publishEvent("cashier", "ticket_updated", { ticketId: updated.id, status: updated.status });
+  await publishEvent("cashier", "ticket_updated", { ticketId: updated.id, status: updated.status });
   revalidatePath("/cashier");
 
   return { success: true, data: { id: updated.id, status: updated.status } };
@@ -550,7 +550,7 @@ export async function voidTicket(
       error: { code: "STALE_DATA", message: "El ticket fue modificado por otra sesión" },
     };
 
-  publishEvent("cashier", "ticket_updated", { ticketId: updated.id, status: updated.status });
+  await publishEvent("cashier", "ticket_updated", { ticketId: updated.id, status: updated.status });
   revalidatePath("/cashier");
   revalidatePath("/secretary");
 
