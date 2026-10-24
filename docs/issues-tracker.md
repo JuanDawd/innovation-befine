@@ -1737,6 +1737,16 @@
 
 ---
 
+### L-42 — Unused JavaScript (est. −78 KB savings)
+
+- **Severity:** Low
+- **Status:** Resolved (2026-10-23)
+- **Affected:** `admin/analytics/analytics-dashboard.tsx`
+- **Description:** Lighthouse flagged ~78 KB of unused JavaScript on initial load; Recharts was imported eagerly by the analytics dashboard.
+- **Fix:** The three charts moved to `analytics-charts.tsx`, loaded with `next/dynamic` (`ssr: false`) and fixed-height placeholders (no layout shift). `/admin/analytics` First Load JS 323 kB → 213 kB; verified the chart renders after the lazy load.
+
+---
+
 ## Lessons learned
 
 > This section is populated during development. Each entry documents what went wrong, the root cause, and how to prevent it in the future.
@@ -1897,3 +1907,4 @@
 | M-72     | 2026-10-23    | Realtime package tested (16); stream-close listener leak fixed; post-deploy smoke on deployment_status          | fix/backlog-batch-2          |
 | M-51     | 2026-10-23    | Verified: no console errors/warnings on prod public pages or any role screen                                    | fix/backlog-batch-2          |
 | L-43     | 2026-10-23    | bfcache blocked by no-store + SSE on authenticated pages — kept on purpose (shared devices)                     | fix/backlog-batch-2          |
+| L-42     | 2026-10-23    | Recharts loaded on demand; /admin/analytics first load 323 → 213 kB                                             | fix/backlog-batch-2          |
