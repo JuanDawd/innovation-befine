@@ -1038,6 +1038,16 @@
 
 ---
 
+### M-51 — Browser console errors logged (Lighthouse Best Practices: 96)
+
+- **Severity:** Medium
+- **Status:** Resolved (verified 2026-10-23 — fixed by earlier work, untracked)
+- **Affected:** all pages
+- **Description:** Lighthouse Best Practices flagged "Browser errors were logged to the console."
+- **Fix:** No change needed now. Verified with Playwright capturing `console` errors/warnings and `pageerror`: production `/` and `/login` clean; on a production build with the E2E database, every role's main screens (admin: cashier, analytics, payroll, catalog, employees, ticket history; secretary: dashboard, appointments, products; stylist and clothier: home and earnings) clean.
+
+---
+
 ## Low-priority issues
 
 ### L-09 — No file/image storage research
@@ -1875,3 +1885,4 @@
 | L-53     | 2026-10-23    | Products dashboard loads only today + WIP candidates in SQL                                                     | fix/backlog-batch-2          |
 | M-62     | 2026-10-23    | Cached employee lookup, parallel independent reads, single-statement openBusinessDay                            | fix/backlog-batch-2          |
 | M-72     | 2026-10-23    | Realtime package tested (16); stream-close listener leak fixed; post-deploy smoke on deployment_status          | fix/backlog-batch-2          |
+| M-51     | 2026-10-23    | Verified: no console errors/warnings on prod public pages or any role screen                                    | fix/backlog-batch-2          |
