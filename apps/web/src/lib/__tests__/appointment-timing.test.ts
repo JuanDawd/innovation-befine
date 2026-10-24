@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { allowedNow, hasStarted } from "@/lib/appointment-timing";
+import { allowedNow, hasStarted, nextFreeStart } from "@/lib/appointment-timing";
 
 const at = "2026-10-24T15:00:00-05:00";
 const before = new Date("2026-10-24T14:59:00-05:00");
@@ -29,5 +29,34 @@ describe("appointment timing", () => {
 
   it.each(["confirm", "cancel", "reschedule", "reopen"])("allows %s any time", (action) => {
     expect(allowedNow(action, at, dayBefore)).toBe(true);
+  });
+});
+
+describe("nextFreeStart", () => {
+  const t = (hhmm: string) => new Date(`2026-10-24T${hhmm}:00-05:00`);
+  const busy = [
+    { start: t("15:00"), minutes: 90 }, // 15:00–16:30
+    { start: t("16:30"), minutes: 60 }, // 16:30–17:30
+    { start: t("18:00"), minutes: 60 }, // 18:00–19:00
+  ];
+
+  it("keeps a time that is already free", () => {
+    expect(nextFreeStart(busy, t("13:00"), 60)).toEqual(t("13:00"));
+  });
+
+  it("skips back-to-back appointments to the first gap that fits", () => {
+    expect(nextFreeStart(busy, t("15:30"), 30)).toEqual(t("17:30"));
+  });
+
+  it("jumps past a gap too short for the duration", () => {
+    expect(nextFreeStart(busy, t("15:30"), 60)).toEqual(t("19:00"));
+  });
+
+  it("does not collide with a slot that starts right when this one ends", () => {
+    expect(nextFreeStart(busy, t("14:00"), 60)).toEqual(t("14:00"));
+  });
+
+  it("works with no appointments", () => {
+    expect(nextFreeStart([], t("10:00"), 45)).toEqual(t("10:00"));
   });
 });

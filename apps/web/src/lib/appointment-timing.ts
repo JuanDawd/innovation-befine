@@ -15,3 +15,24 @@ export function allowedNow(action: string, scheduledAt: Date | string, now = new
   if (action === "complete") return businessDateOf(scheduledAt) <= businessDateOf(now);
   return true;
 }
+
+export type BusySlot = { start: Date; minutes: number };
+
+/** Statuses that still hold the stylist's time (mirrors the no-overlap constraint). */
+export const HOLDS_TIME = new Set(["booked", "confirmed", "completed"]);
+
+/**
+ * The first start at or after `from` where `minutes` fit without touching a
+ * busy slot — what the booking form offers when the chosen time is taken.
+ */
+export function nextFreeStart(busy: BusySlot[], from: Date, minutes: number): Date {
+  const sorted = [...busy].sort((a, b) => a.start.getTime() - b.start.getTime());
+  let start = from.getTime();
+  for (const slot of sorted) {
+    const slotStart = slot.start.getTime();
+    const slotEnd = slotStart + slot.minutes * 60_000;
+    if (start + minutes * 60_000 <= slotStart) break;
+    if (start < slotEnd) start = slotEnd;
+  }
+  return new Date(start);
+}
