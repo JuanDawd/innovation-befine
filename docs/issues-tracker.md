@@ -542,6 +542,14 @@
 - **Description:** Found in the secretary design critique. The approval board listed only `done_pending_approval` pieces whose product belonged to the open business day. Since H-52 clothiers see and finish pieces from earlier days, but those pieces never showed up to approve — and an unapproved piece is never paid. The board is the only approval path.
 - **Fix:** the list returns every finished piece regardless of its product's day, with quantity, product notes and large-order client so the approver knows what she is approving. Follow-up H-57 (Vikunja): a piece approved after its product's day was already paid is still not picked up by payroll.
 
+### H-58 — Large-order prices prefilled with the clothier's piece rate
+
+- **Severity:** High
+- **Status:** Resolved (2026-10-24)
+- **Affected:** T080 large-order create form, large-order detail line editing
+- **Description:** Found in the back-office design critique (verified live: "Bata de spa" priced $8.000 — its piece rate — instead of its $35.000 selling price). Picking a piece set the line's unit price from `pieceRate`, and the order total is computed from the lines, so totals, deposits and balances came out at the clothier's pay instead of the client's price.
+- **Fix:** lines prefill from the variant's `sellingPrice` via `orderUnitPrice()` (tested); pieces without a selling price start at 0 so the price is typed in. Phase 11 (Pedidos, `docs/pedidos-spec` branch) replaces this flow and keeps the selling-price snapshot.
+
 ---
 
 ## Medium-priority issues
@@ -2135,3 +2143,4 @@
 | M-60     | 2026-10-23    | Realtime across instances via Postgres LISTEN/NOTIFY; streams 280 s + heartbeat                                 | fix/m60-realtime-listen-notify |
 | H-55     | 2026-10-24    | createTicket requires an active stylist; staff pick one explicitly; commission hidden from the secretary        | feat/redesign                  |
 | H-56     | 2026-10-24    | Approval board lists finished pieces from every day, with quantity and order context                            | feat/redesign                  |
+| H-58     | 2026-10-24    | Large-order lines priced from the variant's selling price, never the piece rate                                 | feat/redesign                  |

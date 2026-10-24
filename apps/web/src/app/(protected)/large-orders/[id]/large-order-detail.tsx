@@ -37,6 +37,7 @@ import {
   type OrderProductSummary,
 } from "../actions";
 import type { ClothPieceRow } from "@/app/(protected)/admin/catalog/actions/cloth-pieces";
+import { orderUnitPrice } from "@/lib/large-order-pricing";
 import {
   LineAccordion,
   buildDescription,
@@ -130,7 +131,7 @@ function matchLineTocatalog(
     clothPieceId: piece.id,
     clothPieceVariantId: variant?.id ?? "",
     quantity,
-    unitPrice: variant?.pieceRate ?? 0,
+    unitPrice: orderUnitPrice(variant),
     itemDescription: notes,
     color: "",
     style: "",
@@ -223,7 +224,7 @@ export function LargeOrderDetail({
           const active = piece?.variants.filter((v) => v.isActive) ?? [];
           if (active.length === 1) {
             updated.clothPieceVariantId = active[0].id;
-            updated.unitPrice = active[0].pieceRate;
+            updated.unitPrice = orderUnitPrice(active[0]);
           } else {
             updated.clothPieceVariantId = "";
             updated.unitPrice = 0;
@@ -232,7 +233,7 @@ export function LargeOrderDetail({
         if (patch.clothPieceVariantId !== undefined) {
           const piece = clothPieces.find((p) => p.id === l.clothPieceId);
           const variant = piece?.variants.find((v) => v.id === patch.clothPieceVariantId);
-          if (variant) updated.unitPrice = variant.pieceRate;
+          if (variant) updated.unitPrice = orderUnitPrice(variant);
         }
         return updated;
       }),
