@@ -48,12 +48,14 @@
 | Create service type/variant     | Yes   | No        | No      | No       | T024     |
 | Edit service type/variant       | Yes   | No        | No      | No       | T024     |
 | Deactivate service type/variant | Yes   | No        | No      | No       | T024     |
-| View service catalog (read)     | Yes   | Yes       | Yes     | No       | T028     |
+| View service catalog (read)     | Yes   | Yes       | Yes     | Yes      | T028     |
 | Create cloth piece type         | Yes   | No        | No      | No       | T027     |
 | Edit cloth piece type           | Yes   | No        | No      | No       | T027     |
 | Deactivate cloth piece type     | Yes   | No        | No      | No       | T027     |
-| View cloth piece catalog (read) | Yes   | Yes       | No      | Yes      | T028     |
+| View cloth piece catalog (read) | Yes   | Yes       | No      | No       | T028     |
 | View catalog audit log          | Yes   | No        | No      | No       | T025     |
+
+> **M-04 (2026-10-23), matches the code:** "Admin" here covers both `admin` and `cashier` for reads — the cashier reads services (checkout, ticket logging; `listActiveServices` is open to every signed-in role) and cloth pieces (`listActiveClothPieces` on large orders, `listSellableClothPieces` for cloth sales). Clothiers never read the cloth catalog directly: their board joins piece names (`listTodayProductPieces`).
 
 ---
 

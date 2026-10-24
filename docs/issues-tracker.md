@@ -1078,6 +1078,16 @@
 
 ---
 
+### M-04 — T028 missing cashier and clothier read access
+
+- **Severity:** Medium
+- **Status:** Resolved (2026-10-23)
+- **Affected:** T028 `admin/catalog/actions/cloth-pieces.ts` `listActiveClothPieces`, `docs/testing/rbac-matrix.md`
+- **Description:** T028 listed only stylists and secretary as catalog readers. Checked against the code: services were already readable by every signed-in role (`listActiveServices`), but `listActiveClothPieces` refused `cashier` — and cashiers can open large orders (`SHARED_APP_PATHS`), whose detail page then silently got an empty piece list. The RBAC matrix also had no cashier column and claimed clothier read access the code never had.
+- **Fix:** `listActiveClothPieces` allows admin, cashier and secretary (contract test updated). Clothiers don't need the catalog — their board joins piece names. RBAC matrix rows corrected to match the code, with a note on how cashier and clothier reads work.
+
+---
+
 ## Low-priority issues
 
 ### L-09 — No file/image storage research
@@ -1963,3 +1973,4 @@
 | L-01     | 2026-10-23    | Login 429: clear message + 60 s countdown on the button                                                         | fix/backlog-batch-2          |
 | M-70     | 2026-10-23    | Ajustar keeps Cobrar open with the new total — verified by E2E                                                  | fix/backlog-batch-2          |
 | M-79     | 2026-10-23    | Board totals use the adjusted price (override_price ?? unit_price)                                              | fix/backlog-batch-2          |
+| M-04     | 2026-10-23    | Cashier reads cloth pieces (large orders); RBAC matrix matches the code                                         | fix/backlog-batch-2          |
