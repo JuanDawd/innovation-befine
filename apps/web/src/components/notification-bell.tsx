@@ -139,6 +139,18 @@ export function NotificationBell({
     return () => document.removeEventListener("mousedown", handleClick);
   }, [open]);
 
+  // L-52: opening the panel counts as seeing what's in it. Unread dots stay
+  // visible while it's open; on close everything shown is marked read, so the
+  // badge clears.
+  const wasOpen = useRef(false);
+  useEffect(() => {
+    if (wasOpen.current && !open && rows.some((r) => !r.isRead && !r.isArchived)) {
+      setRows((prev) => prev.map((r) => ({ ...r, isRead: true })));
+      void markAllRead();
+    }
+    wasOpen.current = open;
+  }, [open, rows]);
+
   // Close on Escape
   useEffect(() => {
     if (!open) return;

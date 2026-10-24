@@ -48,6 +48,11 @@ describe("isPublic", () => {
     expect(isPublic("/api/version-internal")).toBe(false);
     expect(isPublic("/api/versions/old")).toBe(false);
   });
+
+  it("serves /robots.txt without a session, exact match only (M-50)", () => {
+    expect(isPublic("/robots.txt")).toBe(true);
+    expect(isPublic("/robots.txt.bak")).toBe(false);
+  });
 });
 
 describe("isShared", () => {

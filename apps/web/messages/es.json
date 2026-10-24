@@ -19,7 +19,8 @@
     "required": "obligatorio",
     "yes": "Sí",
     "no": "No",
-    "showMore": "Mostrar {count, plural, one {# más} other {# más}}"
+    "showMore": "Mostrar {count, plural, one {# más} other {# más}}",
+    "networkError": "No se pudo conectar. Revisa la conexión e inténtalo de nuevo."
   },
   "roles": {
     "cashier": "Cajero",
@@ -92,6 +93,7 @@
     "paid_in_full": "Pagado completo",
     "completed": "Completado",
     "cancelled": "Cancelado",
+    "voided": "Anulado",
     "no_show": "No se presentó",
     "ready": "Listo"
   },
@@ -111,7 +113,7 @@
     "reopenError": "No se pudo reabrir el día",
     "confirmClose": "¿Cerrar el día?",
     "confirmCloseDescription": "El cierre queda registrado con estas cifras. Reabrir el día después exige un motivo y queda en el historial.",
-    "closeOpenTicketsWarning": "Hay {count, plural, one {# ticket sin cobrar} other {# tickets sin cobrar}}. Si cierras ahora, saldrán del tablero y de Cobrar.",
+    "closeOpenTicketsWarning": "Hay {count, plural, one {# ticket sin cobrar} other {# tickets sin cobrar}}. Cóbralos o anúlalos desde el tablero antes de cerrar el día.",
     "confirmReopen": "¿Reabrir el día?",
     "confirmReopenDescription": "Reabrir un día cerrado requiere un motivo. Esta acción queda registrada en el historial.",
     "reopenReason": "Motivo de reapertura",
@@ -119,7 +121,6 @@
     "noPreviousDay": "No hay días anteriores para reabrir",
     "closeChecking": "Revisando tickets sin cobrar…",
     "goCharge": "Ir a cobrar ({count})",
-    "closeAnyway": "Cerrar de todos modos",
     "summaryRevenue": "Ingresos",
     "summaryClosed": "Cobrados",
     "summaryOpen": "Sin cobrar",
@@ -302,7 +303,15 @@
     "discardChangesDescription": "Tienes cambios sin guardar en esta variante. ¿Seguro que quieres cerrarla?",
     "discard": "Descartar",
     "sellingPriceTitle": "Precio de venta",
-    "removeVariant": "Eliminar variante"
+    "removeVariant": "Eliminar variante",
+    "variantLimitWarning": "Este servicio tiene {count} variantes. Más de {limit} se vuelven difíciles de elegir en el celular — considera dividirlo en varios servicios.",
+    "auditLogMore": "Ver más",
+    "auditAction": {
+      "create": "Creado",
+      "update": "Editado",
+      "soft_delete": "Desactivado",
+      "restore": "Restaurado"
+    }
   },
   "clients": {
     "pageTitle": "Clientes",
@@ -494,7 +503,6 @@
     "myPieces": "Mis piezas",
     "available": "Disponibles para reclamar",
     "claim": "Reclamar",
-    "claimError": "Ya fue reclamada",
     "markDone": "Listo",
     "markDoneError": "No se pudo actualizar",
     "staleError": "Estado cambiado — recarga la página",
@@ -511,7 +519,9 @@
     "statusPendingApproval": "Pendiente aprobación",
     "groupToDo": "Por hacer",
     "groupDone": "Terminadas",
-    "allDone": "Terminaste todas tus piezas de hoy."
+    "fromDate": "Del {date}",
+    "allDone": "Terminaste todas tus piezas de hoy.",
+    "claimTaken": "Otra persona tomó {piece} — elige otra"
   },
   "products": {
     "pageTitle": "Productos",
@@ -995,7 +1005,8 @@
     "nothingSelected": "Selecciona al menos un ticket",
     "confirmTitle": "¿Cobrar {amount} a {clients}?",
     "confirmDescription": "{count, plural, one {Se cerrará # ticket} other {Se cerrarán # tickets}} y se registrará el pago. Esta acción no se puede deshacer.",
-    "multiClientWarning": "Este cobro incluye {count} clientes distintos: {clients}. Confirma que una sola persona paga por todos."
+    "multiClientWarning": "Este cobro incluye {count} clientes distintos: {clients}. Confirma que una sola persona paga por todos.",
+    "adjustSuccess": "Precio ajustado a {price}"
   },
   "clothSale": {
     "title": "Vender prenda",
@@ -1019,7 +1030,8 @@
     "guestName": "Nombre del cliente",
     "linkedToTicket": "Esta venta quedará vinculada al ticket actual.",
     "submit": "Registrar venta",
-    "success": "Venta registrada — {total}"
+    "success": "Venta registrada — {total}",
+    "paymentMethod": "Método de pago"
   },
   "orderProgress": {
     "emptyTitle": "Sin ítems de producción",
@@ -1071,5 +1083,15 @@
     "retry": "Reintentar",
     "announceNew": "{count, plural, one {Nuevo ticket en el tablero} other {# tickets nuevos en el tablero}}",
     "pendingAside": "Pendientes"
+  },
+  "voidTicket": {
+    "triggerLabel": "Anular ticket de {client}",
+    "title": "¿Anular el ticket de {client}?",
+    "description": "Úsalo cuando el cliente se fue sin pagar. El ticket queda como anulado, no cuenta como ingreso ni comisión, y no se puede deshacer.",
+    "reason": "Motivo",
+    "reasonPlaceholder": "Ej: la clienta se fue sin pagar",
+    "reasonTooShort": "El motivo debe tener al menos 5 caracteres",
+    "confirm": "Anular ticket",
+    "success": "Ticket de {client} anulado"
   }
 }

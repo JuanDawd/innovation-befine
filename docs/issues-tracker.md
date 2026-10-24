@@ -478,6 +478,26 @@
 
 ---
 
+### H-49 — Closing the business day silently strands unpaid tickets
+
+- **Severity:** High
+- **Status:** Resolved (2026-10-23) — partial fix 2026-10-11 (count in the close dialog)
+- **Affected:** T019/T023 `closeBusinessDay`, `business-day-panel.tsx`, T036 cashier board, T038 checkout
+- **Description:** Source: training-manual walkthrough with agent-browser, 2026-10-11. The day could be closed with logged / awaiting_payment tickets; the board and `getAwaitingPaymentTickets` are scoped to the current day, so those services could never be charged. Charging them later on their original day would also land commission in a period that may already be settled.
+- **Fix:** `closeBusinessDay` closes in one `UPDATE … WHERE closed_at IS NULL AND NOT EXISTS (unpaid tickets)` and returns `CONFLICT` with the count (also on an already-closed day). The dialog drops "Cerrar de todos modos" and only offers "Ir a cobrar". New `voided` ticket status (`voided_at`, `voided_by`, `void_reason`, migration `0034`) + `voidTicket` (cashier/admin, reason 5–500 chars, optimistic lock, logged/awaiting_payment only) for walk-outs, from a button on the board cards. Revenue/earnings queries use status allowlists, so voided tickets never count. Tests: `cashier/__tests__/close-business-day.test.ts`, `tickets/__tests__/void-ticket.test.ts`.
+
+---
+
+### H-50 — "Vender prenda": duplicate sales, no payment method, not counted as revenue
+
+- **Severity:** High
+- **Status:** Resolved (2026-10-23)
+- **Affected:** `sell-cloth-piece-modal.tsx`, `cashier/actions/cloth-sales.ts`, `cashier/actions/day-stats.ts`, `packages/db/src/queries/analytics.ts`
+- **Description:** Source: training-manual walkthrough with agent-browser, 2026-10-11. (1) One intended sale was stored twice; the action had no idempotency key. (2) Sales had no payment method and never went through Cobrar. (3) Analytics "Ingresos por venta de productos" only summed sold crafted pieces, so cloth sales showed $0. (4) Catalog variants had no sale price.
+- **Fix:** (1) `cloth_sales.idempotency_key` (unique, migration `0035`); the modal sends one key per sale attempt and the action does `INSERT … ON CONFLICT DO NOTHING` then returns the stored sale. Success toast was already in place. (2) `payment_method` is required on new sales (cash/card/transfer picker; null only on legacy rows); Sentry breadcrumb per sale. (3) Cloth sales `(price_override ?? unit_price) × quantity` added to `revenueByPeriod`, `dailyRevenueBreakdown` and the cashier's day revenue. (4) Data, not code: sale prices are set per variant in Catálogo → Prendas (owner task). Tests: `cashier/__tests__/cloth-sales.test.ts`, `packages/db/src/queries/__tests__/analytics-revenue.test.ts`.
+
+---
+
 ### H-51 — Lists don't refresh after mutations (risk of duplicate records)
 
 - **Severity:** High
@@ -485,6 +505,16 @@
 - **Affected:** Appointments ("Reservar cita"), Products ("Crear producto"), Stylist "Mis servicios de hoy" ("Registrar ticket"), cashier change-request approve, cashier dashboard after checkout
 - **Description:** Source: training-manual walkthrough with agent-browser, 2026-10-11 (demo data, homelab CT 110). After a successful mutation the dialog closes (toast shown in some cases) but the list/KPIs keep the old data until a manual reload. For stylists this means the ticket they just registered is not visible — the natural reaction is to register it again, creating a duplicate ticket. Likely introduced when standalone `/new` pages became in-context dialogs (commit `ab1ee46`, intercepting routes) — `revalidatePath` alone doesn't refresh the client tree behind the modal.
 - **Fix:** Call `router.refresh()` (or invalidate the TanStack Query key) after each successful mutation in these dialogs; add an E2E check that the created row is visible without reload.
+
+---
+
+### H-52 — Clothiers can't see unfinished pieces from previous days
+
+- **Severity:** High
+- **Status:** Resolved (2026-10-23)
+- **Affected:** T046 `clothier/actions.ts` `listTodayProductPieces`, `clothier-work-board.tsx`
+- **Description:** Found while verifying UX fixes (2026-10-11). The query filtered `products.business_day_id = current day`, so every pending piece created on an earlier day disappeared from the clothiers' phones once a new day was opened (7 such pieces in the demo DB were invisible), while the secretary still listed them under "En progreso". With no open day the board was empty.
+- **Fix:** The board returns today's pieces plus any non-approved piece from earlier days (also when no day is open), oldest product first within each status; carried-over pieces show a "Del 21 oct" tag. Tests: `clothier/__tests__/list-pieces.test.ts`.
 
 ---
 
@@ -849,6 +879,142 @@
 - **Affected:** T072, T073 — `admin/analytics/analytics-dashboard.tsx` (comparison bars, drill-down sparkline, daily breakdown)
 - **Description:** Found during the 2026-10-12 a11y/i18n sweep. The theme tokens are `oklch(...)`, so `hsl(var(--primary))` is an invalid colour; Recharts SVG fills/strokes fall back to the default (black), so the "current" series renders without the brand colour and the "prior" series is invisible on the dark theme.
 - **Fix:** Use `var(--color-primary)` and `color-mix(in oklab, var(--color-muted-foreground) 40%, transparent)`.
+
+---
+
+### M-56 — createAssignment lacks SELECT ... FOR UPDATE; concurrent over-assignment race window exists
+
+- **Severity:** Medium
+- **Status:** Resolved (2026-10-23)
+- **Affected:** T4.7 `large-orders/assignment-actions.ts` `createAssignment`
+- **Description:** `createAssignment` read `SUM(assigned_quantity)` inside a transaction without locking the `order_items` row, so two concurrent requests could both pass the capacity check and together exceed `order_items.quantity`.
+- **Fix:** The order-item read is `.for("update")`; concurrent assignments for the same item serialize and the waiting one's SUM (a new statement under READ COMMITTED) sees the committed insert. Test asserts the lock precedes the SUM: `large-orders/__tests__/create-assignment.test.ts`.
+
+---
+
+### M-61 — `createTicket` swallows errors without logging or Sentry
+
+- **Severity:** Medium
+- **Status:** Resolved (2026-10-23)
+- **Affected:** T035 `tickets/actions/index.ts` `createTicket`
+- **Description:** Any error inside the ticket transaction became a generic `INTERNAL_ERROR` with no log line or Sentry event; during the load test the H-47 crash surfaced only as `INTERNAL_ERROR` for stylists.
+- **Fix:** `catch (err)` → `logger.error` + `Sentry.captureException` (tag `action: createTicket`, business day + idempotency key), user still sees the generic message. `lib/logger.ts` doc now states the rule for caught errors. Test: `tickets/__tests__/create-ticket.test.ts`.
+
+---
+
+### M-58 — Clothiers race for the same unassigned piece
+
+- **Severity:** Medium
+- **Status:** Resolved (2026-10-23)
+- **Affected:** T047/T048 `clothier/actions.ts` `listTodayProductPieces`, `claimPiece`; `clothier-work-board.tsx`
+- **Description:** Source: k6 load test 2026-10-11. Every clothier received the same ordered list of unassigned pieces, picked from the top and collided; optimistic locking rejected the loser (1,094 rejected claims in the full run, no corruption), each one a wasted tap and an error for a real person — and the lost piece stayed on screen until the 30 s refetch.
+- **Fix:** Claimable pieces are ordered per clothier (`lib/piece-order.ts`: older days first, then a stable FNV-1a hash of employee + piece), so simultaneous claims spread across the list. A lost claim (`CONFLICT`) shows "Otra persona tomó … — elige otra" and refetches the board immediately; other errors show the server message. Chose this over a blind "claim next" button because clothiers pick by piece type. Tests: `lib/__tests__/piece-order.test.ts`.
+
+---
+
+### M-59 — In-memory rate limiter: per-instance and never evicts keys
+
+- **Severity:** Medium (found worse than reported: limits were never enforced)
+- **Status:** Resolved (2026-10-23) — production needs `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` set in Vercel
+- **Affected:** `apps/web/src/lib/rate-limit.ts` (all mutations, `/api/health`, `/api/version`)
+- **Description:** The `@upstash/ratelimit` instances used an in-process Map as their Redis, so on Vercel each instance had its own counts, and the map never deleted keys (keys embed the window number → a new key per user per minute). While fixing it: (1) the fake `eval` returned `[allowed, reset, …]` but the sliding-window script contract is `[remainingTokens, limit]` with `remaining >= 0` = allowed, so **every request was allowed — no cap was ever enforced**; (2) all six limiters shared the default `@upstash/ratelimit` prefix, so ticket creations also counted against the general bucket.
+- **Fix:** `Redis.fromEnv()` when the Upstash env vars are set (`rateLimitIsShared`), else an in-memory store that mirrors the Lua script (keys `[current, previous]`, args `[tokens, now, windowMs, incrementBy]`, expiry 2 windows + 1 s, swept every 500 calls). Per-limiter prefix `befine:rl:<name>`. `checkRateLimit` / `checkPublicRateLimit` fail open with a warning if Redis is unreachable. Env vars added to `.env.example` and `turbo.json`. Tests: `lib/__tests__/rate-limit.test.ts` (exact cap, bucket separation, eviction, fail-open).
+
+---
+
+### M-50 — `robots.txt` has 2 validation errors
+
+- **Severity:** Medium
+- **Status:** Resolved (2026-10-23)
+- **Affected:** `apps/web/src/app/robots.ts`, `lib/middleware-helpers.ts`
+- **Description:** Lighthouse: "robots.txt is not valid — 2 errors found." There was no robots.txt at all; middleware redirected `/robots.txt` to `/login`, so crawlers parsed the login page HTML.
+- **Fix:** `app/robots.ts` serves `User-agent: * / Disallow: /` (internal app) and `/robots.txt` is an exact-match public path. Test in `lib/__tests__/middleware-helpers.test.ts`.
+
+---
+
+### M-49 — Missing meta description on all pages (SEO score 83)
+
+- **Severity:** Medium
+- **Status:** Resolved (verified 2026-10-23 — fixed earlier, untracked)
+- **Affected:** `apps/web/src/app/layout.tsx`
+- **Description:** Lighthouse flagged "Document does not have a meta description."
+- **Fix:** Already in place: root `metadata.description` = "Plataforma de operaciones internas · {brand}", inherited by every page. No code change in this pass.
+
+---
+
+### M-68 — Silent failures: forms do nothing on non-secure origins; unexplained logout
+
+- **Severity:** Medium
+- **Status:** Resolved (2026-10-23) — partial fix 2026-10-11 (`newUuid()` fallback); cookie loss attributed to the test tool
+- **Affected:** `log-service-form.tsx`, `sell-cloth-piece-modal.tsx`
+- **Description:** Source: training-manual walkthrough, 2026-10-11. Over plain HTTP `crypto.randomUUID` was undefined and "Registrar ticket" failed silently. More generally, a thrown server-action call (network drop, deploy skew) produced no toast, and each retry generated a new idempotency key, so retrying after a lost response could duplicate the ticket.
+- **Fix:** Both forms catch a thrown action and toast `common.networkError`. The idempotency key is tied to the submitted inputs (same inputs → same key → the server returns the ticket/sale already created; changed inputs or success → new key). Remaining `crypto.randomUUID()` uses are server-side only.
+
+---
+
+### M-73 — 142 dependency advisories (4 critical, 59 high) from `pnpm audit`
+
+- **Severity:** Medium (contained criticals reachable in production)
+- **Status:** Resolved (2026-10-23) — 0 critical; remaining highs are build-time only
+- **Affected:** `apps/web`, `packages/db`, `packages/types` dependencies; `.github/workflows/ci.yml`
+- **Description:** `pnpm audit --prod` (2026-10-23): 6 critical / 63 high. Production-reachable: **next 15.5.16** (unauthenticated RCE in the image optimizer, middleware/proxy bypass, server-action SSRF/DoS), **better-auth 1.6.2** (OAuth account takeover / token replay, stored XSS), **@sentry/nextjs 10.48** (middleware bypass via tunnel route), **ws 8.20** (DoS — Neon transaction pool), **zod 4.4.3** (memory exhaustion). Most of the rest came through the `shadcn` CLI sitting in `dependencies`.
+- **Fix:** next 15.5.28, better-auth ~1.6.33 (stays on 1.6; 1.7.12 was 3 days old), @sentry/nextjs 10.76.2, ws 8.22, zod 4.6.7; `shadcn` moved to devDependencies. Now 0 critical / 41 high, all build-time transitive (next-pwa → workbox/webpack/babel, Sentry bundler plugin, postcss pinned by next). `sharp` 0.34 (pinned by next 15.5; unused on Vercel) left as is. CI: critical audit now blocks; high stays informational. Verified: turbo typecheck/test/lint green, `next build` succeeds.
+
+---
+
+### M-75 — "Pagar hasta hoy" stops at the first session when the day was closed and reopened
+
+- **Severity:** Medium
+- **Status:** Resolved (2026-10-23)
+- **Affected:** T066/T067 `admin/payroll/payroll-screen.tsx`
+- **Description:** Found by the new payroll E2E (M-71). Unsettled days were sorted by calendar date only and "today" was `find(d => d.date === today)` — the first business day on today's date. When the day had been closed and reopened (the H-53 scenario), "Pagar hasta hoy" paid only through the first session and left the later ones unsettled; the order of same-date days in the range picker was also arbitrary.
+- **Fix:** `day-labels.ts` `byOpenedAt()` (chronological, stable for same-date days) and `lastDayOn()` (latest session of a date) drive the range and the shortcut. Tests: `admin/payroll/__tests__/day-labels.test.ts`; covered end-to-end by `e2e/payroll-settlement.spec.ts`.
+
+---
+
+### M-76 — Payroll breakdown lines show only the variant name ("Estándar ×1")
+
+- **Severity:** Medium
+- **Status:** Resolved (2026-10-23)
+- **Affected:** T065 `lib/payroll/compute-stylist-earnings.ts`, payroll preview
+- **Description:** Found by the new payroll E2E (M-71). `serviceName` on each stylist earnings line was the variant name; most salon services have a single "Estándar" variant, so the payroll preview was a column of identical "Estándar ×1" rows and the admin couldn't tell which service each commission came from.
+- **Fix:** The query joins `services`; `earningsLineLabel()` shows the service name, plus " — variant" only for non-default variants (same rule as the cashier board). Tests in `lib/payroll/__tests__/earnings.test.ts`.
+
+---
+
+### M-71 — E2E missing checkout and payroll settlement specs
+
+- **Severity:** Medium (surfaced H-54, M-75, M-76 and a broken migration chain)
+- **Status:** Resolved (2026-10-23)
+- **Affected:** `apps/web/e2e`, `playwright.config.ts`, `.github/workflows/ci.yml`, `packages/db` (migrations, seeds)
+- **Description:** CLAUDE.md requires checkout E2E (Phase 4A) and payroll settlement E2E (Phase 7); neither existed and axe ran only in `smoke.spec.ts`. The CI E2E job used `secrets.DATABASE_URL`, which turned out to be production (H-54).
+- **Fix:**
+  - `e2e/checkout.spec.ts` — logged → awaiting → charged in cash (board, Cobrar dialog, success), axe on the dialog; close-day blocked with an unpaid ticket (H-49) and voiding a walk-out with the reason validation.
+  - `e2e/payroll-settlement.spec.ts` — paid service → stylist commission $20.000 per line and total, axe on the screen, payout recorded, nothing left unsettled. Runs in a `settlement` Playwright project after `chromium` because it closes the business day (voids leftovers first).
+  - Throwaway database: `scripts/test-db.sh` (Postgres 17 on tmpfs + local Neon proxy, random password per run), `NEON_LOCAL_PROXY=1` mode in `packages/db`, `seed-e2e.ts` (deterministic "E2E Corte" $50.000 / 40 %; refuses to run without the proxy flag). Migrations fixed to apply from empty (0027).
+  - CI E2E job: database from `scripts/test-db.sh`, migrate + seed in the job; auth secret, Resend key and seeded users' passwords generated per run with `openssl` and masked — no credential is committed (no prod DB, no real email).
+  - `screenshots.spec.ts` now opt-in (`CAPTURE_SCREENSHOTS=1`) — every E2E run was overwriting `docs/training/screenshots`.
+  - Verified locally against ct-dev: 31 passed, twice (fresh DB with 1 worker, then 5 workers, no retries).
+
+---
+
+### M-77 — Analytics commission rounds halves up; payroll rounds half to even
+
+- **Severity:** Medium
+- **Status:** Resolved (2026-10-23)
+- **Affected:** T071/T074 `packages/db/src/queries/analytics.ts` (`earningsByEmployee`, `employeeDayBreakdown`)
+- **Description:** Found while writing M-70b integration tests. Analytics computed stylist commission with Postgres `ROUND()` (half away from zero) while payroll uses `bankersRound()` (half to even, CLAUDE.md). A line whose commission is exactly ½ peso (e.g. $25.005 × 10 % = 2.500,5) showed $2.501 in analytics and paid $2.500 — totals drifted by $1 per such line.
+- **Fix:** `bankersRoundSql()` (CASE on the .5 fraction → even floor) used for both commission sums, still per item like payroll. Integration tests pin 25.005 → 2.500 and 25.015 → 2.502; they fail against the old `ROUND()`.
+
+---
+
+### M-70b — `packages/db/src/queries` coverage is ~4%; the 80% threshold in CLAUDE.md is not enforced
+
+- **Severity:** Medium
+- **Status:** Resolved (2026-10-23)
+- **Affected:** `packages/db/src/queries/` (analytics, order-items, products, payroll), `packages/db/vitest.config.ts`, CI
+- **Description:** CI pipeline review, 2026-10-12: 4–7 % statements / ~5 % branches for `queries/`, no thresholds, coverage never run in CI. Existing tests mirrored logic in pure functions instead of exercising the SQL.
+- **Fix:** Integration tests against a real Postgres (same local Neon proxy stack as E2E): `queries/__tests__/helpers/test-db.ts` runs each test in one transaction that TRUNCATEs the app tables first and always rolls back, plus fixture builders; suites skip unless `TEST_DATABASE_URL` + `NEON_LOCAL_PROXY=1` are set, so `turbo test` still runs without a database. 37 tests with known inputs and pre-computed peso outputs (revenue sources and exclusions, $0 override, 0 %/100 % commission, half-even rounding, clothier approved-only piece rates, secretary ISO-week cap + same-date sessions + absences, period windows, assignment progress/anomalies, products dashboard WIP/today and quantity weighting). Coverage now 98.8 % statements / 85.3 % branches / 100 % functions. `coverage.thresholds` 80 % in `vitest.config.ts`, `test:coverage` script, new CI job "DB integration tests" (also proves migrations apply from empty); deploy gate waits for it. Found M-77.
 
 ---
 
@@ -1451,6 +1617,76 @@
 
 ---
 
+### L-47 — `createTicket` idempotency check is select-then-insert
+
+- **Severity:** Low
+- **Status:** Resolved (2026-10-23)
+- **Affected:** T035 `tickets/actions/index.ts` `createTicket`
+- **Description:** The transaction selected by `idempotency_key` and inserted if absent. Two concurrent submits with the same key could both miss the select; the second then failed on the unique constraint and the user saw `INTERNAL_ERROR` instead of their ticket.
+- **Fix:** `INSERT … ON CONFLICT (idempotency_key) DO NOTHING RETURNING *`, then fetch the existing ticket when nothing was returned (the CLAUDE.md idempotency pattern); the ticket item is only inserted for a new ticket. Tests: `tickets/__tests__/create-ticket.test.ts`.
+
+---
+
+### L-48 — `trustedOrigins` hard-coded to the vercel.app domain in production
+
+- **Severity:** Low
+- **Status:** Resolved (2026-10-23)
+- **Affected:** `apps/web/src/lib/auth.ts`
+- **Description:** Any production build served from another origin (custom domain, self-hosted) was rejected by Better Auth unless code changed.
+- **Fix:** `lib/trusted-origins.ts` `resolveTrustedOrigins()` trusts the origins of `BETTER_AUTH_URL`, `NEXT_PUBLIC_APP_URL` and a comma-separated `BETTER_AUTH_TRUSTED_ORIGINS`; the vercel.app origin (prod) / `localhost:3000` (dev) stay as the base so nothing that works today breaks. Tests: `lib/__tests__/trusted-origins.test.ts`.
+
+---
+
+### L-49 — Transaction pool capped at 5 connections per instance
+
+- **Severity:** Low
+- **Status:** Resolved (2026-10-23)
+- **Affected:** `packages/db/src/index.ts` `createTxDb`
+- **Description:** Transactions queued behind 5 sockets per instance — fine on Vercel, a bottleneck for a single self-hosted process at closing time.
+- **Fix:** `DB_TX_POOL_MAX` (1–100, default 5; invalid values fall back to 5) via `txPoolMax()`; documented in `.env.example`. Test: `packages/db/src/__tests__/tx-pool.test.ts`.
+
+---
+
+### L-52 — Mobile and small UX polish
+
+- **Severity:** Low
+- **Status:** Resolved (2026-10-23) — (5) moved to M-62
+- **Affected:** notifications bell, clothier "Listo", PWA manifest / service worker, mobile shells
+- **Description:** Source: training-manual walkthrough with agent-browser, 2026-10-11. (1) Floating name/bell pill overlapped the H1 at 390 px. (2) The unread badge didn't clear after opening notifications. (3) Clothier "Listo" applied with no confirmation. (4) `/manifest.webmanifest` was redirected to `/login` (manifest requests carry no cookies), so the PWA manifest was unreachable. (5) "Abrir día" spun ~5 s.
+- **Fix:** (1) 2026-10-12 in-flow top bar. (3) 2026-10-11 confirmation + toast + idempotency key. (2) Closing the panel marks what was shown as read (dots stay visible while it's open). (4) Middleware matcher skips `.js` and `.webmanifest` static files — also fixes `/sw.js` and `/workbox-*.js`, which were redirected the same way for signed-out visitors; test with Next's `unstable_doesMiddlewareMatch` in `lib/__tests__/middleware-matcher.test.ts`. (5) is sequential-query latency → tracked under M-62.
+
+---
+
+### L-08 — T102 — Polling every 5 minutes may be aggressive
+
+- **Severity:** Low
+- **Status:** Resolved (2026-10-23)
+- **Affected:** T102 `components/version-banner.tsx`
+- **Description:** Each tab polled `/api/version` every 5 minutes and on every return to the tab. With rate limits now actually enforced (M-59) and all salon devices behind one public IP sharing the 30/min `/api/version` bucket, focus re-checks from phones locking/unlocking could hit the cap.
+- **Fix:** 15-min base interval (±1 min jitter, backoff to 60 min); a focus re-check runs only if the last check was ≥ 1 min ago, otherwise the timer is just rescheduled. Pause-while-hidden and backoff from M-55 kept.
+
+---
+
+### L-04 — T023 — No maximum variant count per service
+
+- **Severity:** Low
+- **Status:** Resolved (2026-10-23)
+- **Affected:** T024 `components/service-catalog.tsx`
+- **Description:** A service could have unlimited variants with no signal that the stylist's variant picker was getting unwieldy.
+- **Fix:** Soft limit `VARIANT_SOFT_LIMIT = 10`: above it, the create-service dialog and the service detail show a non-blocking warning suggesting a split into several services.
+
+---
+
+### L-03 — T025 — No pagination on audit log
+
+- **Severity:** Low
+- **Status:** Resolved (2026-10-23)
+- **Affected:** T025 `admin/catalog/actions/audit-log.ts`, `components/catalog-audit-log.tsx`
+- **Description:** The per-entity audit log returned only the 50 newest entries with no way to see older ones. Also found: `entityId` reached the query without Zod validation, and the action labels were hard-coded Spanish.
+- **Fix:** Pages of 20 with a keyset cursor on `(created_at, id)` resolved in SQL (`beforeId` → no JS-Date precision loss), `hasMore` via `limit + 1`, "Ver más" button. Input validated by `auditLogPageSchema` (`packages/types`). Labels moved to `catalog.auditAction.*`. Tests: `admin/catalog/__tests__/audit-log.test.ts`.
+
+---
+
 ## Lessons learned
 
 > This section is populated during development. Each entry documents what went wrong, the root cause, and how to prevent it in the future.
@@ -1475,107 +1711,134 @@
 
 - **2026-10-12 — A business day is not a date.** Days can be closed and reopened on the same calendar date. Anything paid "per day" must count distinct `businessDateOf()` dates, never business-day rows; and never derive a date with `toISOString().slice(0, 10)`.
 
+- **Fakes must honour the real contract (M-59).** The in-memory Redis for `@upstash/ratelimit` returned a shape the library didn't expect, so every request was "allowed" and nobody noticed for months because no test ever asserted a rejection. When faking a dependency, test the fake through the real library and include at least one negative case (limit hit, conflict, rejection).
+
+- **E2E must own its database (M-71 / H-54).** A spec that "requires a seeded DB with an open day" silently depended on production having one — CI had been creating test tickets in production for four months. E2E now migrates and seeds a throwaway Postgres in the job; a seed or test that can write money records refuses to run unless it is pointed at that database.
+
 ## Resolution log
 
 > When an issue is resolved, update its status above and add an entry here.
 
-| Issue ID | Date resolved | Resolution                                                                                               | Commit/PR                    |
-| -------- | ------------- | -------------------------------------------------------------------------------------------------------- | ---------------------------- |
-| C-01     | 2026-04-02    | Added `appointment_id (FK nullable)` to T033 schema in `phase-04a-tickets-checkout.md`                   | Senior QA review             |
-| C-02     | 2026-04-02    | Added `P4B --> P7` edge to mermaid dependency graph in `project-plan.md`                                 | Senior QA review             |
-| H-02     | 2026-04-02    | Updated `business.md` Sentry entry from "Phase 10" to "Phase 0"                                          | Senior QA review             |
-| H-03     | 2026-04-02    | Added manual password fallback to T013 AC when Resend is unavailable                                     | Senior QA review             |
-| H-06     | 2026-04-02    | Added security review checklist to T089 acceptance criteria                                              | Senior QA review             |
-| H-08     | 2026-04-02    | Added shared `payment_method_enum` definition to T006 acceptance criteria                                | Senior QA review             |
-| H-09     | 2026-04-02    | Resolved via C-01 fix (same `appointment_id` column)                                                     | Senior QA review             |
-| H-10     | 2026-04-02    | Added `cancelled` status to large order enum in T057 and T059 with cancellation reason                   | Senior QA review             |
-| H-11     | 2026-04-02    | Added rate limiting policy to T097 acceptance criteria covering all mutation endpoints                   | Senior QA review             |
-| M-11     | 2026-04-02    | Added T061 to T062 dependency list in task file and progress.md                                          | Senior QA review             |
-| L-10     | 2026-04-02    | Updated `postgres-providers.md` to reference only Drizzle ORM                                            | Senior QA review             |
-| L-12     | 2026-04-02    | Updated T087 health endpoint AC to include DB connectivity check (`SELECT 1`)                            | Senior QA review             |
-| C-03     | 2026-04-02    | Currency confirmed as COP (Colombian Pesos). T099 ACs updated.                                           | Stakeholder decision session |
-| C-04     | 2026-04-02    | Created `docs/research/data-privacy-compliance.md` (Colombian Ley 1581 de 2012)                          | Stakeholder decision session |
-| H-01     | 2026-04-02    | Phase 0 split into 0A (Infrastructure) and 0B (Standards & Design)                                       | Stakeholder decision session |
-| H-04     | 2026-04-02    | Added "Migration Path" section to `docs/research/auth-providers.md` with Auth.js and Clerk steps         | Stakeholder decision session |
-| H-05     | 2026-04-02    | Added 30-second polling fallback to T098 ACs                                                             | Stakeholder decision session |
-| H-07     | 2026-04-02    | Added storage capacity estimate to `docs/research/postgres-providers.md` (~28 MB for 6 months)           | Stakeholder decision session |
-| H-12     | 2026-04-02    | Added loading state to T019 "Open Day" and cold start documentation to postgres-providers.md             | Stakeholder decision session |
-| H-13     | 2026-04-02    | Created `docs/testing/concurrency-test-plan.md` with 8 race condition scenarios                          | QA review action             |
-| H-14     | 2026-04-02    | Business day boundary tests added to phase-04a test plan; timezone constant defined                      | QA review action             |
-| H-15     | 2026-04-02    | Added T106 (UAT) to Phase 10 between T088 and T089                                                       | QA review action             |
-| H-16     | 2026-04-02    | Added post-deployment smoke test AC to T095                                                              | QA review action             |
-| M-01     | 2026-04-02    | Added no-show decrement logic to T032b ACs                                                               | Stakeholder decision session |
-| M-03     | 2026-04-02    | Added `service_variant_id` FK to T049 appointments table                                                 | Stakeholder decision session |
-| M-06     | 2026-04-02    | Added reopen day capability to T019 ACs (admin only, audit trail, most recent day only)                  | Stakeholder decision session |
-| M-07     | 2026-04-02    | Added `expected_work_days` to T012 employees table; T065 updated for part-time                           | Stakeholder decision session |
-| M-08     | 2026-04-02    | Added `original_computed_amount` and `adjustment_reason` to T066 payouts table                           | Stakeholder decision session |
-| M-13     | 2026-04-02    | Removed `deposit_paid` column from T057; computed from payments table                                    | Stakeholder decision session |
-| M-14     | 2026-04-02    | Business timezone constant `America/Bogota` added to T002 standards                                      | Stakeholder decision session |
-| M-15     | 2026-04-02    | Created `docs/research/frontend-libraries.md`                                                            | Stakeholder decision session |
-| M-17     | 2026-04-02    | `commission_pct` precision set to `numeric(5,2)` in T023; banker's rounding in T002                      | Stakeholder decision session |
-| M-19     | 2026-04-02    | Added structured business logic logging AC to T085                                                       | QA review action             |
-| M-20     | 2026-04-02    | Integration test approach documented in `docs/testing/README.md`                                         | QA review action             |
-| L-15     | 2026-04-02    | Rounding policy (banker's rounding) and precision defined in T002 standards                              | Stakeholder decision session |
-| M-16     | 2026-04-09    | Stale — Pusher replaced by SSE; no third-party message volume limits apply                               | Phase 0A Opus audit          |
-| M-21     | 2026-04-09    | `pino-pretty` installed as dev dep in `apps/web`                                                         | T0AR-R1                      |
-| M-22     | 2026-04-09    | Seed script user+account inserts wrapped in `db.transaction()`                                           | T0AR-R2                      |
-| M-23     | 2026-04-09    | Middleware `roleCanAccess()` added — each role restricted to its path prefix                             | T0AR-R3                      |
-| M-24     | 2026-04-09    | Sentry `beforeSend` extended to scrub exception messages, breadcrumbs, and extra data                    | T0AR-R4                      |
-| L-16     | 2026-04-09    | `@deprecated` JSDoc added to `use-sse.ts`; developers directed to `useRealtimeEvent`                     | Phase 0 Opus audit           |
-| H-18     | 2026-04-11    | Added `eq(clients.isActive, true)` guard to `editClient` WHERE clause                                    | T03R-R1                      |
-| M-26     | 2026-04-11    | Added `clients.clearSelection` i18n key; replaced hardcoded aria-labels and "OK" button                  | T03R-R2                      |
-| M-27     | 2026-04-11    | Added `clientIdSchema = z.string().uuid()` validation to editClient, archiveClient, unarchiveClient      | T03R-R3                      |
-| H-17     | 2026-04-11    | Added `updated_at` migration + `.$onUpdate()` to employees and business_days tables                      | T01R-R2                      |
-| M-25     | 2026-04-11    | `ROLE_HOME` moved to `@befine/types` constants; both files import from shared source                     | T01R-R3                      |
-| L-18     | 2026-04-11    | Standardized all server actions to use `hasRole(session.user, role)` helper                              | T01R-R4                      |
-| H-19     | 2026-04-18    | `processCheckout` idempotency rewritten with `INSERT ... ON CONFLICT DO NOTHING RETURNING` + refetch     | T04R-R3                      |
-| H-20     | 2026-04-18    | `createBatch` wrapped in `db.transaction`; clothier notifications deferred to post-commit                | T04R-R4                      |
-| H-21     | 2026-04-18    | `lib/rate-limit.ts` introduced; CLAUDE.md caps applied to all Phase 4 mutations                          | T04R-R5                      |
-| H-22     | 2026-04-18    | Vitest unit tests added covering ticket transitions × role, checkout idempotency, optimistic locks       | T04R-R6                      |
-| M-29     | 2026-04-18    | `resolveEditRequest` wrapped in `db.transaction`; SSE + notification deferred to post-commit             | T04R-R7                      |
-| L-21     | 2026-04-18    | `createNotification`/`archiveOldNotifications` extracted to `lib/notifications.ts` private helper        | T04R-R2                      |
-| L-22     | 2026-04-18    | Dead `transitionToReopened` action deleted                                                               | T04R-R8                      |
-| L-23     | 2026-04-18    | Zod schemas added in `packages/types/src/schemas/` for edit-request, reopen, claim, mark, approve        | T04R-R9                      |
-| C-06     | 2026-04-18    | `/api/realtime/[channel]` gated with session + per-channel role check; removed from SHARED_PATHS         | T04R-R1                      |
-| C-07     | 2026-04-18    | `createNotification` extracted to private helper; no longer a callable server action endpoint            | T04R-R2                      |
-| C-08     | 2026-04-19    | Dual-driver setup: `neon-http` for reads, `neon-serverless` Pool for interactive transactions            | T05R-R1                      |
-| C-09     | 2026-04-19    | `price_change_acknowledged` default flipped to `true`; backfill migration; filter logic corrected        | T05R-R2                      |
-| C-10     | 2026-04-19    | `reschedule` action implemented with overlap re-check; Reschedule button wired in UI                     | T05R-R3                      |
-| H-23     | 2026-04-19    | Reopen branch catches `23P01` exclusion violation; returns friendly CONFLICT response                    | T05R-R4                      |
-| H-24     | 2026-04-19    | `editVariant` price-change side effects wrapped in single transaction; notifications post-commit         | T05R-R5                      |
-| M-30     | 2026-04-19    | Resolved as side effect of C-09 — fresh bookings no longer show false-positive badge                     | T05R-R2                      |
-| M-31     | 2026-04-19    | `checkRateLimit(rateLimits.general)` added to `acknowledgeAppointmentPriceChange`                        | T05R-R6                      |
-| L-24     | 2026-04-19    | `complete` action wires `tickets.appointment_id` when `ticketId` is provided                             | T05R-R7                      |
-| L-25     | 2026-04-19    | `editVariant` protected by optimistic lock (`version` column) to prevent concurrent double-notify        | T05R-R8                      |
-| C-11     | 2026-04-19    | `/large-orders` added to `SHARED_APP_PATHS`; 2 new middleware-helpers tests confirm all roles reach path | T06R-R1                      |
-| H-25     | 2026-04-19    | T062 AC updated: "cashier read-only" clause removed; `cashier_admin` + `secretary` have full access      | T06R-R3                      |
-| H-26     | 2026-04-19    | Overpayment guard added; order re-read inside tx; concurrent-cancel guard via status re-check            | T06R-R2                      |
-| H-27     | 2026-04-19    | Cancel dialog with deposit warning + `acknowledgedDeposits` flag on server; Dialog UI with reason        | T06R-R4                      |
-| M-32     | 2026-04-19    | `editLargeOrder` adds `version` to schema + WHERE clause, terminal-state guard, totalPrice≥paid check    | T06R-R5                      |
-| M-33     | 2026-04-19    | 31 Vitest unit tests added: transitions, balance, overpayment, auto-paid, cancel reason, role gates      | T06R-R6                      |
-| M-34     | 2026-04-19    | Both schemas use `.nullish()` for optional fields; deposit refine ensures amount↔method both-or-none     | T06R-R7                      |
-| M-35     | 2026-04-19    | `createLargeOrder` re-checks `isActive` on client fetch; returns VALIDATION_ERROR if archived            | T06R-R8                      |
-| L-26     | 2026-04-19    | `sql.raw` array replaced with `inArray(batchPieces.batchId, batchIds)` in batch summary query            | T06R-R9                      |
-| L-27     | 2026-04-19    | "Registrado por" replaced with `t("recordedBy")`; key added to `es.json` and `en.json`                   | T06R-R10                     |
-| L-28     | 2026-04-19    | `revalidatePath(\`/large-orders/\${orderId}\`)` added to edit, transition, and payment actions           | T06R-R11                     |
-| L-29     | 2026-04-19    | Cancel wrapped in Dialog with deposit warning, reason input, and disabled confirm until acked            | T06R-R12                     |
-| M-47     | 2026-04-21    | 25 Vitest integration tests in `cross-module-flows.test.ts` covering the four required flows; README doc | T09R-R11                     |
-| M-53     | 2026-04-25    | RFC 4180 `parseCsvLine`, BOM strip, CLI guard, 11 unit tests covering Colombian compound surnames        | T10R-R6                      |
-| M-54     | 2026-04-25    | In-memory phone/email Set dedup, `db.transaction` (createTxDb) wrapper, summary with intra-file skips    | T10R-R7                      |
-| M-55     | 2026-04-25    | Immediate mount check, hidden-tab pause, ±30s jitter, exponential backoff to 30 min, NODE_ENV dev guard  | T10R-R8                      |
-| L-44     | 2026-04-25    | `/api/health` + `/api/version` moved to `PUBLIC_EXACT_PATHS`; 2 new tests reject prefix variants         | T10R-R9                      |
-| L-45     | 2026-04-25    | `checkPublicRateLimit` (IP-keyed): 60/min health, 30/min version; 429 + `retry-after` on exceedance      | T10R-R10                     |
-| L-46     | 2026-04-25    | Replaced bogus `vercel env pull -- DATABASE_URL` with sourced `.env.production` flow; neonctl alt added  | T10R-R11                     |
-| H-46     | 2026-10-11    | Better Auth `customRules["/sign-in/email"]` 30/60 s; k6 login storm 18/18 OK                             | load test (uncommitted)      |
-| H-47     | 2026-10-11    | `WS_NO_BUFFER_UTIL` inlined via next.config `env`; 0 `b.mask` crashes in k6 run                          | load test (uncommitted)      |
-| M-57     | 2026-10-11    | Not reproducible on healthy rig — SSE streams close at 25 s                                              | load test                    |
-| L-50     | 2026-10-12    | StatusBadge translates via `status` ns; subtypes/roles/methods via next-intl; "Analítica"                | feat/design-system           |
-| M-65     | 2026-10-12    | Opt-in selection grouped by client; client names + multi-client warning in confirmation                  | feat/design-system           |
-| M-67     | 2026-10-12    | "Cobrar" quick action hidden for roles without checkout permission                                       | feat/design-system           |
-| M-66     | 2026-10-12    | Oldest-first range picker replaces per-day chips; clearer secretary breakdown labels                     | feat/design-system           |
-| M-63     | 2026-10-12    | `timeZone: "America/Bogota"` on all remaining locale time/date renders (11 sites)                        | feat/design-system           |
-| L-51     | 2026-10-12    | Accessible names on all flagged controls + icon buttons; keyboard drill-down in analytics                | feat/design-system           |
-| M-74     | 2026-10-12    | Chart colours use `var(--color-primary)` / color-mix instead of hsl() over oklch tokens                  | feat/design-system           |
-| H-53     | 2026-10-12    | Distinct-date secretary pay + sibling-payout exclusion; Bogota dates in payroll; same-date labels        | fix/payroll-same-date-days   |
-| M-64     | 2026-10-12    | Client reads via parallel GET /api/q (allowlist over existing read fns); Cobrar dialog ~1.5 s            | fix/payroll-same-date-days   |
-| UI-audit | 2026-10-12    | Long lists paged 50 at a time (clients, ticket history); global-error localized + styled                 | fix/payroll-same-date-days   |
+| Issue ID | Date resolved | Resolution                                                                                                      | Commit/PR                    |
+| -------- | ------------- | --------------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| C-01     | 2026-04-02    | Added `appointment_id (FK nullable)` to T033 schema in `phase-04a-tickets-checkout.md`                          | Senior QA review             |
+| C-02     | 2026-04-02    | Added `P4B --> P7` edge to mermaid dependency graph in `project-plan.md`                                        | Senior QA review             |
+| H-02     | 2026-04-02    | Updated `business.md` Sentry entry from "Phase 10" to "Phase 0"                                                 | Senior QA review             |
+| H-03     | 2026-04-02    | Added manual password fallback to T013 AC when Resend is unavailable                                            | Senior QA review             |
+| H-06     | 2026-04-02    | Added security review checklist to T089 acceptance criteria                                                     | Senior QA review             |
+| H-08     | 2026-04-02    | Added shared `payment_method_enum` definition to T006 acceptance criteria                                       | Senior QA review             |
+| H-09     | 2026-04-02    | Resolved via C-01 fix (same `appointment_id` column)                                                            | Senior QA review             |
+| H-10     | 2026-04-02    | Added `cancelled` status to large order enum in T057 and T059 with cancellation reason                          | Senior QA review             |
+| H-11     | 2026-04-02    | Added rate limiting policy to T097 acceptance criteria covering all mutation endpoints                          | Senior QA review             |
+| M-11     | 2026-04-02    | Added T061 to T062 dependency list in task file and progress.md                                                 | Senior QA review             |
+| L-10     | 2026-04-02    | Updated `postgres-providers.md` to reference only Drizzle ORM                                                   | Senior QA review             |
+| L-12     | 2026-04-02    | Updated T087 health endpoint AC to include DB connectivity check (`SELECT 1`)                                   | Senior QA review             |
+| C-03     | 2026-04-02    | Currency confirmed as COP (Colombian Pesos). T099 ACs updated.                                                  | Stakeholder decision session |
+| C-04     | 2026-04-02    | Created `docs/research/data-privacy-compliance.md` (Colombian Ley 1581 de 2012)                                 | Stakeholder decision session |
+| H-01     | 2026-04-02    | Phase 0 split into 0A (Infrastructure) and 0B (Standards & Design)                                              | Stakeholder decision session |
+| H-04     | 2026-04-02    | Added "Migration Path" section to `docs/research/auth-providers.md` with Auth.js and Clerk steps                | Stakeholder decision session |
+| H-05     | 2026-04-02    | Added 30-second polling fallback to T098 ACs                                                                    | Stakeholder decision session |
+| H-07     | 2026-04-02    | Added storage capacity estimate to `docs/research/postgres-providers.md` (~28 MB for 6 months)                  | Stakeholder decision session |
+| H-12     | 2026-04-02    | Added loading state to T019 "Open Day" and cold start documentation to postgres-providers.md                    | Stakeholder decision session |
+| H-13     | 2026-04-02    | Created `docs/testing/concurrency-test-plan.md` with 8 race condition scenarios                                 | QA review action             |
+| H-14     | 2026-04-02    | Business day boundary tests added to phase-04a test plan; timezone constant defined                             | QA review action             |
+| H-15     | 2026-04-02    | Added T106 (UAT) to Phase 10 between T088 and T089                                                              | QA review action             |
+| H-16     | 2026-04-02    | Added post-deployment smoke test AC to T095                                                                     | QA review action             |
+| M-01     | 2026-04-02    | Added no-show decrement logic to T032b ACs                                                                      | Stakeholder decision session |
+| M-03     | 2026-04-02    | Added `service_variant_id` FK to T049 appointments table                                                        | Stakeholder decision session |
+| M-06     | 2026-04-02    | Added reopen day capability to T019 ACs (admin only, audit trail, most recent day only)                         | Stakeholder decision session |
+| M-07     | 2026-04-02    | Added `expected_work_days` to T012 employees table; T065 updated for part-time                                  | Stakeholder decision session |
+| M-08     | 2026-04-02    | Added `original_computed_amount` and `adjustment_reason` to T066 payouts table                                  | Stakeholder decision session |
+| M-13     | 2026-04-02    | Removed `deposit_paid` column from T057; computed from payments table                                           | Stakeholder decision session |
+| M-14     | 2026-04-02    | Business timezone constant `America/Bogota` added to T002 standards                                             | Stakeholder decision session |
+| M-15     | 2026-04-02    | Created `docs/research/frontend-libraries.md`                                                                   | Stakeholder decision session |
+| M-17     | 2026-04-02    | `commission_pct` precision set to `numeric(5,2)` in T023; banker's rounding in T002                             | Stakeholder decision session |
+| M-19     | 2026-04-02    | Added structured business logic logging AC to T085                                                              | QA review action             |
+| M-20     | 2026-04-02    | Integration test approach documented in `docs/testing/README.md`                                                | QA review action             |
+| L-15     | 2026-04-02    | Rounding policy (banker's rounding) and precision defined in T002 standards                                     | Stakeholder decision session |
+| M-16     | 2026-04-09    | Stale — Pusher replaced by SSE; no third-party message volume limits apply                                      | Phase 0A Opus audit          |
+| M-21     | 2026-04-09    | `pino-pretty` installed as dev dep in `apps/web`                                                                | T0AR-R1                      |
+| M-22     | 2026-04-09    | Seed script user+account inserts wrapped in `db.transaction()`                                                  | T0AR-R2                      |
+| M-23     | 2026-04-09    | Middleware `roleCanAccess()` added — each role restricted to its path prefix                                    | T0AR-R3                      |
+| M-24     | 2026-04-09    | Sentry `beforeSend` extended to scrub exception messages, breadcrumbs, and extra data                           | T0AR-R4                      |
+| L-16     | 2026-04-09    | `@deprecated` JSDoc added to `use-sse.ts`; developers directed to `useRealtimeEvent`                            | Phase 0 Opus audit           |
+| H-18     | 2026-04-11    | Added `eq(clients.isActive, true)` guard to `editClient` WHERE clause                                           | T03R-R1                      |
+| M-26     | 2026-04-11    | Added `clients.clearSelection` i18n key; replaced hardcoded aria-labels and "OK" button                         | T03R-R2                      |
+| M-27     | 2026-04-11    | Added `clientIdSchema = z.string().uuid()` validation to editClient, archiveClient, unarchiveClient             | T03R-R3                      |
+| H-17     | 2026-04-11    | Added `updated_at` migration + `.$onUpdate()` to employees and business_days tables                             | T01R-R2                      |
+| M-25     | 2026-04-11    | `ROLE_HOME` moved to `@befine/types` constants; both files import from shared source                            | T01R-R3                      |
+| L-18     | 2026-04-11    | Standardized all server actions to use `hasRole(session.user, role)` helper                                     | T01R-R4                      |
+| H-19     | 2026-04-18    | `processCheckout` idempotency rewritten with `INSERT ... ON CONFLICT DO NOTHING RETURNING` + refetch            | T04R-R3                      |
+| H-20     | 2026-04-18    | `createBatch` wrapped in `db.transaction`; clothier notifications deferred to post-commit                       | T04R-R4                      |
+| H-21     | 2026-04-18    | `lib/rate-limit.ts` introduced; CLAUDE.md caps applied to all Phase 4 mutations                                 | T04R-R5                      |
+| H-22     | 2026-04-18    | Vitest unit tests added covering ticket transitions × role, checkout idempotency, optimistic locks              | T04R-R6                      |
+| M-29     | 2026-04-18    | `resolveEditRequest` wrapped in `db.transaction`; SSE + notification deferred to post-commit                    | T04R-R7                      |
+| L-21     | 2026-04-18    | `createNotification`/`archiveOldNotifications` extracted to `lib/notifications.ts` private helper               | T04R-R2                      |
+| L-22     | 2026-04-18    | Dead `transitionToReopened` action deleted                                                                      | T04R-R8                      |
+| L-23     | 2026-04-18    | Zod schemas added in `packages/types/src/schemas/` for edit-request, reopen, claim, mark, approve               | T04R-R9                      |
+| C-06     | 2026-04-18    | `/api/realtime/[channel]` gated with session + per-channel role check; removed from SHARED_PATHS                | T04R-R1                      |
+| C-07     | 2026-04-18    | `createNotification` extracted to private helper; no longer a callable server action endpoint                   | T04R-R2                      |
+| C-08     | 2026-04-19    | Dual-driver setup: `neon-http` for reads, `neon-serverless` Pool for interactive transactions                   | T05R-R1                      |
+| C-09     | 2026-04-19    | `price_change_acknowledged` default flipped to `true`; backfill migration; filter logic corrected               | T05R-R2                      |
+| C-10     | 2026-04-19    | `reschedule` action implemented with overlap re-check; Reschedule button wired in UI                            | T05R-R3                      |
+| H-23     | 2026-04-19    | Reopen branch catches `23P01` exclusion violation; returns friendly CONFLICT response                           | T05R-R4                      |
+| H-24     | 2026-04-19    | `editVariant` price-change side effects wrapped in single transaction; notifications post-commit                | T05R-R5                      |
+| M-30     | 2026-04-19    | Resolved as side effect of C-09 — fresh bookings no longer show false-positive badge                            | T05R-R2                      |
+| M-31     | 2026-04-19    | `checkRateLimit(rateLimits.general)` added to `acknowledgeAppointmentPriceChange`                               | T05R-R6                      |
+| L-24     | 2026-04-19    | `complete` action wires `tickets.appointment_id` when `ticketId` is provided                                    | T05R-R7                      |
+| L-25     | 2026-04-19    | `editVariant` protected by optimistic lock (`version` column) to prevent concurrent double-notify               | T05R-R8                      |
+| C-11     | 2026-04-19    | `/large-orders` added to `SHARED_APP_PATHS`; 2 new middleware-helpers tests confirm all roles reach path        | T06R-R1                      |
+| H-25     | 2026-04-19    | T062 AC updated: "cashier read-only" clause removed; `cashier_admin` + `secretary` have full access             | T06R-R3                      |
+| H-26     | 2026-04-19    | Overpayment guard added; order re-read inside tx; concurrent-cancel guard via status re-check                   | T06R-R2                      |
+| H-27     | 2026-04-19    | Cancel dialog with deposit warning + `acknowledgedDeposits` flag on server; Dialog UI with reason               | T06R-R4                      |
+| M-32     | 2026-04-19    | `editLargeOrder` adds `version` to schema + WHERE clause, terminal-state guard, totalPrice≥paid check           | T06R-R5                      |
+| M-33     | 2026-04-19    | 31 Vitest unit tests added: transitions, balance, overpayment, auto-paid, cancel reason, role gates             | T06R-R6                      |
+| M-34     | 2026-04-19    | Both schemas use `.nullish()` for optional fields; deposit refine ensures amount↔method both-or-none            | T06R-R7                      |
+| M-35     | 2026-04-19    | `createLargeOrder` re-checks `isActive` on client fetch; returns VALIDATION_ERROR if archived                   | T06R-R8                      |
+| L-26     | 2026-04-19    | `sql.raw` array replaced with `inArray(batchPieces.batchId, batchIds)` in batch summary query                   | T06R-R9                      |
+| L-27     | 2026-04-19    | "Registrado por" replaced with `t("recordedBy")`; key added to `es.json` and `en.json`                          | T06R-R10                     |
+| L-28     | 2026-04-19    | `revalidatePath(\`/large-orders/\${orderId}\`)` added to edit, transition, and payment actions                  | T06R-R11                     |
+| L-29     | 2026-04-19    | Cancel wrapped in Dialog with deposit warning, reason input, and disabled confirm until acked                   | T06R-R12                     |
+| M-47     | 2026-04-21    | 25 Vitest integration tests in `cross-module-flows.test.ts` covering the four required flows; README doc        | T09R-R11                     |
+| M-53     | 2026-04-25    | RFC 4180 `parseCsvLine`, BOM strip, CLI guard, 11 unit tests covering Colombian compound surnames               | T10R-R6                      |
+| M-54     | 2026-04-25    | In-memory phone/email Set dedup, `db.transaction` (createTxDb) wrapper, summary with intra-file skips           | T10R-R7                      |
+| M-55     | 2026-04-25    | Immediate mount check, hidden-tab pause, ±30s jitter, exponential backoff to 30 min, NODE_ENV dev guard         | T10R-R8                      |
+| L-44     | 2026-04-25    | `/api/health` + `/api/version` moved to `PUBLIC_EXACT_PATHS`; 2 new tests reject prefix variants                | T10R-R9                      |
+| L-45     | 2026-04-25    | `checkPublicRateLimit` (IP-keyed): 60/min health, 30/min version; 429 + `retry-after` on exceedance             | T10R-R10                     |
+| L-46     | 2026-04-25    | Replaced bogus `vercel env pull -- DATABASE_URL` with sourced `.env.production` flow; neonctl alt added         | T10R-R11                     |
+| H-46     | 2026-10-11    | Better Auth `customRules["/sign-in/email"]` 30/60 s; k6 login storm 18/18 OK                                    | load test (uncommitted)      |
+| H-47     | 2026-10-11    | `WS_NO_BUFFER_UTIL` inlined via next.config `env`; 0 `b.mask` crashes in k6 run                                 | load test (uncommitted)      |
+| M-57     | 2026-10-11    | Not reproducible on healthy rig — SSE streams close at 25 s                                                     | load test                    |
+| L-50     | 2026-10-12    | StatusBadge translates via `status` ns; subtypes/roles/methods via next-intl; "Analítica"                       | feat/design-system           |
+| M-65     | 2026-10-12    | Opt-in selection grouped by client; client names + multi-client warning in confirmation                         | feat/design-system           |
+| M-67     | 2026-10-12    | "Cobrar" quick action hidden for roles without checkout permission                                              | feat/design-system           |
+| M-66     | 2026-10-12    | Oldest-first range picker replaces per-day chips; clearer secretary breakdown labels                            | feat/design-system           |
+| M-63     | 2026-10-12    | `timeZone: "America/Bogota"` on all remaining locale time/date renders (11 sites)                               | feat/design-system           |
+| L-51     | 2026-10-12    | Accessible names on all flagged controls + icon buttons; keyboard drill-down in analytics                       | feat/design-system           |
+| M-74     | 2026-10-12    | Chart colours use `var(--color-primary)` / color-mix instead of hsl() over oklch tokens                         | feat/design-system           |
+| H-53     | 2026-10-12    | Distinct-date secretary pay + sibling-payout exclusion; Bogota dates in payroll; same-date labels               | fix/payroll-same-date-days   |
+| M-64     | 2026-10-12    | Client reads via parallel GET /api/q (allowlist over existing read fns); Cobrar dialog ~1.5 s                   | fix/payroll-same-date-days   |
+| UI-audit | 2026-10-12    | Long lists paged 50 at a time (clients, ticket history); global-error localized + styled                        | fix/payroll-same-date-days   |
+| H-52     | 2026-10-23    | Clothier board keeps unfinished pieces from earlier days (dated tag); works with no open day                    | fix/vikunja-backlog          |
+| H-49     | 2026-10-23    | Close day blocked atomically while tickets are unpaid; `voided` status + `voidTicket` with reason               | fix/vikunja-backlog          |
+| H-50     | 2026-10-23    | Cloth sales: idempotency key + required payment method; counted in analytics and day revenue                    | fix/vikunja-backlog          |
+| M-56     | 2026-10-23    | createAssignment locks the order_items row (FOR UPDATE) before the capacity SUM                                 | fix/vikunja-backlog          |
+| M-61     | 2026-10-23    | createTicket catch logs + Sentry.captureException; generic message kept                                         | fix/vikunja-backlog          |
+| L-47     | 2026-10-23    | createTicket idempotency via INSERT … ON CONFLICT DO NOTHING + fetch                                            | fix/vikunja-backlog          |
+| M-58     | 2026-10-23    | Per-clothier stable order for claimable pieces; lost claim refetches board with a clear toast                   | fix/vikunja-backlog          |
+| M-59     | 2026-10-23    | Rate limits actually enforced (fake eval contract fixed); Upstash when configured; per-limiter prefix; eviction | fix/vikunja-backlog          |
+| M-50     | 2026-10-23    | robots.txt served by app/robots.ts (disallow all) and public in middleware                                      | fix/vikunja-backlog          |
+| M-49     | 2026-10-23    | Verified root metadata already sets a description (fixed earlier)                                               | fix/vikunja-backlog          |
+| L-48     | 2026-10-23    | trustedOrigins derived from BETTER_AUTH_URL / NEXT_PUBLIC_APP_URL / BETTER_AUTH_TRUSTED_ORIGINS                 | fix/vikunja-backlog          |
+| L-49     | 2026-10-23    | Transaction pool size configurable via DB_TX_POOL_MAX (default 5)                                               | fix/vikunja-backlog          |
+| L-52     | 2026-10-23    | Notification badge clears on panel close; manifest + service worker no longer redirected to /login              | fix/vikunja-backlog          |
+| M-68     | 2026-10-23    | Ticket and cloth-sale forms toast thrown errors; retries reuse an input-tied idempotency key                    | fix/vikunja-backlog          |
+| M-73     | 2026-10-23    | Patched next/better-auth/sentry/ws/zod (0 critical); shadcn → devDeps; CI blocks on critical                    | fix/vikunja-backlog          |
+| L-08     | 2026-10-23    | Version check every 15 min; focus re-check throttled to 1/min (shared salon IP)                                 | fix/vikunja-backlog          |
+| L-04     | 2026-10-23    | Soft warning above 10 active variants per service (create + detail)                                             | fix/vikunja-backlog          |
+| L-03     | 2026-10-23    | Catalog audit log paged (20, keyset cursor) with Zod-validated input; labels via next-intl                      | fix/vikunja-backlog          |
+| M-75     | 2026-10-23    | "Pagar hasta hoy" reaches the latest session of today; days ordered by opening time                             | fix/vikunja-backlog          |
+| M-76     | 2026-10-23    | Payroll lines labelled by service (+ non-default variant), not "Estándar"                                       | fix/vikunja-backlog          |
+| M-71     | 2026-10-23    | Checkout + payroll E2E with axe; throwaway DB (Postgres + Neon proxy) in CI; screenshots opt-in                 | fix/vikunja-backlog          |
+| M-77     | 2026-10-23    | Analytics commission uses banker's rounding per item (matches payroll)                                          | fix/vikunja-backlog          |
+| M-70b    | 2026-10-23    | Query integration tests on real Postgres (rolled back); 98.8 % / 85.3 % coverage; 80 % threshold enforced in CI | fix/vikunja-backlog          |

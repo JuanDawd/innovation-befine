@@ -3,7 +3,8 @@
 /**
  * Day-at-a-glance stats — T093
  *
- * Returns today's revenue, closed ticket count, and open ticket count for the current business day.
+ * Returns today's revenue (closed tickets + cloth sales — H-50), closed ticket count, and open
+ * ticket count for the current business day.
  * Requires cashier or admin role.
  */
 
@@ -11,7 +12,7 @@ import { headers } from "next/headers";
 import { eq, and, count, sql } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import { tickets, ticketItems } from "@befine/db/schema";
+import { tickets, ticketItems, clothSales } from "@befine/db/schema";
 import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
 import { getCurrentBusinessDay } from "@/lib/business-day";
@@ -35,7 +36,7 @@ export async function getDayStats(): Promise<ActionResult<DayStats>> {
 
   const db = getDb();
 
-  const [revenueRows, countRows] = await Promise.all([
+  const [revenueRows, countRows, clothSaleRows] = await Promise.all([
     db
       .select({
         unitPrice: ticketItems.unitPrice,
@@ -55,12 +56,18 @@ export async function getDayStats(): Promise<ActionResult<DayStats>> {
           sql`${tickets.status} IN ('closed', 'paid_offline')`,
         ),
       ),
+
+    db
+      .select({
+        total: sql<number>`COALESCE(SUM(COALESCE(${clothSales.priceOverride}, ${clothSales.unitPrice}) * ${clothSales.quantity}), 0)::bigint`,
+      })
+      .from(clothSales)
+      .where(eq(clothSales.businessDayId, businessDay.id)),
   ]);
 
-  const revenue = revenueRows.reduce(
-    (sum, r) => sum + (r.overridePrice ?? r.unitPrice) * r.quantity,
-    0,
-  );
+  const revenue =
+    revenueRows.reduce((sum, r) => sum + (r.overridePrice ?? r.unitPrice) * r.quantity, 0) +
+    Number(clothSaleRows[0]?.total ?? 0);
   const closedCount = countRows[0]?.cnt ?? 0;
 
   return { success: true, data: { revenue, closedCount, businessDayId: businessDay.id } };

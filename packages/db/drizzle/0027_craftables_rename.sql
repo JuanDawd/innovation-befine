@@ -33,9 +33,17 @@ ALTER TABLE "craftables"
   RENAME CONSTRAINT "cloth_batches_created_by_employees_id_fk"
   TO "craftables_created_by_employees_id_fk";
 --> statement-breakpoint
-ALTER TABLE "craftables"
-  RENAME CONSTRAINT "cloth_batches_large_order_id_large_orders_id_fk"
-  TO "craftables_large_order_id_large_orders_id_fk";
+-- M-71: 0018/0019/0024/0026 created several of these FKs under hand-written
+-- names (fk_*); databases built with db:push have drizzle's default names.
+-- Those renames accept either name so the chain applies to an empty database.
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'cloth_batches_large_order_id_large_orders_id_fk') THEN
+    ALTER TABLE "craftables" RENAME CONSTRAINT "cloth_batches_large_order_id_large_orders_id_fk" TO "craftables_large_order_id_large_orders_id_fk";
+  ELSIF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_cloth_batches_large_orders') THEN
+    ALTER TABLE "craftables" RENAME CONSTRAINT "fk_cloth_batches_large_orders" TO "craftables_large_order_id_large_orders_id_fk";
+  END IF;
+END $$;
 
 -- 7. Rename FKs on craftable_pieces
 --> statement-breakpoint
@@ -47,9 +55,14 @@ ALTER TABLE "craftable_pieces"
   RENAME CONSTRAINT "batch_pieces_cloth_piece_id_cloth_pieces_id_fk"
   TO "craftable_pieces_cloth_piece_id_cloth_pieces_id_fk";
 --> statement-breakpoint
-ALTER TABLE "craftable_pieces"
-  RENAME CONSTRAINT "batch_pieces_cloth_piece_variant_id_cloth_piece_variants_id_fk"
-  TO "craftable_pieces_cloth_piece_variant_id_cloth_piece_variants_id_fk";
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'batch_pieces_cloth_piece_variant_id_cloth_piece_variants_id_fk') THEN
+    ALTER TABLE "craftable_pieces" RENAME CONSTRAINT "batch_pieces_cloth_piece_variant_id_cloth_piece_variants_id_fk" TO "craftable_pieces_cloth_piece_variant_id_cloth_piece_variants_id_fk";
+  ELSIF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_batch_pieces_variant') THEN
+    ALTER TABLE "craftable_pieces" RENAME CONSTRAINT "fk_batch_pieces_variant" TO "craftable_pieces_cloth_piece_variant_id_cloth_piece_variants_id_fk";
+  END IF;
+END $$;
 --> statement-breakpoint
 ALTER TABLE "craftable_pieces"
   RENAME CONSTRAINT "batch_pieces_assigned_to_employee_id_employees_id_fk"
@@ -59,9 +72,14 @@ ALTER TABLE "craftable_pieces"
   RENAME CONSTRAINT "batch_pieces_approved_by_employees_id_fk"
   TO "craftable_pieces_approved_by_employees_id_fk";
 --> statement-breakpoint
-ALTER TABLE "craftable_pieces"
-  RENAME CONSTRAINT "batch_pieces_sold_by_employees_id_fk"
-  TO "craftable_pieces_sold_by_employees_id_fk";
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'batch_pieces_sold_by_employees_id_fk') THEN
+    ALTER TABLE "craftable_pieces" RENAME CONSTRAINT "batch_pieces_sold_by_employees_id_fk" TO "craftable_pieces_sold_by_employees_id_fk";
+  ELSIF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_batch_pieces_sold_by') THEN
+    ALTER TABLE "craftable_pieces" RENAME CONSTRAINT "fk_batch_pieces_sold_by" TO "craftable_pieces_sold_by_employees_id_fk";
+  END IF;
+END $$;
 
 -- 8. Rename indexes on craftable_pieces
 --> statement-breakpoint
@@ -78,13 +96,23 @@ ALTER TABLE "payout_batch_pieces" RENAME TO "payout_craftable_pieces";
 ALTER TABLE "payout_craftable_pieces"
   RENAME COLUMN "batch_piece_id" TO "craftable_piece_id";
 --> statement-breakpoint
-ALTER TABLE "payout_craftable_pieces"
-  RENAME CONSTRAINT "payout_batch_pieces_payout_id_payouts_id_fk"
-  TO "payout_craftable_pieces_payout_id_payouts_id_fk";
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'payout_batch_pieces_payout_id_payouts_id_fk') THEN
+    ALTER TABLE "payout_craftable_pieces" RENAME CONSTRAINT "payout_batch_pieces_payout_id_payouts_id_fk" TO "payout_craftable_pieces_payout_id_payouts_id_fk";
+  ELSIF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_payout_batch_pieces_payout') THEN
+    ALTER TABLE "payout_craftable_pieces" RENAME CONSTRAINT "fk_payout_batch_pieces_payout" TO "payout_craftable_pieces_payout_id_payouts_id_fk";
+  END IF;
+END $$;
 --> statement-breakpoint
-ALTER TABLE "payout_craftable_pieces"
-  RENAME CONSTRAINT "payout_batch_pieces_batch_piece_id_batch_pieces_id_fk"
-  TO "payout_craftable_pieces_craftable_piece_id_craftable_pieces_id_fk";
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'payout_batch_pieces_batch_piece_id_batch_pieces_id_fk') THEN
+    ALTER TABLE "payout_craftable_pieces" RENAME CONSTRAINT "payout_batch_pieces_batch_piece_id_batch_pieces_id_fk" TO "payout_craftable_pieces_craftable_piece_id_craftable_pieces_id_fk";
+  ELSIF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_payout_batch_pieces_piece') THEN
+    ALTER TABLE "payout_craftable_pieces" RENAME CONSTRAINT "fk_payout_batch_pieces_piece" TO "payout_craftable_pieces_craftable_piece_id_craftable_pieces_id_fk";
+  END IF;
+END $$;
 --> statement-breakpoint
 ALTER INDEX "idx_payout_batch_pieces_payout" RENAME TO "idx_payout_craftable_pieces_payout";
 

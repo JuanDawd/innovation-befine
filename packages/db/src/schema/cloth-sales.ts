@@ -4,6 +4,7 @@ import { businessDays } from "./business-days";
 import { clothPieces } from "./cloth-pieces";
 import { clothPieceVariants } from "./cloth-pieces";
 import { clients } from "./clients";
+import { paymentMethodEnum } from "./enums";
 import { employees } from "./employees";
 import { tickets } from "./tickets";
 
@@ -13,6 +14,7 @@ import { tickets } from "./tickets";
  * Revenue goes to the store. No employee commission.
  * No stock tracking in MVP — stock management is Post-MVP.
  * Optionally linked to an existing ticket (when the customer also has services).
+ * Paid on the spot (H-50): payment_method is recorded on the sale itself.
  */
 export const clothSales = pgTable(
   "cloth_sales",
@@ -40,6 +42,10 @@ export const clothSales = pgTable(
       .notNull()
       .references(() => employees.id, { onDelete: "restrict" }),
     notes: text("notes"),
+    /** H-50 — null only on sales recorded before payment method was captured */
+    paymentMethod: paymentMethodEnum("payment_method"),
+    /** H-50 — client-generated; a retried submit returns the original sale */
+    idempotencyKey: text("idempotency_key").unique(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [

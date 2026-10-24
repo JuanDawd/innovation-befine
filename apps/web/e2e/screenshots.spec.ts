@@ -5,11 +5,11 @@
  * docs/training/screenshots/{role}/{slug}.png (relative to repo root).
  *
  * Usage:
- *   pnpm --filter @befine/web test:e2e --project=chromium e2e/screenshots.ts
+ *   CAPTURE_SCREENSHOTS=1 pnpm --filter @befine/web test:e2e --project=chromium e2e/screenshots.spec.ts
  *
  * Or with a running dev server already up:
- *   PLAYWRIGHT_BASE_URL=http://localhost:3000 pnpm --filter @befine/web test:e2e \
- *     --project=chromium e2e/screenshots.ts
+ *   CAPTURE_SCREENSHOTS=1 PLAYWRIGHT_BASE_URL=http://localhost:3000 pnpm --filter @befine/web test:e2e \
+ *     --project=chromium e2e/screenshots.spec.ts
  *
  * Credentials are read from env vars (same as seed defaults):
  *   SCREENSHOT_ADMIN_EMAIL     SCREENSHOT_ADMIN_PASSWORD
@@ -25,6 +25,10 @@ import { mkdir } from "fs/promises";
 import path from "path";
 import { fileURLToPath } from "url";
 import { AUTH_STATE_DIR } from "./helpers/auth";
+
+// Writes into docs/training/screenshots — never as part of a normal E2E run
+// (it overwrote the guides with E2E-database data). Opt in explicitly.
+test.skip(process.env.CAPTURE_SCREENSHOTS !== "1", "set CAPTURE_SCREENSHOTS=1 to capture");
 
 // ─── Paths ────────────────────────────────────────────────────────────────────
 

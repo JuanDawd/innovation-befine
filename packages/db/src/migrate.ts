@@ -11,6 +11,9 @@ import { drizzle } from "drizzle-orm/neon-http";
 import { migrate } from "drizzle-orm/neon-http/migrator";
 import { resolve } from "path";
 import { fileURLToPath } from "url";
+import { configureLocalNeonProxy } from "./local-proxy";
+
+configureLocalNeonProxy();
 
 const databaseUrl = process.env.DATABASE_URL;
 if (!databaseUrl) {

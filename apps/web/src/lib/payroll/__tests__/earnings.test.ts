@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { bankersRound } from "@/lib/payroll/compute-stylist-earnings";
+import { bankersRound, earningsLineLabel } from "@/lib/payroll/compute-stylist-earnings";
 import { businessDateOf, isoWeekKey } from "@/lib/dates";
 import { countSecretaryDays } from "@/lib/payroll/secretary-days";
 
@@ -225,5 +225,16 @@ describe("businessDateOf", () => {
 
   it("morning opening keeps the same date", () => {
     expect(businessDateOf("2026-10-11T13:00:00Z")).toBe("2026-10-11");
+  });
+});
+
+describe("earningsLineLabel", () => {
+  it("shows only the service for the default variant", () => {
+    expect(earningsLineLabel("Corte", "Estándar")).toBe("Corte");
+    expect(earningsLineLabel("Corte", "Standard")).toBe("Corte");
+  });
+
+  it("adds a non-default variant after the service", () => {
+    expect(earningsLineLabel("Aminoácidos JK", "Cintura")).toBe("Aminoácidos JK — Cintura");
   });
 });

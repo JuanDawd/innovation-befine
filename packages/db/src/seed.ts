@@ -24,8 +24,14 @@ type SeedUser = {
   expectedWorkDays?: number;
 };
 
-function getEnv(key: string, fallback: string): string {
-  return process.env[key] ?? fallback;
+/** Seed passwords are required — never committed, never defaulted. */
+function getEnv(key: string): string {
+  const value = process.env[key];
+  if (!value || value.length < 8) {
+    console.error(`ERROR: ${key} is not set (min. 8 characters). Seed passwords have no defaults.`);
+    process.exit(1);
+  }
+  return value;
 }
 
 const seedUsers: SeedUser[] = [
@@ -33,55 +39,55 @@ const seedUsers: SeedUser[] = [
     email: "admin@befine.dev",
     name: "Admin",
     role: "admin",
-    password: getEnv("SEED_ADMIN_PASSWORD", "Admin123!"),
+    password: getEnv("SEED_ADMIN_PASSWORD"),
   },
   {
     email: "secretary@befine.dev",
     name: "Secretaria",
     role: "secretary",
-    password: getEnv("SEED_SECRETARY_PASSWORD", "Secretary123!"),
+    password: getEnv("SEED_SECRETARY_PASSWORD"),
     dailyRate: 50000,
   },
   {
     email: "manicurist@befine.dev",
     name: "Manicurista",
     role: "stylist",
-    password: getEnv("SEED_STYLIST_PASSWORD", "Stylist123!"),
+    password: getEnv("SEED_STYLIST_PASSWORD"),
     stylistSubtype: "manicurist",
   },
   {
     email: "spa@befine.dev",
     name: "Spa Manager",
     role: "stylist",
-    password: getEnv("SEED_STYLIST_PASSWORD", "Stylist123!"),
+    password: getEnv("SEED_STYLIST_PASSWORD"),
     stylistSubtype: "spa_manager",
   },
   {
     email: "hairdresser@befine.dev",
     name: "Estilista",
     role: "stylist",
-    password: getEnv("SEED_STYLIST_PASSWORD", "Stylist123!"),
+    password: getEnv("SEED_STYLIST_PASSWORD"),
     stylistSubtype: "hairdresser",
   },
   {
     email: "masseuse@befine.dev",
     name: "Masajista",
     role: "stylist",
-    password: getEnv("SEED_STYLIST_PASSWORD", "Stylist123!"),
+    password: getEnv("SEED_STYLIST_PASSWORD"),
     stylistSubtype: "masseuse",
   },
   {
     email: "makeup@befine.dev",
     name: "Maquilladora",
     role: "stylist",
-    password: getEnv("SEED_STYLIST_PASSWORD", "Stylist123!"),
+    password: getEnv("SEED_STYLIST_PASSWORD"),
     stylistSubtype: "makeup_artist",
   },
   {
     email: "clothier@befine.dev",
     name: "Confeccionista",
     role: "clothier",
-    password: getEnv("SEED_CLOTHIER_PASSWORD", "Clothier123!"),
+    password: getEnv("SEED_CLOTHIER_PASSWORD"),
   },
 ];
 

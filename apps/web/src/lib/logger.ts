@@ -3,8 +3,10 @@ import pino from "pino";
 /**
  * Structured logger for business logic — T085
  *
- * Use for business events (checkout, settlement, assignment) — NOT for errors.
- * Errors go to Sentry automatically via instrumentation.ts.
+ * Use for business events (checkout, settlement, assignment). Uncaught errors
+ * go to Sentry automatically via instrumentation.ts; an error you catch and turn
+ * into a generic ActionResult must be logged and sent with Sentry.captureException
+ * so the cause isn't lost (M-61).
  *
  * Usage:
  *   logger.info({ ticketId, action: "checkout" }, "Ticket checked out");

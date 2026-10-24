@@ -2,11 +2,14 @@ import { neon, neonConfig, Pool } from "@neondatabase/serverless";
 import { drizzle as drizzleHttp } from "drizzle-orm/neon-http";
 import { drizzle as drizzleWs } from "drizzle-orm/neon-serverless";
 import ws from "ws";
+import { configureLocalNeonProxy } from "./local-proxy";
 
 import * as schema from "./schema";
 
 // Required for neon-serverless WebSocket driver in Node.js runtime
 neonConfig.webSocketConstructor = ws;
+
+configureLocalNeonProxy();
 
 /**
  * HTTP driver — use for all reads, simple writes, Better Auth, and any
@@ -27,14 +30,20 @@ export function createDb(databaseUrl: string) {
  * Pool config rationale:
  * - idleTimeoutMillis: 10_000 — evicts sockets before Neon's compute can
  *   sleep them, preventing the stale-socket JSON parse error on wake.
- * - max: 5 — caps per-instance connections; Neon free tier has a 100-conn
- *   ceiling shared across all Vercel function instances.
+ * - max: DB_TX_POOL_MAX, default 5 — caps per-instance connections; Neon free
+ *   tier has a 100-conn ceiling shared across all Vercel function instances.
+ *   A single self-hosted process can raise it (L-49), e.g. to 20.
  */
-export function createTxDb(databaseUrl: string) {
+export function txPoolMax(raw: string | undefined): number {
+  const n = Number(raw);
+  return Number.isInteger(n) && n >= 1 && n <= 100 ? n : 5;
+}
+
+export function createTxDb(databaseUrl: string, max = txPoolMax(process.env.DB_TX_POOL_MAX)) {
   const pool = new Pool({
     connectionString: databaseUrl,
     idleTimeoutMillis: 10_000,
-    max: 5,
+    max,
   });
   return drizzleWs({ client: pool, schema });
 }

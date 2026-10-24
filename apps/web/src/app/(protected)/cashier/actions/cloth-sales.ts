@@ -1,6 +1,7 @@
 "use server";
 
 import { headers } from "next/headers";
+import * as Sentry from "@sentry/nextjs";
 import { eq, desc, and, asc } from "drizzle-orm";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
@@ -35,6 +36,7 @@ export type ClothSaleRow = {
   clientName: string | null;
   guestName: string | null;
   ticketId: string | null;
+  paymentMethod: "cash" | "card" | "transfer" | null;
   soldByName: string;
   createdAt: Date;
 };
@@ -60,6 +62,8 @@ const createClothSaleSchema = z
     guestName: z.string().max(120).nullable().optional(),
     ticketId: z.string().uuid().nullable().optional(),
     notes: z.string().max(500).nullable().optional(),
+    paymentMethod: z.enum(["cash", "card", "transfer"], "Selecciona el método de pago"),
+    idempotencyKey: z.uuid("Clave de idempotencia inválida"),
   })
   .refine((d) => !(d.clientId && d.guestName), {
     message: "No se puede especificar cliente y nombre de invitado al mismo tiempo",
@@ -218,8 +222,8 @@ export async function createClothSale(
   }
 
   const txDb = getTxDb();
-  const [sale] = await txDb.transaction(async (tx) => {
-    return tx
+  const sale = await txDb.transaction(async (tx) => {
+    const [inserted] = await tx
       .insert(clothSales)
       .values({
         businessDayId: businessDay.id,
@@ -233,12 +237,46 @@ export async function createClothSale(
         guestName: parsed.data.guestName ?? null,
         soldBy: emp.id,
         notes: parsed.data.notes ?? null,
+        paymentMethod: parsed.data.paymentMethod,
+        idempotencyKey: parsed.data.idempotencyKey,
       })
-      .returning({ id: clothSales.id });
+      .onConflictDoNothing({ target: clothSales.idempotencyKey })
+      .returning({
+        id: clothSales.id,
+        unitPrice: clothSales.unitPrice,
+        quantity: clothSales.quantity,
+      });
+    if (inserted) return { ...inserted, replayed: false };
+
+    // Retried submit — return the sale that was already recorded.
+    const [existing] = await tx
+      .select({ id: clothSales.id, unitPrice: clothSales.unitPrice, quantity: clothSales.quantity })
+      .from(clothSales)
+      .where(eq(clothSales.idempotencyKey, parsed.data.idempotencyKey))
+      .limit(1);
+    return existing ? { ...existing, replayed: true } : null;
+  });
+
+  if (!sale)
+    return {
+      success: false,
+      error: { code: "INTERNAL_ERROR", message: "No se pudo registrar la venta" },
+    };
+
+  const effectiveTotal = sale.unitPrice * sale.quantity;
+  Sentry.addBreadcrumb({
+    category: "financial",
+    message: sale.replayed ? "createClothSale replayed" : "createClothSale",
+    data: {
+      saleId: sale.id,
+      businessDayId: businessDay.id,
+      total: effectiveTotal,
+      paymentMethod: parsed.data.paymentMethod,
+    },
   });
 
   revalidatePath("/cashier");
-  return { success: true, data: { id: sale.id, effectiveTotal: unitPrice * parsed.data.quantity } };
+  return { success: true, data: { id: sale.id, effectiveTotal } };
 }
 
 // ─── List today's cloth sales ──────────────────────────────────────────────────
@@ -266,6 +304,7 @@ export async function listTodayClothSales(): Promise<ActionResult<ClothSaleRow[]
       clientName: clients.name,
       guestName: clothSales.guestName,
       ticketId: clothSales.ticketId,
+      paymentMethod: clothSales.paymentMethod,
       soldByName: users.name,
       createdAt: clothSales.createdAt,
     })
@@ -291,6 +330,7 @@ export async function listTodayClothSales(): Promise<ActionResult<ClothSaleRow[]
       clientName: r.clientName ?? null,
       guestName: r.guestName ?? null,
       ticketId: r.ticketId,
+      paymentMethod: r.paymentMethod,
       soldByName: r.soldByName,
       createdAt: r.createdAt,
     })),

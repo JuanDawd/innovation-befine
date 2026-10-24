@@ -10,7 +10,7 @@
 
 import { notifyDataChanged } from "@/lib/data-events";
 import { newUuid } from "@/lib/uuid";
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import { useToast } from "@/hooks/use-toast";
@@ -72,6 +72,10 @@ export function LogServiceForm({
   const [quantity, setQuantity] = useState(1);
   const [clientSelection, setClientSelection] = useState<ClientSelection>(null);
   const [isPending, startSubmitTransition] = useTransition();
+  // One key per ticket attempt: resubmitting the same inputs after a lost
+  // response returns the ticket already created instead of a duplicate. A new
+  // key is used once the inputs change or the ticket was created.
+  const attempt = useRef<{ signature: string; key: string } | null>(null);
 
   const selectedService = services.find((s) => s.id === serviceId);
   const variants = selectedService?.variants ?? [];
@@ -81,6 +85,9 @@ export function LogServiceForm({
     e.preventDefault();
     if (!variantId || !clientSelection) return;
 
+    const signature = JSON.stringify([employeeId, variantId, quantity, clientSelection]);
+    if (attempt.current?.signature !== signature) attempt.current = { signature, key: newUuid() };
+
     const input = {
       employeeId,
       serviceVariantId: variantId,
@@ -88,12 +95,20 @@ export function LogServiceForm({
       clientType: clientSelection.type,
       clientId: clientSelection.type === "saved" ? clientSelection.client.id : undefined,
       guestName: clientSelection.type === "guest" ? clientSelection.guestName : undefined,
-      idempotencyKey: newUuid(),
+      idempotencyKey: attempt.current.key,
     };
 
     startSubmitTransition(async () => {
-      const result = await createTicket(input);
+      let result: Awaited<ReturnType<typeof createTicket>>;
+      try {
+        result = await createTicket(input);
+      } catch {
+        // M-68: network drop / server unreachable — never fail silently.
+        showToast("error", tc("networkError"));
+        return;
+      }
       if (result.success) {
+        attempt.current = null;
         showToast("success", t("submitSuccess"));
         notifyDataChanged("tickets");
         router.refresh();

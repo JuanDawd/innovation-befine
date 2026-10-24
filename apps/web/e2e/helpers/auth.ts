@@ -1,21 +1,36 @@
 import type { Page } from "@playwright/test";
 
+/** E2E logins come from the environment (same values the seed used) — no defaults. */
+function required(key: string): string {
+  const value = process.env[key];
+  if (!value) throw new Error(`${key} is not set — use the passwords you seeded with (SEED_*).`);
+  return value;
+}
+
 export const CREDS = {
   admin: {
     email: process.env.E2E_ADMIN_EMAIL ?? "admin@befine.dev",
-    password: process.env.E2E_ADMIN_PASSWORD ?? "Admin123!",
+    get password() {
+      return required("E2E_ADMIN_PASSWORD");
+    },
   },
   secretary: {
     email: process.env.E2E_SECRETARY_EMAIL ?? "secretary@befine.dev",
-    password: process.env.E2E_SECRETARY_PASSWORD ?? "Secretary123!",
+    get password() {
+      return required("E2E_SECRETARY_PASSWORD");
+    },
   },
   stylist: {
     email: process.env.E2E_STYLIST_EMAIL ?? "hairdresser@befine.dev",
-    password: process.env.E2E_STYLIST_PASSWORD ?? "Stylist123!",
+    get password() {
+      return required("E2E_STYLIST_PASSWORD");
+    },
   },
   clothier: {
     email: process.env.E2E_CLOTHIER_EMAIL ?? "clothier@befine.dev",
-    password: process.env.E2E_CLOTHIER_PASSWORD ?? "Clothier123!",
+    get password() {
+      return required("E2E_CLOTHIER_PASSWORD");
+    },
   },
 } as const;
 

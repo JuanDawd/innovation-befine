@@ -1,7 +1,7 @@
 "use client";
 
 import { notifyDataChanged } from "@/lib/data-events";
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import { Loader2Icon } from "lucide-react";
@@ -18,6 +18,10 @@ import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { formatMoney } from "@/i18n";
 import { fetchQuery } from "@/lib/action-query";
+import { newUuid } from "@/lib/uuid";
+
+const PAYMENT_METHODS = ["cash", "card", "transfer"] as const;
+type PaymentMethod = (typeof PAYMENT_METHODS)[number];
 
 interface SellClothPieceModalProps {
   open: boolean;
@@ -29,6 +33,7 @@ interface SellClothPieceModalProps {
 export function SellClothPieceModal({ open, onOpenChange, ticketId }: SellClothPieceModalProps) {
   const t = useTranslations("clothSale");
   const tc = useTranslations("common");
+  const tm = useTranslations("checkout.method");
   const [isPending, startTransition] = useTransition();
   // Loaded when the modal first opens, then cached (reopening is instant).
   const piecesQuery = useQuery({
@@ -54,6 +59,11 @@ export function SellClothPieceModal({ open, onOpenChange, ticketId }: SellClothP
   const [customerType, setCustomerType] = useState<"none" | "client" | "guest">("none");
   const [clientId, setClientId] = useState("");
   const [guestName, setGuestName] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
+  // One key per sale attempt: resubmitting the same inputs (double click, flaky
+  // network) returns the sale already recorded instead of a second one (H-50).
+  // Changed inputs or a recorded sale get a new key.
+  const attempt = useRef<{ signature: string; key: string } | null>(null);
 
   const selectedPiece = pieces.find((p) => p.id === selectedPieceId);
   const selectedVariant = selectedPiece?.variants.find((v) => v.id === selectedVariantId);
@@ -70,6 +80,8 @@ export function SellClothPieceModal({ open, onOpenChange, ticketId }: SellClothP
     setCustomerType("none");
     setClientId("");
     setGuestName("");
+    setPaymentMethod(null);
+    attempt.current = null;
   }
 
   function handleOpenChange(next: boolean) {
@@ -90,17 +102,38 @@ export function SellClothPieceModal({ open, onOpenChange, ticketId }: SellClothP
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!selectedVariantId) return;
+    if (!selectedVariantId || !paymentMethod) return;
+    const signature = JSON.stringify([
+      selectedVariantId,
+      quantity,
+      priceOverride,
+      customerType,
+      clientId,
+      guestName,
+      paymentMethod,
+      ticketId,
+    ]);
+    if (attempt.current?.signature !== signature) attempt.current = { signature, key: newUuid() };
+    const idempotencyKey = attempt.current.key;
 
     startTransition(async () => {
-      const res = await createClothSale({
-        clothPieceVariantId: selectedVariantId,
-        quantity,
-        priceOverride: priceOverride !== "" ? parseInt(priceOverride, 10) : null,
-        clientId: customerType === "client" && clientId ? clientId : null,
-        guestName: customerType === "guest" && guestName.trim() ? guestName.trim() : null,
-        ticketId: ticketId ?? null,
-      });
+      let res: Awaited<ReturnType<typeof createClothSale>>;
+      try {
+        res = await createClothSale({
+          clothPieceVariantId: selectedVariantId,
+          quantity,
+          priceOverride: priceOverride !== "" ? parseInt(priceOverride, 10) : null,
+          clientId: customerType === "client" && clientId ? clientId : null,
+          guestName: customerType === "guest" && guestName.trim() ? guestName.trim() : null,
+          ticketId: ticketId ?? null,
+          paymentMethod,
+          idempotencyKey,
+        });
+      } catch {
+        // Same key on retry, so resubmitting can't double-record the sale.
+        toast.error(tc("networkError"));
+        return;
+      }
 
       if (!res.success) {
         toast.error(res.error.message);
@@ -284,12 +317,40 @@ export function SellClothPieceModal({ open, onOpenChange, ticketId }: SellClothP
               </div>
             )}
 
+            {/* Payment method — the sale is paid on the spot */}
+            {selectedVariantId && (
+              <fieldset className="space-y-2">
+                <legend className="text-sm font-medium">
+                  {t("paymentMethod")} <span className="text-destructive">*</span>
+                </legend>
+                <div className="flex flex-wrap gap-2">
+                  {PAYMENT_METHODS.map((method) => (
+                    <button
+                      key={method}
+                      type="button"
+                      onClick={() => setPaymentMethod(method)}
+                      aria-pressed={paymentMethod === method}
+                      className={`min-h-9 rounded-md border px-3 py-1 text-sm font-medium transition-colors focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none ${
+                        paymentMethod === method
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-input hover:bg-muted"
+                      }`}
+                    >
+                      {tm(method)}
+                    </button>
+                  ))}
+                </div>
+              </fieldset>
+            )}
+
             {ticketId && <p className="text-xs text-muted-foreground">{t("linkedToTicket")}</p>}
 
             <div className="flex gap-2 pt-1">
               <Button
                 type="submit"
-                disabled={isPending || !selectedVariantId || effectiveUnitPrice == null}
+                disabled={
+                  isPending || !selectedVariantId || effectiveUnitPrice == null || !paymentMethod
+                }
                 className="flex-1"
               >
                 {isPending ? (

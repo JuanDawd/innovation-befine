@@ -70,5 +70,10 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon\\.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)).*)"],
+  // Static files skip auth. L-52: the PWA manifest and service-worker scripts
+  // (sw.js, workbox-*.js) are fetched without cookies — redirecting them to
+  // /login broke install and offline support.
+  matcher: [
+    "/((?!_next/static|_next/image|favicon\\.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|js|webmanifest)).*)",
+  ],
 };

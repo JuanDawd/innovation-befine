@@ -3,19 +3,22 @@
 /**
  * Clothier product actions — T046
  *
- * listTodayProductPieces: clothier — returns their assigned + unassigned pieces for the current day.
+ * listTodayProductPieces: clothier — returns their assigned + unassigned pieces for the current day,
+ *                         plus unfinished pieces carried over from earlier days (H-52).
  * claimPiece:             clothier — self-claim an unassigned piece (optimistic lock).
  * markPieceDone:          clothier — transition piece to done_pending_approval.
  */
 
 import { headers } from "next/headers";
-import { eq, and, or, isNull, inArray } from "drizzle-orm";
+import { eq, and, or, isNull, inArray, ne, asc } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { getDb, getTxDb } from "@/lib/db";
 import { employees, users, products, productPieces, clothPieces } from "@befine/db/schema";
 import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
 import { getCurrentBusinessDay } from "@/lib/business-day";
+import { businessDateOf } from "@/lib/dates";
+import { spreadForClaimer } from "@/lib/piece-order";
 import { revalidatePath } from "next/cache";
 import { createNotification } from "@/lib/notifications";
 import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
@@ -38,6 +41,10 @@ export type ProductPieceRow = {
   claimSource: "assigned" | "self_claimed" | null;
   status: "pending" | "done_pending_approval" | "approved";
   version: number;
+  /** Bogota calendar date (YYYY-MM-DD) the product was created on */
+  productDate: string;
+  /** True when the piece belongs to an earlier business day */
+  carriedOver: boolean;
 };
 
 // ─── Auth helper ──────────────────────────────────────────────────────────────
@@ -68,11 +75,12 @@ export async function listTodayProductPieces(): Promise<ActionResult<ProductPiec
   if (!ctx) return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
 
   const businessDay = await getCurrentBusinessDay();
-  if (!businessDay) return { success: true, data: [] };
-
   const db = getDb();
 
-  // Pieces assigned to this clothier OR unassigned — from today's products
+  // Pieces assigned to this clothier OR unassigned — every piece from today's
+  // products, plus unfinished ones from earlier days so multi-day work (e.g.
+  // large orders) doesn't vanish when a new day opens.
+  const unfinished = ne(productPieces.status, "approved");
   const rows = await db
     .select({
       id: productPieces.id,
@@ -88,22 +96,38 @@ export async function listTodayProductPieces(): Promise<ActionResult<ProductPiec
       claimSource: productPieces.claimSource,
       status: productPieces.status,
       version: productPieces.version,
+      businessDayId: products.businessDayId,
+      productCreatedAt: products.createdAt,
     })
     .from(productPieces)
     .innerJoin(products, eq(productPieces.productId, products.id))
     .innerJoin(clothPieces, eq(productPieces.clothPieceId, clothPieces.id))
     .where(
       and(
-        eq(products.businessDayId, businessDay.id),
+        businessDay ? or(eq(products.businessDayId, businessDay.id), unfinished) : unfinished,
         or(
           eq(productPieces.assignedToEmployeeId, ctx.employeeId),
           isNull(productPieces.assignedToEmployeeId),
         ),
       ),
     )
-    .orderBy(productPieces.status);
+    .orderBy(productPieces.status, asc(products.createdAt));
 
-  return { success: true, data: rows };
+  const data = rows.map(({ businessDayId, productCreatedAt, ...row }) => ({
+    ...row,
+    productDate: businessDateOf(productCreatedAt),
+    carriedOver: businessDayId !== businessDay?.id,
+  }));
+
+  // M-58: claimable pieces in this clothier's own order so they don't all race
+  // for the top one; their own pieces keep the query order.
+  const mine = data.filter((p) => p.assignedToEmployeeId !== null);
+  const claimable = spreadForClaimer(
+    data.filter((p) => p.assignedToEmployeeId === null),
+    ctx.employeeId,
+  );
+
+  return { success: true, data: [...mine, ...claimable] };
 }
 
 // ─── Self-claim an unassigned piece ──────────────────────────────────────────

@@ -10,6 +10,7 @@
  *
  * - Awaiting-payment cards open checkout with that client's tickets selected.
  * - Logged / reopened cards can be marked "awaiting payment" in place — T037.
+ * - Unpaid (logged / awaiting-payment) cards can be voided with a reason — H-49.
  * - "/" focuses the search field.
  */
 
@@ -38,6 +39,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { VoidTicketDialog } from "@/components/void-ticket-dialog";
 import {
   transitionToAwaitingPayment,
   transitionReopenedToAwaitingPayment,
@@ -152,18 +154,13 @@ const CARD_BASE =
 
 function ChargeCard({ ticket, now }: { ticket: DashboardTicket; now: number }) {
   const t = useTranslations("cashierBoard");
+  // The link is stretched over the whole card (after:inset-0) so the void
+  // button can sit on top of it without nesting interactive elements.
   return (
-    <Link
-      href={`/cashier/checkout?ticket=${ticket.id}`}
-      scroll={false}
-      aria-label={t("chargeLabel", {
-        client: ticket.clientName,
-        service: serviceLabel(ticket),
-        total: formatMoney(ticketTotal(ticket)),
-      })}
+    <div
       className={cn(
         CARD_BASE,
-        "group block hover:border-primary/40 hover:shadow-[0_2px_8px_-2px] hover:shadow-primary/15 focus-visible:border-primary focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none",
+        "group relative hover:border-primary/40 hover:shadow-[0_2px_8px_-2px] hover:shadow-primary/15 has-[a:focus-visible]:border-primary has-[a:focus-visible]:ring-3 has-[a:focus-visible]:ring-ring/50",
         isJustCreated(ticket, now) && "border-status-success-foreground/60 bg-status-success/40",
       )}
     >
@@ -171,16 +168,28 @@ function ChargeCard({ ticket, now }: { ticket: DashboardTicket; now: number }) {
         ticket={ticket}
         now={now}
         trailing={
-          <span className="flex items-center gap-0.5 text-sm font-medium text-muted-foreground transition-colors duration-200 group-hover:text-primary group-focus-visible:text-primary">
-            {t("charge")}
-            <ChevronRightIcon
-              className="size-4 transition-transform duration-200 group-hover:translate-x-0.5"
-              aria-hidden="true"
-            />
-          </span>
+          <div className="flex items-center gap-1">
+            <VoidTicketDialog ticketId={ticket.id} clientName={ticket.clientName} />
+            <Link
+              href={`/cashier/checkout?ticket=${ticket.id}`}
+              scroll={false}
+              aria-label={t("chargeLabel", {
+                client: ticket.clientName,
+                service: serviceLabel(ticket),
+                total: formatMoney(ticketTotal(ticket)),
+              })}
+              className="flex items-center gap-0.5 text-sm font-medium text-muted-foreground transition-colors duration-200 outline-none group-hover:text-primary after:absolute after:inset-0 after:rounded-xl focus-visible:text-primary"
+            >
+              {t("charge")}
+              <ChevronRightIcon
+                className="size-4 transition-transform duration-200 group-hover:translate-x-0.5"
+                aria-hidden="true"
+              />
+            </Link>
+          </div>
         }
       />
-    </Link>
+    </div>
   );
 }
 
@@ -210,24 +219,29 @@ function WorkCard({
         ticket={ticket}
         now={now}
         trailing={
-          <Button
-            size="sm"
-            variant="outline"
-            className="gap-1.5 pointer-coarse:h-11"
-            disabled={busy}
-            onClick={onMarkReady}
-            aria-label={t("markReadyLabel", {
-              client: ticket.clientName,
-              service: serviceLabel(ticket),
-            })}
-          >
-            {busy ? (
-              <Loader2Icon className="size-3.5 animate-spin" aria-hidden="true" />
-            ) : (
-              <CreditCardIcon className="size-3.5" aria-hidden="true" />
+          <div className="flex items-center gap-1">
+            {ticket.status === "logged" && (
+              <VoidTicketDialog ticketId={ticket.id} clientName={ticket.clientName} />
             )}
-            {tt("markReady")}
-          </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-1.5 pointer-coarse:h-11"
+              disabled={busy}
+              onClick={onMarkReady}
+              aria-label={t("markReadyLabel", {
+                client: ticket.clientName,
+                service: serviceLabel(ticket),
+              })}
+            >
+              {busy ? (
+                <Loader2Icon className="size-3.5 animate-spin" aria-hidden="true" />
+              ) : (
+                <CreditCardIcon className="size-3.5" aria-hidden="true" />
+              )}
+              {tt("markReady")}
+            </Button>
+          </div>
         }
       />
       {error && (

@@ -6,6 +6,7 @@ import { accounts, sessions, users, verifications } from "@befine/db/schema";
 import { getDb } from "./db";
 import { sendEmail } from "./email";
 import { PasswordResetEmail } from "@/emails/password-reset";
+import { resolveTrustedOrigins } from "@/lib/trusted-origins";
 
 /**
  * Access control — defines which admin plugin operations each role can perform.
@@ -30,15 +31,8 @@ export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL,
   secret: process.env.BETTER_AUTH_SECRET,
 
-  /**
-   * Allow all localhost ports in development so the dev server can run on
-   * any available port (3000, 3001, 3002, …) without CORS errors.
-   * In production this is locked to the single production URL via BETTER_AUTH_URL.
-   */
-  trustedOrigins:
-    process.env.NODE_ENV === "development"
-      ? ["http://localhost:3000"]
-      : ["https://innovation-befine.vercel.app"],
+  /** L-48 — derived from BETTER_AUTH_URL / NEXT_PUBLIC_APP_URL / BETTER_AUTH_TRUSTED_ORIGINS. */
+  trustedOrigins: resolveTrustedOrigins(process.env),
 
   database: drizzleAdapter(getDb(), {
     provider: "pg",

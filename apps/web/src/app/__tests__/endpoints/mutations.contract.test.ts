@@ -155,6 +155,10 @@ describe("Role gate: tickets/actions", () => {
   it("transitionReopenedToAwaitingPayment — cashier/admin only", () => {
     expectOnlyRoles(["cashier", "admin"], "cashier", "admin");
   });
+
+  it("voidTicket — cashier/admin only", () => {
+    expectOnlyRoles(["cashier", "admin"], "cashier", "admin");
+  });
 });
 
 describe("Role gate: cashier/checkout/actions", () => {
@@ -458,6 +462,7 @@ describe("UNAUTHORIZED: null session denied on all mutation gates", () => {
     { name: "createService", roles: ["admin"] },
     { name: "openBusinessDay", roles: ["cashier", "admin"] },
     { name: "closeBusinessDay", roles: ["cashier", "admin"] },
+    { name: "voidTicket", roles: ["cashier", "admin"] },
     { name: "requestEdit", roles: ["stylist"] },
     { name: "resolveEditRequest", roles: ["cashier", "admin"] },
     { name: "reopenTicket", roles: ["cashier", "admin"] },

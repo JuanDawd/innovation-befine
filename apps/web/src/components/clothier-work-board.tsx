@@ -4,7 +4,7 @@ import { notifyDataChanged } from "@/lib/data-events";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import {
   CheckCircle2Icon,
   CircleIcon,
@@ -97,6 +97,7 @@ function PieceStatusBadge({ status }: { status: ProductPieceRow["status"] }) {
 
 export function ClothierWorkBoard({ employeeId }: { employeeId: string }) {
   const t = useTranslations("clothierWork");
+  const format = useFormatter();
 
   const { data: pieces = [], isPending: isLoading } = useQuery({
     queryKey: queryKeys.products.clothierBoard,
@@ -119,7 +120,14 @@ export function ClothierWorkBoard({ employeeId }: { employeeId: string }) {
     const res = await claimPiece(piece.id, piece.version);
     setPendingId(null);
     if (!res.success) {
-      setErrorMap((m) => ({ ...m, [piece.id]: t("claimError") }));
+      if (res.error.code === "CONFLICT") {
+        // M-58: someone else got it — drop it from the list instead of
+        // leaving a dead row to tap again.
+        toast.info(t("claimTaken", { piece: piece.clothPieceName }));
+        notifyDataChanged("products");
+      } else {
+        setErrorMap((m) => ({ ...m, [piece.id]: res.error.message }));
+      }
     } else {
       toast.success(t("claimSuccess", { piece: piece.clothPieceName }));
       notifyDataChanged("products");
@@ -175,6 +183,17 @@ export function ClothierWorkBoard({ employeeId }: { employeeId: string }) {
       <span className="inline-flex shrink-0 items-center rounded bg-muted px-1.5 py-0.5 font-mono text-xs font-medium tabular-nums">
         ×{piece.quantity}
       </span>
+      {piece.carriedOver && (
+        <span className="text-xs text-status-attention-foreground">
+          {t("fromDate", {
+            date: format.dateTime(new Date(`${piece.productDate}T12:00:00-05:00`), {
+              day: "numeric",
+              month: "short",
+              timeZone: "America/Bogota",
+            }),
+          })}
+        </span>
+      )}
     </div>
   );
 

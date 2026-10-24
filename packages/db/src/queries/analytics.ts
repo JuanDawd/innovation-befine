@@ -4,11 +4,13 @@
  * All queries accept businessDayIds[] so the caller controls the time window.
  * Revenue = sum of effective ticket item prices (override_price ?? unit_price) * quantity
  *   for closed, non-needs_review tickets.
+ * Product sales = sold crafted pieces (sold_price) + direct cloth sales
+ *   (price_override ?? unit_price) * quantity — H-50.
  * earningsByEmployee mirrors the compute-*-earnings logic but runs as a single
  *   SQL aggregation for efficiency.
  */
 
-import { and, eq, inArray, or, sql } from "drizzle-orm";
+import { and, eq, inArray, or, sql, type SQL } from "drizzle-orm";
 import type { Database } from "../index";
 import {
   tickets,
@@ -20,7 +22,29 @@ import {
   users,
   businessDays,
   employeeAbsences,
+  clothSales,
 } from "../schema";
+
+/**
+ * M-77 — round half to even, like payroll's bankersRound(): Postgres ROUND()
+ * rounds halves away from zero, so a commission of exactly ½ peso came out
+ * $1 higher in analytics than in the payout. Inputs are non-negative.
+ */
+function bankersRoundSql(x: SQL): SQL {
+  return sql`(CASE WHEN ${x} - FLOOR(${x}) = 0.5
+    THEN FLOOR(${x}) + (FLOOR(${x})::bigint % 2)
+    ELSE ROUND(${x}) END)`;
+}
+
+const commissionSql = bankersRoundSql(
+  sql`(COALESCE(${ticketItems.overridePrice}, ${ticketItems.unitPrice}))::numeric
+    * ${ticketItems.commissionPct} / 100
+    * ${ticketItems.quantity}`,
+);
+
+const clothSaleTotal = sql<number>`COALESCE(SUM(
+  COALESCE(${clothSales.priceOverride}, ${clothSales.unitPrice}) * ${clothSales.quantity}
+), 0)::bigint`;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -74,7 +98,7 @@ export async function revenueByPeriod(
   if (businessDayIds.length === 0)
     return { totalRevenue: 0, serviceRevenue: 0, productSalesRevenue: 0, totalJobs: 0 };
 
-  const [ticketRows, salesRows] = await Promise.all([
+  const [ticketRows, salesRows, clothSaleRows] = await Promise.all([
     db
       .select({
         revenue: sql<number>`
@@ -104,10 +128,15 @@ export async function revenueByPeriod(
           sql`${productPieces.soldAt} IS NOT NULL`,
         ),
       ),
+    db
+      .select({ revenue: clothSaleTotal })
+      .from(clothSales)
+      .where(inArray(clothSales.businessDayId, businessDayIds)),
   ]);
 
   const serviceRevenue = Number(ticketRows[0]?.revenue ?? 0);
-  const productSalesRevenue = Number(salesRows[0]?.revenue ?? 0);
+  const productSalesRevenue =
+    Number(salesRows[0]?.revenue ?? 0) + Number(clothSaleRows[0]?.revenue ?? 0);
 
   return {
     totalRevenue: serviceRevenue + productSalesRevenue,
@@ -162,7 +191,7 @@ export async function jobsCountByEmployee(
 
 /**
  * Total earnings + job count per active employee for the given business days.
- * Stylist: commission on closed ticket items (SQL ROUND, display only).
+ * Stylist: commission on closed ticket items, banker's rounding per item (as payroll).
  * Clothier: sum of piece_rate for approved batch_pieces.
  * Secretary: daysWorked × daily_rate with ISO-week expected_work_days cap,
  *   excluding vacation/approved_absence days.
@@ -185,13 +214,7 @@ export async function earningsByEmployee(
       employeeName: users.name,
       role: employees.role,
       totalEarnings: sql<number>`
-        COALESCE(SUM(
-          ROUND(
-            (COALESCE(${ticketItems.overridePrice}, ${ticketItems.unitPrice}))::numeric
-            * ${ticketItems.commissionPct} / 100
-            * ${ticketItems.quantity}
-          )
-        ), 0)::bigint`,
+        COALESCE(SUM(${commissionSql}), 0)::bigint`,
       jobCount: sql<number>`COUNT(DISTINCT ${tickets.id})::int`,
     })
     .from(tickets)
@@ -352,7 +375,7 @@ export async function dailyRevenueBreakdown(
 ): Promise<DailyRevenueRow[]> {
   if (businessDayIds.length === 0) return [];
 
-  const [ticketRows, salesRows] = await Promise.all([
+  const [ticketRows, salesRows, clothSaleRows] = await Promise.all([
     db
       .select({
         businessDayId: tickets.businessDayId,
@@ -389,9 +412,16 @@ export async function dailyRevenueBreakdown(
         ),
       )
       .groupBy(products.businessDayId),
+    db
+      .select({ businessDayId: clothSales.businessDayId, revenue: clothSaleTotal })
+      .from(clothSales)
+      .where(inArray(clothSales.businessDayId, businessDayIds))
+      .groupBy(clothSales.businessDayId),
   ]);
 
   const salesByDay = new Map(salesRows.map((r) => [r.businessDayId, Number(r.revenue)]));
+  for (const r of clothSaleRows)
+    salesByDay.set(r.businessDayId, (salesByDay.get(r.businessDayId) ?? 0) + Number(r.revenue));
 
   return ticketRows.map((r) => {
     const serviceRevenue = Number(r.revenue);
@@ -531,13 +561,7 @@ export async function employeeDayBreakdown(
         openedAt: businessDays.openedAt,
         jobs: sql<number>`COUNT(DISTINCT ${tickets.id})::int`,
         earnings: sql<number>`
-          COALESCE(SUM(
-            ROUND(
-              (COALESCE(${ticketItems.overridePrice}, ${ticketItems.unitPrice}))::numeric
-              * ${ticketItems.commissionPct} / 100
-              * ${ticketItems.quantity}
-            )
-          ), 0)::bigint`,
+          COALESCE(SUM(${commissionSql}), 0)::bigint`,
       })
       .from(tickets)
       .innerJoin(ticketItems, eq(ticketItems.ticketId, tickets.id))

@@ -109,10 +109,13 @@ export async function createAssignment(
   type TxResult = { error: "NOT_FOUND" | "CONFLICT" } | { id: string; unassigned: number };
 
   const result: TxResult = await txDb.transaction(async (tx) => {
+    // M-56: lock the order item so concurrent assignments serialize on it and
+    // each one sees the other's inserted quantity in the capacity check.
     const [item] = await tx
       .select({ quantity: orderItems.quantity })
       .from(orderItems)
-      .where(eq(orderItems.id, orderItemId));
+      .where(eq(orderItems.id, orderItemId))
+      .for("update");
 
     if (!item) return { error: "NOT_FOUND" as const };
 

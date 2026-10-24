@@ -19,7 +19,8 @@
     "required": "required",
     "yes": "Yes",
     "no": "No",
-    "showMore": "Show {count} more"
+    "showMore": "Show {count} more",
+    "networkError": "Couldn't connect. Check the connection and try again."
   },
   "roles": {
     "cashier": "Cashier",
@@ -91,6 +92,7 @@
     "paid_in_full": "Paid in full",
     "completed": "Completed",
     "cancelled": "Cancelled",
+    "voided": "Voided",
     "no_show": "No-show",
     "ready": "Ready"
   },
@@ -110,7 +112,7 @@
     "reopenError": "Could not reopen day",
     "confirmClose": "Close the day?",
     "confirmCloseDescription": "The close is recorded with these figures. Reopening the day later requires a reason and is logged in the history.",
-    "closeOpenTicketsWarning": "There {count, plural, one {is # unpaid ticket} other {are # unpaid tickets}}. If you close now, they leave the board and Checkout.",
+    "closeOpenTicketsWarning": "There {count, plural, one {is # unpaid ticket} other {are # unpaid tickets}}. Charge or void them from the board before closing the day.",
     "confirmReopen": "Reopen the day?",
     "confirmReopenDescription": "Reopening a closed day requires a reason. This action is recorded in the audit log.",
     "reopenReason": "Reason for reopening",
@@ -118,7 +120,6 @@
     "noPreviousDay": "No previous days to reopen",
     "closeChecking": "Checking unpaid tickets…",
     "goCharge": "Go to checkout ({count})",
-    "closeAnyway": "Close anyway",
     "summaryRevenue": "Revenue",
     "summaryClosed": "Charged",
     "summaryOpen": "Unpaid",
@@ -301,7 +302,15 @@
     "discardChangesDescription": "You have unsaved changes in this variant. Are you sure you want to close it?",
     "discard": "Discard",
     "sellingPriceTitle": "Selling price",
-    "removeVariant": "Remove variant"
+    "removeVariant": "Remove variant",
+    "variantLimitWarning": "This service has {count} variants. More than {limit} get hard to pick on a phone — consider splitting it into several services.",
+    "auditLogMore": "Show more",
+    "auditAction": {
+      "create": "Created",
+      "update": "Edited",
+      "soft_delete": "Deactivated",
+      "restore": "Restored"
+    }
   },
   "clients": {
     "pageTitle": "Clients",
@@ -452,7 +461,6 @@
     "myPieces": "My pieces",
     "available": "Available to claim",
     "claim": "Claim",
-    "claimError": "Already claimed",
     "markDone": "Done",
     "markDoneError": "Could not update",
     "staleError": "Status changed — please reload",
@@ -469,7 +477,9 @@
     "statusPendingApproval": "Pending approval",
     "groupToDo": "To do",
     "groupDone": "Finished",
-    "allDone": "You finished all your pieces for today."
+    "fromDate": "From {date}",
+    "allDone": "You finished all your pieces for today.",
+    "claimTaken": "Someone else took {piece} — pick another"
   },
   "products": {
     "pageTitle": "Products",
@@ -951,7 +961,8 @@
     "nothingSelected": "Select at least one ticket",
     "confirmTitle": "Charge {amount} to {clients}?",
     "confirmDescription": "{count, plural, one {# ticket will be closed} other {# tickets will be closed}} and the payment recorded. This cannot be undone.",
-    "multiClientWarning": "This checkout covers {count} different clients: {clients}. Make sure one person is paying for all of them."
+    "multiClientWarning": "This checkout covers {count} different clients: {clients}. Make sure one person is paying for all of them.",
+    "adjustSuccess": "Price adjusted to {price}"
   },
   "clothSale": {
     "title": "Sell garment",
@@ -975,7 +986,8 @@
     "guestName": "Customer name",
     "linkedToTicket": "This sale will be linked to the current ticket.",
     "submit": "Record sale",
-    "success": "Sale recorded — {total}"
+    "success": "Sale recorded — {total}",
+    "paymentMethod": "Payment method"
   },
   "orderProgress": {
     "emptyTitle": "No production items",
@@ -1038,5 +1050,15 @@
     "retry": "Retry",
     "announceNew": "{count, plural, one {New ticket on the board} other {# new tickets on the board}}",
     "pendingAside": "Pending"
+  },
+  "voidTicket": {
+    "triggerLabel": "Void {client}'s ticket",
+    "title": "Void {client}'s ticket?",
+    "description": "Use this when the client left without paying. The ticket is marked voided, doesn't count as revenue or commission, and can't be undone.",
+    "reason": "Reason",
+    "reasonPlaceholder": "E.g. client left without paying",
+    "reasonTooShort": "The reason must be at least 5 characters",
+    "confirm": "Void ticket",
+    "success": "{client}'s ticket voided"
   }
 }

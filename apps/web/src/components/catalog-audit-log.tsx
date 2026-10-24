@@ -5,6 +5,7 @@
  *
  * Collapsible audit history panel for a catalog entity.
  * Lazy-fetches on first expand; admin-only (enforced server-side).
+ * Pages of 20, newest first; "Ver más" loads older entries (L-03).
  */
 
 import { useState, useTransition } from "react";
@@ -25,21 +26,16 @@ function formatDate(date: Date): string {
 }
 
 function ActionBadge({ action }: { action: AuditLogEntry["action"] }) {
+  const t = useTranslations("catalog.auditAction");
   const colors: Record<AuditLogEntry["action"], string> = {
     create: "bg-status-success text-status-success-foreground",
     update: "bg-status-progress text-status-progress-foreground",
     soft_delete: "bg-status-negative text-status-negative-foreground",
     restore: "bg-status-attention text-status-attention-foreground",
   };
-  const labels: Record<AuditLogEntry["action"], string> = {
-    create: "Creado",
-    update: "Editado",
-    soft_delete: "Desactivado",
-    restore: "Restaurado",
-  };
   return (
     <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${colors[action]}`}>
-      {labels[action]}
+      {t(action)}
     </span>
   );
 }
@@ -48,20 +44,25 @@ export function CatalogAuditLog({ entityId }: { entityId: string }) {
   const t = useTranslations("catalog");
   const [expanded, setExpanded] = useState(false);
   const [entries, setEntries] = useState<AuditLogEntry[] | null>(null);
+  const [hasMore, setHasMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
+  function load(beforeId?: string) {
+    startTransition(async () => {
+      const result = await getEntityAuditLog({ entityId, beforeId });
+      if (result.success) {
+        setEntries((prev) => [...(beforeId ? (prev ?? []) : []), ...result.data.entries]);
+        setHasMore(result.data.hasMore);
+        setError(null);
+      } else {
+        setError(result.error.message);
+      }
+    });
+  }
+
   function handleToggle() {
-    if (!expanded && entries === null) {
-      startTransition(async () => {
-        const result = await getEntityAuditLog(entityId);
-        if (result.success) {
-          setEntries(result.data);
-        } else {
-          setError(result.error.message);
-        }
-      });
-    }
+    if (!expanded && entries === null) load();
     setExpanded((e) => !e);
   }
 
@@ -104,6 +105,17 @@ export function CatalogAuditLog({ entityId }: { entityId: string }) {
                 </div>
               </div>
             ))}
+          {hasMore && entries && entries.length > 0 && (
+            <button
+              type="button"
+              onClick={() => load(entries[entries.length - 1]!.id)}
+              disabled={isPending}
+              className="flex min-h-9 w-full items-center justify-center gap-1.5 rounded-md text-xs text-muted-foreground hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none disabled:opacity-60"
+            >
+              {isPending && <Loader2Icon className="size-3 animate-spin" aria-hidden="true" />}
+              {t("auditLogMore")}
+            </button>
+          )}
         </div>
       )}
     </div>

@@ -54,8 +54,13 @@ jobs:
       - name: Migration consistency (drizzle-kit check)
         run: pnpm --filter @befine/db exec drizzle-kit check
 
-      # Informational until the existing backlog of advisories is triaged (see issues-tracker).
-      - name: Dependency audit
+      # M-73: blocks on any critical advisory reachable from production deps.
+      # Remaining highs are build-time transitive deps (next-pwa/workbox/webpack,
+      # Sentry bundler plugin) — reported but not blocking.
+      - name: Dependency audit (critical blocks)
+        run: pnpm audit --prod --audit-level critical
+
+      - name: Dependency audit (high, informational)
         run: pnpm audit --prod --audit-level high
         continue-on-error: true
 
@@ -69,18 +74,50 @@ jobs:
         env:
           SKIP_ENV_VALIDATION: "1"
 
-  # E2E needs repo secrets: DATABASE_URL, BETTER_AUTH_SECRET (≥32 chars), BETTER_AUTH_URL,
-  # NEXT_PUBLIC_APP_URL, RESEND_API_KEY, RESEND_FROM_EMAIL. Build uses SKIP_ENV_VALIDATION;
-  # `next start` does not — those vars must be present for the server to boot.
-  #
-  # Seed credentials can be overridden via:
-  #   E2E_ADMIN_PASSWORD, E2E_SECRETARY_PASSWORD, E2E_CLOTHIER_PASSWORD, E2E_STYLIST_PASSWORD
-  # Falls back to defaults (Admin123!, Secretary123!, etc.) if secrets are absent.
+  # Test databases (M-70b, M-71): scripts/test-db.sh starts a throwaway Postgres
+  # behind a local Neon proxy with a random password, written masked to
+  # $GITHUB_ENV. No credential of any kind is committed in this file, and these
+  # jobs never touch a shared or production database or send real email.
+  db-integration:
+    name: DB integration tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: ci
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Start throwaway database
+        run: scripts/test-db.sh up
+
+      - name: Migrate (also proves the chain applies to an empty database)
+        run: pnpm --filter @befine/db exec node --import tsx/esm src/migrate.ts
+
+      # packages/db/src/queries against real Postgres; each test truncates and
+      # rolls back inside one transaction. Enforces the 80 % coverage threshold.
+      - name: Query tests with coverage
+        run: pnpm --filter @befine/db test:coverage
+
   e2e:
     name: E2E Tests
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     needs: ci
+
+    env:
+      BETTER_AUTH_URL: http://localhost:3000
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      RESEND_FROM_EMAIL: "E2E <e2e@example.com>"
 
     steps:
       - uses: actions/checkout@v4
@@ -104,23 +141,41 @@ jobs:
             turbo-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
             turbo-${{ runner.os }}-
 
+      - name: Start throwaway database
+        run: scripts/test-db.sh up
+
+      # Per-run random values, masked: the auth secret, a Resend key that is
+      # never valid (no email can be sent), and the seeded users' passwords,
+      # which seed.ts (SEED_*) and the specs (E2E_*) both read.
+      - name: Generate ephemeral credentials
+        run: |
+          # Mask each value before it can appear in any log, then export it.
+          put() { echo "::add-mask::$2"; echo "$1=$2" >> "$GITHUB_ENV"; }
+          put BETTER_AUTH_SECRET "$(openssl rand -hex 24)"
+          put RESEND_API_KEY "re_$(openssl rand -hex 24)"
+          for role in ADMIN SECRETARY STYLIST CLOTHIER; do
+            pw="$(openssl rand -hex 24)Aa1!"
+            put "SEED_${role}_PASSWORD" "$pw"
+            put "E2E_${role}_PASSWORD" "$pw"
+          done
+
+      - name: Migrate and seed
+        run: |
+          pnpm --filter @befine/db exec node --import tsx/esm src/migrate.ts
+          pnpm --filter @befine/db exec node --import tsx/esm src/seed.ts
+          pnpm --filter @befine/db exec node --import tsx/esm src/seed-e2e.ts
+
       - name: Install Playwright browsers
         run: pnpm --filter @befine/web exec playwright install --with-deps chromium
 
       - name: Clean Next.js build cache
         run: rm -rf apps/web/.next
 
-      # SKIP_ENV_VALIDATION: compile-time schema skip — runtime still requires secrets for `next start` + E2E.
+      # SKIP_ENV_VALIDATION: compile-time schema skip. Only the Sentry upload uses repo secrets.
       - name: Build
         run: pnpm build
         env:
           SKIP_ENV_VALIDATION: "1"
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
-          BETTER_AUTH_URL: http://localhost:3000
-          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-          RESEND_FROM_EMAIL: ${{ secrets.RESEND_FROM_EMAIL }}
-          NEXT_PUBLIC_APP_URL: http://localhost:3000
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
@@ -129,35 +184,15 @@ jobs:
         run: pnpm --filter @befine/web exec next start &
         env:
           PORT: 3000
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
-          BETTER_AUTH_URL: http://localhost:3000
-          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-          RESEND_FROM_EMAIL: ${{ secrets.RESEND_FROM_EMAIL }}
-          NEXT_PUBLIC_APP_URL: http://localhost:3000
 
       - name: Wait for server
         run: npx wait-on http://localhost:3000 --timeout 30000
 
       - name: Run E2E tests
-        run: pnpm --filter @befine/web test:e2e --project=chromium
+        # settlement closes the business day, so it runs after chromium (playwright.config.ts)
+        run: pnpm --filter @befine/web test:e2e --project=chromium --project=settlement
         env:
           PLAYWRIGHT_BASE_URL: "http://localhost:3000"
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
-          BETTER_AUTH_URL: http://localhost:3000
-          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-          RESEND_FROM_EMAIL: ${{ secrets.RESEND_FROM_EMAIL }}
-          NEXT_PUBLIC_APP_URL: http://localhost:3000
-          # Seed user credentials — override via GitHub Secrets if seed passwords differ
-          E2E_ADMIN_EMAIL: "admin@befine.dev"
-          E2E_ADMIN_PASSWORD: ${{ secrets.E2E_ADMIN_PASSWORD || 'Admin123!' }}
-          E2E_SECRETARY_EMAIL: "secretary@befine.dev"
-          E2E_SECRETARY_PASSWORD: ${{ secrets.E2E_SECRETARY_PASSWORD || 'Secretary123!' }}
-          E2E_STYLIST_EMAIL: "hairdresser@befine.dev"
-          E2E_STYLIST_PASSWORD: ${{ secrets.E2E_STYLIST_PASSWORD || 'Stylist123!' }}
-          E2E_CLOTHIER_EMAIL: "clothier@befine.dev"
-          E2E_CLOTHIER_PASSWORD: ${{ secrets.E2E_CLOTHIER_PASSWORD || 'Clothier123!' }}
 
       - name: Upload Playwright report
         if: failure()

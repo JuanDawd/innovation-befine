@@ -21,6 +21,7 @@ export const ticketStatusEnum = pgEnum("ticket_status_enum", [
   "closed",
   "reopened",
   "paid_offline",
+  "voided",
 ]);
 
 /**
@@ -66,6 +67,10 @@ export const tickets = pgTable(
     idempotencyKey: text("idempotency_key").unique(),
     closedAt: timestamp("closed_at", { withTimezone: true }),
     closedBy: uuid("closed_by").references(() => employees.id, { onDelete: "restrict" }),
+    // H-49: unpaid tickets that will never be charged (client left) are voided, never deleted
+    voidedAt: timestamp("voided_at", { withTimezone: true }),
+    voidedBy: uuid("voided_by").references(() => employees.id, { onDelete: "restrict" }),
+    voidReason: text("void_reason"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     createdBy: uuid("created_by")
       .notNull()

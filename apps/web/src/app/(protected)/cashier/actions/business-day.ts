@@ -6,14 +6,16 @@
  * Open, close, and reopen the business day.
  * All actions require cashier or admin role.
  * Financial constraint: only one open day at a time (enforced at DB level too).
+ * H-49: a day can't be closed while it has unpaid tickets — they would become
+ * unreachable from Cobrar. The cashier charges them or voids them first.
  */
 
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
-import { eq, isNull, desc, isNotNull } from "drizzle-orm";
+import { and, eq, isNull, desc, isNotNull, inArray, notExists, count } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import { businessDays } from "@befine/db/schema";
+import { businessDays, tickets } from "@befine/db/schema";
 import { reopenBusinessDaySchema } from "@befine/types";
 import type { ActionResult } from "@/lib/action-result";
 import type { BusinessDay } from "@/lib/business-day";
@@ -68,6 +70,13 @@ export async function openBusinessDay(): Promise<ActionResult<BusinessDay>> {
 // Close business day
 // ---------------------------------------------------------------------------
 
+/** Tickets in these states still need the cashier — charge, re-charge, or void. */
+const UNPAID_STATUSES: ("logged" | "awaiting_payment" | "reopened")[] = [
+  "logged",
+  "awaiting_payment",
+  "reopened",
+];
+
 export async function closeBusinessDay(businessDayId: string): Promise<ActionResult<BusinessDay>> {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) {
@@ -79,18 +88,48 @@ export async function closeBusinessDay(businessDayId: string): Promise<ActionRes
 
   const db = getDb();
 
+  // Single statement so a ticket logged between a check and the update can't
+  // slip through.
+  const unpaid = and(
+    eq(tickets.businessDayId, businessDayId),
+    inArray(tickets.status, UNPAID_STATUSES),
+  );
   const rows = await db
     .update(businessDays)
     .set({
       closedAt: new Date(),
       closedBy: session.user.id,
     })
-    .where(eq(businessDays.id, businessDayId))
+    .where(
+      and(
+        eq(businessDays.id, businessDayId),
+        isNull(businessDays.closedAt),
+        notExists(db.select({ id: tickets.id }).from(tickets).where(unpaid)),
+      ),
+    )
     .returning();
 
   const day = rows[0];
   if (!day) {
-    return { success: false, error: { code: "NOT_FOUND", message: "Día no encontrado" } };
+    const [existing] = await db
+      .select({ closedAt: businessDays.closedAt })
+      .from(businessDays)
+      .where(eq(businessDays.id, businessDayId))
+      .limit(1);
+    if (!existing) {
+      return { success: false, error: { code: "NOT_FOUND", message: "Día no encontrado" } };
+    }
+    if (existing.closedAt) {
+      return { success: false, error: { code: "CONFLICT", message: "El día ya está cerrado" } };
+    }
+    const [open] = await db.select({ n: count() }).from(tickets).where(unpaid);
+    return {
+      success: false,
+      error: {
+        code: "CONFLICT",
+        message: `Hay ${open?.n ?? 0} ticket(s) sin cobrar. Cóbralos o anúlalos antes de cerrar el día.`,
+      },
+    };
   }
 
   revalidatePath("/cashier");
