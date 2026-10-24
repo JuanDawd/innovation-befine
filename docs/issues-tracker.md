@@ -1088,6 +1088,16 @@
 
 ---
 
+### M-10 — T082 — iOS PWA limitations not addressed
+
+- **Severity:** Medium
+- **Status:** Resolved (2026-10-23)
+- **Affected:** T082/T081, `docs/training/common.md`
+- **Description:** The PWA spec covered Android Chrome's install prompt only; iPhones show no prompt and can only install from Safari.
+- **Fix:** Training guide "Tener la app en el celular": iPhone steps (Safari only → Compartir → "Agregar a pantalla de inicio"), Android steps (Chrome ⋮ → "Instalar app"), and a note that notifications live in the in-app bell, not as phone alerts (the app has no web push). The manifest and service worker are now reachable signed out (L-52).
+
+---
+
 ## Low-priority issues
 
 ### L-09 — No file/image storage research
@@ -1985,3 +1995,4 @@
 | M-79     | 2026-10-23    | Board totals use the adjusted price (override_price ?? unit_price)                                              | fix/backlog-batch-2          |
 | M-04     | 2026-10-23    | Cashier reads cloth pieces (large orders); RBAC matrix matches the code                                         | fix/backlog-batch-2          |
 | L-13     | 2026-10-23    | Password-reset email has the brand logo + tenant name                                                           | fix/backlog-batch-2          |
+| M-10     | 2026-10-23    | iPhone/Android install steps in the training guide                                                              | fix/backlog-batch-2          |

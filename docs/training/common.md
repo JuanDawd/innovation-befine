@@ -4,6 +4,21 @@
 
 La app de BeFine funciona en el navegador del computador de caja y en el celular. No hay que instalar nada: abre el enlace que te dio la administradora y guárdalo en favoritos (en el celular puedes usar **"Agregar a pantalla de inicio"**).
 
+### Tener la app en el celular
+
+Así la abres con un toque, a pantalla completa, como cualquier otra app.
+
+**iPhone** — el iPhone no muestra un aviso para instalarla; hay que hacerlo a mano y **solo funciona desde Safari** (no desde Chrome ni Instagram):
+
+1. Abre el enlace de la app en **Safari** e inicia sesión.
+2. Toca el botón **Compartir** (el cuadro con la flecha hacia arriba, abajo en el centro).
+3. Desliza y toca **"Agregar a pantalla de inicio"** → **"Agregar"**.
+4. Desde ahora abre BeFine con el ícono nuevo de tu pantalla de inicio.
+
+**Android** — en **Chrome**, toca el menú **⋮** (arriba a la derecha) → **"Instalar app"** o **"Agregar a pantalla principal"**. Si Chrome muestra el aviso **"Instalar"**, también sirve.
+
+> **Bueno saber:** las notificaciones de BeFine aparecen dentro de la app (la campana), no como avisos del celular. Si la app se ve desactualizada, ciérrala del todo y ábrela otra vez.
+
 ---
 
 ## 1. Iniciar sesión
