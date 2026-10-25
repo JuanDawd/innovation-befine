@@ -142,18 +142,18 @@ One form (modal + full page, per the creation-route pattern) for client or inven
 ## T117 — Pedidos list and detail
 
 **Phase:** 11B — Pedidos
-**Status:** pending
+**Status:** done
 **Dependencies:** T116, T118
 
 ### What to do
 
-List with filters: destino, estado, **grandes (10+ units)**, atrasados; whole row opens the pedido. Detail: lines × sizes with assigned · approved · delivered per cell, status explanation ("128 de 150 aprobadas"), payments and balance, deliveries, **Historial** tab (T132).
+List with filters: destino, estado, **grandes (10+ units)**, atrasados; whole row opens the pedido. Detail: lines × sizes with assigned · approved · delivered per cell, status explanation ("128 de 150 aprobadas"), payments and balance, deliveries, **Historial** tab (T132 — added there).
 
 ### Acceptance criteria
 
-- [ ] Status shown is derived (T118), with its reason
-- [ ] Phone, tablet and desktop layouts; no horizontal overflow
-- [ ] Secretary sees totals and balances but no revenue figures
+- [x] Status shown is derived (T118), with its reason
+- [x] Phone, tablet and desktop layouts; no horizontal overflow
+- [x] Secretary sees totals and balances but no revenue figures
 
 ---
 

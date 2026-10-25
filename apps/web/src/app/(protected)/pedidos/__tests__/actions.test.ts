@@ -344,3 +344,38 @@ describe("createPedidoClient", () => {
     expect(!res.success && res.error.code).toBe("FORBIDDEN");
   });
 });
+
+describe("listPedidos / getPedido", () => {
+  beforeEach(() => {
+    state.queries = [];
+  });
+
+  it.each(["stylist", "clothier"])("returns FORBIDDEN for %s", async (role) => {
+    state.role = role;
+    const { listPedidos, getPedido } = await import("../actions");
+    expect((await listPedidos()).success).toBe(false);
+    const res = await getPedido(IDS.pedido);
+    expect(!res.success && res.error.code).toBe("FORBIDDEN");
+    expect(state.queries).toHaveLength(0);
+  });
+
+  it("returns NOT_FOUND for a malformed or unknown id", async () => {
+    state.role = "secretary";
+    const { getPedido } = await import("../actions");
+    const bad = await getPedido("x' or 1=1");
+    expect(!bad.success && bad.error.code).toBe("NOT_FOUND");
+    const unknown = await getPedido("00000000-0000-4000-8000-00000000dead");
+    expect(!unknown.success && unknown.error.code).toBe("NOT_FOUND");
+  });
+
+  it("ignores invalid filter values instead of failing", async () => {
+    state.role = "cashier";
+    const { listPedidos } = await import("../actions");
+    // The pg-proxy mock returns rows in another shape than Neon, so the call
+    // itself may fail after the query; what matters is what reached the SQL.
+    await listPedidos({ status: "hacked", destination: "x; drop", q: 42 }).catch(() => null);
+    expect(state.queries).toHaveLength(1);
+    expect(state.queries[0]!.params).not.toContain("hacked");
+    expect(state.queries[0]!.params).not.toContain("x; drop");
+  });
+});

@@ -1278,6 +1278,87 @@
       "clientRequired": "Choose or create a client",
       "reasonRequired": "Write the reason for the price change.",
       "priceAndReasonRequired": "This garment has no selling price: enter the price and a reason."
+    },
+    "status": {
+      "pending": "Pending",
+      "in_production": "In production",
+      "ready": "Ready",
+      "partially_delivered": "Partly delivered",
+      "delivered": "Delivered",
+      "paid": "Paid",
+      "cancelled": "Cancelled"
+    },
+    "flags": {
+      "overdue": "Late",
+      "today": "Due today",
+      "large": "Large"
+    },
+    "list": {
+      "search": "Search by number, client or phone",
+      "destination": "Destination",
+      "status": "Status",
+      "all": "All",
+      "clients": "Clients",
+      "large": "Large (10+)",
+      "overdue": "{count, plural, =0 {Late} other {Late (#)}}",
+      "count": "{count, plural, one {# pedido} other {# pedidos}}",
+      "noMatchTitle": "No pedidos match",
+      "noMatchDescription": "Change or clear the filters.",
+      "progress": "{approved} of {ordered} approved",
+      "balance": "Due {amount}",
+      "credit": "Credit {amount}",
+      "settled": "Settled"
+    },
+    "detail": {
+      "statusTitle": "Status",
+      "approvedBar": "Approved units",
+      "explain": {
+        "pending": "None of the {ordered} units is assigned yet.",
+        "inProduction": "{approved} of {ordered} units approved.",
+        "ready": "All {ordered} units are approved and ready to hand over.",
+        "readyInventory": "All {ordered} units are approved and went into stock.",
+        "partial": "{delivered} of {ordered} units delivered.",
+        "delivered": "All delivered. {balance} still due.",
+        "paid": "All delivered and paid.",
+        "cancelled": "Cancelled: {reason}"
+      },
+      "counts": {
+        "assigned": "{n} assigned",
+        "approved": "{n} approved",
+        "delivered": "{n} delivered",
+        "unassigned": "{n} unassigned",
+        "pendingReview": "{n} to review"
+      },
+      "delivery": "Estimated delivery",
+      "overdue": "Late",
+      "today": "Due today",
+      "created": "Created",
+      "notes": "Notes",
+      "moneyTitle": "Payments",
+      "total": "Total",
+      "paid": "Paid",
+      "balance": "Balance",
+      "credit": "Credit owed",
+      "noPayments": "No payments yet.",
+      "afterHours": "Paid after hours",
+      "methods": {
+        "cash": "Cash",
+        "card": "Card",
+        "transfer": "Transfer"
+      },
+      "linesTitle": "Garments",
+      "discount": "Discount",
+      "surcharge": "Surcharge",
+      "priceReason": "Price changed: {reason}",
+      "sizesCaption": "Units per size",
+      "size": "Size",
+      "ordered": "Ordered",
+      "assigned": "Assigned",
+      "approved": "Approved",
+      "delivered": "Delivered",
+      "deliveriesTitle": "Deliveries",
+      "noDeliveries": "No deliveries yet.",
+      "deliveredUnits": "{count, plural, one {# unit} other {# units}}"
     }
   }
 }

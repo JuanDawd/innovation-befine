@@ -1310,6 +1310,87 @@
       "clientRequired": "Elige o crea un cliente",
       "reasonRequired": "Escribe el motivo del cambio de precio.",
       "priceAndReasonRequired": "Esta prenda no tiene precio de venta: escribe el precio y el motivo."
+    },
+    "status": {
+      "pending": "Pendiente",
+      "in_production": "En producción",
+      "ready": "Listo",
+      "partially_delivered": "Entrega parcial",
+      "delivered": "Entregado",
+      "paid": "Pagado",
+      "cancelled": "Cancelado"
+    },
+    "flags": {
+      "overdue": "Atrasado",
+      "today": "Para hoy",
+      "large": "Grande"
+    },
+    "list": {
+      "search": "Buscar por número, cliente o teléfono",
+      "destination": "Destino",
+      "status": "Estado",
+      "all": "Todos",
+      "clients": "Clientes",
+      "large": "Grandes (10+)",
+      "overdue": "{count, plural, =0 {Atrasados} other {Atrasados (#)}}",
+      "count": "{count, plural, one {# pedido} other {# pedidos}}",
+      "noMatchTitle": "Ningún pedido coincide",
+      "noMatchDescription": "Cambia o quita los filtros.",
+      "progress": "{approved} de {ordered} aprobadas",
+      "balance": "Saldo {amount}",
+      "credit": "A favor {amount}",
+      "settled": "Al día"
+    },
+    "detail": {
+      "statusTitle": "Estado",
+      "approvedBar": "Unidades aprobadas",
+      "explain": {
+        "pending": "Ninguna de las {ordered} unidades está asignada todavía.",
+        "inProduction": "{approved} de {ordered} unidades aprobadas.",
+        "ready": "Las {ordered} unidades están aprobadas y listas para entregar.",
+        "readyInventory": "Las {ordered} unidades están aprobadas y entraron al inventario.",
+        "partial": "{delivered} de {ordered} unidades entregadas.",
+        "delivered": "Todo entregado. Falta cobrar {balance}.",
+        "paid": "Todo entregado y pagado.",
+        "cancelled": "Cancelado: {reason}"
+      },
+      "counts": {
+        "assigned": "{n} asignadas",
+        "approved": "{n} aprobadas",
+        "delivered": "{n} entregadas",
+        "unassigned": "{n} sin asignar",
+        "pendingReview": "{n} por revisar"
+      },
+      "delivery": "Entrega estimada",
+      "overdue": "Atrasado",
+      "today": "Para hoy",
+      "created": "Creado",
+      "notes": "Notas",
+      "moneyTitle": "Pagos",
+      "total": "Total",
+      "paid": "Pagado",
+      "balance": "Saldo",
+      "credit": "Saldo a favor",
+      "noPayments": "Sin pagos todavía.",
+      "afterHours": "Pagado fuera de horario",
+      "methods": {
+        "cash": "Efectivo",
+        "card": "Tarjeta",
+        "transfer": "Transferencia"
+      },
+      "linesTitle": "Prendas",
+      "discount": "Descuento",
+      "surcharge": "Recargo",
+      "priceReason": "Precio cambiado: {reason}",
+      "sizesCaption": "Unidades por talla",
+      "size": "Talla",
+      "ordered": "Pedidas",
+      "assigned": "Asignadas",
+      "approved": "Aprobadas",
+      "delivered": "Entregadas",
+      "deliveriesTitle": "Entregas",
+      "noDeliveries": "Sin entregas todavía.",
+      "deliveredUnits": "{count, plural, one {# unidad} other {# unidades}}"
     }
   }
 }

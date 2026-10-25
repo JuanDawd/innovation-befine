@@ -31,14 +31,23 @@ import {
   pedidoLines,
   pedidos,
 } from "@befine/db/schema";
-import { computePedidoTotal, formatPedidoNumber, formatPesos, lineUnits } from "@befine/db";
+import {
+  computePedidoTotal,
+  formatPedidoNumber,
+  formatPesos,
+  getPedidoDetail,
+  lineUnits,
+  listPedidoOverviews,
+  type PedidoDetail,
+  type PedidoListItem,
+} from "@befine/db";
 import {
   createPedidoSchema,
   editPedidoSchema,
   pedidoClientSchema,
   type CreatePedidoInput,
 } from "@befine/types";
-import type { z } from "zod";
+import { z } from "zod";
 import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
 import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
@@ -824,63 +833,44 @@ export async function updatePedido(
   }
 }
 
-// ─── List (basic; filters and derived status come with T117/T118) ────────────
+// ─── List and detail (T117) ──────────────────────────────────────────────────
 
-export type PedidoListRow = {
-  id: string;
-  number: number;
-  destination: "client" | "inventory";
-  clientName: string | null;
-  units: number;
-  total: number;
-  estimatedDeliveryDate: string | null;
-  cancelled: boolean;
-  createdAt: Date;
-};
+const PEDIDO_STATUSES = [
+  "pending",
+  "in_production",
+  "ready",
+  "partially_delivered",
+  "delivered",
+  "paid",
+  "cancelled",
+] as const;
 
-export async function listPedidos(): Promise<ActionResult<PedidoListRow[]>> {
+const listFilterSchema = z
+  .object({
+    destination: z.enum(["client", "inventory"]).optional().catch(undefined),
+    status: z.enum(PEDIDO_STATUSES).optional().catch(undefined),
+    large: z.boolean().optional().catch(undefined),
+    overdue: z.boolean().optional().catch(undefined),
+    q: z.string().max(100).optional().catch(undefined),
+  })
+  .catch({});
+
+export async function listPedidos(
+  rawFilter: unknown = {},
+): Promise<ActionResult<PedidoListItem[]>> {
   const guard = await requirePedidoRole();
   if ("success" in guard) return guard;
+  const filter = listFilterSchema.parse(rawFilter);
+  return { success: true, data: await listPedidoOverviews(getDb(), filter) };
+}
 
-  const units = sql<number>`coalesce((
-    SELECT sum(c.quantity) FROM pedido_line_cells c
-    JOIN pedido_lines l ON l.id = c.line_id WHERE l.pedido_id = ${pedidos.id}
-  ), 0)::int`;
-  const total = sql<number>`coalesce((
-    SELECT sum(CASE WHEN l.kind = 'adjustment' THEN l.amount
-      ELSE l.unit_price * (SELECT coalesce(sum(c.quantity), 0) FROM pedido_line_cells c WHERE c.line_id = l.id) END)
-    FROM pedido_lines l WHERE l.pedido_id = ${pedidos.id}
-  ), 0)::bigint`;
-
-  const rows = await getDb()
-    .select({
-      id: pedidos.id,
-      number: pedidos.number,
-      destination: pedidos.destination,
-      clientName: clients.name,
-      units,
-      total,
-      estimatedDeliveryAt: pedidos.estimatedDeliveryAt,
-      cancelledAt: pedidos.cancelledAt,
-      createdAt: pedidos.createdAt,
-    })
-    .from(pedidos)
-    .leftJoin(clients, eq(pedidos.clientId, clients.id))
-    .orderBy(sql`${pedidos.number} DESC`)
-    .limit(200);
-
-  return {
-    success: true,
-    data: rows.map((r) => ({
-      id: r.id,
-      number: r.number,
-      destination: r.destination,
-      clientName: r.clientName,
-      units: Number(r.units),
-      total: Number(r.total),
-      estimatedDeliveryDate: deliveryDate(r.estimatedDeliveryAt),
-      cancelled: r.cancelledAt !== null,
-      createdAt: r.createdAt,
-    })),
-  };
+export async function getPedido(id: string): Promise<ActionResult<PedidoDetail>> {
+  const guard = await requirePedidoRole();
+  if ("success" in guard) return guard;
+  if (typeof id !== "string" || !/^[0-9a-f-]{36}$/i.test(id))
+    return { success: false, error: { code: "NOT_FOUND", message: "Pedido no encontrado" } };
+  const detail = await getPedidoDetail(getDb(), id);
+  if (!detail)
+    return { success: false, error: { code: "NOT_FOUND", message: "Pedido no encontrado" } };
+  return { success: true, data: detail };
 }
