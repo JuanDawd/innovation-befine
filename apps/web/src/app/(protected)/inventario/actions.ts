@@ -36,7 +36,7 @@ import { hasRole } from "@/lib/middleware-helpers";
 import { getEmployeeRef } from "@/lib/employee-ref";
 import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
 import { actorOf, logActivity } from "@/lib/activity";
-import { checkStockChange } from "@/lib/stock-rules";
+import { checkStockChange, stockLockKey } from "@/lib/stock-rules";
 
 type Fail = Extract<ActionResult<never>, { success: false }>;
 
@@ -150,9 +150,7 @@ export async function adjustStock(rawInput: unknown): Promise<ActionResult<{ onH
         ),
       );
     // Serialise changes to this one item so two adjustments can't both pass the check.
-    await tx.execute(
-      sql`SELECT pg_advisory_xact_lock(hashtext(${`stock:${input.clothPieceVariantId}:${input.sizeId ?? "-"}:${input.colorId ?? "-"}`}))`,
-    );
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${stockLockKey(input)}))`);
     const onHandRes = await tx.execute(sql`
       SELECT coalesce(sum(quantity), 0)::int AS n FROM stock_movements
       WHERE cloth_piece_variant_id = ${input.clothPieceVariantId}

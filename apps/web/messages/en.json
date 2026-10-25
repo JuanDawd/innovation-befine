@@ -1090,9 +1090,9 @@
   "clothSale": {
     "title": "Sell garment",
     "piece": "Garment",
-    "piecePlaceholder": "Select garment…",
-    "variant": "Variant",
-    "variantPlaceholder": "Select variant…",
+    "piecePlaceholder": "Choose garment…",
+    "variant": "Size and colour",
+    "variantPlaceholder": "Choose size and colour…",
     "noPrice": "no price",
     "quantity": "Quantity",
     "unitPrice": "Unit price",
@@ -1110,7 +1110,16 @@
     "linkedToTicket": "This sale will be linked to the current ticket.",
     "submit": "Record sale",
     "success": "Sale recorded — {total}",
-    "paymentMethod": "Payment method"
+    "paymentMethod": "Payment method",
+    "noSize": "No size",
+    "noColor": "No colour",
+    "available": "{n, plural, =0 {out of stock} one {# available} other {# available}}",
+    "oversell": "Sell even though only {n} are in stock (recorded)",
+    "oversellReason": "Reason, e.g. count pending",
+    "afterHoursWarning": "No day is open: the sale is saved after hours and goes into the next day's till.",
+    "successAfterHours": "Sale saved after hours — {total}",
+    "noStockTitle": "Nothing to sell",
+    "noStockDescription": "Only garments in stock can be sold. Approved units of stock pedidos show here."
   },
   "orderProgress": {
     "emptyTitle": "No production items",

@@ -26,7 +26,7 @@ export const queryKeys = {
   // Reference data — changes rarely; invalidated by catalog edits.
   catalog: {
     services: ["catalog", "services"] as const,
-    sellableClothPieces: ["catalog", "sellableClothPieces"] as const,
+    sellableStock: ["catalog", "sellableStock"] as const,
     clothPieceOptions: ["catalog", "clothPieceOptions"] as const,
   },
   staff: {

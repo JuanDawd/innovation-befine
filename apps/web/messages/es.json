@@ -1155,8 +1155,8 @@
     "title": "Vender prenda",
     "piece": "Prenda",
     "piecePlaceholder": "Seleccionar prenda…",
-    "variant": "Variante",
-    "variantPlaceholder": "Seleccionar variante…",
+    "variant": "Talla y color",
+    "variantPlaceholder": "Seleccionar talla y color…",
     "noPrice": "sin precio",
     "quantity": "Cantidad",
     "unitPrice": "Precio unit.",
@@ -1174,7 +1174,16 @@
     "linkedToTicket": "Esta venta quedará vinculada al ticket actual.",
     "submit": "Registrar venta",
     "success": "Venta registrada — {total}",
-    "paymentMethod": "Método de pago"
+    "paymentMethod": "Método de pago",
+    "noSize": "Sin talla",
+    "noColor": "Sin color",
+    "available": "{n, plural, =0 {sin existencias} one {# disponible} other {# disponibles}}",
+    "oversell": "Vender aunque solo hay {n} en inventario (queda registrado)",
+    "oversellReason": "Motivo, ej. conteo pendiente",
+    "afterHoursWarning": "No hay un día abierto: la venta se guarda fuera de horario y entra a la caja del próximo día que se abra.",
+    "successAfterHours": "Venta guardada fuera de horario — {total}",
+    "noStockTitle": "Nada para vender",
+    "noStockDescription": "Solo se venden prendas en inventario. Las unidades aprobadas de pedidos para inventario aparecen aquí."
   },
   "orderProgress": {
     "emptyTitle": "Sin ítems de producción",

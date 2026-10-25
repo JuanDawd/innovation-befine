@@ -362,7 +362,7 @@ Approved units of inventory pedidos create `+` movements automatically. Inventar
 ## T129 — Vender prenda from stock
 
 **Phase:** 11D — Money and stock
-**Status:** pending
+**Status:** in progress — code and unit tests done; DB integration test (cashier/**tests**/cloth-sales.integration.test.ts, incl. the last-unit race) and browser check pending (test database unreachable 2026-10-25).
 **Dependencies:** T128, T127
 
 ### What to do

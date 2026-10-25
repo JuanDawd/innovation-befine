@@ -12,15 +12,14 @@
 
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
-import { eq, and } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { getDb, getTxDb } from "@/lib/db";
-import { clothPieces, clothPieceVariants, productPieces } from "@befine/db/schema";
+import { clothPieces, clothPieceVariants } from "@befine/db/schema";
 import { createClothPieceSchema, editClothPieceSchema } from "@befine/types";
 import { z } from "zod";
 import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
-import { getEmployeeRef } from "@/lib/employee-ref";
 import { actorOf, logActivity, type ActivityTx } from "@/lib/activity";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -480,89 +479,4 @@ export async function restoreClothPieceVariant(variantId: string): Promise<Actio
     return { success: false, error: { code: "NOT_FOUND", message: "Variante no encontrada" } };
   revalidatePath("/admin/catalog");
   return { success: true, data: null };
-}
-
-// ─── Sell product piece ─────────────────────────────────────────────────────
-
-const sellProductPieceSchema = z.object({
-  productPieceId: z.string().uuid("ID de pieza inválido"),
-  priceOverride: z.number().int().min(0).nullable().optional(),
-});
-
-/**
- * Marks an approved product_piece as sold.
- * Snapshots the selling price from the variant (or a cashier override).
- * Gated to admin.
- */
-export async function sellProductPiece(
-  rawInput: unknown,
-): Promise<ActionResult<{ soldPrice: number }>> {
-  const session = await getAdminSession();
-  if (!session) {
-    const s = await auth.api.getSession({ headers: await headers() });
-    if (!s) return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
-    return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
-  }
-
-  const parsed = sellProductPieceSchema.safeParse(rawInput);
-  if (!parsed.success)
-    return {
-      success: false,
-      error: {
-        code: "VALIDATION_ERROR",
-        message: "Datos inválidos",
-        details: parsed.error.issues.map((i) => ({ field: i.path.join("."), message: i.message })),
-      },
-    };
-
-  const db = getDb();
-
-  const emp = await getEmployeeRef(session.user.id);
-
-  const [piece] = await db
-    .select({
-      id: productPieces.id,
-      status: productPieces.status,
-      soldAt: productPieces.soldAt,
-      clothPieceVariantId: productPieces.clothPieceVariantId,
-    })
-    .from(productPieces)
-    .where(eq(productPieces.id, parsed.data.productPieceId))
-    .limit(1);
-
-  if (!piece)
-    return { success: false, error: { code: "NOT_FOUND", message: "Pieza no encontrada" } };
-  if (piece.status !== "approved")
-    return {
-      success: false,
-      error: { code: "CONFLICT", message: "Solo se pueden vender piezas aprobadas" },
-    };
-  if (piece.soldAt)
-    return { success: false, error: { code: "CONFLICT", message: "Esta pieza ya fue vendida" } };
-
-  const [variant] = await db
-    .select({ sellingPrice: clothPieceVariants.sellingPrice })
-    .from(clothPieceVariants)
-    .where(eq(clothPieceVariants.id, piece.clothPieceVariantId))
-    .limit(1);
-
-  const effectivePrice = parsed.data.priceOverride ?? variant?.sellingPrice ?? null;
-  if (effectivePrice === null)
-    return {
-      success: false,
-      error: { code: "CONFLICT", message: "Esta variante no tiene precio de venta configurado" },
-    };
-
-  await db
-    .update(productPieces)
-    .set({
-      soldAt: new Date(),
-      soldPrice: effectivePrice,
-      soldBy: emp?.id ?? null,
-    })
-    .where(
-      and(eq(productPieces.id, parsed.data.productPieceId), eq(productPieces.status, "approved")),
-    );
-
-  return { success: true, data: { soldPrice: effectivePrice } };
 }

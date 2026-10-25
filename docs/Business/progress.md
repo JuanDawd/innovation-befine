@@ -715,7 +715,7 @@ Update `apps/web/src/lib/db/README.md` with a short "When to use `getDb()` vs `g
 | T126 | Clothier payroll on approved units                           | in progress | T124, T125                   |
 | T127 | Pedido payments and the till                                 | pending     | T113, T115                   |
 | T128 | Stock ledger and Inventario                                  | in progress | T113, T124                   |
-| T129 | Vender prenda from stock                                     | pending     | T128, T127                   |
+| T129 | Vender prenda from stock                                     | in progress | T128, T127                   |
 | T130 | Caja de hoy and close summary by source                      | pending     | T127, T129, T125             |
 | T131 | Activity log coverage                                        | pending     | T114                         |
 | T132 | Actividad screen and Historial tabs                          | pending     | T131                         |

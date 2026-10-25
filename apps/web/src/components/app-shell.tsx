@@ -429,7 +429,8 @@ export function AppShell({
                 <span>{t("tickets.logService")}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
-            {(role === "cashier" || role === "admin" || role === "secretary") && (
+            {/* Vender prenda sells from stock: admin + cashier (T129) */}
+            {(role === "cashier" || role === "admin") && (
               <SidebarMenuItem>
                 <SidebarMenuButton
                   onClick={() => setSellOpen(true)}

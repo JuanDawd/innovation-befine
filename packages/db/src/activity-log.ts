@@ -58,7 +58,9 @@ export type ActivityAction =
   | "pedido.payment"
   | "pedido.refund"
   | "pedido.payment_attach"
-  | "stock.adjust";
+  | "stock.adjust"
+  | "stock.sale"
+  | "stock.sale_attach";
 
 export type ActivityEntry = {
   actor: { userId: string | null; role: string | null };
@@ -175,6 +177,10 @@ export function activitySummary(
         .trim();
     case "pedido.payment_attach":
       return `Asignó al día un pago fuera de horario del pedido ${data.number ?? ""}`.trim();
+    case "stock.sale":
+      return `Vendió ${data.units ?? ""} ${data.name ?? "prendas"}`.replace(/\s+/g, " ").trim();
+    case "stock.sale_attach":
+      return "Asignó al día una venta fuera de horario";
     case "stock.adjust":
       return `Ajustó el inventario${data.name ? ` de ${data.name}` : ""}`;
     case "pedido.deliver":

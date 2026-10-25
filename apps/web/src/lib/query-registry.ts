@@ -17,7 +17,7 @@ import {
 import { getDayStats } from "@/app/(protected)/cashier/actions/day-stats";
 import {
   listClientsForSale,
-  listSellableClothPieces,
+  listSellableStock,
 } from "@/app/(protected)/cashier/actions/cloth-sales";
 import { getAwaitingPaymentTickets } from "@/app/(protected)/cashier/checkout/actions";
 import { listTodayProductPieces } from "@/app/(protected)/clothier/actions";
@@ -56,7 +56,7 @@ export const QUERIES = {
   pendingProductPieceApprovals: () => listPendingProductPieceApprovals(),
   productionBoard: () => getProductionBoard(),
   productsDashboard: () => getProductsDashboardData(),
-  sellableClothPieces: () => listSellableClothPieces(),
+  sellableStock: () => listSellableStock(),
   todayProductPieces: () => listTodayProductPieces(),
 } satisfies Record<string, (params: URLSearchParams) => Promise<unknown>>;
 

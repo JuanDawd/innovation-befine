@@ -102,6 +102,12 @@ describe("activitySummary — clients and pedidos", () => {
       "Ajustó el inventario de Bata M",
     );
     expect(activitySummary("stock.adjust", "stock")).toBe("Ajustó el inventario");
+    expect(activitySummary("stock.sale", "stock", { units: 2, name: "Bata M" })).toBe(
+      "Vendió 2 Bata M",
+    );
+    expect(activitySummary("stock.sale_attach", "stock")).toBe(
+      "Asignó al día una venta fuera de horario",
+    );
   });
 });
 

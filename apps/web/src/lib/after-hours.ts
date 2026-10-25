@@ -1,7 +1,7 @@
 /**
  * After-hours money → the next business day — T127 (spec §3.5.20)
  *
- * Pedido payments (and garment sales, T129) taken while no day was open keep
+ * Pedido payments and garment sales (T129) taken while no day was open keep
  * business_day_id null. When a day opens, this claims them. The UPDATE only
  * touches rows still without a day, so running it twice (a retry, a reopen)
  * never moves a payment: each one is attached exactly once.
@@ -9,7 +9,7 @@
  */
 
 import { sql } from "drizzle-orm";
-import { formatPedidoNumber } from "@befine/db";
+import { formatPedidoNumber, formatPesos } from "@befine/db";
 import { getTxDb } from "@/lib/db";
 import { logActivity } from "@/lib/activity";
 import { afterHoursNote } from "@/lib/pedido-payments";
@@ -47,6 +47,29 @@ export async function attachAfterHoursPayments(
           amount: Number(r.amount),
         },
       });
-    return rows.length;
+
+    // Garment sales taken after hours (T129) — same rule, same one-time claim.
+    const sales = await tx.execute(sql`
+      UPDATE cloth_sales SET business_day_id = ${businessDayId}
+      WHERE business_day_id IS NULL AND after_hours
+      RETURNING id, received_at, quantity, coalesce(price_override, unit_price) * quantity AS total
+    `);
+    const saleRows = sales.rows as {
+      id: string;
+      received_at: string;
+      quantity: number;
+      total: string;
+    }[];
+    for (const r of saleRows)
+      await logActivity(tx, {
+        actor,
+        action: "stock.sale_attach",
+        entityType: "stock",
+        entityId: r.id,
+        businessDayId,
+        summary: `Asignó al día una venta fuera de horario de ${formatPesos(Number(r.total))} · ${afterHoursNote(new Date(r.received_at))}`,
+        after: { saleId: r.id, businessDayId, receivedAt: r.received_at, total: Number(r.total) },
+      });
+    return rows.length + saleRows.length;
   });
 }
