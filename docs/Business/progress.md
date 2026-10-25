@@ -698,7 +698,7 @@ Update `apps/web/src/lib/db/README.md` with a short "When to use `getDb()` vs `g
 | ---- | ------------------------------------------------------------ | ------- | ---------------------------- |
 | T110 | Sizes and colours catalog                                    | done    | —                            |
 | T111 | Pedido core schema                                           | done    | T110                         |
-| T112 | Production schema                                            | pending | T111                         |
+| T112 | Production schema                                            | done    | T111                         |
 | T113 | Money and stock schema                                       | pending | T111                         |
 | T114 | Activity log foundation                                      | pending | —                            |
 | T115 | New settings (secretary payments, claim limit, scrapped pay) | pending | —                            |

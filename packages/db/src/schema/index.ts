@@ -28,6 +28,16 @@ export {
   pedidoLines,
   pedidoLineCells,
 } from "./pedidos";
+export {
+  assignmentSourceEnum,
+  unitReportKindEnum,
+  assignments,
+  unitReports,
+  unitReviews,
+  clothierDayClosings,
+  deliveries,
+  deliveryCells,
+} from "./production";
 export { catalogEntityTypeEnum, catalogActionEnum, catalogAuditLog } from "./catalog-audit-log";
 export { clients } from "./clients";
 export { ticketStatusEnum, checkoutSessions, tickets } from "./tickets";

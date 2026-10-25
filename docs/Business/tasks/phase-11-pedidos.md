@@ -48,7 +48,7 @@ Create `pedidos`, `pedido_lines` (`kind` garment | adjustment) and `pedido_line_
 ## T112 — Production schema
 
 **Phase:** 11A — Data model
-**Status:** pending
+**Status:** done
 **Dependencies:** T111
 
 ### What to do
@@ -57,9 +57,9 @@ Create `assignments`, `unit_reports`, `unit_reviews`, `clothier_day_closings`, `
 
 ### Acceptance criteria
 
-- [ ] DB constraints: sum of assignments per cell ≤ cell quantity; approved + returned + scrapped per assignment ≤ reported; delivered per cell ≤ approved
-- [ ] One closing per employee per business day (unique)
-- [ ] Pure query helpers for per-cell assigned / reported / approved / delivered, with unit tests
+- [x] DB constraints: sum of assignments per cell ≤ cell quantity; approved + returned + scrapped per assignment ≤ reported; delivered per cell ≤ approved
+- [x] One closing per employee per business day (unique)
+- [x] Pure query helpers for per-cell assigned / reported / approved / delivered, with unit tests
 
 ---
 

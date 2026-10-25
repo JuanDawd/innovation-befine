@@ -288,6 +288,20 @@
       "when": 1792892156619,
       "tag": "0040_pedidos_core",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1792892385893,
+      "tag": "0041_production",
+      "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1792892386435,
+      "tag": "0042_production_unit_guards",
+      "breakpoints": true
     }
   ]
 }
