@@ -251,7 +251,7 @@ Secretary/admin assign units of a cell to a clothier (from the pedido detail; th
 ## T123 — Mi trabajo (clothier)
 
 **Phase:** 11C — Production
-**Status:** pending
+**Status:** done
 **Dependencies:** T122, T115
 
 ### What to do
@@ -260,10 +260,10 @@ Phone-first screen: **Correcciones** first, then assigned work by delivery date 
 
 ### Acceptance criteria
 
-- [ ] Claim limit enforced server-side
-- [ ] Release only when nothing on the assignment has been reported
-- [ ] No client prices anywhere on clothier screens
-- [ ] 44 px targets, one-handed use, works offline-tolerant like the current board
+- [x] Claim limit enforced server-side
+- [x] Release only when nothing on the assignment has been reported
+- [x] No client prices anywhere on clothier screens
+- [x] 44 px targets, one-handed use, works offline-tolerant like the current board
 
 ---
 

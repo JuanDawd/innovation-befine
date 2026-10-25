@@ -47,7 +47,9 @@ export type ActivityAction =
   | "pedido.deliver"
   | "production.assign"
   | "production.rate_change"
-  | "production.release";
+  | "production.release"
+  | "production.claim"
+  | "production.report";
 
 export type ActivityEntry = {
   actor: { userId: string | null; role: string | null };
@@ -136,6 +138,14 @@ export function activitySummary(
       return `Cambió la tarifa de una asignación del pedido ${data.number ?? ""}`.trim();
     case "production.release":
       return `Liberó ${data.units ?? ""} unidades del pedido ${data.number ?? ""}`
+        .replace(/\s+/g, " ")
+        .trim();
+    case "production.claim":
+      return `Tomó ${data.units ?? ""} unidades del pedido ${data.number ?? ""}`
+        .replace(/\s+/g, " ")
+        .trim();
+    case "production.report":
+      return `Reportó ${data.units ?? ""} unidades terminadas del pedido ${data.number ?? ""}`
         .replace(/\s+/g, " ")
         .trim();
     case "pedido.deliver":

@@ -37,4 +37,7 @@ export const queryKeys = {
   clients: {
     options: ["clients", "options"] as const,
   },
+  pedidos: {
+    myWork: ["pedidos", "myWork"] as const,
+  },
 } as const;

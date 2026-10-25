@@ -92,6 +92,12 @@ export const unitReports = pgTable(
     reportedBy: uuid("reported_by")
       .notNull()
       .references(() => employees.id, { onDelete: "restrict" }),
+    /**
+     * T123 — client-generated per tap; a report queued offline and replayed
+     * is recorded once. One tap may write a rework row and a report row, so
+     * the key carries the kind as a suffix.
+     */
+    idempotencyKey: text("idempotency_key").unique(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [

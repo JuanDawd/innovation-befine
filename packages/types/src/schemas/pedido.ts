@@ -176,6 +176,22 @@ export const releaseAssignmentSchema = z.object({
   quantity: z.number().int().min(1, "Mínimo 1 unidad").max(10_000),
 });
 
+// ─── Mi trabajo (T123) ─────────────────────────────────────────────────────
+
+export const claimUnitsSchema = z.object({
+  cellId: z.uuid(),
+  quantity: z.number("Escribe cuántas").int().min(1, "Mínimo 1 unidad").max(10_000),
+  expectedUnassigned: z.number().int().min(0),
+});
+
+export const reportUnitsSchema = z.object({
+  assignmentId: z.uuid(),
+  quantity: z.number("Escribe cuántas").int().min(1, "Mínimo 1 unidad").max(10_000),
+  idempotencyKey: z.uuid(),
+});
+
+export type ClaimUnitsInput = z.infer<typeof claimUnitsSchema>;
+export type ReportUnitsInput = z.infer<typeof reportUnitsSchema>;
 export type AssignUnitsInput = z.infer<typeof assignUnitsSchema>;
 export type ChangeAssignmentRateInput = z.infer<typeof changeAssignmentRateSchema>;
 export type ReleaseAssignmentInput = z.infer<typeof releaseAssignmentSchema>;

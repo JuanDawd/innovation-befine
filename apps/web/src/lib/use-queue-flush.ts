@@ -50,6 +50,14 @@ async function dispatchMutation(
       return { success: true };
     }
 
+    if (mutation.type === "reportUnits") {
+      const { reportUnits } = await import("@/app/(protected)/clothier/work-actions");
+      // The queued payload carries the original idempotency key: a replay is recorded once.
+      const result = await reportUnits(mutation.payload);
+      if (!result.success) return { success: false, error: result.error.message };
+      return { success: true };
+    }
+
     return { success: false, error: `Unknown mutation type: ${mutation.type}` };
   } catch (e) {
     return { success: false, error: e instanceof Error ? e.message : "Unknown error" };

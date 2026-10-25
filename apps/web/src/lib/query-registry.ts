@@ -21,6 +21,7 @@ import {
 } from "@/app/(protected)/cashier/actions/cloth-sales";
 import { getAwaitingPaymentTickets } from "@/app/(protected)/cashier/checkout/actions";
 import { listTodayProductPieces } from "@/app/(protected)/clothier/actions";
+import { getMyWork } from "@/app/(protected)/clothier/work-actions";
 import { listActiveClothiers } from "@/app/(protected)/large-orders/assignment-actions";
 import { getProductsDashboardData } from "@/app/(protected)/products/actions";
 import { listPendingProductPieceApprovals } from "@/app/(protected)/products/approval-actions";
@@ -43,6 +44,7 @@ export const QUERIES = {
   clientsForSale: () => listClientsForSale(),
   dayStats: () => getDayStats(),
   myEditRequests: () => listMyEditRequests(),
+  myWork: () => getMyWork(),
   myOpenTicketItems: () => listMyOpenTicketItems(),
   openTickets: () => listOpenTickets(),
   pendingEditRequests: () => listPendingEditRequests(),
