@@ -127,6 +127,28 @@ export const cancelPedidoSchema = z.object({
   acknowledgePayments: z.boolean().optional(),
 });
 
+/** Register a delivery (T121): units per cell, only from approved undelivered units. */
+export const recordDeliverySchema = z.object({
+  idempotencyKey: z.uuid(),
+  /** Bogotá date it was handed over; defaults to now */
+  deliveredOn: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Fecha inválida")
+    .optional(),
+  note: optionalText(300),
+  cells: z
+    .array(
+      z.object({
+        cellId: z.uuid(),
+        quantity: z.number().int("Cantidad inválida").min(0).max(10_000),
+      }),
+    )
+    .max(500)
+    .refine((cells) => cells.some((c) => c.quantity > 0), "Indica al menos una unidad entregada")
+    .refine((cells) => new Set(cells.map((c) => c.cellId)).size === cells.length, "Talla repetida"),
+});
+
+export type RecordDeliveryInput = z.infer<typeof recordDeliverySchema>;
 export type CancelPedidoInput = z.infer<typeof cancelPedidoSchema>;
 export type PedidoCellInput = z.infer<typeof pedidoCellSchema>;
 export type PedidoGarmentLineInput = z.infer<typeof pedidoGarmentLineSchema>;

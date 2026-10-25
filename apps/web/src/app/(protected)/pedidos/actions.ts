@@ -23,6 +23,8 @@ import { getDb, getTxDb } from "@/lib/db";
 import {
   assignments,
   clients,
+  deliveries,
+  deliveryCells,
   clothPieces,
   clothPieceVariants,
   garmentColors,
@@ -47,6 +49,7 @@ import {
   editPedidoSchema,
   pedidoClientSchema,
   cancelPedidoSchema,
+  recordDeliverySchema,
   type CreatePedidoInput,
 } from "@befine/types";
 import { z } from "zod";
@@ -1199,6 +1202,140 @@ export async function cancelPedido(
     revalidatePath("/pedidos");
     revalidatePath(`/pedidos/${id}`);
     return { success: true, data: { id } };
+  } catch (err) {
+    const fail = toFail(err);
+    if (fail) return fail;
+    throw err;
+  }
+}
+
+// ─── Deliveries (T121, spec §3.3.15) ────────────────────────────────────────
+
+/** Bogotá calendar date of "now". */
+function todayInBogota(): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Bogota" }).format(new Date());
+}
+
+export async function recordDelivery(
+  pedidoId: string,
+  rawInput: unknown,
+): Promise<ActionResult<{ deliveryId: string; units: number }>> {
+  const guard = await requirePedidoRole();
+  if ("success" in guard) return guard;
+  if (typeof pedidoId !== "string" || !/^[0-9a-f-]{36}$/i.test(pedidoId))
+    return { success: false, error: { code: "NOT_FOUND", message: "Pedido no encontrado" } };
+  const { allowed } = await checkRateLimit(rateLimits.general, guard.user.id);
+  if (!allowed)
+    return {
+      success: false,
+      error: { code: "RATE_LIMITED", message: "Demasiadas solicitudes. Intenta en un minuto." },
+    };
+  const parsed = recordDeliverySchema.safeParse(rawInput);
+  if (!parsed.success) return validationError(parsed.error);
+  const input = parsed.data;
+  const today = todayInBogota();
+  if (input.deliveredOn && input.deliveredOn > today)
+    return fieldError("deliveredOn", "La fecha de entrega no puede ser futura.");
+  const actor = actorOf(guard.user);
+
+  try {
+    const result = await getTxDb().transaction(async (tx) => {
+      const [pedido] = await tx
+        .select({
+          number: pedidos.number,
+          destination: pedidos.destination,
+          cancelledAt: pedidos.cancelledAt,
+        })
+        .from(pedidos)
+        .where(eq(pedidos.id, pedidoId))
+        .for("update");
+      if (!pedido) throw new ConflictError("NOT_FOUND", "Pedido no encontrado");
+
+      // A retried submit returns the delivery it already recorded.
+      const [already] = await tx
+        .select({ id: deliveries.id })
+        .from(deliveries)
+        .where(eq(deliveries.idempotencyKey, input.idempotencyKey));
+      if (already) {
+        const [{ units }] = await tx
+          .select({ units: sql<number>`coalesce(sum(${deliveryCells.quantity}), 0)::int` })
+          .from(deliveryCells)
+          .where(eq(deliveryCells.deliveryId, already.id));
+        return { deliveryId: already.id, units: Number(units) };
+      }
+
+      if (pedido.cancelledAt) throw new ConflictError("CONFLICT", "El pedido está cancelado.");
+      if (pedido.destination === "inventory")
+        throw new ConflictError(
+          "CONFLICT",
+          "Los pedidos para inventario no se entregan: sus unidades entran al inventario.",
+        );
+
+      const existing = await loadExistingLines(tx, pedidoId);
+      const cellsById = new Map(
+        existing.flatMap((l) =>
+          l.kind === "garment" ? l.cells.map((c) => [c.id, c] as const) : [],
+        ),
+      );
+      const toDeliver = input.cells.filter((c) => c.quantity > 0);
+      for (const c of toDeliver) {
+        const cell = cellsById.get(c.cellId);
+        if (!cell) throw new InputError("cells", "Una talla no pertenece a este pedido. Recarga.");
+        const ready = cell.approved - cell.delivered;
+        if (c.quantity > ready)
+          throw new InputError(
+            "cells",
+            ready > 0
+              ? `La talla ${cell.label} solo tiene ${ready} ${ready === 1 ? "unidad lista" : "unidades listas"} para entregar.`
+              : `La talla ${cell.label} no tiene unidades aprobadas sin entregar.`,
+          );
+      }
+
+      const deliveredAt =
+        !input.deliveredOn || input.deliveredOn === today
+          ? new Date()
+          : new Date(`${input.deliveredOn}T12:00:00-05:00`);
+      const [delivery] = await tx
+        .insert(deliveries)
+        .values({
+          pedidoId,
+          deliveredAt,
+          deliveredBy: guard.employeeId,
+          note: input.note ?? null,
+          idempotencyKey: input.idempotencyKey,
+        })
+        .returning({ id: deliveries.id });
+      await tx.insert(deliveryCells).values(
+        toDeliver.map((c) => ({
+          deliveryId: delivery.id,
+          cellId: c.cellId,
+          quantity: c.quantity,
+        })),
+      );
+
+      const units = toDeliver.reduce((n, c) => n + c.quantity, 0);
+      const number = formatPedidoNumber(pedido.number);
+      await logActivity(tx, {
+        actor,
+        action: "pedido.deliver",
+        entityType: "pedido",
+        entityId: pedidoId,
+        data: { units, number },
+        after: {
+          deliveredAt,
+          note: input.note ?? null,
+          cells: toDeliver.map((c) => ({
+            size: cellsById.get(c.cellId)!.label,
+            quantity: c.quantity,
+          })),
+        },
+      });
+      return { deliveryId: delivery.id, units };
+    });
+
+    revalidatePath("/pedidos");
+    revalidatePath(`/pedidos/${pedidoId}`);
+    return { success: true, data: result };
   } catch (err) {
     const fail = toFail(err);
     if (fail) return fail;

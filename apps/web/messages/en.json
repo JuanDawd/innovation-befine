@@ -1367,7 +1367,8 @@
       "delivered": "Delivered",
       "deliveriesTitle": "Deliveries",
       "noDeliveries": "No deliveries yet.",
-      "deliveredUnits": "{count, plural, one {# unit} other {# units}}"
+      "deliveredUnits": "{count, plural, one {# unit} other {# units}}",
+      "nothingReady": "No approved units waiting to be delivered."
     },
     "cancel": {
       "button": "Cancel pedido",
@@ -1377,6 +1378,18 @@
       "acknowledge": "This pedido has {amount} paid. I confirm I will handle the refund.",
       "confirm": "Cancel pedido",
       "done": "Pedido {number} cancelled"
+    },
+    "delivery": {
+      "button": "Record delivery",
+      "title": "Record delivery",
+      "description": "Only approved units not yet delivered can be handed over.",
+      "ready": "{n} ready",
+      "date": "Delivery date",
+      "note": "Note",
+      "notePlaceholder": "e.g. picked up by her sister",
+      "tooMany": "Size {size} only has {n} ready.",
+      "confirm": "{count, plural, =0 {Record} one {Record # unit} other {Record # units}}",
+      "done": "{count, plural, one {Delivery of # unit recorded} other {Delivery of # units recorded}}"
     }
   }
 }

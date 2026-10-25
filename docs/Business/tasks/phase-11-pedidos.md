@@ -213,7 +213,7 @@ Enforce spec §3.4.16: increases always; decreases only down to assigned units; 
 ## T121 — Deliveries in units
 
 **Phase:** 11B — Pedidos
-**Status:** pending
+**Status:** done
 **Dependencies:** T112
 
 ### What to do
@@ -222,9 +222,9 @@ Enforce spec §3.4.16: increases always; decreases only down to assigned units; 
 
 ### Acceptance criteria
 
-- [ ] Cannot deliver more than approved − delivered per cell
-- [ ] Status moves to Entrega parcial / Entregado automatically
-- [ ] Logged
+- [x] Cannot deliver more than approved − delivered per cell
+- [x] Status moves to Entrega parcial / Entregado automatically
+- [x] Logged
 
 ---
 

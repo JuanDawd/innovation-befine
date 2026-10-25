@@ -1399,7 +1399,8 @@
       "delivered": "Entregadas",
       "deliveriesTitle": "Entregas",
       "noDeliveries": "Sin entregas todavía.",
-      "deliveredUnits": "{count, plural, one {# unidad} other {# unidades}}"
+      "deliveredUnits": "{count, plural, one {# unidad} other {# unidades}}",
+      "nothingReady": "No hay unidades aprobadas pendientes de entrega."
     },
     "cancel": {
       "button": "Cancelar pedido",
@@ -1409,6 +1410,18 @@
       "acknowledge": "Este pedido tiene {amount} pagados. Confirmo que gestionaré la devolución.",
       "confirm": "Cancelar pedido",
       "done": "Pedido {number} cancelado"
+    },
+    "delivery": {
+      "button": "Registrar entrega",
+      "title": "Registrar entrega",
+      "description": "Solo se pueden entregar unidades aprobadas que aún no se han entregado.",
+      "ready": "{n} listas",
+      "date": "Fecha de entrega",
+      "note": "Nota",
+      "notePlaceholder": "Ej. la recogió la hermana",
+      "tooMany": "La talla {size} solo tiene {n} listas.",
+      "confirm": "{count, plural, =0 {Registrar} one {Registrar # unidad} other {Registrar # unidades}}",
+      "done": "{count, plural, one {Entrega de # unidad registrada} other {Entrega de # unidades registrada}}"
     }
   }
 }

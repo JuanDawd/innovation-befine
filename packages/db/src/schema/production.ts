@@ -177,6 +177,8 @@ export const deliveries = pgTable(
       .notNull()
       .references(() => employees.id, { onDelete: "restrict" }),
     note: text("note"),
+    /** Client-generated (T121): a double tap records one delivery */
+    idempotencyKey: text("idempotency_key").unique(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index("idx_deliveries_pedido").on(t.pedidoId)],

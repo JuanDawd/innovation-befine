@@ -43,7 +43,8 @@ export type ActivityAction =
   | "client.update"
   | "pedido.create"
   | "pedido.update"
-  | "pedido.cancel";
+  | "pedido.cancel"
+  | "pedido.deliver";
 
 export type ActivityEntry = {
   actor: { userId: string | null; role: string | null };
@@ -124,6 +125,10 @@ export function activitySummary(
       return `Editó el pedido ${data.number ?? ""}`.trim();
     case "pedido.cancel":
       return `Canceló el pedido ${data.number ?? ""}`.trim();
+    case "pedido.deliver":
+      return `Entregó ${data.units ?? ""} unidades del pedido ${data.number ?? ""}`
+        .replace(/\s+/g, " ")
+        .trim();
     case "settings.update":
       return typeof data.setting === "string" && data.setting
         ? `Cambió la configuración: ${data.setting}`

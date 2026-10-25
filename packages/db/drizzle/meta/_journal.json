@@ -344,6 +344,13 @@
       "when": 1792896145038,
       "tag": "0048_pedido_spec_change",
       "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1792896844997,
+      "tag": "0049_delivery_idempotency",
+      "breakpoints": true
     }
   ]
 }

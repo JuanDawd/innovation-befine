@@ -6,6 +6,9 @@ import { and, eq, sql } from "drizzle-orm";
 // Postgres (scripts/test-db.sh). Skipped when no test database is configured.
 // Every test builds its own pedido; the database is throwaway.
 
+// Real round trips to the throwaway database: allow more than the 5 s default.
+vi.setConfig({ testTimeout: 30_000 });
+
 const url = process.env.TEST_DATABASE_URL;
 const hasDb = Boolean(url) && process.env.NEON_LOCAL_PROXY === "1";
 if (hasDb) process.env.DATABASE_URL = url;
@@ -23,7 +26,14 @@ vi.mock("@befine/realtime/server", () => ({ publishEvent: async () => {} }));
 
 import * as s from "@befine/db/schema";
 import { getDb } from "@/lib/db";
-import { cancelPedido, createPedido, getPedidoForEdit, updatePedido } from "../actions";
+import { getPedidoDetail } from "@befine/db";
+import {
+  cancelPedido,
+  createPedido,
+  getPedidoForEdit,
+  recordDelivery,
+  updatePedido,
+} from "../actions";
 
 type Fixture = Awaited<ReturnType<typeof makeFixture>>;
 let f: Fixture;
@@ -400,6 +410,140 @@ describe.skipIf(!hasDb)("cancelPedido (spec §3.4.18)", () => {
     const res = await cancelPedido("00000000-0000-4000-8000-000000000001", {
       version: 1,
       reason: "x".repeat(5),
+    });
+    expect(!res.success && res.error.code).toBe("FORBIDDEN");
+  });
+});
+
+describe.skipIf(!hasDb)("recordDelivery (T121)", () => {
+  beforeAll(async () => {
+    f ??= await makeFixture();
+  });
+  beforeEach(() => {
+    session.user = { id: f.admin.userId, role: "secretary" };
+  });
+
+  async function sCell(pedidoId: string) {
+    const d = await getPedidoDetail(getDb(), pedidoId);
+    const line = d!.lines[0]!;
+    if (line.kind !== "garment") throw new Error("expected garment");
+    return {
+      detail: d!,
+      s: line.cells.find((c) => c.sizeId === f.S)!,
+      m: line.cells.find((c) => c.sizeId === f.M)!,
+    };
+  }
+
+  it("delivers only approved undelivered units and moves the status", async () => {
+    session.user = { id: f.admin.userId, role: "admin" };
+    const p = await newPedido(); // S 10, M 5
+    await work(p.id, 10, 10, 6);
+    const { s: cell } = await sCell(p.id);
+
+    const tooMany = await recordDelivery(p.id, {
+      idempotencyKey: crypto.randomUUID(),
+      cells: [{ cellId: cell.id, quantity: 7 }],
+    });
+    expect(!tooMany.success && tooMany.error.message).toMatch(/solo tiene 6 unidades listas/);
+
+    const key = crypto.randomUUID();
+    const first = await recordDelivery(p.id, {
+      idempotencyKey: key,
+      note: "la recogió la hermana",
+      cells: [{ cellId: cell.id, quantity: 4 }],
+    });
+    expect(first.success && first.data.units).toBe(4);
+    // Same key again: no second delivery.
+    const retry = await recordDelivery(p.id, {
+      idempotencyKey: key,
+      cells: [{ cellId: cell.id, quantity: 4 }],
+    });
+    expect(retry.success && retry.success && first.success && retry.data.deliveryId).toBe(
+      first.success ? first.data.deliveryId : "",
+    );
+    const after = await sCell(p.id);
+    expect(after.s.progress.delivered).toBe(4);
+    expect(after.detail.status).toBe("partially_delivered");
+
+    const [log] = (
+      await getDb().execute(
+        sql`SELECT summary FROM activity_log WHERE entity_id = ${p.id} AND action = 'pedido.deliver'`,
+      )
+    ).rows as { summary: string }[];
+    expect(log!.summary).toMatch(/^Entregó 4 unidades del pedido #\d{4}$/);
+  });
+
+  it("reaches Entregado when every unit is delivered", async () => {
+    const p = await newPedido();
+    // Approve everything on both sizes.
+    await work(p.id, 10, 10, 10);
+    const { m } = await sCell(p.id);
+    const [am] = await getDb()
+      .insert(s.assignments)
+      .values({
+        cellId: m.id,
+        employeeId: f.clothier.employeeId,
+        quantity: 5,
+        pieceRate: 12_000,
+        source: "assigned",
+        createdBy: f.admin.employeeId,
+      })
+      .returning();
+    await getDb().insert(s.unitReports).values({
+      assignmentId: am!.id,
+      quantity: 5,
+      businessDayId: f.dayId,
+      reportedBy: f.clothier.employeeId,
+    });
+    await getDb().insert(s.unitReviews).values({
+      assignmentId: am!.id,
+      approved: 5,
+      businessDayId: f.dayId,
+      reviewedBy: f.admin.employeeId,
+    });
+    const cells = await sCell(p.id);
+    const res = await recordDelivery(p.id, {
+      idempotencyKey: crypto.randomUUID(),
+      deliveredOn: new Intl.DateTimeFormat("en-CA", { timeZone: "America/Bogota" }).format(
+        new Date(),
+      ),
+      cells: [
+        { cellId: cells.s.id, quantity: 10 },
+        { cellId: cells.m.id, quantity: 5 },
+      ],
+    });
+    expect(res.success).toBe(true);
+    expect((await sCell(p.id)).detail.status).toBe("delivered");
+  });
+
+  it("rejects future dates, inventory pedidos and empty deliveries", async () => {
+    const p = await newPedido();
+    const { s: cell } = await sCell(p.id);
+    const future = await recordDelivery(p.id, {
+      idempotencyKey: crypto.randomUUID(),
+      deliveredOn: "2999-01-01",
+      cells: [{ cellId: cell.id, quantity: 1 }],
+    });
+    expect(!future.success && future.error.details?.[0]?.field).toBe("deliveredOn");
+    const empty = await recordDelivery(p.id, {
+      idempotencyKey: crypto.randomUUID(),
+      cells: [{ cellId: cell.id, quantity: 0 }],
+    });
+    expect(!empty.success && empty.error.code).toBe("VALIDATION_ERROR");
+
+    const inv = await createPedido({ destination: "inventory", lines: [garment()] });
+    const invRes = await recordDelivery(inv.success ? inv.data.id : "", {
+      idempotencyKey: crypto.randomUUID(),
+      cells: [{ cellId: cell.id, quantity: 1 }],
+    });
+    expect(!invRes.success && invRes.error.message).toMatch(/inventario/);
+  });
+
+  it("returns FORBIDDEN for a stylist", async () => {
+    session.user = { id: f.admin.userId, role: "stylist" };
+    const res = await recordDelivery("00000000-0000-4000-8000-000000000001", {
+      idempotencyKey: crypto.randomUUID(),
+      cells: [{ cellId: "00000000-0000-4000-8000-000000000002", quantity: 1 }],
     });
     expect(!res.success && res.error.code).toBe("FORBIDDEN");
   });

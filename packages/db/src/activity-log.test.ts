@@ -58,6 +58,9 @@ describe("activitySummary — clients and pedidos", () => {
     expect(activitySummary("pedido.cancel", "pedido", { number: "#0007" })).toBe(
       "Canceló el pedido #0007",
     );
+    expect(activitySummary("pedido.deliver", "pedido", { units: 3, number: "#0007" })).toBe(
+      "Entregó 3 unidades del pedido #0007",
+    );
   });
 });
 

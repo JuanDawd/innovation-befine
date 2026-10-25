@@ -11,6 +11,7 @@ import { formatMoney } from "@/i18n";
 import { cn } from "@/lib/utils";
 import { getPedido } from "../actions";
 import { CancelPedidoDialog } from "./cancel-pedido-dialog";
+import { RecordDeliveryDialog, type DeliverableLine } from "./record-delivery-dialog";
 
 /**
  * Pedido detail — T117 (spec §3.3, §3.10)
@@ -311,14 +312,30 @@ async function LinesSection({ pedido }: { pedido: PedidoDetail }) {
 async function DeliveriesSection({ pedido }: { pedido: PedidoDetail }) {
   const t = await getTranslations("pedidos.detail");
   if (pedido.destination === "inventory") return null;
+  const deliverable: DeliverableLine[] = pedido.lines.flatMap((l) => {
+    if (l.kind !== "garment") return [];
+    const cells = l.cells
+      .filter((c) => c.progress.readyToDeliver > 0)
+      .map((c) => ({ id: c.id, label: c.sizeLabel, ready: c.progress.readyToDeliver }));
+    return cells.length ? [{ id: l.id, title: `${l.pieceName} — ${l.variantName}`, cells }] : [];
+  });
+  const open = pedido.status !== "cancelled";
   return (
     <section
       aria-labelledby="pedido-deliveries"
       className="space-y-3 rounded-xl border bg-card p-4"
     >
-      <h2 id="pedido-deliveries" className="text-lg font-semibold">
-        {t("deliveriesTitle")}
-      </h2>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 id="pedido-deliveries" className="text-lg font-semibold">
+          {t("deliveriesTitle")}
+        </h2>
+        {open && deliverable.length > 0 && (
+          <RecordDeliveryDialog pedidoId={pedido.id} lines={deliverable} />
+        )}
+      </div>
+      {open && deliverable.length === 0 && pedido.progress.delivered < pedido.progress.ordered && (
+        <p className="text-xs text-muted-foreground">{t("nothingReady")}</p>
+      )}
       {pedido.deliveries.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t("noDeliveries")}</p>
       ) : (
