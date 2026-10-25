@@ -302,6 +302,20 @@
       "when": 1792892386435,
       "tag": "0042_production_unit_guards",
       "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1792892690516,
+      "tag": "0043_pedido_money_stock",
+      "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1792892691083,
+      "tag": "0044_ledger_immutability",
+      "breakpoints": true
     }
   ]
 }

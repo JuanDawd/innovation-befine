@@ -66,7 +66,7 @@ Create `assignments`, `unit_reports`, `unit_reviews`, `clothier_day_closings`, `
 ## T113 — Money and stock schema
 
 **Phase:** 11A — Data model
-**Status:** pending
+**Status:** done
 **Dependencies:** T111
 
 ### What to do
@@ -75,9 +75,9 @@ Create `pedido_payments` (signed amount for refunds, `business_day_id` nullable 
 
 ### Acceptance criteria
 
-- [ ] Stock on hand per variant + size + colour is a query (sum of movements), never a column
-- [ ] Balance and saldo a favor are queries, never columns
-- [ ] Unit tests: balance with partial payments, refunds, adjustment lines
+- [x] Stock on hand per variant + size + colour is a query (sum of movements), never a column
+- [x] Balance and saldo a favor are queries, never columns
+- [x] Unit tests: balance with partial payments, refunds, adjustment lines
 
 ---
 

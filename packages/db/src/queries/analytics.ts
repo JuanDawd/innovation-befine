@@ -467,8 +467,11 @@ export async function dailyRevenueBreakdown(
   ]);
 
   const salesByDay = new Map(salesRows.map((r) => [r.businessDayId, Number(r.revenue)]));
-  for (const r of clothSaleRows)
+  for (const r of clothSaleRows) {
+    // inArray() already excludes after-hours sales not yet attached to a day.
+    if (!r.businessDayId) continue;
     salesByDay.set(r.businessDayId, (salesByDay.get(r.businessDayId) ?? 0) + Number(r.revenue));
+  }
 
   return ticketRows.map((r) => {
     const serviceRevenue = Number(r.revenue);

@@ -38,6 +38,12 @@ export {
   deliveries,
   deliveryCells,
 } from "./production";
+export {
+  stockMovementKindEnum,
+  pedidoPayments,
+  stockMovements,
+  restructures,
+} from "./pedido-money-stock";
 export { catalogEntityTypeEnum, catalogActionEnum, catalogAuditLog } from "./catalog-audit-log";
 export { clients } from "./clients";
 export { ticketStatusEnum, checkoutSessions, tickets } from "./tickets";
