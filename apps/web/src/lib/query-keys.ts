@@ -40,5 +40,6 @@ export const queryKeys = {
   pedidos: {
     myWork: ["pedidos", "myWork"] as const,
     productionBoard: ["pedidos", "productionBoard"] as const,
+    clothiersWithoutClosing: ["pedidos", "clothiersWithoutClosing"] as const,
   },
 } as const;

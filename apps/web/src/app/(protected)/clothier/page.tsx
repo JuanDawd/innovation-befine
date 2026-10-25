@@ -13,6 +13,8 @@ import { auth } from "@/lib/auth";
 import { hasRole } from "@/lib/middleware-helpers";
 import { MiTrabajo } from "@/components/mi-trabajo";
 import { PageHeader } from "@/components/page-header";
+import { buttonVariants } from "@/components/ui/button-variants";
+import { MoonIcon } from "lucide-react";
 
 export default async function ClothierHomePage() {
   const t = await getTranslations("miTrabajo");
@@ -21,7 +23,16 @@ export default async function ClothierHomePage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <PageHeader title={t("pageTitle")} className="px-4 pt-6 pb-2" />
+      <PageHeader
+        title={t("pageTitle")}
+        className="px-4 pt-6 pb-2"
+        actions={
+          <Link href="/clothier/cierre" className={buttonVariants({ variant: "outline" })}>
+            <MoonIcon className="size-4" aria-hidden="true" />
+            {t("closeDay")}
+          </Link>
+        }
+      />
       <MiTrabajo />
       <p className="px-4 pb-8 text-center text-sm">
         <Link

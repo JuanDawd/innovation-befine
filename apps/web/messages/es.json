@@ -128,7 +128,8 @@
     "closeSuccessSummary": "Día cerrado: {revenue} en {count, plural, one {# ticket} other {# tickets}}",
     "openSince": "Abierto desde el {date}",
     "staleDay": "Lleva {days, plural, one {# día} other {# días}} abierto. Ciérralo al terminar la jornada.",
-    "reopenReasonTooShort": "El motivo debe tener al menos 5 caracteres"
+    "reopenReasonTooShort": "El motivo debe tener al menos 5 caracteres",
+    "closeUnclosedClothiersWarning": "{count, plural, one {Falta cerrar su jornada: {names}.} other {# confeccionistas no han cerrado su jornada: {names}.}} Sus unidades quedan pendientes y sin pagar hasta que cierren."
   },
   "errors": {
     "generic": "Ocurrió un error inesperado. Intenta de nuevo.",
@@ -1499,14 +1500,16 @@
     "offline": "Sin conexión. Intenta de nuevo.",
     "error": "No se pudo guardar. Intenta de nuevo.",
     "loadError": "No se pudo cargar tu trabajo.",
-    "oldBoard": "Ver productos (sistema anterior)"
+    "oldBoard": "Ver productos (sistema anterior)",
+    "closeDay": "Cerrar mi jornada"
   },
   "produccion": {
     "pageTitle": "Producción",
     "pageSubtitle": "Revisa lo que reportan las confeccionistas y lo que falta por asignar.",
     "tabs": {
       "review": "Por revisar ({n})",
-      "unassigned": "Sin asignar ({n})"
+      "unassigned": "Sin asignar ({n})",
+      "closings": "Cierres ({n})"
     },
     "dayClosed": "El día no está abierto: abre el día para aprobar, devolver o descartar unidades.",
     "emptyReviewTitle": "Nada por revisar",
@@ -1542,6 +1545,45 @@
       "rework": "corrección",
       "since": "desde {date}",
       "open": "Revisar"
+    },
+    "closings": {
+      "size": "talla",
+      "submitted": "{n} unidades · {time}",
+      "zeroDay": "Cerró sin unidades.",
+      "reason": "Motivo de la corrección",
+      "approve": "Aprobar",
+      "approveCorrected": "Aprobar con corrección",
+      "approved": "Cierre de {name} aprobado",
+      "corrected": "Cierre de {name} corregido y aprobado",
+      "dayClosed": "Abre el día para ver y aprobar los cierres.",
+      "emptyTitle": "Nadie tiene que cerrar hoy",
+      "emptyDescription": "Cuando las confeccionistas tengan trabajo aparecerán aquí.",
+      "missing": "Sin cerrar ({n})",
+      "remind": "Enviar recordatorio",
+      "reminded": "{n, plural, one {Recordatorio enviado a # confeccionista} other {Recordatorio enviado a # confeccionistas}}",
+      "waiting": "Por aprobar ({n})",
+      "done": "Aprobados ({n})",
+      "approvedBy": "{n} unidades · aprobó {name}",
+      "withCorrection": "con corrección"
     }
+  },
+  "cierre": {
+    "pageTitle": "Cerrar mi jornada",
+    "pageSubtitle": "Confirma cuántas unidades terminaste hoy.",
+    "dayClosed": "El día no está abierto: no se puede cerrar la jornada ahora.",
+    "approved": "Tu cierre fue aprobado por {name}.",
+    "correctedReason": "Corregido: {reason}",
+    "size": "Talla",
+    "question": "¿Cuántas terminaste hoy?",
+    "less": "Una menos",
+    "more": "Una más",
+    "hint": "Reportaste {reported} hoy · te quedan {left}",
+    "confirmZero": "Confirmo que hoy no terminé unidades.",
+    "send": "{n, plural, =0 {Cerrar sin unidades} one {Cerrar con # unidad} other {Cerrar con # unidades}}",
+    "resend": "{n, plural, =0 {Actualizar cierre (sin unidades)} one {Actualizar cierre (# unidad)} other {Actualizar cierre (# unidades)}}",
+    "sent": "{n, plural, =0 {Jornada cerrada sin unidades} one {Jornada cerrada con # unidad} other {Jornada cerrada con # unidades}}",
+    "waitingApproval": "Ya enviaste tu cierre; puedes corregirlo hasta que lo aprueben.",
+    "noWorkTitle": "No tienes trabajo hoy",
+    "noWorkDescription": "Igual confirma tu cierre para que quede registrado."
   }
 }

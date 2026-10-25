@@ -27,7 +27,8 @@ export type ActivityEntityType =
   | "garment_color"
   | "business_settings"
   | "client"
-  | "pedido";
+  | "pedido"
+  | "employee";
 
 export type ActivityAction =
   | "auth.sign_in"
@@ -50,7 +51,9 @@ export type ActivityAction =
   | "production.release"
   | "production.claim"
   | "production.report"
-  | "production.review";
+  | "production.review"
+  | "production.closing_submit"
+  | "production.closing_approve";
 
 export type ActivityEntry = {
   actor: { userId: string | null; role: string | null };
@@ -89,6 +92,7 @@ const ENTITY_NOUN: Record<ActivityEntityType, string> = {
   business_settings: "la configuración",
   client: "el cliente",
   pedido: "el pedido",
+  employee: "el empleado",
 };
 
 function named(entityType: ActivityEntityType, data: Record<string, unknown>): string {
@@ -151,6 +155,10 @@ export function activitySummary(
         .trim();
     case "production.review":
       return `Revisó unidades del pedido ${data.number ?? ""}`.trim();
+    case "production.closing_submit":
+      return `Cerró su jornada${data.units !== undefined ? ` con ${data.units} unidades` : ""}`;
+    case "production.closing_approve":
+      return `Aprobó el cierre de jornada${data.name ? ` de ${data.name}` : ""}`;
     case "pedido.deliver":
       return `Entregó ${data.units ?? ""} unidades del pedido ${data.number ?? ""}`
         .replace(/\s+/g, " ")

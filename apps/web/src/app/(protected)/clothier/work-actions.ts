@@ -19,9 +19,24 @@ import { revalidatePath } from "next/cache";
 import { and, eq, like, sql } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { getDb, getTxDb } from "@/lib/db";
-import { assignments, unitReports } from "@befine/db/schema";
-import { formatPedidoNumber, getClothierWork, type ClothierWork } from "@befine/db";
-import { claimUnitsSchema, releaseAssignmentSchema, reportUnitsSchema } from "@befine/types";
+import { assignments, clothierDayClosings, unitReports } from "@befine/db/schema";
+import {
+  formatPedidoNumber,
+  getClosingLines,
+  getClothierWork,
+  getDayClosings,
+  type ClosingLine,
+  type ClosingRow,
+  type ClothierWork,
+  type Database,
+  type StoredClosingLine,
+} from "@befine/db";
+import {
+  claimUnitsSchema,
+  releaseAssignmentSchema,
+  reportUnitsSchema,
+  submitClosingSchema,
+} from "@befine/types";
 import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
 import { getEmployeeRef } from "@/lib/employee-ref";
@@ -29,6 +44,7 @@ import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
 import { getCurrentBusinessDay } from "@/lib/business-day";
 import { getBusinessSettings } from "@/lib/business-settings";
 import { actorOf, logActivity, type ActivityTx } from "@/lib/activity";
+import { applyDayCount, DayCountError } from "@/lib/day-count";
 
 type Fail = Extract<ActionResult<never>, { success: false }>;
 
@@ -432,6 +448,161 @@ export async function reportUnits(
     revalidatePath("/clothier");
     if (result.pedidoId) revalidatePath(`/pedidos/${result.pedidoId}`);
     return { success: true, data: { reported: result.reported, rework: result.rework } };
+  } catch (err) {
+    const f = fail(err);
+    if (f) return f;
+    throw err;
+  }
+}
+
+// ─── Cerrar mi jornada (T125) ────────────────────────────────────────────────
+
+export type MyClosing = {
+  dayOpen: boolean;
+  lines: ClosingLine[];
+  closing: ClosingRow | null;
+};
+
+async function openDayId(tx: ActivityTx | ReturnType<typeof getDb>) {
+  const r = await tx.execute(
+    sql`SELECT id FROM business_days WHERE closed_at IS NULL ORDER BY opened_at DESC LIMIT 1`,
+  );
+  return (r.rows[0] as { id: string } | undefined)?.id ?? null;
+}
+
+export async function getMyClosing(): Promise<ActionResult<MyClosing>> {
+  const guard = await requireClothier();
+  if ("success" in guard) return guard;
+  const db = getDb();
+  const dayId = await openDayId(db);
+  if (!dayId) return { success: true, data: { dayOpen: false, lines: [], closing: null } };
+  const [lines, statuses] = await Promise.all([
+    getClosingLines(db, guard.employeeId, dayId),
+    getDayClosings(db, dayId),
+  ]);
+  const mine = statuses.find((s) => s.employeeId === guard.employeeId);
+  return { success: true, data: { dayOpen: true, lines, closing: mine?.closing ?? null } };
+}
+
+export async function submitMyClosing(
+  rawInput: unknown,
+): Promise<ActionResult<{ closingId: string; units: number }>> {
+  const guard = await requireClothier();
+  if ("success" in guard) return guard;
+  const rl = await limited(guard.user.id);
+  if (rl) return rl;
+  const parsed = submitClosingSchema.safeParse(rawInput);
+  if (!parsed.success)
+    return {
+      success: false,
+      error: {
+        code: "VALIDATION_ERROR",
+        message: parsed.error.issues[0]?.message ?? "Datos inválidos",
+      },
+    };
+  const input = parsed.data;
+  const units = input.lines.reduce((n, l) => n + l.finished, 0);
+  if (units === 0 && !input.confirmZero)
+    return {
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "Confirma que hoy no terminaste unidades." },
+    };
+  if (new Set(input.lines.map((l) => l.assignmentId)).size !== input.lines.length)
+    return { success: false, error: { code: "VALIDATION_ERROR", message: "Trabajo repetido." } };
+
+  try {
+    const result = await getTxDb().transaction(async (tx) => {
+      const dayId = await openDayId(tx);
+      if (!dayId)
+        throw new WorkError(
+          "CONFLICT",
+          "El día no está abierto. Pide en caja que lo abran para cerrar tu jornada.",
+        );
+      const [existing] = await tx
+        .select({
+          id: clothierDayClosings.id,
+          approvedAt: clothierDayClosings.approvedAt,
+        })
+        .from(clothierDayClosings)
+        .where(
+          and(
+            eq(clothierDayClosings.employeeId, guard.employeeId),
+            eq(clothierDayClosings.businessDayId, dayId),
+          ),
+        )
+        .for("update");
+      if (existing?.approvedAt)
+        throw new WorkError("CONFLICT", "Tu cierre de hoy ya fue aprobado.");
+
+      // Bring each line's reports for today to the number she declares.
+      const known = await getClosingLines(tx as unknown as Database, guard.employeeId, dayId);
+      const byId = new Map(known.map((l) => [l.assignmentId, l]));
+      const stored: StoredClosingLine[] = [];
+      for (const line of input.lines) {
+        const info = byId.get(line.assignmentId);
+        if (!info)
+          throw new WorkError("STALE_DATA", "Tu lista de trabajo cambió. Actualiza la pantalla.");
+        try {
+          await applyDayCount(tx, {
+            assignmentId: line.assignmentId,
+            employeeId: guard.employeeId,
+            businessDayId: dayId,
+            target: line.finished,
+            reportedBy: guard.employeeId,
+            key: input.idempotencyKey,
+          });
+        } catch (err) {
+          if (err instanceof DayCountError)
+            throw new WorkError(
+              "VALIDATION_ERROR",
+              `${info.garment} talla ${info.size}: ${err.message}`,
+            );
+          throw err;
+        }
+        stored.push({
+          assignmentId: line.assignmentId,
+          pedidoNumber: info.pedidoNumber,
+          garment: info.garment,
+          size: info.size,
+          submitted: line.finished,
+          corrected: null,
+        });
+      }
+
+      const values = {
+        lines: stored,
+        submittedUnits: units,
+        submittedAt: new Date(),
+        updatedAt: new Date(),
+      };
+      let closingId: string;
+      if (existing) {
+        await tx
+          .update(clothierDayClosings)
+          .set({ ...values, version: sql`${clothierDayClosings.version} + 1` })
+          .where(eq(clothierDayClosings.id, existing.id));
+        closingId = existing.id;
+      } else {
+        const [row] = await tx
+          .insert(clothierDayClosings)
+          .values({ employeeId: guard.employeeId, businessDayId: dayId, ...values })
+          .returning({ id: clothierDayClosings.id });
+        closingId = row.id;
+      }
+      await logActivity(tx, {
+        actor: actorOf(guard.user),
+        action: "production.closing_submit",
+        entityType: "employee",
+        entityId: guard.employeeId,
+        businessDayId: dayId,
+        data: { units },
+        after: { closingId, lines: stored },
+      });
+      return { closingId, units };
+    });
+    revalidatePath("/clothier");
+    revalidatePath("/produccion");
+    return { success: true, data: result };
   } catch (err) {
     const f = fail(err);
     if (f) return f;

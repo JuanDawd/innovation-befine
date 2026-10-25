@@ -247,6 +247,29 @@ export const reviewUnitsSchema = z
       ctx.addIssue({ code: "custom", message: "Describe el problema", path: ["scrapNote"] });
   });
 
+// ─── Cerrar mi jornada (T125) ──────────────────────────────────────────────
+
+const closingLine = z.object({
+  assignmentId: z.uuid(),
+  finished: z.number("Escribe cuántas").int("Debe ser un número entero").min(0).max(10_000),
+});
+
+export const submitClosingSchema = z.object({
+  lines: z.array(closingLine).max(200),
+  /** A day with 0 units must be confirmed explicitly */
+  confirmZero: z.boolean().optional(),
+  idempotencyKey: z.uuid(),
+});
+
+export const approveClosingSchema = z.object({
+  version: z.number().int().min(1),
+  /** Lines staff changed; anything not listed stays as she declared */
+  corrections: z.array(closingLine).max(200).optional(),
+  reason: optionalText(300),
+});
+
+export type SubmitClosingInput = z.infer<typeof submitClosingSchema>;
+export type ApproveClosingInput = z.infer<typeof approveClosingSchema>;
 export type ReviewUnitsInput = z.infer<typeof reviewUnitsSchema>;
 export type ClaimUnitsInput = z.infer<typeof claimUnitsSchema>;
 export type ReportUnitsInput = z.infer<typeof reportUnitsSchema>;

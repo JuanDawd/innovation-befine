@@ -7,7 +7,8 @@
  * an item; "Revisar" splits it into approve / return for rework / scrap,
  * with a defect reason for anything not approved.
  * Sin asignar: sizes nobody holds yet, linking to the pedido to assign them.
- * (Cierres de jornada join this screen with T125.)
+ * Cierres: each clothier's day closing — approve, or correct with a reason;
+ * remind everyone who has not closed (T125).
  */
 
 import Link from "next/link";
@@ -15,8 +16,15 @@ import { useId, useState, useTransition } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { CheckIcon, ClipboardCheckIcon, Loader2Icon, PackageOpenIcon } from "lucide-react";
-import type { ReviewItem } from "@befine/db";
+import {
+  BellRingIcon,
+  CheckIcon,
+  ClipboardCheckIcon,
+  Loader2Icon,
+  MoonIcon,
+  PackageOpenIcon,
+} from "lucide-react";
+import type { DayClosingStatus, ReviewItem } from "@befine/db";
 import { formatPedidoNumber } from "@befine/db/pedido-totals";
 import { DEFECT_CODES, DEFECT_LABELS, type DefectCode } from "@befine/types";
 import { Button } from "@/components/ui/button";
@@ -39,9 +47,9 @@ import { notifyDataChanged } from "@/lib/data-events";
 import { newUuid } from "@/lib/uuid";
 import { oneOf, useSearchParamState } from "@/hooks/use-search-param-state";
 import { cn } from "@/lib/utils";
-import { reviewUnits } from "./actions";
+import { approveClosing, remindClosings, reviewUnits } from "./actions";
 
-const TABS = ["revisar", "sin-asignar"] as const;
+const TABS = ["revisar", "cierres", "sin-asignar"] as const;
 
 function since(date: Date | string) {
   return new Intl.DateTimeFormat("es-CO", {
@@ -236,6 +244,198 @@ function ReviewDialog({
   );
 }
 
+// ─── Closings (T125) ─────────────────────────────────────────────────────────
+
+function ClosingCard({ status }: { status: DayClosingStatus }) {
+  const t = useTranslations("produccion.closings");
+  const uid = useId();
+  const closing = status.closing!;
+  const [values, setValues] = useState<Record<string, string>>(() =>
+    Object.fromEntries(closing.lines.map((l) => [l.assignmentId, String(l.submitted)])),
+  );
+  const [reason, setReason] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+  const changed = closing.lines.filter(
+    (l) => (Number(values[l.assignmentId]) || 0) !== l.submitted,
+  );
+
+  function approve() {
+    setError(null);
+    startTransition(async () => {
+      const res = await approveClosing(closing.id, {
+        version: closing.version,
+        corrections: changed.map((l) => ({
+          assignmentId: l.assignmentId,
+          finished: Number(values[l.assignmentId]) || 0,
+        })),
+        reason: changed.length ? reason : undefined,
+      });
+      if (!res.success) {
+        setError(res.error.message);
+        if (res.error.code === "STALE_DATA") notifyDataChanged("pedidos");
+        return;
+      }
+      toast.success(
+        res.data.corrected
+          ? t("corrected", { name: status.name })
+          : t("approved", { name: status.name }),
+      );
+      notifyDataChanged("pedidos");
+    });
+  }
+
+  return (
+    <li className="space-y-3 p-4">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <span className="font-medium">{status.name}</span>
+        <span className="text-sm text-muted-foreground">
+          {t("submitted", { n: closing.submittedUnits, time: since(closing.submittedAt) })}
+        </span>
+      </div>
+      {closing.lines.length === 0 ? (
+        <p className="text-sm text-muted-foreground">{t("zeroDay")}</p>
+      ) : (
+        <ul className="space-y-2">
+          {closing.lines.map((l) => (
+            <li key={l.assignmentId} className="flex items-center justify-between gap-3 text-sm">
+              <label htmlFor={`${uid}-${l.assignmentId}`} className="min-w-0">
+                {l.garment} · {t("size")} {l.size}
+                <span className="block text-xs text-muted-foreground">
+                  {formatPedidoNumber(l.pedidoNumber)}
+                </span>
+              </label>
+              <Input
+                id={`${uid}-${l.assignmentId}`}
+                inputMode="numeric"
+                value={values[l.assignmentId] ?? ""}
+                onChange={(e) =>
+                  setValues((v) => ({
+                    ...v,
+                    [l.assignmentId]: e.target.value.replace(/\D/g, "").slice(0, 5),
+                  }))
+                }
+                className="w-20 text-center font-mono tabular-nums"
+              />
+            </li>
+          ))}
+        </ul>
+      )}
+      {changed.length > 0 && (
+        <div className="space-y-1.5">
+          <label htmlFor={`${uid}-reason`} className="text-sm font-medium">
+            {t("reason")}
+          </label>
+          <Input
+            id={`${uid}-reason`}
+            value={reason}
+            maxLength={300}
+            onChange={(e) => setReason(e.target.value)}
+          />
+        </div>
+      )}
+      {error && (
+        <p className="text-sm text-destructive" role="alert">
+          {error}
+        </p>
+      )}
+      <Button
+        size="sm"
+        onClick={approve}
+        disabled={isPending || (changed.length > 0 && reason.trim().length < 3)}
+      >
+        {isPending && <Loader2Icon className="size-4 animate-spin" aria-hidden="true" />}
+        {changed.length ? t("approveCorrected") : t("approve")}
+      </Button>
+    </li>
+  );
+}
+
+function ClosingsPanel({ closings, dayOpen }: { closings: DayClosingStatus[]; dayOpen: boolean }) {
+  const t = useTranslations("produccion.closings");
+  const [isPending, startTransition] = useTransition();
+  if (!dayOpen) return <p className="text-sm text-muted-foreground">{t("dayClosed")}</p>;
+  if (closings.length === 0)
+    return (
+      <EmptyState icon={MoonIcon} title={t("emptyTitle")} description={t("emptyDescription")} />
+    );
+  const missing = closings.filter((c) => !c.closing);
+  const waiting = closings.filter((c) => c.closing && !c.closing.approvedAt);
+  const done = closings.filter((c) => c.closing?.approvedAt);
+
+  return (
+    <div className="space-y-4">
+      {missing.length > 0 && (
+        <section className="rounded-xl border bg-card" aria-labelledby="closings-missing">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b px-4 py-3">
+            <h2 id="closings-missing" className="text-base font-semibold">
+              {t("missing", { n: missing.length })}
+            </h2>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={isPending}
+              onClick={() =>
+                startTransition(async () => {
+                  const res = await remindClosings();
+                  if (res.success) toast.success(t("reminded", { n: res.data.reminded }));
+                  else toast.error(res.error.message);
+                })
+              }
+            >
+              <BellRingIcon className="size-4" aria-hidden="true" />
+              {t("remind")}
+            </Button>
+          </div>
+          <ul className="divide-y">
+            {missing.map((c) => (
+              <li key={c.employeeId} className="px-4 py-3 text-sm">
+                {c.name}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+      {waiting.length > 0 && (
+        <section className="rounded-xl border bg-card" aria-labelledby="closings-waiting">
+          <h2 id="closings-waiting" className="border-b px-4 py-3 text-base font-semibold">
+            {t("waiting", { n: waiting.length })}
+          </h2>
+          <ul className="divide-y">
+            {waiting.map((c) => (
+              <ClosingCard key={`${c.closing!.id}:${c.closing!.version}`} status={c} />
+            ))}
+          </ul>
+        </section>
+      )}
+      {done.length > 0 && (
+        <section className="rounded-xl border bg-card" aria-labelledby="closings-done">
+          <h2 id="closings-done" className="border-b px-4 py-3 text-base font-semibold">
+            {t("done", { n: done.length })}
+          </h2>
+          <ul className="divide-y">
+            {done.map((c) => (
+              <li
+                key={c.employeeId}
+                className="flex flex-wrap justify-between gap-2 px-4 py-3 text-sm"
+              >
+                <span className="font-medium">{c.name}</span>
+                <span className="text-muted-foreground">
+                  {t("approvedBy", {
+                    n: c.closing!.submittedUnits,
+                    name: c.closing!.approvedByName ?? "",
+                  })}
+                  {c.closing!.correctionReason && ` · ${t("withCorrection")}`}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+    </div>
+  );
+}
+
 // ─── Queue ───────────────────────────────────────────────────────────────────
 
 function QuickApprove({ item }: { item: ReviewItem }) {
@@ -290,8 +490,11 @@ export function ProductionBoard() {
   });
 
   const pendingTotal = data?.queue.reduce((n, g) => n + g.pending, 0) ?? 0;
+  const closingsOpen =
+    data?.closings.filter((c) => !c.closing || !c.closing.approvedAt).length ?? 0;
   const tabs = [
     { id: "revisar" as const, label: t("tabs.review", { n: pendingTotal }) },
+    { id: "cierres" as const, label: t("tabs.closings", { n: closingsOpen }) },
     {
       id: "sin-asignar" as const,
       label: t("tabs.unassigned", { n: data?.unassigned.length ?? 0 }),
@@ -408,6 +611,10 @@ export function ProductionBoard() {
               </section>
             ))
           )}
+        </div>
+      ) : tab === "cierres" ? (
+        <div role="tabpanel">
+          <ClosingsPanel closings={data.closings} dayOpen={data.dayOpen} />
         </div>
       ) : (
         <div role="tabpanel">

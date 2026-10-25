@@ -31,6 +31,7 @@ import {
   check,
   index,
   integer,
+  jsonb,
   pgEnum,
   pgTable,
   text,
@@ -173,6 +174,16 @@ export const clothierDayClosings = pgTable(
     approvedAt: timestamp("approved_at", { withTimezone: true }),
     /** Set when secretary/admin corrected the clothier's numbers */
     correctionReason: text("correction_reason"),
+    /**
+     * T125 — what she declared, per assignment, and any staff correction:
+     * [{ assignmentId, pedidoNumber, garment, size, submitted, corrected }]
+     * corrected is null unless staff changed that line.
+     */
+    lines: jsonb("lines")
+      .notNull()
+      .default(sql`'[]'::jsonb`),
+    /** Units she said she finished that day (before corrections) */
+    submittedUnits: integer("submitted_units").notNull().default(0),
     version: integer("version").notNull().default(1),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
@@ -180,6 +191,7 @@ export const clothierDayClosings = pgTable(
   (t) => [
     uniqueIndex("idx_clothier_day_closings_employee_day").on(t.employeeId, t.businessDayId),
     index("idx_clothier_day_closings_business_day").on(t.businessDayId),
+    check("chk_clothier_day_closings_units", sql`${t.submittedUnits} >= 0`),
     check(
       "chk_clothier_day_closings_approval",
       sql`(${t.approvedBy} IS NULL) = (${t.approvedAt} IS NULL)`,

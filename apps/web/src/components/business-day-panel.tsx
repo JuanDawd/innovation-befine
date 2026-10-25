@@ -163,12 +163,18 @@ function CloseDayDialog({
     queryFn: () => fetchQuery("dayStats"),
     enabled: false,
   });
+  // T125 — clothiers who have not closed their day: a warning, never a block.
+  const unclosed = useQuery({
+    queryKey: queryKeys.pedidos.clothiersWithoutClosing,
+    queryFn: () => fetchQuery("clothiersWithoutClosing"),
+    enabled: false,
+  });
 
   async function handleOpenChange(next: boolean) {
     setOpen(next);
     if (!next) return;
     setChecking(true);
-    await Promise.all([tickets.refetch(), stats.refetch()]);
+    await Promise.all([tickets.refetch(), stats.refetch(), unclosed.refetch()]);
     setChecking(false);
   }
 
@@ -246,6 +252,15 @@ function CloseDayDialog({
                   <p className="flex items-start gap-2 rounded-lg bg-status-attention px-3 py-2.5 text-sm text-status-attention-foreground">
                     <AlertTriangleIcon className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
                     {t("closeOpenTicketsWarning", { count: openCount })}
+                  </p>
+                )}
+                {(unclosed.data?.length ?? 0) > 0 && (
+                  <p className="flex items-start gap-2 rounded-lg bg-status-attention px-3 py-2.5 text-sm text-status-attention-foreground">
+                    <AlertTriangleIcon className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+                    {t("closeUnclosedClothiersWarning", {
+                      count: unclosed.data!.length,
+                      names: unclosed.data!.join(", "),
+                    })}
                   </p>
                 )}
               </>

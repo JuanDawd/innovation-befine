@@ -79,6 +79,16 @@ describe("activitySummary — clients and pedidos", () => {
     expect(activitySummary("production.review", "pedido", { number: "#0007" })).toBe(
       "Revisó unidades del pedido #0007",
     );
+    expect(activitySummary("production.closing_submit", "employee", { units: 7 })).toBe(
+      "Cerró su jornada con 7 unidades",
+    );
+    expect(activitySummary("production.closing_submit", "employee")).toBe("Cerró su jornada");
+    expect(activitySummary("production.closing_approve", "employee", { name: "Luz" })).toBe(
+      "Aprobó el cierre de jornada de Luz",
+    );
+    expect(activitySummary("production.closing_approve", "employee")).toBe(
+      "Aprobó el cierre de jornada",
+    );
   });
 });
 

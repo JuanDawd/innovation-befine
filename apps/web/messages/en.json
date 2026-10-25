@@ -127,7 +127,8 @@
     "closeSuccessSummary": "Day closed: {revenue} across {count, plural, one {# ticket} other {# tickets}}",
     "openSince": "Open since {date}",
     "staleDay": "Open for {days, plural, one {# day} other {# days}}. Close it at the end of the workday.",
-    "reopenReasonTooShort": "The reason must be at least 5 characters"
+    "reopenReasonTooShort": "The reason must be at least 5 characters",
+    "closeUnclosedClothiersWarning": "{count, plural, one {Still has to close her day: {names}.} other {# clothiers have not closed their day: {names}.}} Their units stay pending and unpaid until they close."
   },
   "errors": {
     "generic": "An unexpected error occurred. Please try again.",
@@ -1467,14 +1468,16 @@
     "offline": "Offline. Try again.",
     "error": "Could not save. Try again.",
     "loadError": "Could not load your work.",
-    "oldBoard": "See products (previous system)"
+    "oldBoard": "See products (previous system)",
+    "closeDay": "Close my day"
   },
   "produccion": {
     "pageTitle": "Production",
     "pageSubtitle": "Review what clothiers report and what is still unassigned.",
     "tabs": {
       "review": "To review ({n})",
-      "unassigned": "Unassigned ({n})"
+      "unassigned": "Unassigned ({n})",
+      "closings": "Closings ({n})"
     },
     "dayClosed": "The day isn't open: open it to approve, return or scrap units.",
     "emptyReviewTitle": "Nothing to review",
@@ -1510,6 +1513,45 @@
       "rework": "correction",
       "since": "since {date}",
       "open": "Review"
+    },
+    "closings": {
+      "size": "size",
+      "submitted": "{n} units · {time}",
+      "zeroDay": "Closed with no units.",
+      "reason": "Reason for the correction",
+      "approve": "Approve",
+      "approveCorrected": "Approve with correction",
+      "approved": "{name}'s closing approved",
+      "corrected": "{name}'s closing corrected and approved",
+      "dayClosed": "Open the day to see and approve closings.",
+      "emptyTitle": "Nobody has to close today",
+      "emptyDescription": "Clothiers with work show here.",
+      "missing": "Not closed ({n})",
+      "remind": "Send reminder",
+      "reminded": "{n, plural, one {Reminder sent to # clothier} other {Reminder sent to # clothiers}}",
+      "waiting": "To approve ({n})",
+      "done": "Approved ({n})",
+      "approvedBy": "{n} units · approved by {name}",
+      "withCorrection": "with correction"
     }
+  },
+  "cierre": {
+    "pageTitle": "Close my day",
+    "pageSubtitle": "Confirm how many units you finished today.",
+    "dayClosed": "The day isn't open: you can't close your day now.",
+    "approved": "Your closing was approved by {name}.",
+    "correctedReason": "Corrected: {reason}",
+    "size": "Size",
+    "question": "How many did you finish today?",
+    "less": "One less",
+    "more": "One more",
+    "hint": "You reported {reported} today · {left} left",
+    "confirmZero": "I confirm I finished no units today.",
+    "send": "{n, plural, =0 {Close with no units} one {Close with # unit} other {Close with # units}}",
+    "resend": "{n, plural, =0 {Update closing (no units)} one {Update closing (# unit)} other {Update closing (# units)}}",
+    "sent": "{n, plural, =0 {Day closed with no units} one {Day closed with # unit} other {Day closed with # units}}",
+    "waitingApproval": "You already sent your closing; you can change it until it's approved.",
+    "noWorkTitle": "No work today",
+    "noWorkDescription": "Still confirm your closing so it's recorded."
   }
 }

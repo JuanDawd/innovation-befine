@@ -289,18 +289,18 @@ Queue of reported units grouped by clothier. Per report: approve N, return M as 
 ## T125 — Cerrar mi jornada
 
 **Phase:** 11C — Production
-**Status:** pending
+**Status:** done
 **Dependencies:** T123, T124
 
 ### What to do
 
-Clothier closing: today's assignments with "¿Cuántas terminaste hoy?" prefilled from the day's reports; 0 must be confirmed. Secretary/admin approve or correct (reason) in Producción. Reminder notification near closing time.
+Clothier closing: today's assignments with "¿Cuántas terminaste hoy?" prefilled from the day's reports; 0 must be confirmed. Secretary/admin approve or correct (reason) in Producción. Reminder notification near closing time (a "Enviar recordatorio" button in Producción → Cierres; there is no closing-time setting or scheduler yet to send it automatically).
 
 ### Acceptance criteria
 
-- [ ] One closing per clothier per business day
-- [ ] Corrections logged with reason; clothier sees the corrected numbers
-- [ ] Close-business-day dialog lists clothiers without a closing (warning, not a block)
+- [x] One closing per clothier per business day
+- [x] Corrections logged with reason; clothier sees the corrected numbers
+- [x] Close-business-day dialog lists clothiers without a closing (warning, not a block)
 
 ---
 

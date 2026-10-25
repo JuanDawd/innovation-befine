@@ -711,7 +711,7 @@ Update `apps/web/src/lib/db/README.md` with a short "When to use `getDb()` vs `g
 | T122 | Assigning work                                               | done    | T112                         |
 | T123 | Mi trabajo (clothier)                                        | done    | T122, T115                   |
 | T124 | Producción review queue                                      | pending | T123                         |
-| T125 | Cerrar mi jornada                                            | pending | T123, T124                   |
+| T125 | Cerrar mi jornada                                            | done    | T123, T124                   |
 | T126 | Clothier payroll on approved units                           | pending | T124, T125                   |
 | T127 | Pedido payments and the till                                 | pending | T113, T115                   |
 | T128 | Stock ledger and Inventario                                  | pending | T113, T124                   |
