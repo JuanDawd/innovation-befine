@@ -4,14 +4,14 @@
  * Catalog audit log read action — T025 (T02R-R1)
  *
  * Fetches the audit history for a specific catalog entity.
- * Admin-only.
+ * Admin-only. Reads activity_log since T114 (catalog_audit_log was folded in).
  */
 
 import { headers } from "next/headers";
 import { and, desc, eq, sql } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import { catalogAuditLog, users } from "@befine/db/schema";
+import { activityLog, users } from "@befine/db/schema";
 import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
 import { auditLogPageSchema } from "@befine/types";
@@ -25,9 +25,18 @@ export type AuditLogEntry = {
   id: string;
   action: "create" | "update" | "soft_delete" | "restore";
   changedByName: string;
+  summary: string;
   changedAt: Date;
   previousData: unknown;
   newData: unknown;
+};
+
+const ACTION_KIND: Record<string, AuditLogEntry["action"]> = {
+  "catalog.create": "create",
+  "catalog.update": "update",
+  "catalog.reorder": "update",
+  "catalog.deactivate": "soft_delete",
+  "catalog.restore": "restore",
 };
 
 export async function getEntityAuditLog(rawInput: unknown): Promise<ActionResult<AuditLogPage>> {
@@ -45,32 +54,40 @@ export async function getEntityAuditLog(rawInput: unknown): Promise<ActionResult
   const db = getDb();
   const rows = await db
     .select({
-      id: catalogAuditLog.id,
-      action: catalogAuditLog.action,
+      id: activityLog.id,
+      action: activityLog.action,
       changedByName: users.name,
-      changedAt: catalogAuditLog.createdAt,
-      previousData: catalogAuditLog.previousData,
-      newData: catalogAuditLog.newData,
+      summary: activityLog.summary,
+      changedAt: activityLog.createdAt,
+      previousData: activityLog.before,
+      newData: activityLog.after,
     })
-    .from(catalogAuditLog)
-    .innerJoin(users, eq(catalogAuditLog.changedBy, users.id))
+    .from(activityLog)
+    .leftJoin(users, eq(activityLog.actorUserId, users.id))
     .where(
       and(
-        eq(catalogAuditLog.entityId, entityId),
+        eq(activityLog.entityId, entityId),
         // Keyset on (created_at, id), resolved in the DB so timestamps keep
         // microsecond precision (a JS Date would round them).
         beforeId
-          ? sql`(${catalogAuditLog.createdAt}, ${catalogAuditLog.id}) < (
-              SELECT created_at, id FROM catalog_audit_log WHERE id = ${beforeId}
+          ? sql`(${activityLog.createdAt}, ${activityLog.id}) < (
+              SELECT created_at, id FROM activity_log WHERE id = ${beforeId}
             )`
           : undefined,
       ),
     )
-    .orderBy(desc(catalogAuditLog.createdAt), desc(catalogAuditLog.id))
+    .orderBy(desc(activityLog.createdAt), desc(activityLog.id))
     .limit(PAGE_SIZE + 1);
 
   return {
     success: true,
-    data: { entries: rows.slice(0, PAGE_SIZE), hasMore: rows.length > PAGE_SIZE },
+    data: {
+      entries: rows.slice(0, PAGE_SIZE).map((r) => ({
+        ...r,
+        action: ACTION_KIND[r.action] ?? "update",
+        changedByName: r.changedByName ?? "—",
+      })),
+      hasMore: rows.length > PAGE_SIZE,
+    },
   };
 }

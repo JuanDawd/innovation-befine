@@ -45,6 +45,7 @@ export {
   restructures,
 } from "./pedido-money-stock";
 export { catalogEntityTypeEnum, catalogActionEnum, catalogAuditLog } from "./catalog-audit-log";
+export { activityLog } from "./activity-log";
 export { clients } from "./clients";
 export { ticketStatusEnum, checkoutSessions, tickets } from "./tickets";
 export { ticketItems } from "./ticket-items";

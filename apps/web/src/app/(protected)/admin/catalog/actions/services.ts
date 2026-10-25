@@ -5,7 +5,7 @@
  *
  * CRUD for services and service_variants.
  * Only admin can mutate; all authenticated roles can read (T028).
- * Every mutation writes to catalog_audit_log.
+ * Every mutation writes to activity_log in the same transaction (T114).
  * editVariant triggers price-change notifications to secretaries (T109).
  */
 
@@ -17,7 +17,6 @@ import { getDb, getTxDb } from "@/lib/db";
 import {
   services,
   serviceVariants,
-  catalogAuditLog,
   appointments,
   employees,
   tickets,
@@ -32,6 +31,7 @@ import {
 } from "@befine/types";
 import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
+import { actorOf, logActivity, type ActivityTx } from "@/lib/activity";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -70,24 +70,33 @@ async function getAuthSession() {
   return session;
 }
 
+const CATALOG_ACTION = {
+  create: "catalog.create",
+  update: "catalog.update",
+  soft_delete: "catalog.deactivate",
+  restore: "catalog.restore",
+} as const;
+
 function writeAuditLog(
-  db: ReturnType<typeof getDb>,
+  tx: ActivityTx,
   params: {
-    entityType: "service" | "service_variant" | "cloth_piece";
+    entityType: "service" | "service_variant";
     entityId: string;
-    action: "create" | "update" | "soft_delete" | "restore";
-    changedBy: string;
+    action: keyof typeof CATALOG_ACTION;
+    actor: { id: string; role?: string | null };
+    name: string;
     previousData?: unknown;
     newData?: unknown;
   },
 ) {
-  return db.insert(catalogAuditLog).values({
+  return logActivity(tx, {
+    actor: actorOf(params.actor),
+    action: CATALOG_ACTION[params.action],
     entityType: params.entityType,
     entityId: params.entityId,
-    action: params.action,
-    changedBy: params.changedBy,
-    previousData: params.previousData ?? null,
-    newData: params.newData ?? null,
+    data: { name: params.name },
+    before: params.previousData,
+    after: params.newData,
   });
 }
 
@@ -186,29 +195,32 @@ export async function createService(rawInput: unknown): Promise<ActionResult<{ i
     };
   }
 
-  const db = getDb();
   const { name, description, variants } = parsed.data;
 
-  const [service] = await db
-    .insert(services)
-    .values({ name, description: description ?? null })
-    .returning({ id: services.id });
+  const service = await getTxDb().transaction(async (tx) => {
+    const [created] = await tx
+      .insert(services)
+      .values({ name, description: description ?? null })
+      .returning({ id: services.id });
 
-  await db.insert(serviceVariants).values(
-    variants.map((v) => ({
-      serviceId: service.id,
-      name: v.name,
-      customerPrice: v.customerPrice,
-      commissionPct: v.commissionPct.toFixed(2),
-    })),
-  );
+    await tx.insert(serviceVariants).values(
+      variants.map((v) => ({
+        serviceId: created.id,
+        name: v.name,
+        customerPrice: v.customerPrice,
+        commissionPct: v.commissionPct.toFixed(2),
+      })),
+    );
 
-  await writeAuditLog(db, {
-    entityType: "service",
-    entityId: service.id,
-    action: "create",
-    changedBy: session.user.id,
-    newData: { name, description, variants },
+    await writeAuditLog(tx, {
+      entityType: "service",
+      entityId: created.id,
+      action: "create",
+      actor: session.user,
+      name,
+      newData: { name, description, variants },
+    });
+    return created;
   });
 
   revalidatePath("/admin/catalog");
@@ -248,22 +260,25 @@ export async function editService(
   if (!existing)
     return { success: false, error: { code: "NOT_FOUND", message: "Servicio no encontrado" } };
 
-  await db
-    .update(services)
-    .set({
-      name: parsed.data.name,
-      description: parsed.data.description ?? null,
-      updatedAt: new Date(),
-    })
-    .where(eq(services.id, id));
+  await getTxDb().transaction(async (tx) => {
+    await tx
+      .update(services)
+      .set({
+        name: parsed.data.name,
+        description: parsed.data.description ?? null,
+        updatedAt: new Date(),
+      })
+      .where(eq(services.id, id));
 
-  await writeAuditLog(db, {
-    entityType: "service",
-    entityId: id,
-    action: "update",
-    changedBy: session.user.id,
-    previousData: { name: existing.name, description: existing.description },
-    newData: parsed.data,
+    await writeAuditLog(tx, {
+      entityType: "service",
+      entityId: id,
+      action: "update",
+      actor: session.user,
+      name: parsed.data.name,
+      previousData: { name: existing.name, description: existing.description },
+      newData: parsed.data,
+    });
   });
 
   revalidatePath("/admin/catalog");
@@ -285,18 +300,21 @@ export async function deactivateService(id: string): Promise<ActionResult<null>>
   if (!existing)
     return { success: false, error: { code: "NOT_FOUND", message: "Servicio no encontrado" } };
 
-  await db
-    .update(services)
-    .set({ isActive: false, updatedAt: new Date() })
-    .where(eq(services.id, id));
+  await getTxDb().transaction(async (tx) => {
+    await tx
+      .update(services)
+      .set({ isActive: false, updatedAt: new Date() })
+      .where(eq(services.id, id));
 
-  await writeAuditLog(db, {
-    entityType: "service",
-    entityId: id,
-    action: "soft_delete",
-    changedBy: session.user.id,
-    previousData: { isActive: true },
-    newData: { isActive: false },
+    await writeAuditLog(tx, {
+      entityType: "service",
+      entityId: id,
+      action: "soft_delete",
+      actor: session.user,
+      name: existing.name,
+      previousData: { isActive: true },
+      newData: { isActive: false },
+    });
   });
 
   revalidatePath("/admin/catalog");
@@ -313,19 +331,27 @@ export async function restoreService(id: string): Promise<ActionResult<null>> {
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
   }
 
-  const db = getDb();
-  await db
-    .update(services)
-    .set({ isActive: true, updatedAt: new Date() })
-    .where(eq(services.id, id));
+  const restored = await getTxDb().transaction(async (tx) => {
+    const [row] = await tx
+      .update(services)
+      .set({ isActive: true, updatedAt: new Date() })
+      .where(eq(services.id, id))
+      .returning({ name: services.name });
+    if (!row) return false;
 
-  await writeAuditLog(db, {
-    entityType: "service",
-    entityId: id,
-    action: "restore",
-    changedBy: session.user.id,
-    newData: { isActive: true },
+    await writeAuditLog(tx, {
+      entityType: "service",
+      entityId: id,
+      action: "restore",
+      actor: session.user,
+      name: row.name,
+      previousData: { isActive: false },
+      newData: { isActive: true },
+    });
+    return true;
   });
+  if (!restored)
+    return { success: false, error: { code: "NOT_FOUND", message: "Servicio no encontrado" } };
 
   revalidatePath("/admin/catalog");
   return { success: true, data: null };
@@ -364,22 +390,26 @@ export async function addVariant(
   if (!service)
     return { success: false, error: { code: "NOT_FOUND", message: "Servicio no encontrado" } };
 
-  const [variant] = await db
-    .insert(serviceVariants)
-    .values({
-      serviceId,
-      name: parsed.data.name,
-      customerPrice: parsed.data.customerPrice,
-      commissionPct: parsed.data.commissionPct.toFixed(2),
-    })
-    .returning({ id: serviceVariants.id });
+  const variant = await getTxDb().transaction(async (tx) => {
+    const [created] = await tx
+      .insert(serviceVariants)
+      .values({
+        serviceId,
+        name: parsed.data.name,
+        customerPrice: parsed.data.customerPrice,
+        commissionPct: parsed.data.commissionPct.toFixed(2),
+      })
+      .returning({ id: serviceVariants.id });
 
-  await writeAuditLog(db, {
-    entityType: "service_variant",
-    entityId: variant.id,
-    action: "create",
-    changedBy: session.user.id,
-    newData: { serviceId, ...parsed.data },
+    await writeAuditLog(tx, {
+      entityType: "service_variant",
+      entityId: created.id,
+      action: "create",
+      actor: session.user,
+      name: `${service.name} — ${parsed.data.name}`,
+      newData: { serviceId, ...parsed.data },
+    });
+    return created;
   });
 
   revalidatePath("/admin/catalog");
@@ -457,13 +487,12 @@ export async function editVariant(
 
       if (!updated.length) throw new Error("STALE_DATA");
 
-      // Cast: tx (NeonTransaction) and db (NeonHttpDatabase) both expose insert() with
-      // compatible runtime behavior — the type mismatch is in Drizzle's HKT generics only.
-      await writeAuditLog(tx as unknown as ReturnType<typeof getDb>, {
+      await writeAuditLog(tx, {
         entityType: "service_variant",
         entityId: variantId,
         action: "update",
-        changedBy: session.user.id,
+        actor: session.user,
+        name: parsed.data.name,
         previousData: {
           name: existing.name,
           customerPrice: existing.customerPrice,
@@ -565,18 +594,21 @@ export async function restoreVariant(variantId: string): Promise<ActionResult<nu
   if (!existing)
     return { success: false, error: { code: "NOT_FOUND", message: "Variante no encontrada" } };
 
-  await db
-    .update(serviceVariants)
-    .set({ isActive: true, updatedAt: new Date() })
-    .where(eq(serviceVariants.id, variantId));
+  await getTxDb().transaction(async (tx) => {
+    await tx
+      .update(serviceVariants)
+      .set({ isActive: true, updatedAt: new Date() })
+      .where(eq(serviceVariants.id, variantId));
 
-  await writeAuditLog(db, {
-    entityType: "service_variant",
-    entityId: variantId,
-    action: "restore",
-    changedBy: session.user.id,
-    previousData: { isActive: false },
-    newData: { isActive: true },
+    await writeAuditLog(tx, {
+      entityType: "service_variant",
+      entityId: variantId,
+      action: "restore",
+      actor: session.user,
+      name: existing.name,
+      previousData: { isActive: false },
+      newData: { isActive: true },
+    });
   });
 
   revalidatePath("/admin/catalog");
@@ -600,18 +632,21 @@ export async function deactivateVariant(variantId: string): Promise<ActionResult
   if (!existing)
     return { success: false, error: { code: "NOT_FOUND", message: "Variante no encontrada" } };
 
-  await db
-    .update(serviceVariants)
-    .set({ isActive: false, updatedAt: new Date() })
-    .where(eq(serviceVariants.id, variantId));
+  await getTxDb().transaction(async (tx) => {
+    await tx
+      .update(serviceVariants)
+      .set({ isActive: false, updatedAt: new Date() })
+      .where(eq(serviceVariants.id, variantId));
 
-  await writeAuditLog(db, {
-    entityType: "service_variant",
-    entityId: variantId,
-    action: "soft_delete",
-    changedBy: session.user.id,
-    previousData: { isActive: true },
-    newData: { isActive: false },
+    await writeAuditLog(tx, {
+      entityType: "service_variant",
+      entityId: variantId,
+      action: "soft_delete",
+      actor: session.user,
+      name: existing.name,
+      previousData: { isActive: true },
+      newData: { isActive: false },
+    });
   });
 
   revalidatePath("/admin/catalog");

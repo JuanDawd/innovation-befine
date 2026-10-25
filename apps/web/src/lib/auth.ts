@@ -8,6 +8,7 @@ import { sendEmail } from "./email";
 import { PasswordResetEmail } from "@/emails/password-reset";
 import { BRAND_FULL_NAME } from "@/lib/brand";
 import { resolveTrustedOrigins } from "@/lib/trusted-origins";
+import { authActivityAfter, authActivityBefore } from "@/lib/auth-activity";
 
 /**
  * Access control — defines which admin plugin operations each role can perform.
@@ -98,6 +99,12 @@ export const auth = betterAuth({
     customRules: {
       "/sign-in/email": { window: 60, max: 30 },
     },
+  },
+
+  /** T114 — sign-in, sign-out and failed attempts go to the activity log. */
+  hooks: {
+    before: authActivityBefore,
+    after: authActivityAfter,
   },
 
   plugins: [

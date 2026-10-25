@@ -57,8 +57,7 @@ function uniqueViolation() {
   return Object.assign(new Error("duplicate key"), { code: "23505" });
 }
 
-const audits = () =>
-  state.queries.filter((q) => q.sql.startsWith('insert into "catalog_audit_log"'));
+const audits = () => state.queries.filter((q) => q.sql.startsWith('insert into "activity_log"'));
 
 describe("garment attribute actions", () => {
   beforeEach(() => {
@@ -159,11 +158,12 @@ describe("garment attribute actions", () => {
   });
 
   it("deactivates a size (soft delete) and audits it", async () => {
-    state.respond = (q) => (q.sql.startsWith('update "garment_sizes"') ? [[A]] : []);
+    state.respond = (q) => (q.sql.startsWith('update "garment_sizes"') ? [[A, "XS"]] : []);
     const r = await setGarmentSizeActive(A, false);
     expect(r.success).toBe(true);
     expect(state.queries.some((q) => q.sql.startsWith("delete"))).toBe(false);
-    expect(audits()[0]!.params).toContain("soft_delete");
+    expect(audits()[0]!.params).toContain("catalog.deactivate");
+    expect(audits()[0]!.params).toContain("Desactivó la talla «XS»");
   });
 
   describe("reorderGarmentSizes", () => {
@@ -171,8 +171,8 @@ describe("garment attribute actions", () => {
       state.respond = (q) => {
         if (q.sql.includes("for update"))
           return [
-            [A, 10],
-            [B, 20],
+            [A, "XS", 10],
+            [B, "S", 20],
           ];
         if (q.sql.startsWith('select "id", "label"'))
           return [
@@ -187,14 +187,15 @@ describe("garment attribute actions", () => {
         2,
       );
       expect(audits()).toHaveLength(2);
+      expect(audits()[0]!.params).toContain("catalog.reorder");
     });
 
     it("returns STALE_DATA when the list no longer matches the table", async () => {
       state.respond = (q) =>
         q.sql.includes("for update")
           ? [
-              [A, 10],
-              [B, 20],
+              [A, "XS", 10],
+              [B, "S", 20],
             ]
           : [];
       const r = await reorderGarmentSizes({ ids: [A] });

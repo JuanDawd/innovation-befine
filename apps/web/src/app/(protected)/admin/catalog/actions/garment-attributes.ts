@@ -5,8 +5,8 @@
  *
  * Admin-only lists used by pedido size grids and the stock ledger.
  * Never deleted: deactivation hides an entry from pickers but keeps it on
- * the records that already reference it. Every change lands in the catalog
- * audit log (moves to the activity log with T114/T131).
+ * the records that already reference it. Every change is written to the
+ * activity log in the same transaction (T114).
  */
 
 import { headers } from "next/headers";
@@ -14,12 +14,13 @@ import { revalidatePath } from "next/cache";
 import { asc, eq, sql } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { getDb, getTxDb } from "@/lib/db";
-import { catalogAuditLog, garmentColors, garmentSizes } from "@befine/db/schema";
+import { garmentColors, garmentSizes } from "@befine/db/schema";
 import { garmentColorSchema, garmentSizeSchema, reorderGarmentSizesSchema } from "@befine/types";
 import { z } from "zod";
 import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
 import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
+import { actorOf, logActivity, type ActivityTx } from "@/lib/activity";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -38,12 +39,13 @@ export type GarmentColorRow = {
 };
 
 type Fail = Extract<ActionResult<never>, { success: false }>;
-type Tx = Parameters<Parameters<ReturnType<typeof getTxDb>["transaction"]>[0]>[0];
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-/** Session + admin gate + catalog rate limit. Returns the user id or a failure. */
-async function gate(limit = rateLimits.catalogEdit): Promise<{ userId: string } | Fail> {
+type Actor = { userId: string; role: string | null };
+
+/** Session + admin gate + catalog rate limit. Returns the actor or a failure. */
+async function gate(limit = rateLimits.catalogEdit): Promise<{ actor: Actor } | Fail> {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session)
     return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
@@ -55,7 +57,7 @@ async function gate(limit = rateLimits.catalogEdit): Promise<{ userId: string } 
       success: false,
       error: { code: "RATE_LIMITED", message: "Demasiadas solicitudes. Intenta en un minuto." },
     };
-  return { userId: session.user.id };
+  return { actor: actorOf(session.user) };
 }
 
 function validationError(error: z.ZodError): Fail {
@@ -75,24 +77,34 @@ function isUniqueViolation(err: unknown): boolean {
   return e?.code === "23505" || e?.cause?.code === "23505";
 }
 
+const CATALOG_ACTION = {
+  create: "catalog.create",
+  update: "catalog.update",
+  soft_delete: "catalog.deactivate",
+  restore: "catalog.restore",
+  reorder: "catalog.reorder",
+} as const;
+
 function audit(
-  tx: Tx,
+  tx: ActivityTx,
   params: {
     entityType: "garment_size" | "garment_color";
     entityId: string;
-    action: "create" | "update" | "soft_delete" | "restore";
-    changedBy: string;
+    action: keyof typeof CATALOG_ACTION;
+    actor: Actor;
+    name: string;
     previousData?: unknown;
     newData?: unknown;
   },
 ) {
-  return tx.insert(catalogAuditLog).values({
+  return logActivity(tx, {
+    actor: params.actor,
+    action: CATALOG_ACTION[params.action],
     entityType: params.entityType,
     entityId: params.entityId,
-    action: params.action,
-    changedBy: params.changedBy,
-    previousData: params.previousData ?? null,
-    newData: params.newData ?? null,
+    data: { name: params.name },
+    before: params.previousData,
+    after: params.newData,
   });
 }
 
@@ -166,7 +178,8 @@ export async function createGarmentSize(rawInput: unknown): Promise<ActionResult
         entityType: "garment_size",
         entityId: created.id,
         action: "create",
-        changedBy: g.userId,
+        actor: g.actor,
+        name: created.label,
         newData: { label: created.label, sortOrder: created.sortOrder },
       });
       return created;
@@ -212,7 +225,8 @@ export async function renameGarmentSize(
         entityType: "garment_size",
         entityId: id,
         action: "update",
-        changedBy: g.userId,
+        actor: g.actor,
+        name: updated.label,
         previousData: { label: existing.label },
         newData: { label: updated.label },
       });
@@ -243,13 +257,14 @@ export async function setGarmentSizeActive(
       .update(garmentSizes)
       .set({ isActive, updatedAt: new Date() })
       .where(eq(garmentSizes.id, id))
-      .returning({ id: garmentSizes.id });
+      .returning({ id: garmentSizes.id, label: garmentSizes.label });
     if (!updated) return false;
     await audit(tx, {
       entityType: "garment_size",
       entityId: id,
       action: isActive ? "restore" : "soft_delete",
-      changedBy: g.userId,
+      actor: g.actor,
+      name: updated.label,
       previousData: { isActive: !isActive },
       newData: { isActive },
     });
@@ -282,15 +297,15 @@ export async function reorderGarmentSizes(
 
   const rows = await getTxDb().transaction(async (tx) => {
     const current = await tx
-      .select({ id: garmentSizes.id, sortOrder: garmentSizes.sortOrder })
+      .select({ id: garmentSizes.id, label: garmentSizes.label, sortOrder: garmentSizes.sortOrder })
       .from(garmentSizes)
       .for("update");
-    const byId = new Map(current.map((r) => [r.id, r.sortOrder]));
+    const byId = new Map(current.map((r) => [r.id, r]));
     if (current.length !== ids.length || ids.some((id) => !byId.has(id))) return null;
 
     for (const [i, id] of ids.entries()) {
       const sortOrder = (i + 1) * 10;
-      const previous = byId.get(id)!;
+      const { label, sortOrder: previous } = byId.get(id)!;
       if (previous === sortOrder) continue;
       await tx
         .update(garmentSizes)
@@ -299,8 +314,9 @@ export async function reorderGarmentSizes(
       await audit(tx, {
         entityType: "garment_size",
         entityId: id,
-        action: "update",
-        changedBy: g.userId,
+        action: "reorder",
+        actor: g.actor,
+        name: label,
         previousData: { sortOrder: previous },
         newData: { sortOrder },
       });
@@ -350,7 +366,8 @@ export async function createGarmentColor(
         entityType: "garment_color",
         entityId: created.id,
         action: "create",
-        changedBy: g.userId,
+        actor: g.actor,
+        name: created.label,
         newData: { label: created.label, hex: created.hex },
       });
       return created;
@@ -397,7 +414,8 @@ export async function editGarmentColor(
         entityType: "garment_color",
         entityId: id,
         action: "update",
-        changedBy: g.userId,
+        actor: g.actor,
+        name: updated.label,
         previousData: existing,
         newData: { label: updated.label, hex: updated.hex },
       });
@@ -428,13 +446,14 @@ export async function setGarmentColorActive(
       .update(garmentColors)
       .set({ isActive, updatedAt: new Date() })
       .where(eq(garmentColors.id, id))
-      .returning({ id: garmentColors.id });
+      .returning({ id: garmentColors.id, label: garmentColors.label });
     if (!updated) return false;
     await audit(tx, {
       entityType: "garment_color",
       entityId: id,
       action: isActive ? "restore" : "soft_delete",
-      changedBy: g.userId,
+      actor: g.actor,
+      name: updated.label,
       previousData: { isActive: !isActive },
       newData: { isActive },
     });

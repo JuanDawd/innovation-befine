@@ -22,8 +22,9 @@ vi.mock("@/lib/db", () => ({
       return {
         rows: Array.from({ length: n }, (_, i) => [
           `e${i}`,
-          "update",
+          "catalog.update",
           "Admin",
+          "Editó el servicio «Corte»",
           "2026-10-23 15:00:00+00",
           null,
           null,
@@ -49,7 +50,11 @@ describe("getEntityAuditLog", () => {
     const res = await getEntityAuditLog({ entityId: ENTITY });
     expect(res.success && res.data.entries).toHaveLength(20);
     expect(res.success && res.data.hasMore).toBe(true);
-    expect(state.queries[0]!.sql).not.toMatch(/catalog_audit_log WHERE id =/);
+    expect(res.success && res.data.entries[0]).toMatchObject({
+      action: "update",
+      summary: "Editó el servicio «Corte»",
+    });
+    expect(state.queries[0]!.sql).not.toMatch(/activity_log WHERE id =/);
   });
 
   it("reports no more pages when the last page is short", async () => {
@@ -57,10 +62,8 @@ describe("getEntityAuditLog", () => {
     const res = await getEntityAuditLog({ entityId: ENTITY, beforeId: CURSOR });
     expect(res.success && res.data).toEqual(expect.objectContaining({ hasMore: false }));
     const q = state.queries[0]!;
-    expect(q.sql).toMatch(/\("catalog_audit_log"\."created_at", "catalog_audit_log"\."id"\) < \(/);
-    expect(q.sql).toMatch(
-      /order by "catalog_audit_log"\."created_at" desc, "catalog_audit_log"\."id" desc/,
-    );
+    expect(q.sql).toMatch(/\("activity_log"\."created_at", "activity_log"\."id"\) < \(/);
+    expect(q.sql).toMatch(/order by "activity_log"\."created_at" desc, "activity_log"\."id" desc/);
     expect(q.params).toContain(CURSOR);
   });
 

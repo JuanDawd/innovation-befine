@@ -84,7 +84,7 @@ Create `pedido_payments` (signed amount for refunds, `business_day_id` nullable 
 ## T114 — Activity log foundation
 
 **Phase:** 11A — Data model
-**Status:** pending
+**Status:** done
 **Dependencies:** —
 
 ### What to do
@@ -93,10 +93,10 @@ Create `activity_log` per spec §4 and a `logActivity(tx, entry)` helper that mu
 
 ### Acceptance criteria
 
-- [ ] No update/delete path exists for `activity_log` (app code and a DB trigger rejecting UPDATE/DELETE)
-- [ ] An action that fails rolls back its log entry (integration test)
-- [ ] Sign-in, sign-out and failed attempts are logged with device info
-- [ ] Spanish summary generated per action type
+- [x] No update/delete path exists for `activity_log` (app code and a DB trigger rejecting UPDATE/DELETE)
+- [x] An action that fails rolls back its log entry (integration test)
+- [x] Sign-in, sign-out and failed attempts are logged with device info
+- [x] Spanish summary generated per action type
 
 ---
 
