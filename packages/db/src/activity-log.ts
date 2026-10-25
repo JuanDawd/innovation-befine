@@ -28,7 +28,8 @@ export type ActivityEntityType =
   | "business_settings"
   | "client"
   | "pedido"
-  | "employee";
+  | "employee"
+  | "stock";
 
 export type ActivityAction =
   | "auth.sign_in"
@@ -56,7 +57,8 @@ export type ActivityAction =
   | "production.closing_approve"
   | "pedido.payment"
   | "pedido.refund"
-  | "pedido.payment_attach";
+  | "pedido.payment_attach"
+  | "stock.adjust";
 
 export type ActivityEntry = {
   actor: { userId: string | null; role: string | null };
@@ -96,6 +98,7 @@ const ENTITY_NOUN: Record<ActivityEntityType, string> = {
   client: "el cliente",
   pedido: "el pedido",
   employee: "el empleado",
+  stock: "el inventario",
 };
 
 function named(entityType: ActivityEntityType, data: Record<string, unknown>): string {
@@ -172,6 +175,8 @@ export function activitySummary(
         .trim();
     case "pedido.payment_attach":
       return `Asignó al día un pago fuera de horario del pedido ${data.number ?? ""}`.trim();
+    case "stock.adjust":
+      return `Ajustó el inventario${data.name ? ` de ${data.name}` : ""}`;
     case "pedido.deliver":
       return `Entregó ${data.units ?? ""} unidades del pedido ${data.number ?? ""}`
         .replace(/\s+/g, " ")

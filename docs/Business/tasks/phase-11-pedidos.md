@@ -345,7 +345,7 @@ Record payments (cash / card / transfer) on the pedido; attach to the open busin
 ## T128 — Stock ledger and Inventario
 
 **Phase:** 11D — Money and stock
-**Status:** pending
+**Status:** in progress — code and unit tests done; DB integration test (inventario/**tests**/stock.integration.test.ts) and browser check pending (test database unreachable 2026-10-25). Nav link comes with T134.
 **Dependencies:** T113, T124
 
 ### What to do

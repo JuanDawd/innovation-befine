@@ -1613,5 +1613,53 @@
     "waitingApproval": "Ya enviaste tu cierre; puedes corregirlo hasta que lo aprueben.",
     "noWorkTitle": "No tienes trabajo hoy",
     "noWorkDescription": "Igual confirma tu cierre para que quede registrado."
+  },
+  "inventario": {
+    "pageTitle": "Inventario",
+    "pageSubtitle": "Prendas en existencia por talla y color. Cada cambio queda registrado.",
+    "search": "Buscar prenda, talla o color",
+    "onlyInStock": "Solo con existencias",
+    "newAdjustment": "Nuevo ajuste",
+    "summary": "{items, plural, one {# referencia} other {# referencias}} · {units, plural, one {# unidad} other {# unidades}}",
+    "emptyTitle": "Sin existencias",
+    "emptyDescription": "Las unidades aprobadas de pedidos para inventario y los ajustes aparecen aquí.",
+    "noSize": "sin talla",
+    "noColor": "sin color",
+    "lastMovement": "último movimiento {date}",
+    "openHistory": "Ver historial de {name}",
+    "adjustButton": "Ajustar",
+    "adjust": {
+      "title": "Ajustar inventario",
+      "onHand": "{n} en inventario",
+      "newDescription": "Elige la prenda, talla y color.",
+      "garment": "Prenda",
+      "chooseGarment": "Elige la prenda",
+      "size": "Talla",
+      "noSize": "Sin talla",
+      "color": "Color",
+      "noColor": "Sin color",
+      "direction": "Movimiento",
+      "add": "Agregar",
+      "remove": "Sacar",
+      "quantity": "Unidades",
+      "reason": "Motivo",
+      "note": "Nota",
+      "override": "Autorizo que quede por debajo de 0 (queda registrado).",
+      "confirm": "Guardar ajuste",
+      "done": "Inventario actualizado: {n} en existencia"
+    },
+    "history": {
+      "title": "Historial",
+      "onHand": "{n} en inventario",
+      "loading": "Cargando…",
+      "empty": "Sin movimientos.",
+      "kinds": {
+        "production": "Entrada de producción",
+        "adjustment": "Ajuste",
+        "sale": "Venta",
+        "scrap": "Descarte",
+        "restructure": "Reestructuración"
+      }
+    }
   }
 }

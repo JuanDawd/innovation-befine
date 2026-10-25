@@ -98,6 +98,10 @@ describe("activitySummary — clients and pedidos", () => {
     expect(activitySummary("pedido.payment_attach", "pedido", { number: "#0007" })).toBe(
       "Asignó al día un pago fuera de horario del pedido #0007",
     );
+    expect(activitySummary("stock.adjust", "stock", { name: "Bata M" })).toBe(
+      "Ajustó el inventario de Bata M",
+    );
+    expect(activitySummary("stock.adjust", "stock")).toBe("Ajustó el inventario");
   });
 });
 

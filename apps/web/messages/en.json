@@ -1581,5 +1581,53 @@
     "waitingApproval": "You already sent your closing; you can change it until it's approved.",
     "noWorkTitle": "No work today",
     "noWorkDescription": "Still confirm your closing so it's recorded."
+  },
+  "inventario": {
+    "pageTitle": "Inventory",
+    "pageSubtitle": "Garments in stock by size and colour. Every change is recorded.",
+    "search": "Search garment, size or colour",
+    "onlyInStock": "In stock only",
+    "newAdjustment": "New adjustment",
+    "summary": "{items, plural, one {# item} other {# items}} · {units, plural, one {# unit} other {# units}}",
+    "emptyTitle": "Nothing in stock",
+    "emptyDescription": "Approved units of stock pedidos and adjustments show here.",
+    "noSize": "no size",
+    "noColor": "no colour",
+    "lastMovement": "last movement {date}",
+    "openHistory": "See history of {name}",
+    "adjustButton": "Adjust",
+    "adjust": {
+      "title": "Adjust stock",
+      "onHand": "{n} in stock",
+      "newDescription": "Choose the garment, size and colour.",
+      "garment": "Garment",
+      "chooseGarment": "Choose the garment",
+      "size": "Size",
+      "noSize": "No size",
+      "color": "Colour",
+      "noColor": "No colour",
+      "direction": "Movement",
+      "add": "Add",
+      "remove": "Remove",
+      "quantity": "Units",
+      "reason": "Reason",
+      "note": "Note",
+      "override": "I authorise going below 0 (recorded).",
+      "confirm": "Save adjustment",
+      "done": "Stock updated: {n} on hand"
+    },
+    "history": {
+      "title": "History",
+      "onHand": "{n} in stock",
+      "loading": "Loading…",
+      "empty": "No movements.",
+      "kinds": {
+        "production": "From production",
+        "adjustment": "Adjustment",
+        "sale": "Sale",
+        "scrap": "Write-off",
+        "restructure": "Restructure"
+      }
+    }
   }
 }

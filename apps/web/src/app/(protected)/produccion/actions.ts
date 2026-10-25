@@ -18,7 +18,13 @@
 import { revalidatePath } from "next/cache";
 import { eq, sql } from "drizzle-orm";
 import { getDb, getTxDb } from "@/lib/db";
-import { clothierDayClosings, employees, unitReviews, users } from "@befine/db/schema";
+import {
+  clothierDayClosings,
+  employees,
+  stockMovements,
+  unitReviews,
+  users,
+} from "@befine/db/schema";
 import {
   formatPedidoNumber,
   getDayClosings,
@@ -109,7 +115,8 @@ export async function reviewUnits(
       if (!dayId) throw new ConflictError("CONFLICT", "Abre el día para revisar unidades.");
 
       const rows = await tx.execute(sql`
-        SELECT a.id, a.employee_id, a.piece_rate, p.id AS pedido_id, p.number,
+        SELECT a.id, a.employee_id, a.piece_rate, p.id AS pedido_id, p.number, p.destination,
+          l.cloth_piece_variant_id AS variant_id, c.size_id, l.color_id,
           u.name AS clothier_name, cp.name || ' — ' || v.name AS garment,
           coalesce(gs.label, c.size_other) AS size_label,
           (coalesce((SELECT sum(r.quantity) FROM unit_reports r WHERE r.assignment_id = a.id), 0)
@@ -132,6 +139,10 @@ export async function reviewUnits(
             piece_rate: string;
             pedido_id: string;
             number: number;
+            destination: "client" | "inventory";
+            variant_id: string;
+            size_id: string | null;
+            color_id: string | null;
             clothier_name: string;
             garment: string;
             size_label: string;
@@ -156,20 +167,37 @@ export async function reviewUnits(
           ? DEFECT_LABELS[input.scrapCode] + (input.scrapNote ? `: ${input.scrapNote}` : "")
           : null;
 
-      await tx.insert(unitReviews).values({
-        assignmentId: a.id,
-        approved: input.approved,
-        returned: input.returned,
-        scrapped: input.scrapped,
-        reason: returnText,
-        returnCode: input.returned > 0 ? input.returnCode : null,
-        scrapCode: input.scrapped > 0 ? input.scrapCode : null,
-        scrapReason: scrapText,
-        scrapPaid: input.scrapped > 0 && payScrappedUnits,
-        businessDayId: dayId,
-        reviewedBy: guard.employeeId,
-        idempotencyKey: input.idempotencyKey,
-      });
+      const [review] = await tx
+        .insert(unitReviews)
+        .values({
+          assignmentId: a.id,
+          approved: input.approved,
+          returned: input.returned,
+          scrapped: input.scrapped,
+          reason: returnText,
+          returnCode: input.returned > 0 ? input.returnCode : null,
+          scrapCode: input.scrapped > 0 ? input.scrapCode : null,
+          scrapReason: scrapText,
+          scrapPaid: input.scrapped > 0 && payScrappedUnits,
+          businessDayId: dayId,
+          reviewedBy: guard.employeeId,
+          idempotencyKey: input.idempotencyKey,
+        })
+        .returning({ id: unitReviews.id });
+
+      // T128 — approved units of an inventory pedido enter stock, linked to
+      // this review. Client pedido garments never enter general stock (§3.6.25).
+      if (a.destination === "inventory" && input.approved > 0)
+        await tx.insert(stockMovements).values({
+          clothPieceVariantId: a.variant_id,
+          sizeId: a.size_id,
+          colorId: a.color_id,
+          quantity: input.approved,
+          kind: "production",
+          refType: "unit_review",
+          refId: review.id,
+          createdBy: guard.employeeId,
+        });
 
       const number = formatPedidoNumber(a.number);
       const parts = [

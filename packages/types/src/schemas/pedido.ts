@@ -282,6 +282,39 @@ export const recordPedidoPaymentSchema = z.object({
   idempotencyKey: z.uuid(),
 });
 
+// ─── Stock (T128) ──────────────────────────────────────────────────────────
+
+export const STOCK_ADJUST_REASONS = ["conteo", "danada", "devolucion", "otro"] as const;
+export const STOCK_ADJUST_LABELS: Record<(typeof STOCK_ADJUST_REASONS)[number], string> = {
+  conteo: "Conteo de inventario",
+  danada: "Prenda dañada",
+  devolucion: "Devolución de cliente",
+  otro: "Otro",
+};
+
+export const adjustStockSchema = z
+  .object({
+    clothPieceVariantId: z.uuid("Elige la prenda"),
+    sizeId: z.uuid().nullable(),
+    colorId: z.uuid().nullable(),
+    /** Signed units: + adds stock, − removes it */
+    quantity: z
+      .number("Escribe la cantidad")
+      .int("Debe ser un número entero")
+      .refine((q) => q !== 0, "La cantidad no puede ser 0")
+      .refine((q) => Math.abs(q) <= 10_000, "Cantidad demasiado alta"),
+    reasonCode: z.enum(STOCK_ADJUST_REASONS),
+    note: optionalText(300),
+    /** Admin override: allow stock to go below 0 (logged) */
+    allowNegative: z.boolean().optional(),
+    idempotencyKey: z.uuid(),
+  })
+  .refine((a) => a.reasonCode !== "otro" || Boolean(a.note), {
+    message: "Describe el motivo",
+    path: ["note"],
+  });
+
+export type AdjustStockInput = z.infer<typeof adjustStockSchema>;
 export type RecordPedidoPaymentInput = z.infer<typeof recordPedidoPaymentSchema>;
 export type SubmitClosingInput = z.infer<typeof submitClosingSchema>;
 export type ApproveClosingInput = z.infer<typeof approveClosingSchema>;
