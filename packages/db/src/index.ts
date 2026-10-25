@@ -59,5 +59,6 @@ export * from "./queries/order-items";
 export * from "./queries/pedido-totals";
 export * from "./queries/pedido-progress";
 export * from "./queries/pedido-balance";
+export * from "./queries/pedido-status";
 export * from "./queries/stock";
 export * from "./activity-log";

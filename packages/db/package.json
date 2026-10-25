@@ -8,7 +8,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./schema": "./src/schema/index.ts",
-    "./pedido-totals": "./src/queries/pedido-totals.ts"
+    "./pedido-totals": "./src/queries/pedido-totals.ts",
+    "./pedido-status": "./src/queries/pedido-status.ts"
   },
   "scripts": {
     "db:generate": "dotenv -e ../../.env.local -- drizzle-kit generate",

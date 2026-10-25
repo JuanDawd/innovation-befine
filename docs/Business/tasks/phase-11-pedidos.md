@@ -160,7 +160,7 @@ List with filters: destino, estado, **grandes (10+ units)**, atrasados; whole ro
 ## T118 — Derived status engine
 
 **Phase:** 11B — Pedidos
-**Status:** pending
+**Status:** done
 **Dependencies:** T112, T113
 
 ### What to do
@@ -169,8 +169,8 @@ Pure function computing Pendiente / En producción / Listo / Entrega parcial / E
 
 ### Acceptance criteria
 
-- [ ] 100 % branch coverage unit tests, including partial delivery, payments before delivery, restructure and cancellation
-- [ ] No status column is written by app code (cancellation fields aside)
+- [x] 100 % branch coverage unit tests, including partial delivery, payments before delivery, restructure and cancellation
+- [x] No status column is written by app code (cancellation fields aside)
 
 ---
 
