@@ -1500,5 +1500,48 @@
     "error": "No se pudo guardar. Intenta de nuevo.",
     "loadError": "No se pudo cargar tu trabajo.",
     "oldBoard": "Ver productos (sistema anterior)"
+  },
+  "produccion": {
+    "pageTitle": "Producción",
+    "pageSubtitle": "Revisa lo que reportan las confeccionistas y lo que falta por asignar.",
+    "tabs": {
+      "review": "Por revisar ({n})",
+      "unassigned": "Sin asignar ({n})"
+    },
+    "dayClosed": "El día no está abierto: abre el día para aprobar, devolver o descartar unidades.",
+    "emptyReviewTitle": "Nada por revisar",
+    "emptyReviewDescription": "Cuando una confeccionista reporte unidades terminadas aparecerán aquí.",
+    "emptyUnassignedTitle": "Todo está asignado",
+    "emptyUnassignedDescription": "No hay unidades de pedidos sin confeccionista.",
+    "forStock": "para inventario",
+    "delivery": "entrega {date}",
+    "overdue": "Atrasado",
+    "unassignedUnits": "{n, plural, one {# sin asignar} other {# sin asignar}}",
+    "loadError": "No se pudo cargar Producción.",
+    "review": {
+      "title": "Revisar unidades",
+      "size": "talla",
+      "pending": "{n, plural, one {# por revisar} other {# por revisar}}",
+      "approve": "Aprobar",
+      "return": "Devolver",
+      "scrap": "Descartar",
+      "returnReason": "¿Por qué se devuelven?",
+      "scrapReason": "¿Por qué se descartan?",
+      "chooseReason": "Elige el motivo",
+      "note": "Nota",
+      "atLeastOne": "Indica al menos una unidad.",
+      "tooMany": "Solo hay {n} por revisar.",
+      "returnCodeRequired": "Elige por qué se devuelven.",
+      "scrapCodeRequired": "Elige por qué se descartan.",
+      "noteRequired": "Describe el problema en la nota.",
+      "summary": "{total} de {pending} revisadas",
+      "confirm": "Guardar revisión",
+      "done": "{n, plural, one {# unidad revisada} other {# unidades revisadas}}",
+      "approveAll": "Aprobar {n}",
+      "approveAllLabel": "Aprobar las {n} unidades de {garment} talla {size}",
+      "rework": "corrección",
+      "since": "desde {date}",
+      "open": "Revisar"
+    }
   }
 }

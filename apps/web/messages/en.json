@@ -1468,5 +1468,48 @@
     "error": "Could not save. Try again.",
     "loadError": "Could not load your work.",
     "oldBoard": "See products (previous system)"
+  },
+  "produccion": {
+    "pageTitle": "Production",
+    "pageSubtitle": "Review what clothiers report and what is still unassigned.",
+    "tabs": {
+      "review": "To review ({n})",
+      "unassigned": "Unassigned ({n})"
+    },
+    "dayClosed": "The day isn't open: open it to approve, return or scrap units.",
+    "emptyReviewTitle": "Nothing to review",
+    "emptyReviewDescription": "Finished units reported by clothiers show here.",
+    "emptyUnassignedTitle": "Everything is assigned",
+    "emptyUnassignedDescription": "No pedido units without a clothier.",
+    "forStock": "for stock",
+    "delivery": "due {date}",
+    "overdue": "Late",
+    "unassignedUnits": "{n, plural, one {# unassigned} other {# unassigned}}",
+    "loadError": "Could not load Production.",
+    "review": {
+      "title": "Review units",
+      "size": "size",
+      "pending": "{n, plural, one {# to review} other {# to review}}",
+      "approve": "Approve",
+      "return": "Return",
+      "scrap": "Scrap",
+      "returnReason": "Why are they returned?",
+      "scrapReason": "Why are they scrapped?",
+      "chooseReason": "Choose the reason",
+      "note": "Note",
+      "atLeastOne": "Enter at least one unit.",
+      "tooMany": "Only {n} to review.",
+      "returnCodeRequired": "Choose why they are returned.",
+      "scrapCodeRequired": "Choose why they are scrapped.",
+      "noteRequired": "Describe the problem in the note.",
+      "summary": "{total} of {pending} reviewed",
+      "confirm": "Save review",
+      "done": "{n, plural, one {# unit reviewed} other {# units reviewed}}",
+      "approveAll": "Approve {n}",
+      "approveAllLabel": "Approve all {n} units of {garment} size {size}",
+      "rework": "correction",
+      "since": "since {date}",
+      "open": "Review"
+    }
   }
 }

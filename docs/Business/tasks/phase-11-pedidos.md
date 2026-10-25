@@ -270,7 +270,7 @@ Phone-first screen: **Correcciones** first, then assigned work by delivery date 
 ## T124 — Producción review queue
 
 **Phase:** 11C — Production
-**Status:** pending
+**Status:** done
 **Dependencies:** T123
 
 ### What to do
@@ -279,10 +279,10 @@ Queue of reported units grouped by clothier. Per report: approve N, return M as 
 
 ### Acceptance criteria
 
-- [ ] Approve + return + scrap ≤ reported (server-checked)
-- [ ] Rework is paid once when approved, at the assignment rate
-- [ ] Scrapped-unit pay follows the setting
-- [ ] Defect reasons stored for analytics
+- [x] Approve + return + scrap ≤ reported (server-checked)
+- [x] Rework is paid once when approved, at the assignment rate (returned units are never approved twice; pay itself is T126)
+- [x] Scrapped-unit pay follows the setting
+- [x] Defect reasons stored for analytics
 
 ---
 

@@ -27,6 +27,7 @@
 
 import {
   bigint,
+  boolean,
   check,
   index,
   integer,
@@ -117,8 +118,21 @@ export const unitReviews = pgTable(
     approved: integer("approved").notNull().default(0),
     returned: integer("returned").notNull().default(0),
     scrapped: integer("scrapped").notNull().default(0),
-    /** Required when anything is returned or scrapped */
+    /** Free-text note for returned units (or for both, on rows before T124) */
     reason: text("reason"),
+    /** T124 — defect code for returned units (DEFECT_CODES in @befine/types), for analytics */
+    returnCode: text("return_code"),
+    /** T124 — why units were scrapped: code + optional note */
+    scrapCode: text("scrap_code"),
+    scrapReason: text("scrap_reason"),
+    /**
+     * T124 — whether these scrapped units are paid, copied from the
+     * pay_scrapped_units setting at review time so a later change of the
+     * setting never rewrites past pay.
+     */
+    scrapPaid: boolean("scrap_paid").notNull().default(false),
+    /** T124 — client-generated per submit: a double tap records one review */
+    idempotencyKey: text("idempotency_key").unique(),
     businessDayId: uuid("business_day_id")
       .notNull()
       .references(() => businessDays.id, { onDelete: "restrict" }),
@@ -137,8 +151,10 @@ export const unitReviews = pgTable(
     ),
     check(
       "chk_unit_reviews_reason",
-      sql`(${t.returned} = 0 AND ${t.scrapped} = 0) OR ${t.reason} IS NOT NULL`,
+      sql`(${t.returned} = 0 OR coalesce(${t.returnCode}, ${t.reason}) IS NOT NULL)
+        AND (${t.scrapped} = 0 OR coalesce(${t.scrapCode}, ${t.scrapReason}, ${t.reason}) IS NOT NULL)`,
     ),
+    index("idx_unit_reviews_return_code").on(t.returnCode),
   ],
 );
 

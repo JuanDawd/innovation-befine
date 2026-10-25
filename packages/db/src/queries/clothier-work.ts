@@ -55,6 +55,7 @@ export type WorkItem = {
 
 export type AvailableItem = {
   cellId: string;
+  pedidoId: string;
   pedidoNumber: number;
   destination: "client" | "inventory";
   garment: string;
@@ -198,8 +199,32 @@ export async function getClothierWork(
     .sort((a, b) => byDate(a, b) || a.sizeOrder - b.sizeOrder)
     .map(strip);
 
+  const available = await listUnassignedCells(db, today);
+
+  return {
+    corrections,
+    work,
+    available,
+    held: items.reduce((n, i) => n + i.progress.unstarted, 0),
+    pendingReview: items.reduce((n, i) => n + i.progress.pendingReview, 0),
+  };
+}
+
+/**
+ * Every size with units nobody holds, on pedidos that are not cancelled —
+ * Disponibles on Mi trabajo and "Sin asignar" on Producción. Client pedidos
+ * first, then nearest delivery, then size order.
+ */
+export async function listUnassignedCells(
+  db: Database,
+  today: string = bogotaDate(new Date()),
+): Promise<AvailableItem[]> {
+  const byDate = (a: { estimatedDeliveryDate: string | null; pedidoNumber: number }, b: typeof a) =>
+    (a.estimatedDeliveryDate ?? "9999").localeCompare(b.estimatedDeliveryDate ?? "9999") ||
+    a.pedidoNumber - b.pedidoNumber;
   const availableRows = await db.execute<{
     cell_id: string;
+    pedido_id: string;
     pedido_number: number;
     destination: "client" | "inventory";
     garment: string;
@@ -212,7 +237,7 @@ export async function getClothierWork(
     piece_rate: string;
     estimated_delivery_at: string | null;
   }>(sql`
-    SELECT c.id AS cell_id, p.number AS pedido_number, p.destination,
+    SELECT c.id AS cell_id, p.id AS pedido_id, p.number AS pedido_number, p.destination,
       cp.name || ' — ' || v.name AS garment,
       coalesce(gc.label, l.color_other) AS color, l.style, l.instructions,
       coalesce(gs.label, c.size_other) AS size_label, gs.sort_order AS size_order,
@@ -230,7 +255,7 @@ export async function getClothierWork(
     LEFT JOIN garment_colors gc ON gc.id = l.color_id
     WHERE p.cancelled_at IS NULL
   `);
-  const available: AvailableItem[] = (availableRows.rows as typeof availableRows.rows)
+  return (availableRows.rows as typeof availableRows.rows)
     .filter((r) => Number(r.unassigned) > 0)
     .map((r) => {
       const estimatedDeliveryDate = r.estimated_delivery_at
@@ -238,6 +263,7 @@ export async function getClothierWork(
         : null;
       return {
         cellId: r.cell_id,
+        pedidoId: r.pedido_id,
         pedidoNumber: Number(r.pedido_number),
         destination: r.destination,
         garment: r.garment,
@@ -262,12 +288,4 @@ export async function getClothierWork(
       void sizeOrder;
       return rest;
     });
-
-  return {
-    corrections,
-    work,
-    available,
-    held: items.reduce((n, i) => n + i.progress.unstarted, 0),
-    pendingReview: items.reduce((n, i) => n + i.progress.pendingReview, 0),
-  };
 }

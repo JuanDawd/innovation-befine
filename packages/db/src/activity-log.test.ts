@@ -76,6 +76,9 @@ describe("activitySummary — clients and pedidos", () => {
     expect(activitySummary("production.report", "pedido", { units: 4, number: "#0007" })).toBe(
       "Reportó 4 unidades terminadas del pedido #0007",
     );
+    expect(activitySummary("production.review", "pedido", { number: "#0007" })).toBe(
+      "Revisó unidades del pedido #0007",
+    );
   });
 });
 

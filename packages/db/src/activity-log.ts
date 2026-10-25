@@ -49,7 +49,8 @@ export type ActivityAction =
   | "production.rate_change"
   | "production.release"
   | "production.claim"
-  | "production.report";
+  | "production.report"
+  | "production.review";
 
 export type ActivityEntry = {
   actor: { userId: string | null; role: string | null };
@@ -148,6 +149,8 @@ export function activitySummary(
       return `Reportó ${data.units ?? ""} unidades terminadas del pedido ${data.number ?? ""}`
         .replace(/\s+/g, " ")
         .trim();
+    case "production.review":
+      return `Revisó unidades del pedido ${data.number ?? ""}`.trim();
     case "pedido.deliver":
       return `Entregó ${data.units ?? ""} unidades del pedido ${data.number ?? ""}`
         .replace(/\s+/g, " ")

@@ -22,6 +22,7 @@ import {
 import { getAwaitingPaymentTickets } from "@/app/(protected)/cashier/checkout/actions";
 import { listTodayProductPieces } from "@/app/(protected)/clothier/actions";
 import { getMyWork } from "@/app/(protected)/clothier/work-actions";
+import { getProductionBoard } from "@/app/(protected)/produccion/actions";
 import { listActiveClothiers } from "@/app/(protected)/large-orders/assignment-actions";
 import { getProductsDashboardData } from "@/app/(protected)/products/actions";
 import { listPendingProductPieceApprovals } from "@/app/(protected)/products/approval-actions";
@@ -49,6 +50,7 @@ export const QUERIES = {
   openTickets: () => listOpenTickets(),
   pendingEditRequests: () => listPendingEditRequests(),
   pendingProductPieceApprovals: () => listPendingProductPieceApprovals(),
+  productionBoard: () => getProductionBoard(),
   productsDashboard: () => getProductsDashboardData(),
   sellableClothPieces: () => listSellableClothPieces(),
   todayProductPieces: () => listTodayProductPieces(),

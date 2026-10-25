@@ -190,6 +190,64 @@ export const reportUnitsSchema = z.object({
   idempotencyKey: z.uuid(),
 });
 
+// ─── Review (T124) ─────────────────────────────────────────────────────────
+
+/** Why units are returned or scrapped — stored as codes for defect analytics. */
+export const DEFECT_CODES = [
+  "costura",
+  "talla",
+  "medidas",
+  "mancha",
+  "tela",
+  "acabado",
+  "otro",
+] as const;
+export type DefectCode = (typeof DEFECT_CODES)[number];
+
+export const DEFECT_LABELS: Record<DefectCode, string> = {
+  costura: "Costura torcida o suelta",
+  talla: "Talla equivocada",
+  medidas: "Medidas fuera de lo pedido",
+  mancha: "Mancha o suciedad",
+  tela: "Tela dañada",
+  acabado: "Mal acabado",
+  otro: "Otro",
+};
+
+export const reviewUnitsSchema = z
+  .object({
+    /** Units waiting for review that the reviewer saw; a mismatch means it changed */
+    expectedPending: z.number().int().min(1),
+    approved: z.number().int().min(0).max(10_000),
+    returned: z.number().int().min(0).max(10_000),
+    scrapped: z.number().int().min(0).max(10_000),
+    returnCode: z.enum(DEFECT_CODES).optional(),
+    returnNote: optionalText(300),
+    scrapCode: z.enum(DEFECT_CODES).optional(),
+    scrapNote: optionalText(300),
+    idempotencyKey: z.uuid(),
+  })
+  .superRefine((r, ctx) => {
+    const total = r.approved + r.returned + r.scrapped;
+    if (total < 1)
+      ctx.addIssue({ code: "custom", message: "Indica al menos una unidad", path: ["approved"] });
+    if (total > r.expectedPending)
+      ctx.addIssue({
+        code: "custom",
+        message: `Solo hay ${r.expectedPending} por revisar`,
+        path: ["approved"],
+      });
+    if (r.returned > 0 && !r.returnCode)
+      ctx.addIssue({ code: "custom", message: "Elige por qué se devuelven", path: ["returnCode"] });
+    if (r.returned > 0 && r.returnCode === "otro" && !r.returnNote)
+      ctx.addIssue({ code: "custom", message: "Describe el problema", path: ["returnNote"] });
+    if (r.scrapped > 0 && !r.scrapCode)
+      ctx.addIssue({ code: "custom", message: "Elige por qué se descartan", path: ["scrapCode"] });
+    if (r.scrapped > 0 && r.scrapCode === "otro" && !r.scrapNote)
+      ctx.addIssue({ code: "custom", message: "Describe el problema", path: ["scrapNote"] });
+  });
+
+export type ReviewUnitsInput = z.infer<typeof reviewUnitsSchema>;
 export type ClaimUnitsInput = z.infer<typeof claimUnitsSchema>;
 export type ReportUnitsInput = z.infer<typeof reportUnitsSchema>;
 export type AssignUnitsInput = z.infer<typeof assignUnitsSchema>;

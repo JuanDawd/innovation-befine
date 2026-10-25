@@ -42,6 +42,7 @@ export const SHARED_APP_PATHS = ["/profile", "/large-orders"];
  */
 export const ROLE_SCOPED_APP_PATHS: Record<string, readonly AppRole[]> = {
   "/pedidos": ["admin", "cashier", "secretary"],
+  "/produccion": ["admin", "cashier", "secretary"],
 };
 
 /** Where each role is redirected after login; also the route prefix they own */
