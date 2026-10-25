@@ -162,6 +162,23 @@ describe("roleCanAccess", () => {
     expect(roleCanAccess("clothier", "/profile")).toBe(true);
   });
 
+  it("admin, cashier and secretary can access /pedidos (T116)", () => {
+    for (const role of ["admin", "cashier", "secretary"] as const) {
+      expect(roleCanAccess(role, "/pedidos")).toBe(true);
+      expect(roleCanAccess(role, "/pedidos/new")).toBe(true);
+      expect(roleCanAccess(role, "/pedidos/abc-123/edit")).toBe(true);
+    }
+  });
+
+  it("stylist and clothier cannot reach /pedidos", () => {
+    for (const role of ["stylist", "clothier"] as const) {
+      expect(roleCanAccess(role, "/pedidos")).toBe(false);
+      expect(roleCanAccess(role, "/pedidos/new")).toBe(false);
+    }
+    // A look-alike prefix is not the pedidos route.
+    expect(roleCanAccess("stylist", "/pedidosx")).toBe(false);
+  });
+
   it("admin, cashier and secretary can access /large-orders (shared app path)", () => {
     expect(roleCanAccess("admin", "/large-orders")).toBe(true);
     expect(roleCanAccess("admin", "/large-orders/new")).toBe(true);

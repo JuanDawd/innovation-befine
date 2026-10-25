@@ -36,6 +36,14 @@ export const AUTHENTICATED_API_PATHS = ["/api/realtime", "/api/q/"];
 /** App paths any authenticated role may access (regardless of role prefix) */
 export const SHARED_APP_PATHS = ["/profile", "/large-orders"];
 
+/**
+ * App paths shared by some roles only, outside any role prefix (T116).
+ * Pedidos: admin, cashier and secretary (spec §3.8) — never stylist or clothier.
+ */
+export const ROLE_SCOPED_APP_PATHS: Record<string, readonly AppRole[]> = {
+  "/pedidos": ["admin", "cashier", "secretary"],
+};
+
 /** Where each role is redirected after login; also the route prefix they own */
 export const ROLE_HOME: Record<AppRole, string> = {
   cashier: "/cashier",
@@ -95,6 +103,8 @@ export function roleCanAccess(
 ): boolean {
   if (!role) return false;
   if (isSharedApp(pathname)) return true;
+  for (const [prefix, roles] of Object.entries(ROLE_SCOPED_APP_PATHS))
+    if (pathname === prefix || pathname.startsWith(`${prefix}/`)) return roles.includes(role);
   const home = ROLE_HOME[role];
   if (pathname.startsWith(home)) return true;
   // admin role always has access to both /admin and /cashier

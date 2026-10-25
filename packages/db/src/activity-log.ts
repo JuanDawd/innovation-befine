@@ -25,7 +25,9 @@ export type ActivityEntityType =
   | "cloth_piece_variant"
   | "garment_size"
   | "garment_color"
-  | "business_settings";
+  | "business_settings"
+  | "client"
+  | "pedido";
 
 export type ActivityAction =
   | "auth.sign_in"
@@ -36,7 +38,11 @@ export type ActivityAction =
   | "catalog.deactivate"
   | "catalog.restore"
   | "catalog.reorder"
-  | "settings.update";
+  | "settings.update"
+  | "client.create"
+  | "client.update"
+  | "pedido.create"
+  | "pedido.update";
 
 export type ActivityEntry = {
   actor: { userId: string | null; role: string | null };
@@ -73,6 +79,8 @@ const ENTITY_NOUN: Record<ActivityEntityType, string> = {
   garment_size: "la talla",
   garment_color: "el color",
   business_settings: "la configuración",
+  client: "el cliente",
+  pedido: "el pedido",
 };
 
 function named(entityType: ActivityEntityType, data: Record<string, unknown>): string {
@@ -105,6 +113,14 @@ export function activitySummary(
       return `Restauró ${named(entityType, data)}`;
     case "catalog.reorder":
       return `Cambió el orden de ${named(entityType, data)}`;
+    case "client.create":
+      return `Creó ${named(entityType, data)}`;
+    case "client.update":
+      return `Editó ${named(entityType, data)}`;
+    case "pedido.create":
+      return `Creó el pedido ${data.number ?? ""}`.trim();
+    case "pedido.update":
+      return `Editó el pedido ${data.number ?? ""}`.trim();
     case "settings.update":
       return typeof data.setting === "string" && data.setting
         ? `Cambió la configuración: ${data.setting}`

@@ -43,6 +43,21 @@ describe("activitySummary", () => {
   });
 });
 
+describe("activitySummary — clients and pedidos", () => {
+  it("names clients and pedidos", () => {
+    expect(activitySummary("client.create", "client", { name: "Ana" })).toBe(
+      "Creó el cliente «Ana»",
+    );
+    expect(activitySummary("client.update", "client", { name: "Ana" })).toBe(
+      "Editó el cliente «Ana»",
+    );
+    expect(activitySummary("pedido.create", "pedido", { number: "#0412" })).toBe(
+      "Creó el pedido #0412",
+    );
+    expect(activitySummary("pedido.update", "pedido")).toBe("Editó el pedido");
+  });
+});
+
 describe("formatPesos", () => {
   it("formats whole COP with dot separators", () => {
     expect(formatPesos(0)).toBe("$0");

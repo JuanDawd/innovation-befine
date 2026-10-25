@@ -110,3 +110,19 @@ export {
   type UpdateCompletedQuantityInput,
   type ApproveAssignmentQuantityInput,
 } from "./schemas/assignment";
+export {
+  pedidoCellSchema,
+  pedidoGarmentLineSchema,
+  pedidoAdjustmentLineSchema,
+  pedidoLineSchema,
+  createPedidoSchema,
+  editPedidoSchema,
+  pedidoClientSchema,
+  type PedidoCellInput,
+  type PedidoGarmentLineInput,
+  type PedidoAdjustmentLineInput,
+  type PedidoLineInput,
+  type CreatePedidoInput,
+  type EditPedidoInput,
+  type PedidoClientInput,
+} from "./schemas/pedido";

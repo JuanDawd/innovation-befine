@@ -122,7 +122,7 @@ Add to `business_settings` and Configuración: **secretary can record pedido pay
 ## T116 — Create / edit pedido
 
 **Phase:** 11B — Pedidos
-**Status:** pending
+**Status:** done
 **Dependencies:** T111, T030
 
 ### What to do
@@ -131,11 +131,11 @@ One form (modal + full page, per the creation-route pattern) for client or inven
 
 ### Acceptance criteria
 
-- [ ] Guests cannot be selected; inline-created clients require a phone
-- [ ] Line price defaults to `selling_price` (never `piece_rate`); variants without one require a typed price + reason
-- [ ] Total is always the sum of lines; no free-typed total
-- [ ] Works with or without an open business day; nothing is silently skipped
-- [ ] Validation inline, keyboard operable, 44 px targets on touch
+- [x] Guests cannot be selected; inline-created clients require a phone
+- [x] Line price defaults to `selling_price` (never `piece_rate`); variants without one require a typed price + reason
+- [x] Total is always the sum of lines; no free-typed total
+- [x] Works with or without an open business day; nothing is silently skipped
+- [x] Validation inline, keyboard operable, 44 px targets on touch
 
 ---
 
