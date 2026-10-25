@@ -21,6 +21,7 @@ import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
 import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
 import { actorOf, logActivity, type ActivityTx } from "@/lib/activity";
+import { isUniqueViolation } from "@/lib/pg-error";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -69,12 +70,6 @@ function validationError(error: z.ZodError): Fail {
       details: error.issues.map((i) => ({ field: i.path.join("."), message: i.message })),
     },
   };
-}
-
-/** Postgres unique violation, raw or wrapped by Drizzle. */
-function isUniqueViolation(err: unknown): boolean {
-  const e = err as { code?: string; cause?: { code?: string } };
-  return e?.code === "23505" || e?.cause?.code === "23505";
 }
 
 const CATALOG_ACTION = {

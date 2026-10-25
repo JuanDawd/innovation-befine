@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { pedidoEarningsLines, type ClothierReviewRow } from "../compute-clothier-earnings";
+import {
+  payoutReviewIds,
+  pedidoEarningsLines,
+  type ClothierReviewRow,
+} from "../compute-clothier-earnings";
 import { closingBlockMessage } from "../clothier-closing-gate";
 
 // T126 — clothier pay = approved units × assignment rate, explainable line by line.
@@ -134,5 +138,16 @@ describe("closingBlockMessage", () => {
     ).toBe(
       "Luz tiene el cierre del 24 de oct sin aprobar. Apruébalo en Producción → Cierres antes de liquidar.",
     );
+  });
+});
+
+describe("payoutReviewIds", () => {
+  it("links a review with approved units and paid scraps once", () => {
+    const lines = pedidoEarningsLines([
+      row({ reviewId: "rv-1", approved: 3, scrapped: 1, scrapPaid: true }),
+      row({ reviewId: "rv-2", assignmentId: "a-2", approved: 2 }),
+    ]);
+    expect(lines.flatMap((l) => l.unitReviewIds).sort()).toEqual(["rv-1", "rv-1", "rv-2"]);
+    expect(payoutReviewIds(lines).sort()).toEqual(["rv-1", "rv-2"]);
   });
 });

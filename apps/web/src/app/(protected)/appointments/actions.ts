@@ -19,6 +19,7 @@ import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
 import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
 import { createNotification } from "@/lib/notifications";
+import { pgErrorCode } from "@/lib/pg-error";
 
 export type AppointmentRow = {
   id: string;
@@ -503,8 +504,7 @@ export async function transitionAppointment(
   } catch (err) {
     // T05R-R4: reopen (no_show → booked) can fail with exclusion constraint 23P01 if
     // the stylist now has a conflicting appointment in that slot.
-    const pgCode = (err as { code?: string })?.code;
-    if (pgCode === "23P01") {
+    if (pgErrorCode(err) === "23P01") {
       return {
         success: false,
         error: { code: "CONFLICT", message: "El horario ya está ocupado" },

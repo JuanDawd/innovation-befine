@@ -44,9 +44,10 @@ import { computeStylistEarnings, earningsLineLabel } from "@/lib/payroll/compute
 import { earningsPeriods } from "@/lib/payroll/my-earnings-days";
 import { checkPayout } from "@/lib/payroll/payout-check";
 import { computeEarningsTotal } from "@/lib/payroll/compute-total";
-import { computeClothierEarnings } from "@/lib/payroll/compute-clothier-earnings";
+import { computeClothierEarnings, payoutReviewIds } from "@/lib/payroll/compute-clothier-earnings";
 import { computeSecretaryEarnings } from "@/lib/payroll/compute-secretary-earnings";
 import { businessDateOf } from "@/lib/dates";
+import { isUniqueViolation } from "@/lib/pg-error";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -396,13 +397,15 @@ export async function recordPayout(rawInput: unknown): Promise<ActionResult<{ id
 
         // T126: the pedido unit reviews this payout pays. UNIQUE(unit_review_id)
         // makes a second payout of the same review fail and roll back.
-        const reviewIds = (
-          await computeClothierEarnings(
-            tx as unknown as Database,
-            input.employeeId,
-            input.businessDayIds,
-          )
-        ).lines.flatMap((l) => l.unitReviewIds);
+        const reviewIds = payoutReviewIds(
+          (
+            await computeClothierEarnings(
+              tx as unknown as Database,
+              input.employeeId,
+              input.businessDayIds,
+            )
+          ).lines,
+        );
         if (reviewIds.length > 0)
           await tx
             .insert(payoutUnitReviews)
@@ -413,8 +416,7 @@ export async function recordPayout(rawInput: unknown): Promise<ActionResult<{ id
     });
   } catch (err) {
     // Postgres unique violation on payout_period_days = double-pay attempt
-    const code = (err as { code?: string }).code;
-    if (code === "23505") {
+    if (isUniqueViolation(err)) {
       return {
         success: false,
         error: {

@@ -114,6 +114,14 @@ export function pedidoEarningsLines(rows: ClothierReviewRow[]): ClothierEarnings
   );
 }
 
+/**
+ * The unit reviews a payout pays, each once. A review with approved units and
+ * paid scraps sits on two lines; linking it twice would break the payout.
+ */
+export function payoutReviewIds(lines: ClothierEarningsLine[]): string[] {
+  return [...new Set(lines.flatMap((l) => l.unitReviewIds))];
+}
+
 /** One payroll line per approved product piece (previous model) — kept for unit tests. */
 export function clothierEarningsLine(row: {
   productId: string;
