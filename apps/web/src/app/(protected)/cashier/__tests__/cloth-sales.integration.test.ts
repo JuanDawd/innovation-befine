@@ -7,7 +7,10 @@ import { eq, sql } from "drizzle-orm";
 // skipped without a test database.
 
 vi.setConfig({ testTimeout: 60_000 });
-if (process.env.TEST_DATABASE_URL && process.env.NEON_LOCAL_PROXY === "1")
+if (
+  process.env.TEST_DATABASE_URL &&
+  (process.env.NEON_LOCAL_PROXY === "1" || process.env.TEST_DATABASE_NEON === "1")
+)
   process.env.DATABASE_URL = process.env.TEST_DATABASE_URL;
 
 const session = vi.hoisted(() => ({ user: { id: "", role: "cashier" } }));

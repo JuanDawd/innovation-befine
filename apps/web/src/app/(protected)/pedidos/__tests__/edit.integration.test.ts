@@ -10,7 +10,8 @@ import { and, eq, sql } from "drizzle-orm";
 vi.setConfig({ testTimeout: 30_000 });
 
 const url = process.env.TEST_DATABASE_URL;
-const hasDb = Boolean(url) && process.env.NEON_LOCAL_PROXY === "1";
+const hasDb =
+  Boolean(url) && (process.env.NEON_LOCAL_PROXY === "1" || process.env.TEST_DATABASE_NEON === "1");
 if (hasDb) process.env.DATABASE_URL = url;
 
 const session = vi.hoisted(() => ({ user: { id: "", role: "admin" } }));

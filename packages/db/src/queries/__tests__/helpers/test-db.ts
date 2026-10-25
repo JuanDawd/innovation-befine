@@ -2,7 +2,9 @@
  * M-70b — integration-test harness for packages/db/src/queries.
  *
  * Runs against the throwaway Postgres from scripts/test-db.sh (which prints
- * TEST_DATABASE_URL and NEON_LOCAL_PROXY=1; CI does the same). Without
+ * TEST_DATABASE_URL and NEON_LOCAL_PROXY=1; CI does the same), or against a
+ * dedicated Neon test branch with TEST_DATABASE_URL and TEST_DATABASE_NEON=1
+ * (an explicit opt-in: never point it at production). Without
  * them the suites are skipped, so `turbo test` still works with no database.
  *
  * Every test runs inside one transaction that first TRUNCATEs the app tables
@@ -17,7 +19,8 @@ import { createTxDb, type Database } from "../../../index";
 import * as s from "../../../schema";
 
 const url = process.env.TEST_DATABASE_URL;
-export const hasTestDb = Boolean(url) && process.env.NEON_LOCAL_PROXY === "1";
+export const hasTestDb =
+  Boolean(url) && (process.env.NEON_LOCAL_PROXY === "1" || process.env.TEST_DATABASE_NEON === "1");
 
 /** Skips the suite unless a test database is configured. */
 export const describeDb: ReturnType<typeof describe.skipIf> = describe.skipIf(!hasTestDb);

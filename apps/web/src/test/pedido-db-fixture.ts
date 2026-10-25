@@ -11,7 +11,8 @@ import { getDb } from "@/lib/db";
 const tag = () => Math.random().toString(36).slice(2, 8);
 
 export const hasTestDb =
-  Boolean(process.env.TEST_DATABASE_URL) && process.env.NEON_LOCAL_PROXY === "1";
+  Boolean(process.env.TEST_DATABASE_URL) &&
+  (process.env.NEON_LOCAL_PROXY === "1" || process.env.TEST_DATABASE_NEON === "1");
 
 export type PedidoFixture = Awaited<ReturnType<typeof makeFixture>>;
 
