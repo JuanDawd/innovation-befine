@@ -47,19 +47,13 @@ import { notifyDataChanged } from "@/lib/data-events";
 import { newUuid } from "@/lib/uuid";
 import { oneOf, useSearchParamState } from "@/hooks/use-search-param-state";
 import { cn } from "@/lib/utils";
+import { formatDate } from "@/i18n";
 import { approveClosing, remindClosings, reviewUnits } from "./actions";
 
 const TABS = ["revisar", "cierres", "sin-asignar"] as const;
 
-function since(date: Date | string) {
-  return new Intl.DateTimeFormat("es-CO", {
-    day: "numeric",
-    month: "short",
-    hour: "numeric",
-    minute: "2-digit",
-    timeZone: "America/Bogota",
-  }).format(new Date(date));
-}
+// date-fns, not Intl: identical on server and client (no hydration mismatch).
+const since = (date: Date | string) => formatDate(date, "es", "d MMM, HH:mm");
 
 // ─── Review dialog ───────────────────────────────────────────────────────────
 

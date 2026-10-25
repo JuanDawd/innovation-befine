@@ -38,18 +38,13 @@ import {
 import { newUuid } from "@/lib/uuid";
 import { checkStockChange } from "@/lib/stock-rules";
 import { cn } from "@/lib/utils";
+import { formatDateTime } from "@/i18n";
 import { adjustStock, getStockHistory, type Inventory } from "./actions";
 
 type ItemKey = { clothPieceVariantId: string; sizeId: string | null; colorId: string | null };
 const keyOf = (i: ItemKey) => `${i.clothPieceVariantId}:${i.sizeId ?? "-"}:${i.colorId ?? "-"}`;
 
-function when(d: Date | string) {
-  return new Intl.DateTimeFormat("es-CO", {
-    dateStyle: "medium",
-    timeStyle: "short",
-    timeZone: "America/Bogota",
-  }).format(new Date(d));
-}
+const when = (d: Date | string) => formatDateTime(d);
 
 // ─── Adjust dialog ───────────────────────────────────────────────────────────
 
