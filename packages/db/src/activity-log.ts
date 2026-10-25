@@ -44,7 +44,10 @@ export type ActivityAction =
   | "pedido.create"
   | "pedido.update"
   | "pedido.cancel"
-  | "pedido.deliver";
+  | "pedido.deliver"
+  | "production.assign"
+  | "production.rate_change"
+  | "production.release";
 
 export type ActivityEntry = {
   actor: { userId: string | null; role: string | null };
@@ -125,6 +128,16 @@ export function activitySummary(
       return `Editó el pedido ${data.number ?? ""}`.trim();
     case "pedido.cancel":
       return `Canceló el pedido ${data.number ?? ""}`.trim();
+    case "production.assign":
+      return `Asignó ${data.units ?? ""} unidades del pedido ${data.number ?? ""}`
+        .replace(/\s+/g, " ")
+        .trim();
+    case "production.rate_change":
+      return `Cambió la tarifa de una asignación del pedido ${data.number ?? ""}`.trim();
+    case "production.release":
+      return `Liberó ${data.units ?? ""} unidades del pedido ${data.number ?? ""}`
+        .replace(/\s+/g, " ")
+        .trim();
     case "pedido.deliver":
       return `Entregó ${data.units ?? ""} unidades del pedido ${data.number ?? ""}`
         .replace(/\s+/g, " ")

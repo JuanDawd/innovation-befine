@@ -273,6 +273,16 @@ describeDb("getPedidoDetail", () => {
         delivered: 2,
         readyToDeliver: 3,
       });
+      expect(line.assignments).toEqual([
+        expect.objectContaining({
+          sizeLabel: "S",
+          employeeName: "Luz",
+          pieceRate: 12_000,
+          source: "assigned",
+          progress: expect.objectContaining({ live: 5, approved: 5, unstarted: 0 }),
+        }),
+      ]);
+      expect(line.specChange).toBeNull();
       expect(line.progress).toMatchObject({
         ordered: 10,
         approved: 5,

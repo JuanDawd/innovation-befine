@@ -708,7 +708,7 @@ Update `apps/web/src/lib/db/README.md` with a short "When to use `getDb()` vs `g
 | T119 | Edit rules after production starts                           | done    | T116, T112                   |
 | T120 | Admin-approved restructure                                   | pending | T119, T127, T128             |
 | T121 | Deliveries in units                                          | done    | T112                         |
-| T122 | Assigning work                                               | pending | T112                         |
+| T122 | Assigning work                                               | done    | T112                         |
 | T123 | Mi trabajo (clothier)                                        | pending | T122, T115                   |
 | T124 | Producción review queue                                      | pending | T123                         |
 | T125 | Cerrar mi jornada                                            | pending | T123, T124                   |

@@ -1422,6 +1422,37 @@
       "tooMany": "La talla {size} solo tiene {n} listas.",
       "confirm": "{count, plural, =0 {Registrar} one {Registrar # unidad} other {Registrar # unidades}}",
       "done": "{count, plural, one {Entrega de # unidad registrada} other {Entrega de # unidades registrada}}"
+    },
+    "assign": {
+      "heading": "Asignaciones",
+      "none": "Nadie tiene unidades de esta prenda todavía.",
+      "button": "Asignar",
+      "title": "Asignar unidades",
+      "size": "Talla",
+      "sizeOption": "{size} · {n} sin asignar",
+      "quantity": "Unidades",
+      "clothier": "Confeccionista",
+      "chooseClothier": "Elige a quién",
+      "noClothiers": "No hay confeccionistas activas.",
+      "earnings": "Paga {rate} por unidad · {total} en total",
+      "specialRate": "Tarifa especial para esta asignación",
+      "rate": "Tarifa por unidad",
+      "rateReason": "Motivo de la tarifa",
+      "rateReasonPlaceholder": "Ej. entrega urgente, bordado a mano",
+      "confirm": "{count, plural, =0 {Asignar} one {Asignar # unidad} other {Asignar # unidades}}",
+      "done": "{count, plural, one {# unidad asignada a {name}} other {# unidades asignadas a {name}}}",
+      "units": "{n, plural, one {# unidad} other {# unidades}}",
+      "claimed": "tomada por ella",
+      "progress": "{reported} reportadas · {approved} aprobadas",
+      "perUnit": "c/u",
+      "release": "Liberar",
+      "changeRate": "Cambiar tarifa",
+      "releaseTitle": "Liberar unidades",
+      "changeRateTitle": "Cambiar tarifa",
+      "releaseQuantity": "Unidades a liberar (máx. {n} sin empezar)",
+      "released": "Unidades liberadas",
+      "rateChanged": "Tarifa actualizada",
+      "specChange": "Último cambio: {summary}. Motivo: {reason}"
     }
   }
 }

@@ -27,7 +27,13 @@ import {
   users,
 } from "../schema";
 import { computePedidoBalance } from "./pedido-balance";
-import { summarizeCell, sumProgress, type CellProgress } from "./pedido-progress";
+import {
+  summarizeAssignment,
+  summarizeCell,
+  sumProgress,
+  type AssignmentProgress,
+  type CellProgress,
+} from "./pedido-progress";
 import { derivePedidoStatus, type PedidoStatus } from "./pedido-status";
 
 /** A pedido is "grande" from this many units (spec §2). */
@@ -235,6 +241,20 @@ export type PedidoDetailCell = {
   progress: CellProgress;
 };
 
+export type PedidoDetailAssignment = {
+  id: string;
+  cellId: string;
+  sizeLabel: string;
+  employeeId: string;
+  employeeName: string;
+  source: "assigned" | "claimed";
+  /** null when redacted for a role that may not see clothier pay (secretary) */
+  pieceRate: number | null;
+  rateReason: string | null;
+  version: number;
+  progress: AssignmentProgress;
+};
+
 export type PedidoDetailLine =
   | {
       kind: "garment";
@@ -247,9 +267,15 @@ export type PedidoDetailLine =
       instructions: string | null;
       unitPrice: number;
       priceReason: string | null;
+      /** Catalog piece rate of the variant; null when redacted (secretary) */
+      variantPieceRate: number | null;
       cells: PedidoDetailCell[];
       progress: CellProgress;
       total: number;
+      /** Who holds units of this line (T122) — rates are hidden from the secretary by the caller */
+      assignments: PedidoDetailAssignment[];
+      /** Last spec change while in production (T119) */
+      specChange: { summary: string; reason: string } | null;
     }
   | { kind: "adjustment"; id: string; amount: number; reason: string };
 
@@ -326,6 +352,7 @@ export async function getPedidoDetail(
       kind: pedidoLines.kind,
       pieceName: clothPieces.name,
       variantName: clothPieceVariants.name,
+      variantPieceRate: clothPieceVariants.pieceRate,
       colorLabel: garmentColors.label,
       colorHex: garmentColors.hex,
       colorOther: pedidoLines.colorOther,
@@ -334,6 +361,7 @@ export async function getPedidoDetail(
       unitPrice: pedidoLines.unitPrice,
       priceReason: pedidoLines.priceReason,
       amount: pedidoLines.amount,
+      specChange: pedidoLines.specChange,
     })
     .from(pedidoLines)
     .leftJoin(clothPieceVariants, eq(pedidoLines.clothPieceVariantId, clothPieceVariants.id))
@@ -362,9 +390,22 @@ export async function getPedidoDetail(
 
   const assignmentRows = cellIds.length
     ? await db
-        .select({ id: assignments.id, cellId: assignments.cellId, quantity: assignments.quantity })
+        .select({
+          id: assignments.id,
+          cellId: assignments.cellId,
+          quantity: assignments.quantity,
+          employeeId: assignments.employeeId,
+          employeeName: users.name,
+          source: assignments.source,
+          pieceRate: assignments.pieceRate,
+          rateReason: assignments.rateReason,
+          version: assignments.version,
+        })
         .from(assignments)
+        .leftJoin(employees, eq(assignments.employeeId, employees.id))
+        .leftJoin(users, eq(employees.userId, users.id))
         .where(inArray(assignments.cellId, cellIds))
+        .orderBy(asc(assignments.createdAt))
     : [];
   const assignmentIds = assignmentRows.map((a) => a.id);
   const [reportRows, reviewRows, deliveredRows, paymentRows, deliveryRows] = await Promise.all([
@@ -453,6 +494,27 @@ export async function getPedidoDetail(
       }))
       .sort((a, b) => a.sizeSortOrder - b.sizeSortOrder || a.sizeLabel.localeCompare(b.sizeLabel));
     const progress = sumProgress(cells.map((c) => c.progress));
+    const cellLabel = new Map(cells.map((c) => [c.id, c.sizeLabel]));
+    const lineAssignments = assignmentRows
+      .filter((a) => cellLabel.has(a.cellId))
+      .map((a) => ({
+        id: a.id,
+        cellId: a.cellId,
+        sizeLabel: cellLabel.get(a.cellId)!,
+        employeeId: a.employeeId,
+        employeeName: a.employeeName ?? "—",
+        source: a.source,
+        pieceRate: a.pieceRate,
+        rateReason: a.rateReason,
+        version: a.version,
+        progress: summarizeAssignment({
+          quantity: a.quantity,
+          reports: reportRows.filter((r) => r.assignmentId === a.id),
+          reviews: reviewRows.filter((r) => r.assignmentId === a.id),
+        }),
+      }))
+      // Fully released assignments with no work left are history only.
+      .filter((a) => a.progress.live > 0 || a.progress.reported + a.progress.rework > 0);
     return {
       kind: "garment",
       id: l.id,
@@ -464,9 +526,12 @@ export async function getPedidoDetail(
       instructions: l.instructions,
       unitPrice: l.unitPrice!,
       priceReason: l.priceReason,
+      variantPieceRate: l.variantPieceRate,
       cells,
       progress,
       total: l.unitPrice! * progress.ordered,
+      assignments: lineAssignments,
+      specChange: (l.specChange as { summary: string; reason: string } | null) ?? null,
     };
   });
 

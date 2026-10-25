@@ -148,6 +148,37 @@ export const recordDeliverySchema = z.object({
     .refine((cells) => new Set(cells.map((c) => c.cellId)).size === cells.length, "Talla repetida"),
 });
 
+// ─── Assigning work (T122) ─────────────────────────────────────────────────
+
+export const assignUnitsSchema = z.object({
+  cellId: z.uuid("Talla inválida"),
+  employeeId: z.uuid("Elige una confeccionista"),
+  quantity: z
+    .number("Escribe la cantidad")
+    .int("La cantidad debe ser un número entero")
+    .min(1, "Mínimo 1 unidad")
+    .max(10_000),
+  /** Unassigned units the person saw; a mismatch means someone else assigned meanwhile */
+  expectedUnassigned: z.number().int().min(0),
+  /** Admin only: a different rate for this assignment, with a reason */
+  pieceRate: z.number().int().min(0).max(10_000_000).optional(),
+  rateReason: optionalText(300),
+});
+
+export const changeAssignmentRateSchema = z.object({
+  version: z.number().int().min(1),
+  pieceRate: z.number("Escribe la tarifa").int().min(0).max(10_000_000),
+  reason: z.string().trim().min(3, "Escribe el motivo").max(300),
+});
+
+export const releaseAssignmentSchema = z.object({
+  version: z.number().int().min(1),
+  quantity: z.number().int().min(1, "Mínimo 1 unidad").max(10_000),
+});
+
+export type AssignUnitsInput = z.infer<typeof assignUnitsSchema>;
+export type ChangeAssignmentRateInput = z.infer<typeof changeAssignmentRateSchema>;
+export type ReleaseAssignmentInput = z.infer<typeof releaseAssignmentSchema>;
 export type RecordDeliveryInput = z.infer<typeof recordDeliverySchema>;
 export type CancelPedidoInput = z.infer<typeof cancelPedidoSchema>;
 export type PedidoCellInput = z.infer<typeof pedidoCellSchema>;

@@ -34,6 +34,12 @@ import {
   recordDelivery,
   updatePedido,
 } from "../actions";
+import {
+  assignUnits,
+  changeAssignmentRate,
+  listClothiers,
+  releaseAssignment,
+} from "../production-actions";
 
 type Fixture = Awaited<ReturnType<typeof makeFixture>>;
 let f: Fixture;
@@ -546,5 +552,231 @@ describe.skipIf(!hasDb)("recordDelivery (T121)", () => {
       cells: [{ cellId: "00000000-0000-4000-8000-000000000002", quantity: 1 }],
     });
     expect(!res.success && res.error.code).toBe("FORBIDDEN");
+  });
+});
+
+describe.skipIf(!hasDb)("assigning work (T122)", () => {
+  beforeAll(async () => {
+    f ??= await makeFixture();
+  });
+  beforeEach(() => {
+    session.user = { id: f.admin.userId, role: "secretary" };
+  });
+
+  async function cellOf(pedidoId: string, sizeId: string) {
+    const d = await getPedidoDetail(getDb(), pedidoId);
+    const line = d!.lines[0]!;
+    if (line.kind !== "garment") throw new Error("expected garment");
+    return { line, cell: line.cells.find((c) => c.sizeId === sizeId)! };
+  }
+
+  it("assigns units, copies the variant rate and notifies the clothier", async () => {
+    const p = await newPedido(); // S 10
+    const { cell } = await cellOf(p.id, f.S);
+    const res = await assignUnits({
+      cellId: cell.id,
+      employeeId: f.clothier.employeeId,
+      quantity: 6,
+      expectedUnassigned: 10,
+    });
+    expect(res.success && res.data.unassigned).toBe(4);
+    const { line } = await cellOf(p.id, f.S);
+    expect(line.assignments).toEqual([
+      expect.objectContaining({ employeeName: "Luz", pieceRate: 12_000, rateReason: null }),
+    ]);
+    const notes = await getDb()
+      .select({ message: s.notifications.message })
+      .from(s.notifications)
+      .where(eq(s.notifications.recipientEmployeeId, f.clothier.employeeId));
+    expect(
+      notes.some((n) =>
+        /Te asignaron 6 unidades: .* talla S-\w+ .* \$12\.000 c\/u \(\$72\.000\)/.test(n.message),
+      ),
+    ).toBe(true);
+    // No client price in what the clothier receives.
+    expect(notes.every((n) => !n.message.includes("45.000"))).toBe(true);
+  });
+
+  it("refuses stale screens and over-assignment", async () => {
+    const p = await newPedido();
+    const { cell } = await cellOf(p.id, f.S);
+    await assignUnits({
+      cellId: cell.id,
+      employeeId: f.clothier.employeeId,
+      quantity: 6,
+      expectedUnassigned: 10,
+    });
+    const stale = await assignUnits({
+      cellId: cell.id,
+      employeeId: f.clothier.employeeId,
+      quantity: 2,
+      expectedUnassigned: 10,
+    });
+    expect(!stale.success && stale.error.code).toBe("STALE_DATA");
+    expect(!stale.success && stale.error.message).toMatch(/ahora son 4/);
+    const over = await assignUnits({
+      cellId: cell.id,
+      employeeId: f.clothier.employeeId,
+      quantity: 5,
+      expectedUnassigned: 4,
+    });
+    expect(!over.success && over.error.message).toMatch(/Solo quedan 4 unidades sin asignar/);
+  });
+
+  it("merges a second assignment to the same clothier at the same rate", async () => {
+    const p = await newPedido();
+    const { cell } = await cellOf(p.id, f.S);
+    await assignUnits({
+      cellId: cell.id,
+      employeeId: f.clothier.employeeId,
+      quantity: 3,
+      expectedUnassigned: 10,
+    });
+    await assignUnits({
+      cellId: cell.id,
+      employeeId: f.clothier.employeeId,
+      quantity: 4,
+      expectedUnassigned: 7,
+    });
+    const { line } = await cellOf(p.id, f.S);
+    expect(line.assignments).toHaveLength(1);
+    expect(line.assignments[0]!.progress.live).toBe(7);
+  });
+
+  it("only assigns to active clothiers", async () => {
+    const p = await newPedido();
+    const { cell } = await cellOf(p.id, f.S);
+    const res = await assignUnits({
+      cellId: cell.id,
+      employeeId: f.admin.employeeId,
+      quantity: 1,
+      expectedUnassigned: 10,
+    });
+    expect(!res.success && res.error.details?.[0]?.field).toBe("employeeId");
+    const list = await listClothiers();
+    expect(list.success && list.data.some((c) => c.id === f.clothier.employeeId)).toBe(true);
+    expect(list.success && list.data.some((c) => c.id === f.admin.employeeId)).toBe(false);
+  });
+
+  it("lets only admin set a special rate, with a reason, and logs it", async () => {
+    const p = await newPedido();
+    const { cell } = await cellOf(p.id, f.S);
+    const sec = await assignUnits({
+      cellId: cell.id,
+      employeeId: f.clothier.employeeId,
+      quantity: 2,
+      expectedUnassigned: 10,
+      pieceRate: 20_000,
+      rateReason: "urgente",
+    });
+    expect(!sec.success && sec.error.code).toBe("FORBIDDEN");
+
+    session.user = { id: f.admin.userId, role: "admin" };
+    const noReason = await assignUnits({
+      cellId: cell.id,
+      employeeId: f.clothier.employeeId,
+      quantity: 2,
+      expectedUnassigned: 10,
+      pieceRate: 20_000,
+    });
+    expect(!noReason.success && noReason.error.details?.[0]?.field).toBe("rateReason");
+    const ok = await assignUnits({
+      cellId: cell.id,
+      employeeId: f.clothier.employeeId,
+      quantity: 2,
+      expectedUnassigned: 10,
+      pieceRate: 20_000,
+      rateReason: "bordado a mano",
+    });
+    expect(ok.success).toBe(true);
+    const [entry] = (
+      await getDb().execute(
+        sql`SELECT summary, reason FROM activity_log WHERE entity_id = ${p.id} AND action = 'production.assign' ORDER BY created_at DESC LIMIT 1`,
+      )
+    ).rows as { summary: string; reason: string }[];
+    expect(entry!.summary).toMatch(/tarifa especial \$20\.000/);
+    expect(entry!.reason).toBe("bordado a mano");
+  });
+
+  it("changes a rate only before work starts, admin only", async () => {
+    const p = await newPedido();
+    const { cell } = await cellOf(p.id, f.S);
+    const a = await assignUnits({
+      cellId: cell.id,
+      employeeId: f.clothier.employeeId,
+      quantity: 5,
+      expectedUnassigned: 10,
+    });
+    const id = a.success ? a.data.assignmentId : "";
+    const sec = await changeAssignmentRate(id, {
+      version: 1,
+      pieceRate: 15_000,
+      reason: "urgente",
+    });
+    expect(!sec.success && sec.error.code).toBe("FORBIDDEN");
+
+    session.user = { id: f.admin.userId, role: "admin" };
+    const ok = await changeAssignmentRate(id, {
+      version: 1,
+      pieceRate: 15_000,
+      reason: "entrega urgente",
+    });
+    expect(ok.success).toBe(true);
+    const stale = await changeAssignmentRate(id, {
+      version: 1,
+      pieceRate: 16_000,
+      reason: "otra vez",
+    });
+    expect(!stale.success && stale.error.code).toBe("STALE_DATA");
+
+    await getDb().insert(s.unitReports).values({
+      assignmentId: id,
+      quantity: 1,
+      businessDayId: f.dayId,
+      reportedBy: f.clothier.employeeId,
+    });
+    const late = await changeAssignmentRate(id, {
+      version: 2,
+      pieceRate: 16_000,
+      reason: "otra vez",
+    });
+    expect(!late.success && late.error.message).toMatch(/ya reportó/);
+  });
+
+  it("releases only unreported units", async () => {
+    const p = await newPedido();
+    const { cell } = await cellOf(p.id, f.S);
+    const a = await assignUnits({
+      cellId: cell.id,
+      employeeId: f.clothier.employeeId,
+      quantity: 5,
+      expectedUnassigned: 10,
+    });
+    const id = a.success ? a.data.assignmentId : "";
+    await getDb().insert(s.unitReports).values({
+      assignmentId: id,
+      quantity: 2,
+      businessDayId: f.dayId,
+      reportedBy: f.clothier.employeeId,
+    });
+    const tooMany = await releaseAssignment(id, { version: 1, quantity: 4 });
+    expect(!tooMany.success && tooMany.error.message).toMatch(/Solo se pueden liberar 3 unidades/);
+    const ok = await releaseAssignment(id, { version: 1, quantity: 3 });
+    expect(ok.success && ok.data.quantity).toBe(2);
+    const { cell: after } = await cellOf(p.id, f.S);
+    expect(after.progress.unassigned).toBe(8);
+  });
+
+  it("returns FORBIDDEN for clothiers and stylists", async () => {
+    for (const role of ["clothier", "stylist"]) {
+      session.user = { id: f.clothier.userId, role };
+      const res = await assignUnits({
+        cellId: "00000000-0000-4000-8000-000000000001",
+        employeeId: f.clothier.employeeId,
+        quantity: 1,
+        expectedUnassigned: 1,
+      });
+      expect(!res.success && res.error.code).toBe("FORBIDDEN");
+    }
   });
 });

@@ -1390,6 +1390,37 @@
       "tooMany": "Size {size} only has {n} ready.",
       "confirm": "{count, plural, =0 {Record} one {Record # unit} other {Record # units}}",
       "done": "{count, plural, one {Delivery of # unit recorded} other {Delivery of # units recorded}}"
+    },
+    "assign": {
+      "heading": "Assignments",
+      "none": "Nobody holds units of this garment yet.",
+      "button": "Assign",
+      "title": "Assign units",
+      "size": "Size",
+      "sizeOption": "{size} · {n} unassigned",
+      "quantity": "Units",
+      "clothier": "Clothier",
+      "chooseClothier": "Choose who",
+      "noClothiers": "No active clothiers.",
+      "earnings": "Pays {rate} per unit · {total} in total",
+      "specialRate": "Special rate for this assignment",
+      "rate": "Rate per unit",
+      "rateReason": "Reason for the rate",
+      "rateReasonPlaceholder": "e.g. rush delivery, hand embroidery",
+      "confirm": "{count, plural, =0 {Assign} one {Assign # unit} other {Assign # units}}",
+      "done": "{count, plural, one {# unit assigned to {name}} other {# units assigned to {name}}}",
+      "units": "{n, plural, one {# unit} other {# units}}",
+      "claimed": "claimed by her",
+      "progress": "{reported} reported · {approved} approved",
+      "perUnit": "each",
+      "release": "Release",
+      "changeRate": "Change rate",
+      "releaseTitle": "Release units",
+      "changeRateTitle": "Change rate",
+      "releaseQuantity": "Units to release (max {n} not started)",
+      "released": "Units released",
+      "rateChanged": "Rate updated",
+      "specChange": "Last change: {summary}. Reason: {reason}"
     }
   }
 }

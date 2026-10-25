@@ -9,7 +9,8 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { formatMoney } from "@/i18n";
 import { cn } from "@/lib/utils";
-import { getPedido } from "../actions";
+import { getPedido, type PedidoViewer } from "../actions";
+import { AssignButton, AssignmentRow } from "./assignment-controls";
 import { CancelPedidoDialog } from "./cancel-pedido-dialog";
 import { RecordDeliveryDialog, type DeliverableLine } from "./record-delivery-dialog";
 
@@ -197,9 +198,11 @@ async function MoneyCard({ pedido }: { pedido: PedidoDetail }) {
   );
 }
 
-async function LinesSection({ pedido }: { pedido: PedidoDetail }) {
+async function LinesSection({ pedido }: { pedido: PedidoDetail & { viewer: PedidoViewer } }) {
   const t = await getTranslations("pedidos.detail");
+  const ta = await getTranslations("pedidos.assign");
   const isClient = pedido.destination === "client";
+  const editable = pedido.status !== "cancelled";
   return (
     <section aria-labelledby="pedido-lines" className="space-y-3">
       <h2 id="pedido-lines" className="text-lg font-semibold">
@@ -302,6 +305,49 @@ async function LinesSection({ pedido }: { pedido: PedidoDetail }) {
                 ))}
               </tbody>
             </table>
+            <div className="space-y-2 border-t pt-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h4 className="text-sm font-semibold">{ta("heading")}</h4>
+                {editable && line.progress.unassigned > 0 && (
+                  <AssignButton
+                    garment={`${line.pieceName} — ${line.variantName}`}
+                    cells={line.cells
+                      .filter((c) => c.progress.unassigned > 0)
+                      .map((c) => ({
+                        id: c.id,
+                        label: c.sizeLabel,
+                        unassigned: c.progress.unassigned,
+                      }))}
+                    catalogRate={line.variantPieceRate}
+                    isAdmin={pedido.viewer.isAdmin}
+                    canSeeRates={pedido.viewer.canSeeRates}
+                  />
+                )}
+              </div>
+              {line.assignments.length === 0 ? (
+                <p className="text-sm text-muted-foreground">{ta("none")}</p>
+              ) : (
+                <ul className="divide-y">
+                  {line.assignments.map((a) => (
+                    <AssignmentRow
+                      key={a.id}
+                      assignment={a}
+                      isAdmin={pedido.viewer.isAdmin}
+                      canSeeRates={pedido.viewer.canSeeRates}
+                      editable={editable}
+                    />
+                  ))}
+                </ul>
+              )}
+              {line.specChange && (
+                <p className="text-xs text-muted-foreground">
+                  {ta("specChange", {
+                    summary: line.specChange.summary,
+                    reason: line.specChange.reason,
+                  })}
+                </p>
+              )}
+            </div>
           </article>
         ),
       )}
@@ -358,7 +404,7 @@ async function DeliveriesSection({ pedido }: { pedido: PedidoDetail }) {
   );
 }
 
-function PedidoContent({ pedido }: { pedido: PedidoDetail }) {
+function PedidoContent({ pedido }: { pedido: PedidoDetail & { viewer: PedidoViewer } }) {
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_22rem] lg:items-start">
       <div className="min-w-0 space-y-6">

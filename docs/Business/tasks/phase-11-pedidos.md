@@ -233,18 +233,18 @@ Enforce spec §3.4.16: increases always; decreases only down to assigned units; 
 ## T122 — Assigning work
 
 **Phase:** 11C — Production
-**Status:** pending
+**Status:** done
 **Dependencies:** T112
 
 ### What to do
 
-Secretary/admin assign units of a cell to a clothier (from the pedido detail and from Producción). Piece rate copied from the variant; admin can override one assignment's rate with reason.
+Secretary/admin assign units of a cell to a clothier (from the pedido detail; the Producción board entry point comes with T124). Piece rate copied from the variant; admin can override one assignment's rate with reason.
 
 ### Acceptance criteria
 
-- [ ] Cannot assign beyond the cell's unassigned units (optimistic locking)
-- [ ] Clothier notified; sees rate and expected earnings
-- [ ] Rate override visible to the clothier before work starts; logged
+- [x] Cannot assign beyond the cell's unassigned units (optimistic locking)
+- [x] Clothier notified; sees rate and expected earnings
+- [x] Rate override visible to the clothier before work starts; logged
 
 ---
 

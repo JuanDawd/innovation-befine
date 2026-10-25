@@ -61,6 +61,15 @@ describe("activitySummary — clients and pedidos", () => {
     expect(activitySummary("pedido.deliver", "pedido", { units: 3, number: "#0007" })).toBe(
       "Entregó 3 unidades del pedido #0007",
     );
+    expect(activitySummary("production.assign", "pedido", { units: 6, number: "#0007" })).toBe(
+      "Asignó 6 unidades del pedido #0007",
+    );
+    expect(activitySummary("production.rate_change", "pedido", { number: "#0007" })).toBe(
+      "Cambió la tarifa de una asignación del pedido #0007",
+    );
+    expect(activitySummary("production.release", "pedido", { units: 2, number: "#0007" })).toBe(
+      "Liberó 2 unidades del pedido #0007",
+    );
   });
 });
 

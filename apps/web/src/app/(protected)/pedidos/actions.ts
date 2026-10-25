@@ -15,10 +15,8 @@
  * searchPedidoClients / createPedidoClient: the picker in the same form.
  */
 
-import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { and, asc, eq, ilike, inArray, or, sql } from "drizzle-orm";
-import { auth } from "@/lib/auth";
 import { getDb, getTxDb } from "@/lib/db";
 import {
   assignments,
@@ -54,11 +52,18 @@ import {
 } from "@befine/types";
 import { z } from "zod";
 import type { ActionResult } from "@/lib/action-result";
-import { hasRole } from "@/lib/middleware-helpers";
 import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
-import { getEmployeeRef } from "@/lib/employee-ref";
+import { hasRole } from "@/lib/middleware-helpers";
 import { actorOf, logActivity, type ActivityTx } from "@/lib/activity";
 import { resolveLinePrice } from "@/lib/pedido-line-pricing";
+import {
+  ConflictError,
+  fieldError,
+  InputError,
+  requirePedidoRole,
+  toFail,
+  validationError,
+} from "./action-helpers";
 import { createNotification } from "@/lib/notifications";
 import {
   lineIsStarted,
@@ -108,49 +113,6 @@ export type PedidoForEdit = {
   lines: CreatePedidoInput["lines"];
 };
 
-type Fail = Extract<ActionResult<never>, { success: false }>;
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-async function requirePedidoRole(): Promise<
-  | Fail
-  | {
-      user: { id: string; role?: string | null };
-      employeeId: string;
-      canEditPrices: boolean;
-    }
-> {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session)
-    return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
-  if (!hasRole(session.user, "admin", "cashier", "secretary"))
-    return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
-  const emp = await getEmployeeRef(session.user.id);
-  if (!emp)
-    return { success: false, error: { code: "NOT_FOUND", message: "Empleado no encontrado" } };
-  return {
-    user: session.user,
-    employeeId: emp.id,
-    canEditPrices: hasRole(session.user, "admin", "cashier"),
-  };
-}
-
-function validationError(error: z.ZodError): Fail {
-  return {
-    success: false,
-    error: {
-      code: "VALIDATION_ERROR",
-      message: error.issues[0]?.message ?? "Datos inválidos",
-      details: error.issues.map((i) => ({ field: i.path.join("."), message: i.message })),
-    },
-  };
-}
-
-const fieldError = (field: string, message: string): Fail => ({
-  success: false,
-  error: { code: "VALIDATION_ERROR", message, details: [{ field, message }] },
-});
-
 /** Bogotá calendar date → stored timestamp (start of that day, UTC-5). */
 function deliveryTimestamp(date: string | undefined): Date | null {
   return date ? new Date(`${date}T00:00:00-05:00`) : null;
@@ -160,24 +122,6 @@ function deliveryTimestamp(date: string | undefined): Date | null {
 function deliveryDate(at: Date | null): string | null {
   if (!at) return null;
   return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Bogota" }).format(at);
-}
-
-class InputError extends Error {
-  constructor(
-    readonly field: string,
-    message: string,
-  ) {
-    super(message);
-  }
-}
-
-class ConflictError extends Error {
-  constructor(
-    readonly code: "CONFLICT" | "STALE_DATA" | "NOT_FOUND",
-    message: string,
-  ) {
-    super(message);
-  }
 }
 
 type ResolvedLine =
@@ -433,13 +377,6 @@ function snapshot(
     units,
     lines,
   };
-}
-
-function toFail(err: unknown): Fail | null {
-  if (err instanceof InputError) return fieldError(err.field, err.message);
-  if (err instanceof ConflictError)
-    return { success: false, error: { code: err.code, message: err.message } };
-  return null;
 }
 
 // ─── Form data ───────────────────────────────────────────────────────────────
@@ -1374,7 +1311,15 @@ export async function listPedidos(
   return { success: true, data: await listPedidoOverviews(getDb(), filter) };
 }
 
-export async function getPedido(id: string): Promise<ActionResult<PedidoDetail>> {
+export type PedidoViewer = {
+  /** admin + cashier: clothier piece rates are visible */
+  canSeeRates: boolean;
+  isAdmin: boolean;
+};
+
+export async function getPedido(
+  id: string,
+): Promise<ActionResult<PedidoDetail & { viewer: PedidoViewer }>> {
   const guard = await requirePedidoRole();
   if ("success" in guard) return guard;
   if (typeof id !== "string" || !/^[0-9a-f-]{36}$/i.test(id))
@@ -1382,5 +1327,21 @@ export async function getPedido(id: string): Promise<ActionResult<PedidoDetail>>
   const detail = await getPedidoDetail(getDb(), id);
   if (!detail)
     return { success: false, error: { code: "NOT_FOUND", message: "Pedido no encontrado" } };
-  return { success: true, data: detail };
+  // Piece rates are clothier pay: never sent to the secretary.
+  const canSeeRates = guard.canEditPrices;
+  const lines = canSeeRates
+    ? detail.lines
+    : detail.lines.map((l) =>
+        l.kind === "garment"
+          ? {
+              ...l,
+              variantPieceRate: null,
+              assignments: l.assignments.map((a) => ({ ...a, pieceRate: null, rateReason: null })),
+            }
+          : l,
+      );
+  return {
+    success: true,
+    data: { ...detail, lines, viewer: { canSeeRates, isAdmin: hasRole(guard.user, "admin") } },
+  };
 }
