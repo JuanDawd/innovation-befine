@@ -103,7 +103,7 @@ Create `activity_log` per spec §4 and a `logActivity(tx, entry)` helper that mu
 ## T115 — New settings
 
 **Phase:** 11A — Data model
-**Status:** pending
+**Status:** done
 **Dependencies:** —
 
 ### What to do
@@ -112,8 +112,8 @@ Add to `business_settings` and Configuración: **secretary can record pedido pay
 
 ### Acceptance criteria
 
-- [ ] Admin-only edit; each change logged
-- [ ] Defaults applied on existing deployments
+- [x] Admin-only edit; each change logged
+- [x] Defaults applied on existing deployments
 
 ---
 

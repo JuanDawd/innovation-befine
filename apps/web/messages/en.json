@@ -1024,7 +1024,14 @@
     "cashierAdminHelp": "On: anyone with the <strong>cashier</strong> role also sees analytics, payroll and employees. Use it only if the front desk and the admin are different people.",
     "subtypeSection": "Services by subtype",
     "subtypeRestriction": "Stylists log only their own services",
-    "subtypeRestrictionHelp": "On: a manicurist only sees manicure services, a hairdresser only hair. Off: anyone can log any service."
+    "subtypeRestrictionHelp": "On: a manicurist only sees manicure services, a hairdresser only hair. Off: anyone can log any service.",
+    "secretaryPedidoPayments": "Secretary can record pedido payments",
+    "secretaryPedidoPaymentsHelp": "When on, the secretary can take deposits and balances on pedidos. Payments go into the day's till.",
+    "payScrappedUnits": "Pay for scrapped units",
+    "payScrappedUnitsHelp": "When on, the clothier is paid for units scrapped at review, at her assignment rate.",
+    "claimLimit": "Units per clothier limit",
+    "claimLimitHelp": "Most units a clothier can take at once from \"Disponibles\".",
+    "claimLimitInvalid": "Enter a whole number between {min} and {max}"
   },
   "checkout": {
     "confirmRefundDescription": "{count, plural, one {# ticket will be closed} other {# tickets will be closed}} and the refund recorded. This can't be undone.",

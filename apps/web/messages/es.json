@@ -1088,7 +1088,14 @@
     "cashierAdminHelp": "Activo: quien tenga el rol <strong>cajero</strong> también ve analítica, nómina y empleados. Úsalo solo si caja y administración son personas distintas.",
     "subtypeSection": "Servicios por subtipo",
     "subtypeRestriction": "Cada estilista registra solo sus servicios",
-    "subtypeRestrictionHelp": "Activo: una manicurista solo ve servicios de manicure, un peluquero solo de peluquería. Inactivo: cualquiera puede registrar cualquier servicio."
+    "subtypeRestrictionHelp": "Activo: una manicurista solo ve servicios de manicure, un peluquero solo de peluquería. Inactivo: cualquiera puede registrar cualquier servicio.",
+    "secretaryPedidoPayments": "La secretaria puede registrar pagos de pedidos",
+    "secretaryPedidoPaymentsHelp": "Si está activo, la secretaria puede cobrar abonos y saldos de pedidos. Los pagos entran a la caja del día.",
+    "payScrappedUnits": "Pagar unidades descartadas",
+    "payScrappedUnitsHelp": "Si está activo, la confeccionista cobra las unidades que se descartan en la revisión, a la tarifa de su asignación.",
+    "claimLimit": "Límite de unidades por confeccionista",
+    "claimLimitHelp": "Máximo de unidades que una confeccionista puede tomar a la vez desde «Disponibles».",
+    "claimLimitInvalid": "Escribe un número entero entre {min} y {max}"
   },
   "checkout": {
     "confirmRefundDescription": "{count, plural, one {Se cerrará # ticket} other {Se cerrarán # tickets}} y se registrará la devolución. Esta acción no se puede deshacer.",
