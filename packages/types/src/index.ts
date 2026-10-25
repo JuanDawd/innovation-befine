@@ -128,6 +128,8 @@ export {
   reviewUnitsSchema,
   submitClosingSchema,
   approveClosingSchema,
+  recordPedidoPaymentSchema,
+  type RecordPedidoPaymentInput,
   type SubmitClosingInput,
   type ApproveClosingInput,
   DEFECT_CODES,

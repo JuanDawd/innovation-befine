@@ -268,6 +268,21 @@ export const approveClosingSchema = z.object({
   reason: optionalText(300),
 });
 
+// ─── Pedido payments (T127) ────────────────────────────────────────────────
+
+export const recordPedidoPaymentSchema = z.object({
+  kind: z.enum(["payment", "refund"]),
+  amount: z
+    .number("Escribe el valor")
+    .int("El valor debe ser en pesos enteros")
+    .min(1, "El valor debe ser mayor que $0")
+    .max(100_000_000, "Valor demasiado alto"),
+  method: z.enum(["cash", "card", "transfer"]),
+  note: optionalText(300),
+  idempotencyKey: z.uuid(),
+});
+
+export type RecordPedidoPaymentInput = z.infer<typeof recordPedidoPaymentSchema>;
 export type SubmitClosingInput = z.infer<typeof submitClosingSchema>;
 export type ApproveClosingInput = z.infer<typeof approveClosingSchema>;
 export type ReviewUnitsInput = z.infer<typeof reviewUnitsSchema>;

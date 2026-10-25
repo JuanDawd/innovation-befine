@@ -54,6 +54,7 @@ import { z } from "zod";
 import type { ActionResult } from "@/lib/action-result";
 import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
 import { hasRole } from "@/lib/middleware-helpers";
+import { getBusinessSettings } from "@/lib/business-settings";
 import { actorOf, logActivity, type ActivityTx } from "@/lib/activity";
 import { resolveLinePrice } from "@/lib/pedido-line-pricing";
 import {
@@ -1315,6 +1316,10 @@ export type PedidoViewer = {
   /** admin + cashier: clothier piece rates are visible */
   canSeeRates: boolean;
   isAdmin: boolean;
+  /** admin + cashier, or the secretary when the setting allows it (T127) */
+  canRecordPayments: boolean;
+  /** A business day is open: payments now belong to it, otherwise after hours */
+  dayOpen: boolean;
 };
 
 export async function getPedido(
@@ -1340,8 +1345,22 @@ export async function getPedido(
             }
           : l,
       );
+  const [settings, openDay] = await Promise.all([
+    getBusinessSettings(),
+    getDb().execute(sql`SELECT 1 FROM business_days WHERE closed_at IS NULL LIMIT 1`),
+  ]);
+  const canRecordPayments = canSeeRates || settings.secretaryCanRecordPedidoPayments;
   return {
     success: true,
-    data: { ...detail, lines, viewer: { canSeeRates, isAdmin: hasRole(guard.user, "admin") } },
+    data: {
+      ...detail,
+      lines,
+      viewer: {
+        canSeeRates,
+        isAdmin: hasRole(guard.user, "admin"),
+        canRecordPayments,
+        dayOpen: openDay.rows.length > 0,
+      },
+    },
   };
 }

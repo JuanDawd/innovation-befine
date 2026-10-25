@@ -11,6 +11,8 @@ import { formatMoney } from "@/i18n";
 import { cn } from "@/lib/utils";
 import { getPedido, type PedidoViewer } from "../actions";
 import { AssignButton, AssignmentRow } from "./assignment-controls";
+import { PaymentDialog } from "./payment-dialog";
+import { afterHoursNote } from "@/lib/pedido-payments";
 import { CancelPedidoDialog } from "./cancel-pedido-dialog";
 import { RecordDeliveryDialog, type DeliverableLine } from "./record-delivery-dialog";
 
@@ -138,13 +140,31 @@ async function StatusCard({ pedido }: { pedido: PedidoDetail }) {
   );
 }
 
-async function MoneyCard({ pedido }: { pedido: PedidoDetail }) {
+async function MoneyCard({ pedido }: { pedido: PedidoDetail & { viewer: PedidoViewer } }) {
   const t = await getTranslations("pedidos.detail");
+  const cancelled = pedido.status === "cancelled";
+  const canPay = pedido.viewer.canRecordPayments && !cancelled && pedido.balance > 0;
+  const canRefund =
+    pedido.viewer.canRecordPayments && pedido.paid > 0 && (cancelled || pedido.saldoAFavor > 0);
+  const dialog = {
+    pedidoId: pedido.id,
+    cancelled,
+    paid: pedido.paid,
+    balance: pedido.balance,
+    saldoAFavor: pedido.saldoAFavor,
+    dayOpen: pedido.viewer.dayOpen,
+  };
   return (
     <section aria-labelledby="pedido-money" className="space-y-3 rounded-xl border bg-card p-4">
-      <h2 id="pedido-money" className="text-lg font-semibold">
-        {t("moneyTitle")}
-      </h2>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 id="pedido-money" className="text-lg font-semibold">
+          {t("moneyTitle")}
+        </h2>
+        <div className="flex gap-2">
+          {canRefund && <PaymentDialog kind="refund" {...dialog} />}
+          {canPay && <PaymentDialog kind="payment" {...dialog} />}
+        </div>
+      </div>
       <dl className="grid grid-cols-3 gap-3 text-sm">
         <div>
           <dt className="text-muted-foreground">{t("total")}</dt>
@@ -185,7 +205,9 @@ async function MoneyCard({ pedido }: { pedido: PedidoDetail }) {
                   <span className="text-muted-foreground"> · {p.recordedByName}</span>
                 )}
                 {p.afterHours && (
-                  <span className="block text-xs text-muted-foreground">{t("afterHours")}</span>
+                  <span className="block text-xs text-muted-foreground">
+                    {afterHoursNote(p.receivedAt)}
+                  </span>
                 )}
                 {p.note && <span className="block text-xs text-muted-foreground">{p.note}</span>}
               </span>

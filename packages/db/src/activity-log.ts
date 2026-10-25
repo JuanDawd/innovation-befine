@@ -53,7 +53,10 @@ export type ActivityAction =
   | "production.report"
   | "production.review"
   | "production.closing_submit"
-  | "production.closing_approve";
+  | "production.closing_approve"
+  | "pedido.payment"
+  | "pedido.refund"
+  | "pedido.payment_attach";
 
 export type ActivityEntry = {
   actor: { userId: string | null; role: string | null };
@@ -159,6 +162,16 @@ export function activitySummary(
       return `Cerró su jornada${data.units !== undefined ? ` con ${data.units} unidades` : ""}`;
     case "production.closing_approve":
       return `Aprobó el cierre de jornada${data.name ? ` de ${data.name}` : ""}`;
+    case "pedido.payment":
+      return `Registró un pago de ${data.amount ?? ""} en el pedido ${data.number ?? ""}`
+        .replace(/\s+/g, " ")
+        .trim();
+    case "pedido.refund":
+      return `Registró una devolución de ${data.amount ?? ""} en el pedido ${data.number ?? ""}`
+        .replace(/\s+/g, " ")
+        .trim();
+    case "pedido.payment_attach":
+      return `Asignó al día un pago fuera de horario del pedido ${data.number ?? ""}`.trim();
     case "pedido.deliver":
       return `Entregó ${data.units ?? ""} unidades del pedido ${data.number ?? ""}`
         .replace(/\s+/g, " ")

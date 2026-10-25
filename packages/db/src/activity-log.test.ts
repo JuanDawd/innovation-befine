@@ -89,6 +89,15 @@ describe("activitySummary — clients and pedidos", () => {
     expect(activitySummary("production.closing_approve", "employee")).toBe(
       "Aprobó el cierre de jornada",
     );
+    expect(
+      activitySummary("pedido.payment", "pedido", { amount: "$50.000", number: "#0007" }),
+    ).toBe("Registró un pago de $50.000 en el pedido #0007");
+    expect(activitySummary("pedido.refund", "pedido", { amount: "$5.000", number: "#0007" })).toBe(
+      "Registró una devolución de $5.000 en el pedido #0007",
+    );
+    expect(activitySummary("pedido.payment_attach", "pedido", { number: "#0007" })).toBe(
+      "Asignó al día un pago fuera de horario del pedido #0007",
+    );
   });
 });
 

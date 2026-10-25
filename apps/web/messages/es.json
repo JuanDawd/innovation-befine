@@ -1458,6 +1458,30 @@
       "released": "Unidades liberadas",
       "rateChanged": "Tarifa actualizada",
       "specChange": "Último cambio: {summary}. Motivo: {reason}"
+    },
+    "payment": {
+      "pay": "Registrar pago",
+      "refund": "Devolver",
+      "payTitle": "Registrar pago",
+      "refundTitle": "Registrar devolución",
+      "payDescription": "Saldo pendiente: {balance}.",
+      "refundDescription": "Se puede devolver hasta {amount}.",
+      "afterHoursWarning": "No hay un día abierto: el pago se guarda fuera de horario y entra a la caja del próximo día que se abra.",
+      "amount": "Valor",
+      "method": "Medio de pago",
+      "methods": {
+        "cash": "Efectivo",
+        "card": "Tarjeta",
+        "transfer": "Transferencia"
+      },
+      "note": "Nota",
+      "refundReason": "Motivo de la devolución",
+      "refundReasonPlaceholder": "Ej. se rebajó el precio, pedido cancelado",
+      "confirmPay": "Cobrar {amount}",
+      "confirmRefund": "Devolver {amount}",
+      "saved": "Pago de {amount} registrado",
+      "refunded": "Devolución de {amount} registrada",
+      "savedAfterHours": "Pago de {amount} guardado fuera de horario; entra al próximo día"
     }
   },
   "miTrabajo": {

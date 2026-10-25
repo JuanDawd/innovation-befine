@@ -1426,6 +1426,30 @@
       "released": "Units released",
       "rateChanged": "Rate updated",
       "specChange": "Last change: {summary}. Reason: {reason}"
+    },
+    "payment": {
+      "pay": "Record payment",
+      "refund": "Refund",
+      "payTitle": "Record payment",
+      "refundTitle": "Record refund",
+      "payDescription": "Balance due: {balance}.",
+      "refundDescription": "Up to {amount} can be refunded.",
+      "afterHoursWarning": "No day is open: the payment is saved after hours and goes into the next day's till.",
+      "amount": "Amount",
+      "method": "Method",
+      "methods": {
+        "cash": "Cash",
+        "card": "Card",
+        "transfer": "Transfer"
+      },
+      "note": "Note",
+      "refundReason": "Reason for the refund",
+      "refundReasonPlaceholder": "e.g. price lowered, pedido cancelled",
+      "confirmPay": "Charge {amount}",
+      "confirmRefund": "Refund {amount}",
+      "saved": "Payment of {amount} recorded",
+      "refunded": "Refund of {amount} recorded",
+      "savedAfterHours": "Payment of {amount} saved after hours; it goes into the next day"
     }
   },
   "miTrabajo": {

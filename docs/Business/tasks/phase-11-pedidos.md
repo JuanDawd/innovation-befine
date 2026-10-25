@@ -327,7 +327,7 @@ Replace `compute-clothier-earnings` with approved units × assignment rate (plus
 ## T127 — Pedido payments and the till
 
 **Phase:** 11D — Money and stock
-**Status:** pending
+**Status:** in progress — code and unit tests done; DB integration test (payments.integration.test.ts) and browser check pending (test database unreachable 2026-10-25). Applying saldo a favor to another pedido is not built yet: refunds only.
 **Dependencies:** T113, T115
 
 ### What to do

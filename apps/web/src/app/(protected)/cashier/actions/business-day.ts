@@ -20,6 +20,9 @@ import { reopenBusinessDaySchema } from "@befine/types";
 import type { ActionResult } from "@/lib/action-result";
 import type { BusinessDay } from "@/lib/business-day";
 import { hasRole } from "@/lib/middleware-helpers";
+import { attachAfterHoursPayments } from "@/lib/after-hours";
+import { actorOf } from "@/lib/activity";
+import { logger } from "@/lib/logger";
 
 // ---------------------------------------------------------------------------
 // Open business day
@@ -78,6 +81,12 @@ export async function openBusinessDay(): Promise<ActionResult<BusinessDay>> {
   if (!day) {
     return { success: false, error: { code: "INTERNAL_ERROR", message: "Error al abrir el día" } };
   }
+
+  // T127: after-hours pedido payments belong to the day that opens next.
+  // Idempotent, so a failure here is retried on the next open or payment read.
+  await attachAfterHoursPayments(day.id, actorOf(session.user)).catch((err) =>
+    logger.error({ err, businessDayId: day.id }, "Could not attach after-hours payments"),
+  );
 
   revalidatePath("/cashier");
   return { success: true, data: day };
