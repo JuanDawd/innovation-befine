@@ -56,3 +56,4 @@ export * from "./queries/analytics";
 export * from "./queries/payroll";
 export * from "./queries/products";
 export * from "./queries/order-items";
+export * from "./queries/pedido-totals";

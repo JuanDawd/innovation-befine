@@ -29,7 +29,7 @@ Create `garment_sizes` (`id`, `label`, `sort_order`, `is_active`) and `garment_c
 ## T111 — Pedido core schema
 
 **Phase:** 11A — Data model
-**Status:** pending
+**Status:** done
 **Dependencies:** T110
 
 ### What to do
@@ -38,10 +38,10 @@ Create `pedidos`, `pedido_lines` (`kind` garment | adjustment) and `pedido_line_
 
 ### Acceptance criteria
 
-- [ ] Migrations run; enums via `pgEnum`; money as `bigint`
-- [ ] CHECK constraints: destination ↔ client, quantities ≥ 1, prices ≥ 0
-- [ ] Optimistic locking `version` on `pedidos`
-- [ ] Unit tests for the total = sum of lines (garment cells × unit price + adjustment amounts)
+- [x] Migrations run; enums via `pgEnum`; money as `bigint`
+- [x] CHECK constraints: destination ↔ client, quantities ≥ 1, prices ≥ 0
+- [x] Optimistic locking `version` on `pedidos`
+- [x] Unit tests for the total = sum of lines (garment cells × unit price + adjustment amounts)
 
 ---
 

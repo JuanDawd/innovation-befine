@@ -697,7 +697,7 @@ Update `apps/web/src/lib/db/README.md` with a short "When to use `getDb()` vs `g
 | ID   | Task                                                         | Status  | Dependencies                 |
 | ---- | ------------------------------------------------------------ | ------- | ---------------------------- |
 | T110 | Sizes and colours catalog                                    | done    | —                            |
-| T111 | Pedido core schema                                           | pending | T110                         |
+| T111 | Pedido core schema                                           | done    | T110                         |
 | T112 | Production schema                                            | pending | T111                         |
 | T113 | Money and stock schema                                       | pending | T111                         |
 | T114 | Activity log foundation                                      | pending | —                            |

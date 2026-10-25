@@ -281,6 +281,13 @@
       "when": 1792891154947,
       "tag": "0039_garment_sizes_colors",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1792892156619,
+      "tag": "0040_pedidos_core",
+      "breakpoints": true
     }
   ]
 }

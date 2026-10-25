@@ -21,6 +21,13 @@ export { businessDays } from "./business-days";
 export { services, serviceVariants } from "./services";
 export { clothPieces, clothPieceVariants } from "./cloth-pieces";
 export { garmentSizes, garmentColors } from "./garment-attributes";
+export {
+  pedidoDestinationEnum,
+  pedidoLineKindEnum,
+  pedidos,
+  pedidoLines,
+  pedidoLineCells,
+} from "./pedidos";
 export { catalogEntityTypeEnum, catalogActionEnum, catalogAuditLog } from "./catalog-audit-log";
 export { clients } from "./clients";
 export { ticketStatusEnum, checkoutSessions, tickets } from "./tickets";
@@ -32,6 +39,9 @@ export {
   largeOrdersRelations,
   largeOrderPaymentsRelations,
   productsRelations,
+  pedidosRelations,
+  pedidoLinesRelations,
+  pedidoLineCellsRelations,
 } from "./relations";
 export { notificationTypeEnum, notifications } from "./notifications";
 export { editRequestStatusEnum, ticketEditRequests } from "./ticket-edit-requests";
