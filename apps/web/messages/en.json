@@ -788,7 +788,11 @@
     "rangeToPlaceholder": "Choose the last day to pay",
     "previewDays": "Calculate earnings ({count, plural, one {# day} other {# days}})",
     "weeklyDayCap": "Payable days per week",
-    "weeklyDayCapValue": "{count, plural, one {# day} other {# days}}"
+    "weeklyDayCapValue": "{count, plural, one {# day} other {# days}}",
+    "lineSize": "size {size}",
+    "lineOldProduct": "product (previous system)",
+    "lineScrappedPaid": "{quantity} scrapped × {rate} (paid by setting)",
+    "lineSpecialRate": "special rate: {reason}"
   },
   "analytics": {
     "byMethodTitle": "Taken by method",

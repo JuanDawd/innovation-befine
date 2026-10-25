@@ -72,7 +72,13 @@ export {
 export { appointmentStatusEnum, appointments } from "./appointments";
 export { largeOrderStatusEnum, largeOrders, orderItems, largeOrderPayments } from "./large-orders";
 export { absenceTypeEnum, employeeAbsences } from "./absences";
-export { payouts, payoutPeriodDays, payoutTicketItems, payoutProductPieces } from "./payouts";
+export {
+  payouts,
+  payoutPeriodDays,
+  payoutTicketItems,
+  payoutProductPieces,
+  payoutUnitReviews,
+} from "./payouts";
 export { idempotencyKeys } from "./idempotency";
 export { clothPieceAssignments } from "./assignments";
 export { productionLogs } from "./production-logs";

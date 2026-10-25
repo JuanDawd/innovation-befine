@@ -359,12 +359,22 @@ export function PayrollScreen({ days, employees, history, unsettled, initialEmpl
                           ).map((line, i) => (
                             <div key={i} className="flex justify-between gap-4">
                               <span className="min-w-0">
-                                <span className="block truncate">{line.pieceName}</span>
+                                <span className="block truncate">
+                                  {line.pieceName} — {line.variantName}
+                                  {line.source === "pedido" &&
+                                    ` · #${String(line.pedidoNumber).padStart(4, "0")} · ${t("lineSize", { size: line.sizeLabel ?? "" })}`}
+                                  {line.source === "producto" && ` · ${t("lineOldProduct")}`}
+                                </span>
                                 <span className="block text-xs text-muted-foreground tabular-nums">
-                                  {t("linePieceRate", {
-                                    quantity: line.quantity,
-                                    rate: formatMoney(line.pieceRate),
-                                  })}
+                                  {t(
+                                    line.kind === "scrapped" ? "lineScrappedPaid" : "linePieceRate",
+                                    {
+                                      quantity: line.quantity,
+                                      rate: formatMoney(line.pieceRate),
+                                    },
+                                  )}
+                                  {line.rateReason &&
+                                    ` · ${t("lineSpecialRate", { reason: line.rateReason })}`}
                                 </span>
                               </span>
                               <span className="font-mono tabular-nums">
@@ -493,9 +503,18 @@ export function PayrollScreen({ days, employees, history, unsettled, initialEmpl
           {preview && finalAmountValue <= 0 && (
             <p className="text-sm text-muted-foreground">{t("zeroPayoutHint")}</p>
           )}
+          {/* T126 — a clothier's day is settled only after her closing is approved */}
+          {preview.closingBlock && (
+            <p
+              className="rounded-lg bg-status-attention px-3 py-2.5 text-sm text-status-attention-foreground"
+              role="alert"
+            >
+              {preview.closingBlock}
+            </p>
+          )}
           <ConfirmationDialog
             trigger={
-              <Button size="sm" disabled={!canConfirm}>
+              <Button size="sm" disabled={!canConfirm || !!preview.closingBlock}>
                 {isPending ? (
                   <Loader2Icon className="size-3.5 animate-spin mr-1" />
                 ) : (

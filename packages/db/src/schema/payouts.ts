@@ -6,6 +6,7 @@
  *   UNIQUE(employee_id, business_day_id) physically prevents double-pay under concurrency.
  * payout_ticket_items: links a stylist payout to the ticket items it covers.
  * payout_craftable_pieces: links a clothier payout to the product pieces it covers.
+ * payout_unit_reviews: links a clothier payout to the pedido unit reviews it paid (T126).
  *
  * idempotency_key: client-generated UUID; UNIQUE prevents duplicate inserts on retry.
  * original_computed_amount: what the system computed before any admin adjustment.
@@ -28,6 +29,7 @@ import { businessDays } from "./business-days";
 import { ticketItems } from "./ticket-items";
 import { productPieces } from "./products";
 import { paymentMethodEnum } from "./enums";
+import { unitReviews } from "./production";
 
 export const payouts = pgTable(
   "payouts",
@@ -100,4 +102,25 @@ export const payoutProductPieces = pgTable(
       .references(() => productPieces.id, { onDelete: "restrict" }),
   },
   (table) => [index("idx_payout_craftable_pieces_payout").on(table.payoutId)],
+);
+
+/**
+ * T126 — links a clothier payout to the unit reviews it paid (approved units,
+ * plus scrapped units when the review was marked paid). UNIQUE(unit_review_id):
+ * a review is paid once, whatever day ranges are settled.
+ */
+export const payoutUnitReviews = pgTable(
+  "payout_unit_reviews",
+  {
+    payoutId: uuid("payout_id")
+      .notNull()
+      .references(() => payouts.id, { onDelete: "restrict" }),
+    unitReviewId: uuid("unit_review_id")
+      .notNull()
+      .references(() => unitReviews.id, { onDelete: "restrict" }),
+  },
+  (table) => [
+    unique("uq_payout_unit_reviews_review").on(table.unitReviewId),
+    index("idx_payout_unit_reviews_payout").on(table.payoutId),
+  ],
 );

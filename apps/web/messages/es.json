@@ -850,7 +850,11 @@
     "rangeToPlaceholder": "Elige el último día a pagar",
     "previewDays": "Calcular ganancias ({count, plural, one {# día} other {# días}})",
     "weeklyDayCap": "Máximo pagable por semana",
-    "weeklyDayCapValue": "{count, plural, one {# día} other {# días}}"
+    "weeklyDayCapValue": "{count, plural, one {# día} other {# días}}",
+    "lineSize": "talla {size}",
+    "lineOldProduct": "producto (sistema anterior)",
+    "lineScrappedPaid": "{quantity} descartadas × {rate} (se pagan por configuración)",
+    "lineSpecialRate": "tarifa especial: {reason}"
   },
   "analytics": {
     "byMethodTitle": "Cobrado por método",

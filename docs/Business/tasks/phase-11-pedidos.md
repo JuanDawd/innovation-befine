@@ -307,7 +307,7 @@ Clothier closing: today's assignments with "¿Cuántas terminaste hoy?" prefille
 ## T126 — Clothier payroll on approved units
 
 **Phase:** 11C — Production
-**Status:** pending
+**Status:** in progress — code done, DB integration test and browser check pending (test database unreachable 2026-10-25)
 **Dependencies:** T124, T125
 
 ### What to do
