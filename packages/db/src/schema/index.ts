@@ -20,6 +20,7 @@ export { businessSettings, BUSINESS_SETTINGS_ID } from "./business-settings";
 export { businessDays } from "./business-days";
 export { services, serviceVariants } from "./services";
 export { clothPieces, clothPieceVariants } from "./cloth-pieces";
+export { garmentSizes, garmentColors } from "./garment-attributes";
 export { catalogEntityTypeEnum, catalogActionEnum, catalogAuditLog } from "./catalog-audit-log";
 export { clients } from "./clients";
 export { ticketStatusEnum, checkoutSessions, tickets } from "./tickets";

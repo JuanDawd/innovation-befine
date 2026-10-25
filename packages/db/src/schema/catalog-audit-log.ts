@@ -2,7 +2,7 @@
  * Catalog audit log table — T025
  *
  * Tracks all create/update/soft-delete operations on catalog entities
- * (services, service_variants, cloth_pieces) for compliance and traceability.
+ * (services, service_variants, cloth_pieces, garment_sizes, garment_colors) for compliance and traceability.
  *
  * entity_type: which catalog table was changed
  * entity_id: the uuid of the affected row
@@ -18,6 +18,8 @@ export const catalogEntityTypeEnum = pgEnum("catalog_entity_type", [
   "service",
   "service_variant",
   "cloth_piece",
+  "garment_size",
+  "garment_color",
 ]);
 
 export const catalogActionEnum = pgEnum("catalog_action", [

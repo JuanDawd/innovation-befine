@@ -274,6 +274,13 @@
       "when": 1792881645833,
       "tag": "0038_reopen_prepaid",
       "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1792891154947,
+      "tag": "0039_garment_sizes_colors",
+      "breakpoints": true
     }
   ]
 }

@@ -3,7 +3,7 @@
 /**
  * CatalogTabs — T024, T027
  *
- * Tab switcher for Services / Cloth pieces catalog sections.
+ * Tab switcher for Services / Cloth pieces / Sizes and colours (T110) catalog sections.
  */
 
 import { type ReactNode } from "react";
@@ -11,14 +11,16 @@ import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { oneOf, useSearchParamState } from "@/hooks/use-search-param-state";
 
-const CATALOG_TABS = ["services", "clothPieces"] as const;
+const CATALOG_TABS = ["services", "clothPieces", "garments"] as const;
 
 export function CatalogTabs({
   services,
   clothPieces,
+  garments,
 }: {
   services: ReactNode;
   clothPieces: ReactNode;
+  garments: ReactNode;
 }) {
   const t = useTranslations("catalog");
   const [tab, setTab] = useSearchParamState("tab", "services", oneOf(CATALOG_TABS));
@@ -26,14 +28,16 @@ export function CatalogTabs({
   const tabs = [
     { id: "services" as const, label: t("servicesTab") },
     { id: "clothPieces" as const, label: t("clothPiecesTab") },
+    { id: "garments" as const, label: t("garmentsTab") },
   ];
+  const panels = { services, clothPieces, garments };
 
   return (
     <div className="space-y-4">
       <div
         role="tablist"
         aria-label={t("pageTitle")}
-        className="flex gap-1 rounded-xl bg-muted p-1 w-fit"
+        className="flex max-w-full flex-wrap gap-1 rounded-xl bg-muted p-1 w-fit"
       >
         {tabs.map(({ id, label }) => (
           <button
@@ -42,7 +46,7 @@ export function CatalogTabs({
             aria-selected={tab === id}
             onClick={() => setTab(id)}
             className={cn(
-              "rounded-lg px-4 py-1.5 text-sm font-medium transition-colors",
+              "shrink-0 rounded-lg px-4 py-1.5 text-sm font-medium whitespace-nowrap transition-colors",
               tab === id
                 ? "bg-background text-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground",
@@ -53,7 +57,7 @@ export function CatalogTabs({
         ))}
       </div>
 
-      <div role="tabpanel">{tab === "services" ? services : clothPieces}</div>
+      <div role="tabpanel">{panels[tab]}</div>
     </div>
   );
 }

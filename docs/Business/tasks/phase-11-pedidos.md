@@ -11,7 +11,7 @@
 ## T110 — Sizes and colours catalog
 
 **Phase:** 11A — Data model
-**Status:** pending
+**Status:** done
 **Dependencies:** —
 
 ### What to do
@@ -20,9 +20,9 @@ Create `garment_sizes` (`id`, `label`, `sort_order`, `is_active`) and `garment_c
 
 ### Acceptance criteria
 
-- [ ] Admin can add, rename, reorder and deactivate sizes and colours; deactivated ones stay on existing records
-- [ ] Changes are written to the activity log (once T114 lands; until then the catalog audit log)
-- [ ] Non-admin roles cannot edit the lists
+- [x] Admin can add, rename, reorder and deactivate sizes and colours; deactivated ones stay on existing records
+- [x] Changes are written to the activity log (once T114 lands; until then the catalog audit log)
+- [x] Non-admin roles cannot edit the lists
 
 ---
 

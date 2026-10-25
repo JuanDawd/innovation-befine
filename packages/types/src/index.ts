@@ -23,6 +23,12 @@ export {
   type AddVariantInput,
   type CreateClothPieceInput,
   type EditClothPieceInput,
+  garmentSizeSchema,
+  garmentColorSchema,
+  reorderGarmentSizesSchema,
+  type GarmentSizeInput,
+  type GarmentColorInput,
+  type ReorderGarmentSizesInput,
 } from "./schemas/catalog";
 export { createTicketSchema, type CreateTicketInput } from "./schemas/ticket";
 export {

@@ -1,7 +1,7 @@
 /**
- * Admin catalog page — T024, T027
+ * Admin catalog page — T024, T027, T110
  *
- * Server component: fetches all services and cloth pieces, renders tabbed UI.
+ * Server component: fetches services, cloth pieces, sizes and colours, renders tabbed UI.
  * Only admin can access (enforced by middleware + server actions).
  */
 
@@ -15,23 +15,30 @@ import { PageSkeleton } from "@/components/ui/loading-skeleton";
 import { ServiceCatalog } from "@/components/service-catalog";
 import { ClothPieceCatalog } from "@/components/cloth-piece-catalog";
 import { CatalogTabs } from "@/components/catalog-tabs";
+import { GarmentAttributeCatalog } from "@/components/garment-attribute-catalog";
 import { listAllServices } from "./actions/services";
 import { listAllClothPieces } from "./actions/cloth-pieces";
+import { listGarmentAttributes } from "./actions/garment-attributes";
 import { PageHeader } from "@/components/page-header";
 
 async function CatalogData() {
-  const [servicesResult, piecesResult] = await Promise.all([
+  const [servicesResult, piecesResult, garmentsResult] = await Promise.all([
     listAllServices(),
     listAllClothPieces(),
+    listGarmentAttributes(),
   ]);
 
   const services = servicesResult.success ? servicesResult.data : [];
   const pieces = piecesResult.success ? piecesResult.data : [];
+  const garments = garmentsResult.success ? garmentsResult.data : { sizes: [], colors: [] };
 
   return (
     <CatalogTabs
       services={<ServiceCatalog initialServices={services} />}
       clothPieces={<ClothPieceCatalog initialPieces={pieces} />}
+      garments={
+        <GarmentAttributeCatalog initialSizes={garments.sizes} initialColors={garments.colors} />
+      }
     />
   );
 }

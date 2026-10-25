@@ -59,3 +59,27 @@ export const auditLogPageSchema = z.object({
   beforeId: z.uuid("ID inválido").optional(),
 });
 export type AuditLogPageInput = z.infer<typeof auditLogPageSchema>;
+
+// ─── Garment sizes and colours (T110) ──────────────────────────────────────
+
+export const garmentSizeSchema = z.object({
+  label: z.string().trim().min(1, "La talla es obligatoria").max(20, "Máximo 20 caracteres"),
+});
+
+export const garmentColorSchema = z.object({
+  label: z.string().trim().min(1, "El color es obligatorio").max(40, "Máximo 40 caracteres"),
+  hex: z
+    .string()
+    .regex(/^#[0-9A-Fa-f]{6}$/, "Usa el formato #RRGGBB")
+    .nullable()
+    .optional(),
+});
+
+/** Full new order of the size list — every size id, first to last. */
+export const reorderGarmentSizesSchema = z.object({
+  ids: z.array(z.uuid("ID inválido")).min(1).max(200),
+});
+
+export type GarmentSizeInput = z.infer<typeof garmentSizeSchema>;
+export type GarmentColorInput = z.infer<typeof garmentColorSchema>;
+export type ReorderGarmentSizesInput = z.infer<typeof reorderGarmentSizesSchema>;
