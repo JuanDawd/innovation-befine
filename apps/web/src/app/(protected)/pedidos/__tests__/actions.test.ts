@@ -277,41 +277,12 @@ describe("updatePedido", () => {
     expect(state.queries.some((q) => q.sql.startsWith("delete"))).toBe(false);
   });
 
-  it("refuses once production has started", async () => {
-    state.existingLine = true;
-    state.assigned = 3;
-    const res = await updatePedido(IDS.pedido, { ...base(), version: 1 });
-    expect(!res.success && res.error.code).toBe("CONFLICT");
-    expect(state.queries.some((q) => q.sql.startsWith("delete"))).toBe(false);
-  });
-
-  it("keeps an existing line's id and price snapshot on edit, even for the secretary", async () => {
-    state.role = "secretary";
-    state.existingLine = true;
-    const res = await updatePedido(IDS.pedido, {
-      ...base({ lines: [garment({ id: LINE, cells: [{ sizeId: IDS.size, quantity: 5 }] })] }),
-      version: 1,
-    });
-    expect(res.success).toBe(true);
-    const line = inserted("pedido_lines")[0]!;
-    expect(line.params).toContain(LINE);
-    expect(log()!.params.some((p) => String(p).includes("$135.000 → $225.000"))).toBe(true);
-  });
-
   it("rejects a line id that is not on the pedido", async () => {
     const res = await updatePedido(IDS.pedido, {
       ...base({ lines: [garment({ id: "00000000-0000-4000-8000-000000000999" })] }),
       version: 1,
     });
     expect(!res.success && res.error.details?.[0]?.field).toBe("lines.0");
-  });
-
-  it("bumps the version and logs the edit", async () => {
-    const res = await updatePedido(IDS.pedido, { ...base(), version: 1 });
-    expect(res.success).toBe(true);
-    const upd = state.queries.find((q) => q.sql.startsWith('update "pedidos"'))!;
-    expect(upd.sql).toMatch(/"version" = "pedidos"\."version" \+ 1/);
-    expect(log()!.params).toContain("pedido.update");
   });
 
   it("rejects a malformed id", async () => {

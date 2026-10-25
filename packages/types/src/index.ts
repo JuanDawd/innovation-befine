@@ -118,6 +118,8 @@ export {
   createPedidoSchema,
   editPedidoSchema,
   pedidoClientSchema,
+  cancelPedidoSchema,
+  type CancelPedidoInput,
   type PedidoCellInput,
   type PedidoGarmentLineInput,
   type PedidoAdjustmentLineInput,

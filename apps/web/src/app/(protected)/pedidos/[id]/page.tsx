@@ -10,6 +10,7 @@ import { buttonVariants } from "@/components/ui/button-variants";
 import { formatMoney } from "@/i18n";
 import { cn } from "@/lib/utils";
 import { getPedido } from "../actions";
+import { CancelPedidoDialog } from "./cancel-pedido-dialog";
 
 /**
  * Pedido detail — T117 (spec §3.3, §3.10)
@@ -383,10 +384,21 @@ export default async function PedidoPage({ params }: { params: Promise<{ id: str
         backLabel={tc("back")}
         actions={
           pedido.status !== "cancelled" ? (
-            <Link href={`/pedidos/${id}/edit`} className={buttonVariants({ variant: "outline" })}>
-              <PencilIcon className="size-4" aria-hidden="true" />
-              {tc("edit")}
-            </Link>
+            <div className="flex flex-wrap gap-2">
+              <Link href={`/pedidos/${id}/edit`} className={buttonVariants({ variant: "outline" })}>
+                <PencilIcon className="size-4" aria-hidden="true" />
+                {tc("edit")}
+              </Link>
+              {/* Cancelling is blocked once units are approved (spec §3.4.18). */}
+              {pedido.progress.approved === 0 && (
+                <CancelPedidoDialog
+                  pedidoId={id}
+                  number={formatPedidoNumber(pedido.number)}
+                  version={pedido.version}
+                  paid={pedido.paid}
+                />
+              )}
+            </div>
           ) : undefined
         }
       />

@@ -337,6 +337,13 @@
       "when": 1792893396122,
       "tag": "0047_pedido_settings",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1792896145038,
+      "tag": "0048_pedido_spec_change",
+      "breakpoints": true
     }
   ]
 }

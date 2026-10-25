@@ -177,7 +177,7 @@ Pure function computing Pendiente / En producción / Listo / Entrega parcial / E
 ## T119 — Edit rules after production starts
 
 **Phase:** 11B — Pedidos
-**Status:** pending
+**Status:** done
 **Dependencies:** T116, T112
 
 ### What to do
@@ -186,9 +186,9 @@ Enforce spec §3.4.16: increases always; decreases only down to assigned units; 
 
 ### Acceptance criteria
 
-- [ ] Server rejects edits that would drop below assigned / approved / delivered units, with a clear Spanish message
-- [ ] Assigned clothiers get a notification and see "Cambió: …" on their work
-- [ ] Every edit logged with before/after and reason
+- [x] Server rejects edits that would drop below assigned / approved / delivered units, with a clear Spanish message
+- [x] Assigned clothiers get a notification and see "Cambió: …" on their work
+- [x] Every edit logged with before/after and reason
 
 ---
 

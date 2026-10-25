@@ -63,7 +63,26 @@ type GarmentDraft = {
   priceReason: string;
   /** Stored snapshot when editing, kept while the variant is unchanged */
   snapshot?: { variantId: string; unitPrice: number; priceReason: string | null };
+  /** Specs as stored, to spot changes on a line already in production (T119) */
+  original?: { colorChoice: string; colorOther: string; style: string; instructions: string };
+  changeReason: string;
 };
+
+type LineLimit = PedidoForEdit["limits"][string];
+
+/** Size key used by the server limits: list size id or "other:<label>". */
+const otherKey = (label: string) => `other:${label.trim().toLowerCase()}`;
+
+function specsChanged(line: GarmentDraft): boolean {
+  const o = line.original;
+  if (!o) return false;
+  return (
+    o.colorChoice !== line.colorChoice ||
+    (line.colorChoice === OTHER && o.colorOther.trim() !== line.colorOther.trim()) ||
+    o.style.trim() !== line.style.trim() ||
+    o.instructions.trim() !== line.instructions.trim()
+  );
+}
 
 type AdjustmentDraft = {
   key: number;
@@ -93,6 +112,7 @@ function emptyGarment(): GarmentDraft {
     customPrice: false,
     price: "",
     priceReason: "",
+    changeReason: "",
   };
 }
 
@@ -108,15 +128,20 @@ function draftsFrom(pedido: PedidoForEdit | undefined): LineDraft[] {
         amount: String(Math.abs(l.amount)),
         reason: l.priceReason,
       };
+    const specs = {
+      colorChoice: l.colorId ?? (l.colorOther ? OTHER : ""),
+      colorOther: l.colorOther ?? "",
+      style: l.style ?? "",
+      instructions: l.instructions ?? "",
+    };
     return {
       key: nextKey(),
       kind: "garment",
       id: l.id,
       variantId: l.clothPieceVariantId,
-      colorChoice: l.colorId ?? (l.colorOther ? OTHER : ""),
-      colorOther: l.colorOther ?? "",
-      style: l.style ?? "",
-      instructions: l.instructions ?? "",
+      ...specs,
+      original: specs,
+      changeReason: "",
       qty: Object.fromEntries(
         l.cells.filter((c) => c.sizeId).map((c) => [c.sizeId!, String(c.quantity)]),
       ),
@@ -367,6 +392,7 @@ function GarmentLine({
   onRemove,
   canRemove,
   errors,
+  limit,
 }: {
   index: number;
   line: GarmentDraft;
@@ -375,8 +401,13 @@ function GarmentLine({
   onRemove: () => void;
   canRemove: boolean;
   errors: Record<string, string>;
+  /** Production limits when editing a stored line (T119) */
+  limit?: LineLimit;
 }) {
   const t = useTranslations("pedidos.form");
+  const started = !!limit?.started;
+  const minFor = (key: string) => limit?.cells[key]?.min ?? 0;
+  const lockedFor = (key: string) => !!limit?.cells[key]?.locked;
   const uid = useId();
   const p = `lines.${index}`;
   const err = (field: string) => errors[`${p}.${field}`];
@@ -423,8 +454,15 @@ function GarmentLine({
               })
             }
             className="w-full"
+            disabled={started}
             aria-invalid={!!err("clothPieceVariantId")}
-            aria-describedby={err("clothPieceVariantId") ? `${uid}-variant-error` : undefined}
+            aria-describedby={
+              err("clothPieceVariantId")
+                ? `${uid}-variant-error`
+                : started
+                  ? `${uid}-variant-locked`
+                  : undefined
+            }
           >
             <option value="">{t("chooseGarment")}</option>
             {pieces.map(([piece, variants]) => (
@@ -439,9 +477,14 @@ function GarmentLine({
               </optgroup>
             ))}
           </NativeSelect>
+          {started && (
+            <p id={`${uid}-variant-locked`} className="text-xs text-muted-foreground">
+              {t("inProductionLocked")}
+            </p>
+          )}
           <FieldError id={`${uid}-variant-error`} message={err("clothPieceVariantId")} />
         </div>
-        {canRemove && (
+        {canRemove && !started && (
           <Button
             type="button"
             variant="ghost"
@@ -478,6 +521,7 @@ function GarmentLine({
                 inputMode="numeric"
                 autoComplete="off"
                 placeholder="0"
+                aria-describedby={minFor(s.id) > 0 ? `${uid}-size-${s.id}-min` : undefined}
                 value={line.qty[s.id] ?? ""}
                 onChange={(e) =>
                   onChange({
@@ -486,6 +530,14 @@ function GarmentLine({
                 }
                 className="text-center font-mono tabular-nums"
               />
+              {minFor(s.id) > 0 && (
+                <p
+                  id={`${uid}-size-${s.id}-min`}
+                  className="text-center text-[0.6875rem] text-muted-foreground"
+                >
+                  {t("minUnits", { n: minFor(s.id) })}
+                </p>
+              )}
             </div>
           ))}
         </div>
@@ -532,15 +584,21 @@ function GarmentLine({
                 className="text-center font-mono tabular-nums"
               />
             </div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              aria-label={t("removeOtherSize", { n: j + 1 })}
-              onClick={() => onChange({ others: line.others.filter((x) => x.key !== o.key) })}
-            >
-              <XIcon className="size-4" aria-hidden="true" />
-            </Button>
+            {lockedFor(otherKey(o.label)) ? (
+              <span className="w-11 pb-2 text-center text-xs text-muted-foreground">
+                {t("minUnits", { n: minFor(otherKey(o.label)) })}
+              </span>
+            ) : (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label={t("removeOtherSize", { n: j + 1 })}
+                onClick={() => onChange({ others: line.others.filter((x) => x.key !== o.key) })}
+              >
+                <XIcon className="size-4" aria-hidden="true" />
+              </Button>
+            )}
           </div>
         ))}
         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -618,6 +676,26 @@ function GarmentLine({
           className="w-full resize-y rounded-lg border border-input bg-transparent px-2.5 py-2 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm"
         />
       </div>
+      {started && specsChanged(line) && (
+        <div className="space-y-1.5 rounded-lg border border-status-attention-foreground/30 bg-status-attention/40 p-3">
+          <label htmlFor={`${uid}-change-reason`} className="text-sm font-medium">
+            {t("changeReason")}
+          </label>
+          <Input
+            id={`${uid}-change-reason`}
+            value={line.changeReason}
+            maxLength={300}
+            placeholder={t("changeReasonPlaceholder")}
+            onChange={(e) => onChange({ changeReason: e.target.value })}
+            aria-invalid={!!err("changeReason")}
+            aria-describedby={`${uid}-change-reason-help${err("changeReason") ? ` ${uid}-change-reason-error` : ""}`}
+          />
+          <p id={`${uid}-change-reason-help`} className="text-xs text-muted-foreground">
+            {t("changeReasonHelp")}
+          </p>
+          <FieldError id={`${uid}-change-reason-error`} message={err("changeReason")} />
+        </div>
+      )}
 
       {/* Price */}
       {variant && (
@@ -824,6 +902,7 @@ export function PedidoForm({ data, pedido }: { data: PedidoFormData; pedido?: Pe
         instructions: l.instructions,
         unitPrice: price ?? Number.NaN,
         priceReason: keeps ? (l.snapshot!.priceReason ?? undefined) : l.priceReason,
+        changeReason: specsChanged(l) ? l.changeReason : undefined,
         cells: [
           ...Object.entries(l.qty)
             .filter(([, q]) => Number(q) > 0)
@@ -861,6 +940,26 @@ export function PedidoForm({ data, pedido }: { data: PedidoFormData; pedido?: Pe
     if (destination === "client" && !client) errs.clientId ??= t("clientRequired");
     if (destination === "client" && client && !client.phone?.trim() && !clientPhone.trim())
       errs.clientPhone = t("phoneRequired");
+    // Production limits on lines being edited (T119); the server checks them too.
+    lines.forEach((l, i) => {
+      if (l.kind !== "garment" || !l.id) return;
+      const limit = pedido?.limits[l.id];
+      if (!limit?.started) return;
+      if (specsChanged(l) && !l.changeReason.trim())
+        errs[`lines.${i}.changeReason`] ??= t("changeReasonRequired");
+      const typed = new Map<string, number>([
+        ...Object.entries(l.qty).map(([k, q]) => [k, Number(q) || 0] as const),
+        ...l.others.map((o) => [otherKey(o.label), Number(o.qty) || 0] as const),
+      ]);
+      for (const [key, { min }] of Object.entries(limit.cells)) {
+        if (min > 0 && (typed.get(key) ?? 0) < min) {
+          const label = key.startsWith("other:")
+            ? key.slice(6)
+            : (data.sizes.find((s) => s.id === key)?.label ?? "");
+          errs[`lines.${i}.cells`] ??= t("belowMinimum", { size: label, n: min });
+        }
+      }
+    });
     lines.forEach((l, i) => {
       if (l.kind !== "garment" || !l.variantId) return;
       const variant = data.variants.find((v) => v.id === l.variantId);
@@ -941,7 +1040,15 @@ export function PedidoForm({ data, pedido }: { data: PedidoFormData; pedido?: Pe
         showToast("error", res.error.message);
         return;
       }
-      showToast("success", pedido ? t("updated") : t("created"));
+      const credit = (res.data as { saldoAFavor?: number }).saldoAFavor ?? 0;
+      showToast(
+        "success",
+        !pedido
+          ? t("created")
+          : credit > 0
+            ? t("updatedWithCredit", { amount: formatMoney(credit) })
+            : t("updated"),
+      );
       notifyDataChanged("pedidos");
       window.location.assign(`/pedidos/${res.data.id}`);
     });
@@ -975,6 +1082,7 @@ export function PedidoForm({ data, pedido }: { data: PedidoFormData; pedido?: Pe
                 name="destination"
                 value={value}
                 checked={destination === value}
+                disabled={!!pedido?.started && destination !== value}
                 onChange={() => setDestination(value)}
                 className="sr-only"
               />
@@ -1013,6 +1121,7 @@ export function PedidoForm({ data, pedido }: { data: PedidoFormData; pedido?: Pe
               onRemove={() => setLines((prev) => prev.filter((l) => l.key !== line.key))}
               canRemove={garmentCount > 1}
               errors={errors}
+              limit={line.id ? pedido?.limits[line.id] : undefined}
             />
           ) : (
             <AdjustmentLine

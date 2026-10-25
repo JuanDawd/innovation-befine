@@ -1309,7 +1309,16 @@
       "save": "Guardar cambios",
       "clientRequired": "Elige o crea un cliente",
       "reasonRequired": "Escribe el motivo del cambio de precio.",
-      "priceAndReasonRequired": "Esta prenda no tiene precio de venta: escribe el precio y el motivo."
+      "priceAndReasonRequired": "Esta prenda no tiene precio de venta: escribe el precio y el motivo.",
+      "inProductionLocked": "Ya está en producción: no se puede cambiar la prenda.",
+      "minUnits": "mín. {n}",
+      "changeReason": "Motivo del cambio",
+      "changeReasonPlaceholder": "Ej. la clienta pidió otro color",
+      "changeReasonHelp": "Esta prenda ya está en producción: las confeccionistas asignadas verán el cambio.",
+      "changeReasonRequired": "Escribe el motivo del cambio.",
+      "belowMinimum": "La talla {size} no puede bajar de {n}: ya están asignadas, aprobadas o entregadas.",
+      "updatedWithCredit": "Pedido actualizado. Queda saldo a favor de {amount}.",
+      "startedBanner": "Este pedido ya está en producción. Puedes aumentar cantidades; para bajar, quitar tallas o cambiar especificaciones se aplican las reglas de producción."
     },
     "status": {
       "pending": "Pendiente",
@@ -1391,6 +1400,15 @@
       "deliveriesTitle": "Entregas",
       "noDeliveries": "Sin entregas todavía.",
       "deliveredUnits": "{count, plural, one {# unidad} other {# unidades}}"
+    },
+    "cancel": {
+      "button": "Cancelar pedido",
+      "title": "¿Cancelar el pedido {number}?",
+      "description": "Las unidades sin empezar se liberan y sus confeccionistas reciben un aviso. No se puede deshacer.",
+      "reason": "Motivo",
+      "acknowledge": "Este pedido tiene {amount} pagados. Confirmo que gestionaré la devolución.",
+      "confirm": "Cancelar pedido",
+      "done": "Pedido {number} cancelado"
     }
   }
 }

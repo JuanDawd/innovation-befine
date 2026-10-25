@@ -22,6 +22,7 @@ export default async function EditPedidoPage({ params }: { params: Promise<{ id:
     if (pedido.error.code === "UNAUTHORIZED" || pedido.error.code === "FORBIDDEN") redirect("/403");
     notFound();
   }
+  if (pedido.data.cancelled) redirect(`/pedidos/${id}`);
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 p-4 md:p-6 lg:p-8">
       <PageHeader
@@ -29,6 +30,11 @@ export default async function EditPedidoPage({ params }: { params: Promise<{ id:
         backHref={`/pedidos/${id}`}
         backLabel={t("common.back")}
       />
+      {pedido.data.started && (
+        <p className="rounded-lg border border-status-attention-foreground/30 bg-status-attention/40 p-3 text-sm">
+          {t("pedidos.form.startedBanner")}
+        </p>
+      )}
       <Suspense fallback={<PageSkeleton />}>
         <EditPedidoContent id={id} />
       </Suspense>

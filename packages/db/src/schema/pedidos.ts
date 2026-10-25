@@ -22,6 +22,7 @@ import {
   check,
   index,
   integer,
+  jsonb,
   pgEnum,
   pgTable,
   text,
@@ -98,6 +99,13 @@ export const pedidoLines = pgTable(
     priceReason: text("price_reason"),
     /** Adjustment lines: signed whole COP (negative = discount) */
     amount: bigint("amount", { mode: "number" }),
+    /**
+     * T119 — last spec change made while units were assigned: what changed
+     * and why, shown to the assigned clothiers as "Cambió: …".
+     * { summary: string; reason: string; by: string | null }
+     */
+    specChange: jsonb("spec_change"),
+    specChangedAt: timestamp("spec_changed_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },

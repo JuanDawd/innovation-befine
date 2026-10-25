@@ -42,6 +42,8 @@ export const pedidoGarmentLineSchema = z
       .min(0, "El precio no puede ser negativo")
       .max(100_000_000, "Precio demasiado alto"),
     priceReason: optionalText(300),
+    /** Why the specs changed on a line already in production (T119) */
+    changeReason: optionalText(300),
     cells: z.array(pedidoCellSchema).min(1, "Agrega al menos una talla").max(60),
   })
   .refine((l) => !(l.colorId && l.colorOther), {
@@ -117,6 +119,15 @@ export const pedidoClientSchema = z.object({
     .regex(/^[+\d][\d\s-]*$/, "Solo números, espacios, guiones o +"),
 });
 
+/** Cancel a pedido (spec §3.4.18) */
+export const cancelPedidoSchema = z.object({
+  version: z.number().int().min(1),
+  reason: z.string().trim().min(3, "Escribe el motivo de la cancelación").max(300),
+  /** Payments were recorded: the person confirms they will handle the refund */
+  acknowledgePayments: z.boolean().optional(),
+});
+
+export type CancelPedidoInput = z.infer<typeof cancelPedidoSchema>;
 export type PedidoCellInput = z.infer<typeof pedidoCellSchema>;
 export type PedidoGarmentLineInput = z.infer<typeof pedidoGarmentLineSchema>;
 export type PedidoAdjustmentLineInput = z.infer<typeof pedidoAdjustmentLineSchema>;

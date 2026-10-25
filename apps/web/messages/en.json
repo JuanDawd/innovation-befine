@@ -1277,7 +1277,16 @@
       "save": "Save changes",
       "clientRequired": "Choose or create a client",
       "reasonRequired": "Write the reason for the price change.",
-      "priceAndReasonRequired": "This garment has no selling price: enter the price and a reason."
+      "priceAndReasonRequired": "This garment has no selling price: enter the price and a reason.",
+      "inProductionLocked": "Already in production: the garment can't change.",
+      "minUnits": "min. {n}",
+      "changeReason": "Reason for the change",
+      "changeReasonPlaceholder": "e.g. the client asked for another colour",
+      "changeReasonHelp": "This garment is in production: the assigned clothiers will see the change.",
+      "changeReasonRequired": "Write the reason for the change.",
+      "belowMinimum": "Size {size} can't go below {n}: those units are assigned, approved or delivered.",
+      "updatedWithCredit": "Pedido updated. The client has {amount} in credit.",
+      "startedBanner": "This pedido is in production. You can raise quantities; lowering them, removing sizes or changing specs follows the production rules."
     },
     "status": {
       "pending": "Pending",
@@ -1359,6 +1368,15 @@
       "deliveriesTitle": "Deliveries",
       "noDeliveries": "No deliveries yet.",
       "deliveredUnits": "{count, plural, one {# unit} other {# units}}"
+    },
+    "cancel": {
+      "button": "Cancel pedido",
+      "title": "Cancel pedido {number}?",
+      "description": "Units nobody started are released and their clothiers are notified. This can't be undone.",
+      "reason": "Reason",
+      "acknowledge": "This pedido has {amount} paid. I confirm I will handle the refund.",
+      "confirm": "Cancel pedido",
+      "done": "Pedido {number} cancelled"
     }
   }
 }
