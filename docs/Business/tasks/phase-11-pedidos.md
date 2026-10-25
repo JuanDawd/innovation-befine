@@ -307,7 +307,7 @@ Clothier closing: today's assignments with "¿Cuántas terminaste hoy?" prefille
 ## T126 — Clothier payroll on approved units
 
 **Phase:** 11C — Production
-**Status:** in progress — code done, DB integration test and browser check pending (test database unreachable 2026-10-25)
+**Status:** done — DB integration tests and browser check passed on a Neon test branch (2026-10-25).
 **Dependencies:** T124, T125
 
 ### What to do
@@ -327,7 +327,7 @@ Replace `compute-clothier-earnings` with approved units × assignment rate (plus
 ## T127 — Pedido payments and the till
 
 **Phase:** 11D — Money and stock
-**Status:** in progress — code and unit tests done; DB integration test (payments.integration.test.ts) and browser check pending (test database unreachable 2026-10-25). Applying saldo a favor to another pedido is not built yet: refunds only.
+**Status:** done — DB integration tests and browser check passed on a Neon test branch (2026-10-25). Applying saldo a favor to another pedido is not built yet: refunds only.
 **Dependencies:** T113, T115
 
 ### What to do
@@ -345,7 +345,7 @@ Record payments (cash / card / transfer) on the pedido; attach to the open busin
 ## T128 — Stock ledger and Inventario
 
 **Phase:** 11D — Money and stock
-**Status:** in progress — code and unit tests done; DB integration test (inventario/**tests**/stock.integration.test.ts) and browser check pending (test database unreachable 2026-10-25). Nav link comes with T134.
+**Status:** done — DB integration tests and browser check passed on a Neon test branch (2026-10-25).
 **Dependencies:** T113, T124
 
 ### What to do
@@ -362,7 +362,7 @@ Approved units of inventory pedidos create `+` movements automatically. Inventar
 ## T129 — Vender prenda from stock
 
 **Phase:** 11D — Money and stock
-**Status:** in progress — code and unit tests done; DB integration test (cashier/**tests**/cloth-sales.integration.test.ts, incl. the last-unit race) and browser check pending (test database unreachable 2026-10-25).
+**Status:** done — DB integration tests and browser check passed on a Neon test branch (2026-10-25).
 **Dependencies:** T128, T127
 
 ### What to do
