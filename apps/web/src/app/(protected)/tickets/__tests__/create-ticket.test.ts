@@ -10,6 +10,8 @@ const state = vi.hoisted(() => ({
   failInsert: null as Error | null,
   /** A ticket with this key already exists (stored by an earlier/concurrent call) */
   existingTicket: false,
+  /** role / is_active of the employee the ticket is for */
+  target: ["stylist", true] as unknown[] | null,
   captureException: vi.fn(),
   loggerError: vi.fn(),
 }));
@@ -38,6 +40,8 @@ vi.mock("@/lib/db", () => {
     if (sql.includes('from "tickets"'))
       return { rows: state.existingTicket ? [ticketRow("existing-ticket")] : [] };
     if (sql.includes('from "employees" inner join "users"')) return { rows: [["Laura"]] };
+    if (sql.includes('"is_active" from "employees"'))
+      return { rows: state.target ? [state.target] : [] };
     return { rows: [[EMPLOYEE_ID]] };
   });
   // pg-proxy has no transactions; run the callback against the same instance.
@@ -80,6 +84,7 @@ describe("createTicket", () => {
     state.queries = [];
     state.failInsert = null;
     state.existingTicket = false;
+    state.target = ["stylist", true];
     state.captureException.mockClear();
     state.loggerError.mockClear();
   });
@@ -108,6 +113,18 @@ describe("createTicket", () => {
     const ticketInsert = state.queries.find((q) => q.startsWith('insert into "tickets"'))!;
     expect(ticketInsert).toMatch(/on conflict \("idempotency_key"\) do nothing/);
     expect(state.queries.some((q) => q.startsWith('insert into "ticket_items"'))).toBe(true);
+  });
+
+  it.each([
+    ["the secretary herself", ["secretary", true]],
+    ["a clothier", ["clothier", true]],
+    ["an inactive stylist", ["stylist", false]],
+    ["an unknown employee", null],
+  ])("rejects a ticket for %s without writing", async (_label, target) => {
+    state.target = target as unknown[] | null;
+    const res = await createTicket(input);
+    expect(!res.success && res.error.code).toBe("VALIDATION_ERROR");
+    expect(state.queries.some((q) => q.startsWith("insert"))).toBe(false);
   });
 
   it("returns the existing ticket on a replayed key without adding a second item", async () => {

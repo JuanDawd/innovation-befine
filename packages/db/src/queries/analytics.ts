@@ -23,6 +23,8 @@ import {
   businessDays,
   employeeAbsences,
   clothSales,
+  ticketPayments,
+  checkoutSessions,
 } from "../schema";
 
 /**
@@ -248,7 +250,7 @@ export async function earningsByEmployee(
     .innerJoin(users, eq(employees.userId, users.id))
     .where(
       and(
-        inArray(products.businessDayId, businessDayIds),
+        inArray(productPieces.approvedBusinessDayId, businessDayIds),
         eq(productPieces.status, "approved"),
         activeFilter,
       ),
@@ -362,6 +364,51 @@ export async function earningsByEmployee(
   }
 
   return Array.from(result.values()).sort((a, b) => b.totalEarnings - a.totalEarnings);
+}
+
+// ─── Money taken by payment method ──────────────────────────────────────────
+
+export type RevenueByMethod = {
+  cash: number;
+  card: number;
+  transfer: number;
+  /** Cloth sales recorded before the payment method was captured (H-50) */
+  unrecorded: number;
+};
+
+/**
+ * What came in through the till per method — checkout payments plus cloth
+ * sales — for the given business days. It is what the drawer, the card
+ * terminal and the bank should show, so the day can be reconciled.
+ */
+export async function revenueByMethod(
+  db: Database,
+  businessDayIds: string[],
+): Promise<RevenueByMethod> {
+  const result: RevenueByMethod = { cash: 0, card: 0, transfer: 0, unrecorded: 0 };
+  if (businessDayIds.length === 0) return result;
+
+  const [paymentRows, saleRows] = await Promise.all([
+    db
+      .select({
+        method: ticketPayments.method,
+        amount: sql<number>`COALESCE(SUM(${ticketPayments.amount}), 0)::bigint`,
+      })
+      .from(ticketPayments)
+      .innerJoin(checkoutSessions, eq(ticketPayments.checkoutSessionId, checkoutSessions.id))
+      .where(inArray(checkoutSessions.businessDayId, businessDayIds))
+      .groupBy(ticketPayments.method),
+    db
+      .select({ method: clothSales.paymentMethod, amount: clothSaleTotal })
+      .from(clothSales)
+      .where(inArray(clothSales.businessDayId, businessDayIds))
+      .groupBy(clothSales.paymentMethod),
+  ]);
+
+  for (const r of [...paymentRows, ...saleRows]) {
+    result[r.method ?? "unrecorded"] += Number(r.amount);
+  }
+  return result;
 }
 
 // ─── Daily revenue breakdown ──────────────────────────────────────────────────
@@ -588,27 +635,26 @@ export async function employeeDayBreakdown(
   if (emp.role === "clothier") {
     const rows = await db
       .select({
-        businessDayId: products.businessDayId,
+        businessDayId: productPieces.approvedBusinessDayId,
         openedAt: businessDays.openedAt,
         jobs: sql<number>`COALESCE(SUM(${productPieces.quantity}), 0)::int`,
         earnings: sql<number>`COALESCE(SUM(${clothPieceVariants.pieceRate} * ${productPieces.quantity}), 0)::bigint`,
       })
       .from(productPieces)
-      .innerJoin(products, eq(productPieces.productId, products.id))
       .innerJoin(clothPieceVariants, eq(productPieces.clothPieceVariantId, clothPieceVariants.id))
-      .innerJoin(businessDays, eq(products.businessDayId, businessDays.id))
+      .innerJoin(businessDays, eq(productPieces.approvedBusinessDayId, businessDays.id))
       .where(
         and(
           eq(productPieces.assignedToEmployeeId, employeeId),
-          inArray(products.businessDayId, businessDayIds),
+          inArray(productPieces.approvedBusinessDayId, businessDayIds),
           eq(productPieces.status, "approved"),
         ),
       )
-      .groupBy(products.businessDayId, businessDays.openedAt)
+      .groupBy(productPieces.approvedBusinessDayId, businessDays.openedAt)
       .orderBy(businessDays.openedAt);
 
     return rows.map((r) => ({
-      businessDayId: r.businessDayId,
+      businessDayId: r.businessDayId!, // filtered by approval day above
       date: toBogotaDate(new Date(r.openedAt)),
       jobs: Number(r.jobs),
       earnings: Number(r.earnings),

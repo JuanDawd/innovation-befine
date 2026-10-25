@@ -28,11 +28,11 @@ export default async function StylistHomePage() {
   const t = await getTranslations();
 
   return (
-    <div className="flex flex-col gap-6 p-4 md:p-6 lg:p-8">
+    <div className="flex flex-col gap-6 p-4 max-md:pb-24 md:p-6 lg:p-8">
       <PageHeader
         title={t("home.stylistTitle")}
         description={t("home.stylistSubtitle")}
-        actions={<LogServiceDialog isStylist redirectPath="/stylist" />}
+        actions={<LogServiceDialog isStylist redirectPath="/stylist" floatingOnMobile />}
       />
 
       <Suspense fallback={<MyEditRequestsSkeleton />}>

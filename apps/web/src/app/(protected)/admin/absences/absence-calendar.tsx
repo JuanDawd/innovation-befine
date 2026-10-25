@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { ChevronLeftIcon, ChevronRightIcon, Loader2Icon, PlusIcon, Trash2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import { logAbsence, deleteAbsence, type AbsenceRow, type EmployeeOption } from "./actions";
 import { NativeSelect } from "@/components/ui/native-select";
 
@@ -17,7 +18,7 @@ type Props = {
 };
 
 const ABSENCE_COLORS = {
-  vacation: "bg-status-progress text-status-progress-foreground",
+  vacation: "bg-status-success text-status-success-foreground",
   approved_absence: "bg-status-attention text-status-attention-foreground",
   missed: "bg-status-negative text-status-negative-foreground",
 } as const;
@@ -88,17 +89,44 @@ export function AbsenceCalendar({ year, month, absences, employees }: Props) {
     });
   }
 
-  function handleDelete(absenceId: string) {
+  /** Delete in one tap, take it back from the toast (re-logs the same absence). */
+  function handleDelete(absence: AbsenceRow) {
     setError(null);
     startTransition(async () => {
-      const res = await deleteAbsence({ absenceId });
+      const res = await deleteAbsence({ absenceId: absence.id });
       if (!res.success) {
         setError(res.error.message);
         return;
       }
       router.refresh();
+      toast.success(t("deleted", { name: absence.employeeName }), {
+        duration: 6000,
+        action: {
+          label: t("undo"),
+          onClick: () =>
+            startTransition(async () => {
+              const again = await logAbsence({
+                employeeId: absence.employeeId,
+                type: absence.type,
+                date: absence.date,
+                note: absence.note ?? null,
+              });
+              if (!again.success) toast.error(again.error.message);
+              router.refresh();
+            }),
+        },
+      });
     });
   }
+
+  const todayStr = new Date().toLocaleDateString("en-CA", { timeZone: "America/Bogota" });
+  const longDate = (dateStr: string) =>
+    new Date(`${dateStr}T12:00:00Z`).toLocaleDateString(locale, {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      timeZone: "UTC",
+    });
 
   const monthName = capitalizeFirst(
     new Date(year, month - 1, 1).toLocaleDateString("es-CO", {
@@ -117,6 +145,7 @@ export function AbsenceCalendar({ year, month, absences, employees }: Props) {
           onClick={prevMonth}
           disabled={isPending}
           aria-label={t("prevMonth")}
+          className="max-md:min-w-11"
         >
           <ChevronLeftIcon className="size-4" aria-hidden="true" />
         </Button>
@@ -127,6 +156,7 @@ export function AbsenceCalendar({ year, month, absences, employees }: Props) {
           onClick={nextMonth}
           disabled={isPending}
           aria-label={t("nextMonth")}
+          className="max-md:min-w-11"
         >
           <ChevronRightIcon className="size-4" aria-hidden="true" />
         </Button>
@@ -150,39 +180,64 @@ export function AbsenceCalendar({ year, month, absences, employees }: Props) {
             const dateStr = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
             const dayAbsences = absenceMap.get(dateStr) ?? [];
             const isSelected = selectedDate === dateStr;
+            const isToday = dateStr === todayStr;
+            // A cell holds its own add button and the absence chips — no
+            // buttons nested inside a button.
             return (
-              <button
+              <div
                 key={dateStr}
-                type="button"
-                className={`min-h-[80px] p-1 w-full text-left hover:bg-muted/20 transition-colors ${isSelected ? "ring-2 ring-inset ring-primary" : ""}`}
-                onClick={() => setSelectedDate(isSelected ? null : dateStr)}
-                aria-pressed={isSelected}
-                aria-label={t("logAbsenceFor", { date: dateStr })}
+                className={`group/day min-h-[80px] p-1 ${isSelected ? "ring-2 ring-inset ring-primary" : ""}`}
               >
-                <span className="text-xs font-medium text-muted-foreground">{day}</span>
-                <div className="mt-0.5 space-y-0.5">
+                <div className="flex items-center justify-between">
+                  <span
+                    className={
+                      isToday
+                        ? "rounded-full bg-primary px-1.5 text-xs font-semibold text-primary-foreground"
+                        : "text-xs font-medium text-muted-foreground"
+                    }
+                  >
+                    {day}
+                  </span>
+                  <button
+                    type="button"
+                    className="inline-flex size-6 items-center justify-center rounded text-muted-foreground opacity-0 transition-opacity group-hover/day:opacity-100 hover:bg-muted hover:text-foreground focus-visible:opacity-100 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none aria-pressed:opacity-100"
+                    onClick={() => setSelectedDate(isSelected ? null : dateStr)}
+                    aria-pressed={isSelected}
+                    aria-label={t("logAbsenceFor", { date: longDate(dateStr) })}
+                  >
+                    <PlusIcon className="size-3.5" aria-hidden="true" />
+                  </button>
+                </div>
+                <ul className="mt-0.5 space-y-0.5">
                   {dayAbsences.map((a) => (
-                    <div
+                    <li
                       key={a.id}
-                      className={`text-xs rounded px-1 py-0.5 flex items-center justify-between gap-1 ${ABSENCE_COLORS[a.type]}`}
+                      className={`flex items-center justify-between gap-1 rounded px-1 py-0.5 text-xs ${ABSENCE_COLORS[a.type]}`}
+                      title={`${a.employeeName} — ${t(`type_${a.type}` as Parameters<typeof t>[0])}`}
                     >
-                      <span className="truncate max-w-[80px]">{a.employeeName.split(" ")[0]}</span>
+                      <span className="truncate">
+                        {a.employeeName.split(" ")[0]}
+                        <span className="sr-only">
+                          {" "}
+                          — {t(`type_${a.type}` as Parameters<typeof t>[0])}
+                        </span>
+                      </span>
                       <button
                         type="button"
-                        className="opacity-50 hover:opacity-100 shrink-0"
-                        aria-label={t("deleteAbsence")}
+                        className="inline-flex size-6 shrink-0 items-center justify-center rounded opacity-70 hover:opacity-100 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+                        aria-label={t("deleteAbsenceOf", {
+                          name: a.employeeName,
+                          date: longDate(dateStr),
+                        })}
                         disabled={isPending}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete(a.id);
-                        }}
+                        onClick={() => handleDelete(a)}
                       >
-                        <Trash2Icon className="size-3" />
+                        <Trash2Icon className="size-3" aria-hidden="true" />
                       </button>
-                    </div>
+                    </li>
                   ))}
-                </div>
-              </button>
+                </ul>
+              </div>
             );
           })}
         </div>
@@ -212,12 +267,16 @@ export function AbsenceCalendar({ year, month, absences, employees }: Props) {
                     {a.employeeName} — {t(`type_${a.type}` as Parameters<typeof t>[0])}
                   </span>
                   <button
-                    aria-label={t("deleteAbsence")}
+                    type="button"
+                    aria-label={t("deleteAbsenceOf", {
+                      name: a.employeeName,
+                      date: longDate(date),
+                    })}
                     disabled={isPending}
-                    onClick={() => handleDelete(a.id)}
-                    className="opacity-60 hover:opacity-100 ml-2"
+                    onClick={() => handleDelete(a)}
+                    className="ml-2 inline-flex size-11 shrink-0 items-center justify-center rounded opacity-70 hover:opacity-100"
                   >
-                    <Trash2Icon className="size-3.5" />
+                    <Trash2Icon className="size-4" aria-hidden="true" />
                   </button>
                 </div>
               ))}

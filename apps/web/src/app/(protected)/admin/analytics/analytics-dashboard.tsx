@@ -29,7 +29,7 @@ import {
   type EmployeeDrillDownResult,
 } from "./actions";
 import type { EarningsByEmployee } from "@befine/db";
-import { formatCount, formatMoney } from "@/i18n";
+import { formatCount, formatDate, formatMoney } from "@/i18n";
 import { PageHeader } from "@/components/page-header";
 import { oneOf, useSearchParamState } from "@/hooks/use-search-param-state";
 
@@ -41,10 +41,6 @@ const chartSlot = (height: number) =>
   function ChartSlot() {
     return <div className="animate-pulse rounded-md bg-muted/40" style={{ height }} />;
   };
-const ComparisonChart = dynamic(() => import("./analytics-charts").then((m) => m.ComparisonChart), {
-  ssr: false,
-  loading: chartSlot(200),
-});
 const EarningsSparkline = dynamic(
   () => import("./analytics-charts").then((m) => m.EarningsSparkline),
   { ssr: false, loading: chartSlot(80) },
@@ -163,7 +159,7 @@ function EmployeeRow({
             }}
             aria-expanded={open}
             aria-label={t("toggleDrillDown", { name: emp.employeeName })}
-            className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+            className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none max-md:size-11"
           >
             {open ? (
               <ChevronUpIcon className="size-4" aria-hidden="true" />
@@ -182,15 +178,17 @@ function EmployeeRow({
               </div>
             ) : drillDown && drillDown.days.length > 0 ? (
               <div className="space-y-2 pt-2">
-                <EarningsSparkline data={sparkData} />
+                {sparkData.length >= 3 && <EarningsSparkline data={sparkData} />}
                 <table className="w-full text-xs">
                   <tbody>
                     {drillDown.days.map((d) => (
                       <tr key={d.businessDayId} className="border-t">
-                        <td className="py-0.5 text-muted-foreground">{d.date}</td>
+                        <td className="py-0.5 text-muted-foreground">
+                          {formatDate(`${d.date}T12:00:00Z`, "es", "EEE dd/MM")}
+                        </td>
                         <td className="py-0.5 text-right font-mono">{formatMoney(d.earnings)}</td>
                         <td className="py-0.5 text-right text-muted-foreground">
-                          {d.jobs} trabajos
+                          {t("jobsCount", { count: d.jobs })}
                         </td>
                       </tr>
                     ))}
@@ -242,8 +240,6 @@ function EmployeeTable({
     }
   }
 
-  const maxEarnings = Math.max(...rows.map((r) => r.totalEarnings), 1);
-
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
@@ -259,7 +255,7 @@ function EmployeeTable({
         </label>
       </div>
 
-      <div className="rounded-xl border overflow-hidden">
+      <div className="overflow-x-auto rounded-xl border">
         <table className="w-full text-sm">
           <thead className="bg-muted/50 text-xs">
             <tr>
@@ -301,27 +297,6 @@ function EmployeeTable({
             )}
           </tbody>
         </table>
-
-        {sorted.length > 0 && (
-          <div className="px-3 py-2 border-t bg-muted/10 space-y-1">
-            {sorted.map((emp) => (
-              <div key={emp.employeeId} className="flex items-center gap-2 text-xs">
-                <span className="w-28 truncate text-muted-foreground">
-                  {emp.employeeName.split(" ")[0]}
-                </span>
-                <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
-                  <div
-                    className="h-full bg-primary rounded-full transition-[width]"
-                    style={{ width: `${(emp.totalEarnings / maxEarnings) * 100}%` }}
-                  />
-                </div>
-                <span className="font-mono text-muted-foreground w-24 text-right">
-                  {formatMoney(emp.totalEarnings)}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
     </div>
   );
@@ -352,7 +327,7 @@ function SortHeader({
       <button
         type="button"
         onClick={onSort}
-        className="inline-flex items-center gap-1 rounded-sm hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+        className="inline-flex items-center gap-1 rounded-sm hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none max-md:min-h-11"
       >
         {label}
         <span aria-hidden="true" className="w-3 text-muted-foreground">
@@ -528,6 +503,31 @@ export function AnalyticsDashboard({ initialData }: { initialData: AnalyticsSumm
             />
           </div>
 
+          {/* What the drawer, the card terminal and the bank should show */}
+          <section aria-labelledby="by-method" className="rounded-xl border p-4 space-y-3">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <h2 id="by-method" className="text-sm font-semibold">
+                {t("byMethodTitle")}
+              </h2>
+              <p className="text-xs text-muted-foreground">{t("byMethodHint")}</p>
+            </div>
+            <dl className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              {(["cash", "card", "transfer"] as const).map((m) => (
+                <div key={m} className="flex items-baseline justify-between gap-3 sm:block">
+                  <dt className="text-xs text-muted-foreground">{t(`method_${m}`)}</dt>
+                  <dd className="font-mono text-lg tabular-nums">
+                    {formatMoney(data.byMethod[m])}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+            {data.byMethod.unrecorded > 0 && (
+              <p className="text-xs text-muted-foreground">
+                {t("byMethodUnrecorded", { amount: formatMoney(data.byMethod.unrecorded) })}
+              </p>
+            )}
+          </section>
+
           {/* Revenue breakdown */}
           {(data.current.serviceRevenue > 0 || data.current.productSalesRevenue > 0) && (
             <div className="grid grid-cols-2 gap-3 print:grid-cols-2">
@@ -548,7 +548,7 @@ export function AnalyticsDashboard({ initialData }: { initialData: AnalyticsSumm
 
           {/* Earnings breakdown */}
           {data.current.earnings > 0 && (
-            <div className="grid grid-cols-3 gap-3 print:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 print:grid-cols-3">
               <MetricCard
                 label={t("earningsService")}
                 value={data.current.earningsBySource.service}
@@ -566,17 +566,6 @@ export function AnalyticsDashboard({ initialData }: { initialData: AnalyticsSumm
                 value={data.current.earningsBySource.workedDay}
                 priorValue={data.prior.earningsBySource.workedDay}
                 mono
-              />
-            </div>
-          )}
-
-          {period !== "day" && (
-            <div className="rounded-xl border p-4 space-y-2">
-              <h2 className="text-sm font-semibold">{t("comparisonChart")}</h2>
-              <ComparisonChart
-                current={data.current}
-                prior={data.prior}
-                labels={{ revenue: t("revenue"), jobs: t("jobs"), earnings: t("earnings") }}
               />
             </div>
           )}

@@ -293,6 +293,7 @@ async function run() {
             completedAt: closedAt,
             approvedAt: closedAt,
             approvedBy: adminEmp.id,
+            approvedBusinessDayId: day.id,
           });
         }
       }

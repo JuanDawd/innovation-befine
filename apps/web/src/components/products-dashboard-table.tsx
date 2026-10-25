@@ -4,14 +4,9 @@ import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import {
-  type LucideIcon,
-  ChevronRightIcon,
-  Loader2Icon,
-  PackageIcon,
-  ClockIcon,
-} from "lucide-react";
+import { type LucideIcon, ChevronRightIcon, PackageIcon, ClockIcon } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Skeleton } from "@/components/ui/loading-skeleton";
 import { ProductStatusBadge, type ProductStatusKey } from "@/components/ui/product-status-badge";
 import { ProductProgressBar } from "@/components/ui/product-progress-bar";
 import type { ProductDashboardRow } from "@befine/db";
@@ -53,16 +48,21 @@ function DashboardSection({
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
               <tr>
-                <th className="px-3 py-2.5 text-left font-medium">{t("colStatus")}</th>
+                <th className="px-3 py-2.5 text-left font-medium">{t("colProduct")}</th>
+                <th className="px-3 py-2.5 text-left font-medium hidden sm:table-cell">
+                  {t("colStatus")}
+                </th>
                 <th className="px-3 py-2.5 text-left font-medium hidden sm:table-cell">
                   {t("colAssigned")}
                 </th>
-                <th className="px-3 py-2.5 text-right font-medium">{t("colQuantity")}</th>
+                <th className="px-3 py-2.5 text-right font-medium hidden sm:table-cell">
+                  {t("colQuantity")}
+                </th>
                 <th className="px-3 py-2.5 text-left font-medium hidden md:table-cell">
                   {t("colLargeOrder")}
                 </th>
                 <th className="px-3 py-2.5 text-left font-medium">{t("colProgress")}</th>
-                <th className="w-10 px-2 py-2.5">
+                <th className="hidden w-10 px-2 py-2.5 sm:table-cell">
                   <span className="sr-only">{t("colDetail")}</span>
                 </th>
               </tr>
@@ -70,6 +70,15 @@ function DashboardSection({
             <tbody className="divide-y divide-border">
               {rows.map((row) => {
                 const statusKey = deriveProductStatus(row);
+                const summary = row.pieces
+                  .slice(0, 3)
+                  .map((p) => `${p.name} ×${p.quantity}`)
+                  .join(", ")
+                  .concat(
+                    row.pieces.length > 3
+                      ? ` ${t("morePieces", { count: row.pieces.length - 3 })}`
+                      : "",
+                  );
                 const assigned =
                   row.assignedEmployeeNames.length > 0
                     ? row.assignedEmployeeNames.join(", ")
@@ -77,22 +86,30 @@ function DashboardSection({
 
                 return (
                   <tr key={row.id} className="group relative hover:bg-muted/40">
-                    <td className="px-3 py-2.5">
+                    <td className="max-w-[11rem] px-3 py-2.5 sm:max-w-[260px]">
                       {/* Stretched link: the whole row opens the product */}
                       <Link
                         href={`${detailBase}/${row.id}`}
-                        aria-label={t("openDetailLabel", {
-                          order: row.largeOrderClientName ?? "none",
-                        })}
-                        className="after:absolute after:inset-0 focus-visible:outline-none focus-visible:after:rounded-sm focus-visible:after:ring-3 focus-visible:after:ring-ring/50"
+                        className="block truncate font-medium after:absolute after:inset-0 focus-visible:outline-none focus-visible:after:rounded-sm focus-visible:after:ring-3 focus-visible:after:ring-ring/50"
                       >
-                        <ProductStatusBadge status={statusKey} />
+                        {row.notes || summary || t("untitledProduct")}
                       </Link>
+                      {row.notes && summary && (
+                        <span className="block truncate text-xs text-muted-foreground">
+                          {summary}
+                        </span>
+                      )}
+                      <span className="mt-1 block sm:hidden">
+                        <ProductStatusBadge status={statusKey} />
+                      </span>
+                    </td>
+                    <td className="px-3 py-2.5 hidden sm:table-cell">
+                      <ProductStatusBadge status={statusKey} />
                     </td>
                     <td className="px-3 py-2.5 text-muted-foreground hidden sm:table-cell max-w-[160px] truncate">
                       {assigned}
                     </td>
-                    <td className="px-3 py-2.5 text-right font-mono tabular-nums">
+                    <td className="px-3 py-2.5 text-right font-mono tabular-nums hidden sm:table-cell">
                       {row.totalPieces}
                     </td>
                     <td className="px-3 py-2.5 hidden md:table-cell max-w-[180px]">
@@ -127,7 +144,10 @@ function DashboardSection({
                         />
                       </div>
                     </td>
-                    <td className="px-2 py-2.5 text-muted-foreground" aria-hidden="true">
+                    <td
+                      className="hidden px-2 py-2.5 text-muted-foreground sm:table-cell"
+                      aria-hidden="true"
+                    >
                       <ChevronRightIcon className="size-4 transition-transform group-hover:translate-x-0.5 group-hover:text-foreground" />
                     </td>
                   </tr>
@@ -150,12 +170,7 @@ export function ProductsDashboardTable({ isAdmin }: { isAdmin: boolean }) {
   });
 
   if (isLoading && rows.length === 0) {
-    return (
-      <div className="flex items-center gap-2 py-8 text-sm text-muted-foreground">
-        <Loader2Icon className="size-4 animate-spin" />
-        {t("pageTitle")}
-      </div>
-    );
+    return <Skeleton className="h-40 w-full rounded-xl" />;
   }
 
   const todayRows = rows.filter((r) => r.section === "today");

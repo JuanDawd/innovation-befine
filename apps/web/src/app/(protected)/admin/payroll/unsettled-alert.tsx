@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { AlertTriangleIcon, CheckCircle2Icon } from "lucide-react";
 import type { UnsettledEmployee } from "./actions";
+import { formatDate } from "@/i18n";
 
 type Props = { unsettled: UnsettledEmployee[] };
 
@@ -36,12 +37,12 @@ export function UnsettledAlert({ unsettled }: Props) {
               {" — "}
               {t("unsettledDays", { count: e.unsettledDayCount })}
               {" ("}
-              {t("since")} {e.oldestUnsettledDate}
+              {t("since")} {formatDate(`${e.oldestUnsettledDate}T12:00:00Z`, "es", "EEE dd/MM")}
               {")"}
             </span>
             <Link
               href={`/admin/payroll?employeeId=${e.employeeId}`}
-              className="text-xs underline whitespace-nowrap"
+              className="-my-2 inline-flex min-h-11 min-w-11 items-center justify-end whitespace-nowrap text-xs underline md:min-h-0"
             >
               {t("liquidate")}
             </Link>

@@ -43,6 +43,8 @@ export type ProductDashboardRow = {
   assignedEmployeeNames: string[];
   section: "today" | "wip";
   unassignedQuantity: number;
+  /** What the product is made of, largest first — "Toalla bordada ×12" — so rows are recognisable */
+  pieces: { name: string; quantity: number }[];
 };
 
 // ─── Query ────────────────────────────────────────────────────────────────────
@@ -102,6 +104,26 @@ export async function getProductsDashboard(db: Database): Promise<ProductDashboa
   const countMap = new Map(
     pieceCounts.map((r) => [r.productId, { total: r.total, approved: r.approved }]),
   );
+
+  // 3b. Piece names per product, so a row says what it is
+  const pieceNameRows = await db
+    .select({
+      productId: productPieces.productId,
+      name: clothPieces.name,
+      quantity: sql<number>`sum(${productPieces.quantity})::int`,
+    })
+    .from(productPieces)
+    .innerJoin(clothPieces, eq(productPieces.clothPieceId, clothPieces.id))
+    .where(inArray(productPieces.productId, productIds))
+    .groupBy(productPieces.productId, clothPieces.name);
+
+  const piecesMap = new Map<string, { name: string; quantity: number }[]>();
+  for (const r of pieceNameRows) {
+    const list = piecesMap.get(r.productId) ?? [];
+    list.push({ name: r.name, quantity: Number(r.quantity) });
+    piecesMap.set(r.productId, list);
+  }
+  for (const list of piecesMap.values()) list.sort((a, b) => b.quantity - a.quantity);
 
   // 4. Distinct assigned employee names per product
   const assigneeRows = await db
@@ -207,6 +229,7 @@ export async function getProductsDashboard(db: Database): Promise<ProductDashboa
       assignedEmployeeNames: [...(assigneeMap.get(c.id) ?? [])],
       section: isToday ? "today" : "wip",
       unassignedQuantity,
+      pieces: piecesMap.get(c.id) ?? [],
     });
   }
 

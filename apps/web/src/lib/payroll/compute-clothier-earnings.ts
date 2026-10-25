@@ -12,6 +12,7 @@ import { productPieces, products, clothPieces, clothPieceVariants } from "@befin
 
 export type ClothierEarningsLine = {
   productId: string;
+  businessDayId: string;
   productPieceId: string;
   pieceName: string;
   variantName: string;
@@ -45,6 +46,7 @@ export async function computeClothierEarnings(
   const rows = await db
     .select({
       productId: products.id,
+      businessDayId: productPieces.approvedBusinessDayId,
       productPieceId: productPieces.id,
       pieceName: clothPieces.name,
       variantName: clothPieceVariants.name,
@@ -59,11 +61,13 @@ export async function computeClothierEarnings(
       and(
         eq(productPieces.assignedToEmployeeId, employeeId),
         eq(productPieces.status, "approved"),
-        inArray(products.businessDayId, businessDayIds),
+        // H-57: pay belongs to the day the piece was approved
+        inArray(productPieces.approvedBusinessDayId, businessDayIds),
       ),
     );
 
-  const lines = rows.map(clothierEarningsLine);
+  // Filtered by approval day above, so it is always set
+  const lines = rows.map((r) => clothierEarningsLine({ ...r, businessDayId: r.businessDayId! }));
   const totalEarnings = lines.reduce((sum, l) => sum + l.earnings, 0);
 
   return { employeeId, businessDayIds, totalEarnings, lines };

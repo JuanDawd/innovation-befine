@@ -526,6 +526,46 @@
 - **Description:** Found from a duplicate "2026-10-11" row in the payroll status grid (demo data: day closed 14:53, new day opened 15:48 the same date). (1) Secretary pay counted business-day rows, so a closed-and-reopened date paid two daily rates (within the weekly cap); paying the two sibling days in separate payouts would also pay the date twice. Analytics had the same overcount. (2) Every payroll date was `toISOString().slice(0, 10)` — the UTC date — so a day opened after 19:00 Bogota would be filed under the next date (wrong absence match, wrong ISO week). (3) The grid/range picker showed two identical date labels.
 - **Fix:** `businessDateOf()` (Bogota) replaces UTC slicing; `countSecretaryDays()` counts distinct dates and is now what the tests exercise (they previously tested a copy); dates already paid via a sibling business day are excluded; analytics dedupes by date; same-date rows show the opening time ("2026-10-11 · 15:48").
 
+### H-55 — Staff could log a ticket for a non-stylist; secretary saw commission rates
+
+- **Severity:** High
+- **Status:** Resolved (2026-10-24)
+- **Affected:** T035 `createTicket`, `log-service-form.tsx`, `listActiveServices`
+- **Description:** Found in the secretary design critique. (1) `createTicket` checked the target employee only when a stylist logged her own ticket; staff could create a ticket for any employee id — the secretary, a clothier, an inactive stylist — and its revenue and commission would be attributed to them. (2) The register-service form started `employeeId` as the logged-in staff member's own id while the select only lists stylists, so the placeholder showed but the form was submittable and booked the ticket to the secretary. (3) The form showed "Comisión: 40%" and `listActiveServices` returned every variant's `commissionPct` to the secretary, who must not see payroll data.
+- **Fix:** `createTicket` rejects (VALIDATION_ERROR, nothing written) unless the target is an active stylist; staff start with no employee selected; commission is shown only to the stylist and stripped from `listActiveServices` for roles other than admin, cashier and stylist.
+
+### H-56 — Finished pieces from earlier days never reached approval
+
+- **Severity:** High
+- **Status:** Resolved (2026-10-24)
+- **Affected:** T047 `listPendingProductPieceApprovals`, product approval board; H-52 carried-over work, multi-day large orders
+- **Description:** Found in the secretary design critique. The approval board listed only `done_pending_approval` pieces whose product belonged to the open business day. Since H-52 clothiers see and finish pieces from earlier days, but those pieces never showed up to approve — and an unapproved piece is never paid. The board is the only approval path.
+- **Fix:** the list returns every finished piece regardless of its product's day, with quantity, product notes and large-order client so the approver knows what she is approving. Follow-up H-57 (Vikunja): a piece approved after its product's day was already paid is still not picked up by payroll.
+
+### H-58 — Large-order prices prefilled with the clothier's piece rate
+
+- **Severity:** High
+- **Status:** Resolved (2026-10-24)
+- **Affected:** T080 large-order create form, large-order detail line editing
+- **Description:** Found in the back-office design critique (verified live: "Bata de spa" priced $8.000 — its piece rate — instead of its $35.000 selling price). Picking a piece set the line's unit price from `pieceRate`, and the order total is computed from the lines, so totals, deposits and balances came out at the clothier's pay instead of the client's price.
+- **Fix:** lines prefill from the variant's `sellingPrice` via `orderUnitPrice()` (tested); pieces without a selling price start at 0 so the price is typed in. Phase 11 (Pedidos, `docs/pedidos-spec` branch) replaces this flow and keeps the selling-price snapshot.
+
+### H-59 — Payouts recorded the client's computed amount without recomputing
+
+- **Severity:** High
+- **Status:** Resolved (2026-10-24)
+- **Affected:** T067 `recordPayout`, payroll screen
+- **Description:** Found in the back-office design critique. `recordPayout` compared the paid amount with the `originalComputedAmount` sent by the browser and stored it as the audit figure — it never recomputed. A ticket reopened or a piece approved between preview and confirm was paid at the stale amount with no reason required, against the CLAUDE.md rule "settlement amounts must be recomputed server-side". A $0 payout was also accepted, marking days settled with nothing paid (compounds H-57).
+- **Fix:** `recordPayout` recomputes earnings for the employee and days; `checkPayout()` (tested) returns STALE_DATA with the new figure when it differs from the preview, refuses $0, and requires a reason against the server figure; the server figure is what's stored as `original_computed_amount`.
+
+### H-57 — A piece approved after its product's day was paid was never paid
+
+- **Severity:** High
+- **Status:** Resolved (2026-10-24)
+- **Affected:** T064 `compute-clothier-earnings`, T066/T067 payroll (unsettled detection, payout piece links), T074 analytics, employee termination, approval board / clothier auto-approve
+- **Description:** Clothier pay was attributed to the business day the _product_ was created on, and payouts settle whole days. Since H-52 clothiers finish pieces from earlier days and since H-56 those pieces reach approval — if the product's day was already settled, the newly approved piece was excluded from unsettled detection and from every later payout.
+- **Fix:** migration 0037 adds `craftable_pieces.approved_business_day_id` (backfilled with the product's day for pieces already approved, so existing payouts are unchanged) and a CHECK that approved pieces carry it. Approving (board, admin direct approve, clothier auto-approve) stamps the open business day; with no day open the board refuses and auto-approve leaves the piece for the board. Clothier earnings, unsettled detection, payout piece links, termination and analytics all read the approval day. Integration test: Monday's product, piece approved Wednesday → paid on Wednesday.
+
 ---
 
 ## Medium-priority issues
@@ -2117,3 +2157,8 @@
 | M-78     | 2026-10-23    | Clothier pay and analytics use piece_rate × quantity (per garment); no past payout underpaid                    | fix/m78-piece-rate-quantity    |
 | L-20     | 2026-10-23    | Process note acknowledged; one commit per issue going forward                                                   | fix/backlog-batch-2            |
 | M-60     | 2026-10-23    | Realtime across instances via Postgres LISTEN/NOTIFY; streams 280 s + heartbeat                                 | fix/m60-realtime-listen-notify |
+| H-55     | 2026-10-24    | createTicket requires an active stylist; staff pick one explicitly; commission hidden from the secretary        | feat/redesign                  |
+| H-56     | 2026-10-24    | Approval board lists finished pieces from every day, with quantity and order context                            | feat/redesign                  |
+| H-58     | 2026-10-24    | Large-order lines priced from the variant's selling price, never the piece rate                                 | feat/redesign                  |
+| H-59     | 2026-10-24    | recordPayout recomputes server-side; stale preview → STALE_DATA; $0 payouts refused                             | feat/redesign                  |
+| H-57     | 2026-10-24    | Piece pay belongs to the day it's approved (approved_business_day_id, migration 0037)                           | feat/redesign                  |

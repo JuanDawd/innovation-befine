@@ -14,6 +14,7 @@ import { auth } from "@/lib/auth";
 import { getDb, getTxDb } from "@/lib/db";
 import { appointments, employees, users, clients, tickets } from "@befine/db/schema";
 import { createAppointmentSchema, transitionAppointmentSchema } from "@befine/types";
+import { allowedNow } from "@/lib/appointment-timing";
 import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
 import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
@@ -371,12 +372,19 @@ export async function transitionAppointment(
       clientId: appointments.clientId,
       stylistEmployeeId: appointments.stylistEmployeeId,
       durationMinutes: appointments.durationMinutes,
+      scheduledAt: appointments.scheduledAt,
     })
     .from(appointments)
     .where(eq(appointments.id, appointmentId))
     .limit(1);
 
   if (!appt) return { success: false, error: { code: "NOT_FOUND", message: "Cita no encontrada" } };
+
+  if (!allowedNow(action, appt.scheduledAt))
+    return {
+      success: false,
+      error: { code: "CONFLICT", message: "Aún no es la hora de la cita" },
+    };
 
   const transitions = ALLOWED_TRANSITIONS[appt.status];
   if (!transitions)

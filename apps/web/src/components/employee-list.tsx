@@ -39,8 +39,8 @@ import {
   setShowEarnings,
   deactivateEmployee,
   terminateEmployee,
+  previewTermination,
 } from "@/app/(protected)/admin/employees/actions/update-employee";
-import { previewEarnings } from "@/app/(protected)/admin/payroll/actions";
 import { NativeSelect } from "@/components/ui/native-select";
 import { formatMoney } from "@/i18n";
 
@@ -147,9 +147,13 @@ export function EmployeeList({ initialEmployees }: EmployeeListProps) {
     startTransition(async () => {
       const result = await setShowEarnings(emp.id, !emp.showEarnings);
       if (result.success) {
-        setEmployees((prev) =>
-          prev.map((e) => (e.id === emp.id ? { ...e, showEarnings: result.data.showEarnings } : e)),
-        );
+        const showEarnings = result.data.showEarnings;
+        setEmployees((prev) => prev.map((e) => (e.id === emp.id ? { ...e, showEarnings } : e)));
+        // The open dialog reads editTarget — keep it in step with the saved value
+        setEditTarget((prev) => (prev && prev.id === emp.id ? { ...prev, showEarnings } : prev));
+        toast.success(showEarnings ? t("earningsShown") : t("earningsHidden"));
+      } else {
+        toast.error(result.error.message);
       }
     });
   }
@@ -177,10 +181,9 @@ export function EmployeeList({ initialEmployees }: EmployeeListProps) {
         setTerminateAmount("");
         setTerminateReason("");
         setTerminateOpen(true);
-        // Pre-fill with computed amount
-        const preview = await previewEarnings(emp.id, []);
+        // Pre-fill with what is owed over every unsettled day (server-computed)
+        const preview = await previewTermination(emp.id);
         if (preview.success) {
-          // We pass empty array — just surface 0 for now; admin fills in
           setComputedTermination(preview.data.computedAmount);
           setTerminateAmount(String(preview.data.computedAmount));
         }

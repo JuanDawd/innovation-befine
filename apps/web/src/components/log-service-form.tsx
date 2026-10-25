@@ -29,7 +29,7 @@ type ServiceVariant = {
   id: string;
   name: string;
   customerPrice: number;
-  commissionPct: string;
+  commissionPct?: string;
 };
 type Service = { id: string; name: string; variants: ServiceVariant[] };
 
@@ -66,7 +66,8 @@ export function LogServiceForm({
   const loadError = (servicesQuery.error ?? stylistsQuery.error)?.message ?? null;
   const { showToast } = useToast();
 
-  const [employeeId, setEmployeeId] = useState(currentEmployeeId);
+  // Stylists log their own work; staff must pick the stylist explicitly.
+  const [employeeId, setEmployeeId] = useState(isStylist ? currentEmployeeId : "");
   const [serviceId, setServiceId] = useState("");
   const [variantId, setVariantId] = useState("");
   const [quantity, setQuantity] = useState(1);
@@ -220,8 +221,9 @@ export function LogServiceForm({
           </NativeSelect>
           {selectedVariant && (
             <p className="text-xs text-muted-foreground">
-              {t("price")}: {formatMoney(selectedVariant.customerPrice)} · {t("commission")}:{" "}
-              {selectedVariant.commissionPct}%
+              {t("price")}: {formatMoney(selectedVariant.customerPrice)}
+              {/* Commission is payroll data — only the stylist sees her own rate */}
+              {isStylist && ` · ${t("commission")}: ${selectedVariant.commissionPct}%`}
             </p>
           )}
         </div>
@@ -253,14 +255,15 @@ export function LogServiceForm({
       </div>
 
       {/* Actions */}
-      <div className="flex gap-3 pt-2">
-        <Button type="submit" disabled={!canSubmit}>
+      <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row">
+        <Button type="submit" disabled={!canSubmit} className="max-sm:w-full">
           {isPending && <Loader2Icon className="mr-2 size-4 animate-spin" />}
           {t("submit")}
         </Button>
         <Button
           type="button"
           variant="outline"
+          className="max-sm:w-full"
           onClick={() => (onClose ? onClose() : router.push(redirectPath))}
           disabled={isPending}
         >

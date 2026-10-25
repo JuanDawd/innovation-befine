@@ -10,7 +10,7 @@
 import { headers } from "next/headers";
 import * as Sentry from "@sentry/nextjs";
 import { logger } from "@/lib/logger";
-import { eq, and, inArray } from "drizzle-orm";
+import { eq, and, inArray, isNull } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { getDb, getTxDb } from "@/lib/db";
 import {
@@ -137,7 +137,7 @@ export async function createTicket(rawInput: unknown): Promise<ActionResult<Tick
 
   // M-62: these lookups are independent — one round trip instead of three.
   const db = getDb();
-  const [businessDay, [variant], emp] = await Promise.all([
+  const [businessDay, [variant], emp, [target]] = await Promise.all([
     getCurrentBusinessDay(),
     // Snapshot price/commission from the variant
     db
@@ -151,6 +151,12 @@ export async function createTicket(rawInput: unknown): Promise<ActionResult<Tick
       .limit(1),
     // The creator's employee id for createdBy
     getEmployeeRef(session.user.id),
+    // Who the ticket is for — only an active stylist earns commission on it
+    db
+      .select({ role: employees.role, isActive: employees.isActive })
+      .from(employees)
+      .where(eq(employees.id, input.employeeId))
+      .limit(1),
   ]);
 
   if (!businessDay)
@@ -163,6 +169,12 @@ export async function createTicket(rawInput: unknown): Promise<ActionResult<Tick
     return {
       success: false,
       error: { code: "NOT_FOUND", message: "Servicio no encontrado o inactivo" },
+    };
+
+  if (!target || target.role !== "stylist" || !target.isActive)
+    return {
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "El servicio debe ser de una estilista activa" },
     };
 
   const createdByEmployeeId = emp?.id ?? input.employeeId;
@@ -339,6 +351,7 @@ export async function listOpenTickets(): Promise<ActionResult<DashboardTicket[]>
 /**
  * Allowed transitions:
  *   logged → awaiting_payment   : stylist (own), secretary, cashier, admin
+ *   awaiting_payment → logged   : same, undo before caja starts the checkout
  *   awaiting_payment → closed   : cashier/admin only (T038)
  *   closed → reopened            : cashier/admin only
  *   reopened → awaiting_payment : cashier/admin only
@@ -418,6 +431,77 @@ export async function transitionToAwaitingPayment(
     return {
       success: false,
       error: { code: "STALE_DATA", message: "El ticket fue modificado por otra sesión" },
+    };
+
+  await publishEvent("cashier", "ticket_updated", { ticketId: updated.id, status: updated.status });
+  revalidatePath("/cashier");
+  revalidatePath("/secretary");
+
+  return { success: true, data: { id: updated.id, status: updated.status } };
+}
+
+/**
+ * Undo "Listo para cobrar": awaiting_payment → logged, for the same people who
+ * can mark it ready, as long as caja hasn't started charging it (no checkout
+ * session). Backs the undo toast on the stylist / secretary list.
+ */
+export async function undoMarkReady(
+  rawInput: unknown,
+): Promise<ActionResult<{ id: string; status: string }>> {
+  const parsedInput = transitionTicketSchema.safeParse(rawInput);
+  if (!parsedInput.success)
+    return { success: false, error: { code: "VALIDATION_ERROR", message: "Datos inválidos" } };
+  const validInput: TransitionInput = { ticketId: parsedInput.data.ticketId };
+
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session)
+    return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
+
+  const isStylist = hasRole(session.user, "stylist");
+  const isStaff = hasRole(session.user, "cashier", "admin", "secretary");
+  if (!isStylist && !isStaff)
+    return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
+
+  const rl = await checkRateLimit(rateLimits.general, session.user.id);
+  if (!rl.allowed)
+    return {
+      success: false,
+      error: {
+        code: "RATE_LIMITED",
+        message: "Demasiadas solicitudes. Intenta de nuevo en un momento.",
+      },
+    };
+
+  const { ticket, employeeId } = await getTicketAndEmployee(validInput.ticketId, session.user.id);
+  if (!ticket)
+    return { success: false, error: { code: "NOT_FOUND", message: "Ticket no encontrado" } };
+
+  if (ticket.status !== "awaiting_payment")
+    return { success: false, error: { code: "CONFLICT", message: "Transición no permitida" } };
+
+  if (isStylist && !isStaff && ticket.employeeId !== employeeId)
+    return {
+      success: false,
+      error: { code: "FORBIDDEN", message: "Solo puedes modificar tus propios tickets" },
+    };
+
+  const db = getDb();
+  const [updated] = await db
+    .update(tickets)
+    .set({ status: "logged", version: ticket.version + 1 })
+    .where(
+      and(
+        eq(tickets.id, validInput.ticketId),
+        eq(tickets.version, ticket.version),
+        isNull(tickets.checkoutSessionId),
+      ),
+    )
+    .returning({ id: tickets.id, status: tickets.status });
+
+  if (!updated)
+    return {
+      success: false,
+      error: { code: "STALE_DATA", message: "Caja ya está cobrando este ticket" },
     };
 
   await publishEvent("cashier", "ticket_updated", { ticketId: updated.id, status: updated.status });

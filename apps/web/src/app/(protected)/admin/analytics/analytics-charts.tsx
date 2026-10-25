@@ -5,7 +5,6 @@
  * library loads on demand via next/dynamic (L-42).
  */
 
-import { useTranslations } from "next-intl";
 import {
   BarChart,
   Bar,
@@ -16,46 +15,7 @@ import {
   LineChart,
   Line,
 } from "recharts";
-import { formatCount, formatMoney } from "@/i18n";
-
-export function ComparisonChart({
-  current,
-  prior,
-  labels,
-}: {
-  current: { revenue: number; jobs: number; earnings: number };
-  prior: { revenue: number; jobs: number; earnings: number };
-  labels: { revenue: string; jobs: string; earnings: string };
-}) {
-  const t = useTranslations("analytics");
-  const data = [
-    { metric: labels.revenue, current: current.revenue, prior: prior.revenue },
-    { metric: labels.jobs, current: current.jobs, prior: prior.jobs },
-    { metric: labels.earnings, current: current.earnings, prior: prior.earnings },
-  ];
-
-  return (
-    <ResponsiveContainer width="100%" height={200}>
-      <BarChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-        <XAxis dataKey="metric" tick={{ fontSize: 11 }} />
-        <YAxis hide />
-        <Tooltip formatter={(v: unknown) => formatCount(Number(v))} labelStyle={{ fontSize: 11 }} />
-        <Bar
-          dataKey="current"
-          fill="var(--color-primary)"
-          radius={[3, 3, 0, 0]}
-          name={t("seriesCurrent")}
-        />
-        <Bar
-          dataKey="prior"
-          fill="color-mix(in oklab, var(--color-muted-foreground) 40%, transparent)"
-          radius={[3, 3, 0, 0]}
-          name={t("seriesPrior")}
-        />
-      </BarChart>
-    </ResponsiveContainer>
-  );
-}
+import { formatMoney } from "@/i18n";
 
 /** Per-employee earnings over the selected days (drill-down row). */
 export function EarningsSparkline({ data }: { data: { date: string; earnings: number }[] }) {
@@ -88,7 +48,11 @@ export function DailyRevenueChart({
   return (
     <ResponsiveContainer width="100%" height={180}>
       <BarChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-        <XAxis dataKey="date" tick={{ fontSize: 10 }} tickFormatter={(v: string) => v.slice(5)} />
+        <XAxis
+          dataKey="date"
+          tick={{ fontSize: 10 }}
+          tickFormatter={(v: string) => `${v.slice(8, 10)}/${v.slice(5, 7)}`}
+        />
         <YAxis hide />
         <Tooltip formatter={(v: unknown) => formatMoney(Number(v))} labelStyle={{ fontSize: 10 }} />
         <Bar

@@ -27,8 +27,8 @@ export default async function AdminProductsPage() {
         title={t("pageTitle")}
         actions={<NewProductDialog redirectPath="/admin/products" largeOrders={activeOrders} />}
       />
-      <ProductsDashboardTable isAdmin />
       <ProductApprovalBoard />
+      <ProductsDashboardTable isAdmin />
     </div>
   );
 }

@@ -52,6 +52,7 @@ export default async function PayrollPage({
         days={days}
         employees={employees}
         history={history}
+        unsettled={unsettled}
         initialEmployeeId={employeeId}
       />
     </div>

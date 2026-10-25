@@ -19,10 +19,12 @@ import {
   productPieces,
   clothPieces,
   clothPieceVariants,
+  largeOrders,
+  clients,
 } from "@befine/db/schema";
 import type { ActionResult } from "@/lib/action-result";
-import { hasRole } from "@/lib/middleware-helpers";
 import { getCurrentBusinessDay } from "@/lib/business-day";
+import { hasRole } from "@/lib/middleware-helpers";
 import { revalidatePath } from "next/cache";
 import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
 import { pieceActionSchema } from "@befine/types";
@@ -41,6 +43,11 @@ export type PendingProductPieceApprovalRow = {
   status: "pending" | "done_pending_approval" | "approved";
   completedAt: Date | null;
   version: number;
+  quantity: number;
+  productNotes: string | null;
+  largeOrderId: string | null;
+  largeOrderClientName: string | null;
+  productCreatedAt: Date;
 };
 
 // ─── Auth helper ──────────────────────────────────────────────────────────────
@@ -62,9 +69,8 @@ export async function listPendingProductPieceApprovals(): Promise<
   const ctx = await getStaffEmployee();
   if (!ctx) return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
 
-  const businessDay = await getCurrentBusinessDay();
-  if (!businessDay) return { success: true, data: [] };
-
+  // H-56: every finished piece waits here, whatever day its product was
+  // created — multi-day orders and carried-over work (H-52) included.
   const db = getDb();
 
   const rows = await db
@@ -79,19 +85,21 @@ export async function listPendingProductPieceApprovals(): Promise<
       status: productPieces.status,
       completedAt: productPieces.completedAt,
       version: productPieces.version,
+      quantity: productPieces.quantity,
+      productNotes: products.notes,
+      largeOrderId: products.largeOrderId,
+      largeOrderClientName: clients.name,
+      productCreatedAt: products.createdAt,
     })
     .from(productPieces)
     .innerJoin(products, eq(productPieces.productId, products.id))
+    .leftJoin(largeOrders, eq(products.largeOrderId, largeOrders.id))
+    .leftJoin(clients, eq(largeOrders.clientId, clients.id))
     .innerJoin(clothPieces, eq(productPieces.clothPieceId, clothPieces.id))
     .innerJoin(clothPieceVariants, eq(productPieces.clothPieceVariantId, clothPieceVariants.id))
     .leftJoin(employees, eq(productPieces.assignedToEmployeeId, employees.id))
     .leftJoin(users, eq(employees.userId, users.id))
-    .where(
-      and(
-        eq(products.businessDayId, businessDay.id),
-        eq(productPieces.status, "done_pending_approval"),
-      ),
-    )
+    .where(eq(productPieces.status, "done_pending_approval"))
     .orderBy(productPieces.completedAt);
 
   return { success: true, data: rows };
@@ -124,6 +132,18 @@ export async function approveProductPiece(
       },
     };
 
+  // H-57: the piece's pay belongs to the day it is approved on
+  const businessDay = await getCurrentBusinessDay();
+  if (!businessDay)
+    return {
+      success: false,
+      error: {
+        code: "CONFLICT",
+        message:
+          "Abre el día laboral para aprobar piezas: el pago queda en el día de la aprobación.",
+      },
+    };
+
   const db = getDb();
 
   const result = await db
@@ -132,6 +152,7 @@ export async function approveProductPiece(
       status: "approved",
       approvedAt: new Date(),
       approvedBy: ctx.employeeId,
+      approvedBusinessDayId: businessDay.id,
       version: expectedVersion + 1,
     })
     .where(
@@ -190,6 +211,18 @@ export async function adminMarkProductPieceApproved(
   if (!emp)
     return { success: false, error: { code: "NOT_FOUND", message: "Empleado no encontrado" } };
 
+  // H-57: the piece's pay belongs to the day it is approved on
+  const businessDay = await getCurrentBusinessDay();
+  if (!businessDay)
+    return {
+      success: false,
+      error: {
+        code: "CONFLICT",
+        message:
+          "Abre el día laboral para aprobar piezas: el pago queda en el día de la aprobación.",
+      },
+    };
+
   const result = await db
     .update(productPieces)
     .set({
@@ -197,6 +230,7 @@ export async function adminMarkProductPieceApproved(
       completedAt: new Date(),
       approvedAt: new Date(),
       approvedBy: emp.id,
+      approvedBusinessDayId: businessDay.id,
       version: expectedVersion + 1,
     })
     .where(

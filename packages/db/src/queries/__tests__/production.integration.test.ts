@@ -211,6 +211,7 @@ describeDb("getProductsDashboard", () => {
           pendingPieces: 3,
           progressPct: 25,
           assignedEmployeeNames: ["Ana"],
+          pieces: [expect.objectContaining({ quantity: 4 })],
         }),
       );
       expect(rows[2]).toEqual(expect.objectContaining({ totalPieces: 2, progressPct: 100 }));

@@ -7,6 +7,7 @@ import { PlusIcon, Loader2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createLargeOrder, type ClientOption } from "./actions";
 import type { ClothPieceRow } from "@/app/(protected)/admin/catalog/actions/cloth-pieces";
+import { orderUnitPrice } from "@/lib/large-order-pricing";
 import { LineAccordion, buildDescription, type OrderLine } from "./line-accordion";
 import { NativeSelect } from "@/components/ui/native-select";
 import { formatMoney } from "@/i18n";
@@ -85,7 +86,7 @@ export function CreateLargeOrderForm({ clients, clothPieces }: Props) {
           const active = piece?.variants.filter((v) => v.isActive) ?? [];
           if (active.length === 1) {
             updated.clothPieceVariantId = active[0].id;
-            updated.unitPrice = active[0].pieceRate;
+            updated.unitPrice = orderUnitPrice(active[0]);
           } else {
             updated.clothPieceVariantId = "";
             updated.unitPrice = 0;
@@ -94,7 +95,7 @@ export function CreateLargeOrderForm({ clients, clothPieces }: Props) {
         if (patch.clothPieceVariantId !== undefined) {
           const piece = clothPieces.find((p) => p.id === l.clothPieceId);
           const variant = piece?.variants.find((v) => v.id === patch.clothPieceVariantId);
-          if (variant) updated.unitPrice = variant.pieceRate;
+          if (variant) updated.unitPrice = orderUnitPrice(variant);
         }
         return updated;
       }),
@@ -300,7 +301,7 @@ export function CreateLargeOrderForm({ clients, clothPieces }: Props) {
         </label>
 
         {withDeposit && (
-          <div className="grid grid-cols-2 gap-3 pl-6">
+          <div className="grid grid-cols-1 gap-3 pl-6 sm:grid-cols-2">
             <div className="space-y-1">
               <label className="text-sm font-medium" htmlFor="initialDepositAmount">
                 {t("depositAmount")}

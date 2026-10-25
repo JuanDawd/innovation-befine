@@ -23,6 +23,7 @@ import {
   products,
   employeeAbsences,
 } from "@befine/db/schema";
+import { computeEarningsTotal } from "@/lib/payroll/compute-total";
 import { terminateEmployeeSchema } from "@befine/types";
 import type { ActionResult } from "@/lib/action-result";
 import type { EmployeeListItem } from "./list-employees";
@@ -323,14 +324,14 @@ export async function getUnsettledPeriodsForEmployee(
     );
   } else if (emp.role === "clothier") {
     const workDays = await db
-      .selectDistinct({ businessDayId: products.businessDayId })
+      .selectDistinct({ businessDayId: productPieces.approvedBusinessDayId })
       .from(productPieces)
       .innerJoin(products, eq(productPieces.productId, products.id))
       .where(
         and(
           eq(productPieces.assignedToEmployeeId, employeeId),
           eq(productPieces.status, "approved"),
-          inArray(products.businessDayId, closedDayIds),
+          inArray(productPieces.approvedBusinessDayId, closedDayIds),
         ),
       );
     unsettledDays = closedDays.filter(
@@ -359,6 +360,44 @@ export async function getUnsettledPeriodsForEmployee(
   if (!unsettledDays.length) return null;
   const dates = unsettledDays.map((d) => businessDateOf(d.openedAt)).sort();
   return { businessDayIds: unsettledDays.map((d) => d.id), oldestDate: dates[0] };
+}
+
+/**
+ * What an employee is owed if terminated now: earnings over every unsettled
+ * day, computed server-side — prefills the termination dialog.
+ */
+export async function previewTermination(
+  employeeId: string,
+): Promise<ActionResult<{ computedAmount: number; dayCount: number; oldestDate: string | null }>> {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session)
+    return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
+  if (!hasRole(session.user, "admin"))
+    return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
+
+  const parsed = z.uuid().safeParse(employeeId);
+  if (!parsed.success)
+    return { success: false, error: { code: "VALIDATION_ERROR", message: "Datos inválidos" } };
+
+  const db = getDb();
+  const [emp] = await db
+    .select({ role: employees.role })
+    .from(employees)
+    .where(eq(employees.id, parsed.data))
+    .limit(1);
+  if (!emp)
+    return { success: false, error: { code: "NOT_FOUND", message: "Empleado no encontrado" } };
+
+  const unsettled = await getUnsettledPeriodsForEmployee(parsed.data);
+  const dayIds = unsettled?.businessDayIds ?? [];
+  return {
+    success: true,
+    data: {
+      computedAmount: await computeEarningsTotal(db, emp.role, parsed.data, dayIds),
+      dayCount: dayIds.length,
+      oldestDate: unsettled?.oldestDate ?? null,
+    },
+  };
 }
 
 /**
@@ -392,6 +431,16 @@ export async function terminateEmployee(
     return { success: false, error: { code: "NOT_FOUND", message: "Empleado no encontrado" } };
 
   const unsettled = await getUnsettledPeriodsForEmployee(employeeId);
+  // Audit the figure the server computes, not the one typed in the dialog
+  const [target] = await getDb()
+    .select({ role: employees.role })
+    .from(employees)
+    .where(eq(employees.id, employeeId))
+    .limit(1);
+  const computedAmount =
+    target && unsettled
+      ? await computeEarningsTotal(getDb(), target.role, employeeId, unsettled.businessDayIds)
+      : 0;
   const txDb = getTxDb();
   const now = new Date();
 
@@ -405,7 +454,7 @@ export async function terminateEmployee(
           idempotencyKey: idemKey,
           employeeId,
           amount: terminationAmount,
-          originalComputedAmount: terminationAmount,
+          originalComputedAmount: computedAmount,
           adjustmentReason: reason,
           method,
           recordedBy: adminEmp.id,

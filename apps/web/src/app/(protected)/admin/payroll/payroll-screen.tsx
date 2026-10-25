@@ -16,9 +16,11 @@ import {
   type BusinessDayOption,
   type EarningsPreview,
   type PayoutRow,
+  type UnsettledEmployee,
 } from "./actions";
 import type { EmployeeOption } from "../absences/actions";
 import { NativeSelect } from "@/components/ui/native-select";
+import { Input } from "@/components/ui/input";
 import { formatDate, formatMoney } from "@/i18n";
 import { byOpenedAt, lastDayOn, sameDateSuffixes } from "./day-labels";
 
@@ -26,10 +28,12 @@ type Props = {
   days: BusinessDayOption[];
   employees: EmployeeOption[];
   history: PayoutRow[];
+  /** Who is still owed — after a payout the screen moves on to the next one */
+  unsettled: UnsettledEmployee[];
   initialEmployeeId?: string;
 };
 
-export function PayrollScreen({ days, employees, history, initialEmployeeId }: Props) {
+export function PayrollScreen({ days, employees, history, unsettled, initialEmployeeId }: Props) {
   const t = useTranslations("payroll");
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -112,8 +116,13 @@ export function PayrollScreen({ days, employees, history, initialEmployeeId }: P
       });
       if (!res.success) {
         setError(res.error.message);
+        // H-59: the figure changed since the preview — show the new one
+        if (res.error.code === "STALE_DATA") handlePreview(preview.businessDayIds);
         return;
       }
+      toast.success(
+        t("paidToast", { amount: formatMoney(finalAmount), name: preview.employeeName }),
+      );
       setSuccess(true);
       setPreview(null);
       setRangeEndId("");
@@ -122,11 +131,28 @@ export function PayrollScreen({ days, employees, history, initialEmployeeId }: P
       setNotes("");
       // Rotate idempotency key so next payout gets a fresh one
       idempotencyKeyRef.current = newUuid();
-      router.refresh();
+      // Move on to the next person still owed, oldest debt first
+      const next = unsettled.find((u) => u.employeeId !== preview.employeeId);
+      if (next) router.push(`/admin/payroll?employeeId=${next.employeeId}`);
+      else router.refresh();
     });
   }
 
-  const isAdjusted = preview && parseInt(adjustedAmount, 10) !== preview.computedAmount;
+  const finalAmountValue = parseInt(adjustedAmount, 10);
+  const isAdjusted = preview && finalAmountValue !== preview.computedAmount;
+  const canConfirm =
+    !!preview &&
+    !isPending &&
+    Number.isFinite(finalAmountValue) &&
+    finalAmountValue > 0 &&
+    (!isAdjusted || adjustmentReason.trim().length > 0);
+  const dayDate = new Map(days.map((d) => [d.id, d.date]));
+  const previewDates = preview
+    ? preview.businessDayIds
+        .map((id) => dayDate.get(id))
+        .filter((d): d is string => !!d)
+        .sort()
+    : [];
 
   // Today's date in business timezone (America/Bogota)
   const todayStr = new Intl.DateTimeFormat("sv-SE", { timeZone: "America/Bogota" }).format(
@@ -275,44 +301,100 @@ export function PayrollScreen({ days, employees, history, initialEmployeeId }: P
         <div className="border rounded-md p-4 space-y-4 bg-muted/10">
           <h2 className="text-sm font-semibold">{t("step3")}</h2>
 
-          {/* Breakdown */}
-          {preview.breakdown.type === "stylist" && (
-            <div className="space-y-1 text-sm">
-              {preview.breakdown.lines.map((line, i) =>
-                line.excluded ? (
-                  <div key={i} className="text-muted-foreground italic text-xs">
-                    Ticket {line.ticketId.slice(0, 8)} — {t("needsReviewExcluded")}
-                  </div>
-                ) : (
-                  <div key={i} className="flex justify-between gap-4">
-                    <span className="text-muted-foreground">
-                      {line.serviceName ?? "Servicio"} ×{line.quantity}
-                    </span>
-                    <span className="font-mono tabular-nums">{formatMoney(line.earnings)}</span>
-                  </div>
-                ),
-              )}
-            </div>
-          )}
-
-          {preview.breakdown.type === "clothier" && (
-            <div className="space-y-1 text-sm">
-              {preview.breakdown.lines.map((line, i) => (
-                <div key={i} className="flex justify-between gap-4">
-                  <span className="text-muted-foreground">
-                    {line.pieceName} ×{line.quantity}
-                  </span>
-                  <span className="font-mono tabular-nums">{formatMoney(line.earnings)}</span>
-                </div>
-              ))}
-            </div>
-          )}
+          {/* Pay slip: every line explains itself, grouped by day */}
+          {(preview.breakdown.type === "stylist" || preview.breakdown.type === "clothier") &&
+            (preview.breakdown.lines.length === 0 ? (
+              <p className="text-sm text-muted-foreground">{t("nothingInPeriod")}</p>
+            ) : (
+              <div className="space-y-3 text-sm">
+                {preview.businessDayIds
+                  .map((dayId) => ({
+                    dayId,
+                    lines: (
+                      preview.breakdown as { lines: { businessDayId?: string }[] }
+                    ).lines.filter((l) => l.businessDayId === dayId),
+                  }))
+                  .filter((g) => g.lines.length > 0)
+                  .map(({ dayId, lines }) => (
+                    <div key={dayId} className="space-y-1">
+                      <div className="flex justify-between gap-4 border-b pb-1 text-xs font-medium text-muted-foreground">
+                        <span>{dayLabel(dayDate.get(dayId) ?? "")}</span>
+                        <span className="font-mono tabular-nums">
+                          {formatMoney(
+                            lines.reduce(
+                              (sum, l) => sum + ("earnings" in l ? (l.earnings as number) : 0),
+                              0,
+                            ),
+                          )}
+                        </span>
+                      </div>
+                      {preview.breakdown.type === "stylist"
+                        ? (lines as typeof preview.breakdown.lines).map((line, i) =>
+                            line.excluded ? null : (
+                              <div key={i} className="flex justify-between gap-4">
+                                <span className="min-w-0">
+                                  <span className="block truncate">
+                                    {line.serviceName}
+                                    {line.quantity > 1 ? ` ×${line.quantity}` : ""}
+                                    {line.clientName ? ` · ${line.clientName}` : ""}
+                                  </span>
+                                  <span className="block text-xs text-muted-foreground tabular-nums">
+                                    {t("lineCommission", {
+                                      pct: line.commissionPct,
+                                      price: formatMoney(line.effectivePrice * line.quantity),
+                                    })}
+                                  </span>
+                                </span>
+                                <span className="font-mono tabular-nums">
+                                  {formatMoney(line.earnings)}
+                                </span>
+                              </div>
+                            ),
+                          )
+                        : (
+                            lines as Extract<
+                              EarningsPreview["breakdown"],
+                              { type: "clothier" }
+                            >["lines"]
+                          ).map((line, i) => (
+                            <div key={i} className="flex justify-between gap-4">
+                              <span className="min-w-0">
+                                <span className="block truncate">{line.pieceName}</span>
+                                <span className="block text-xs text-muted-foreground tabular-nums">
+                                  {t("linePieceRate", {
+                                    quantity: line.quantity,
+                                    rate: formatMoney(line.pieceRate),
+                                  })}
+                                </span>
+                              </span>
+                              <span className="font-mono tabular-nums">
+                                {formatMoney(line.earnings)}
+                              </span>
+                            </div>
+                          ))}
+                    </div>
+                  ))}
+                {preview.breakdown.type === "stylist" &&
+                  preview.breakdown.lines.some((l) => l.excluded) && (
+                    <p className="text-xs italic text-muted-foreground">
+                      {t("needsReviewExcludedCount", {
+                        count: preview.breakdown.lines.filter((l) => l.excluded).length,
+                      })}
+                    </p>
+                  )}
+              </div>
+            ))}
 
           {preview.breakdown.type === "secretary" && (
             <div className="text-sm space-y-1">
               <div className="flex justify-between gap-4">
                 <span className="text-muted-foreground">{t("daysWorked")}</span>
-                <span className="tabular-nums">{preview.breakdown.daysWorked}</span>
+                <span className="tabular-nums">
+                  {t("daysWorkedOf", {
+                    worked: preview.breakdown.daysWorked,
+                    selected: preview.businessDayIds.length,
+                  })}
+                </span>
               </div>
               <div className="flex justify-between gap-4">
                 <span className="text-muted-foreground">{t("weeklyDayCap")}</span>
@@ -340,14 +422,19 @@ export function PayrollScreen({ days, employees, history, initialEmployeeId }: P
               <label className="text-sm font-medium" htmlFor="adjustedAmount">
                 {t("finalAmount")} <span className="text-destructive">*</span>
               </label>
-              <input
+              <Input
                 id="adjustedAmount"
                 type="number"
+                inputMode="numeric"
                 min={0}
                 value={adjustedAmount}
                 onChange={(e) => setAdjustedAmount(e.target.value)}
-                className="w-full h-9 rounded-md border border-input bg-transparent px-3 text-sm font-mono focus-visible:outline-none focus-visible:border-ring"
+                className="font-mono tabular-nums"
+                aria-describedby="adjustedAmount-echo"
               />
+              <p id="adjustedAmount-echo" className="text-xs text-muted-foreground tabular-nums">
+                {Number.isFinite(finalAmountValue) ? formatMoney(finalAmountValue) : "—"}
+              </p>
             </div>
             <div className="space-y-1">
               <label className="text-sm font-medium" htmlFor="method">
@@ -370,13 +457,12 @@ export function PayrollScreen({ days, employees, history, initialEmployeeId }: P
                 {t("notes")}
                 <span className="text-muted-foreground text-xs ml-1">(opcional)</span>
               </label>
-              <input
+              <Input
                 id="notes"
                 type="text"
                 maxLength={500}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                className="w-full h-9 rounded-md border border-input bg-transparent px-3 text-sm focus-visible:outline-none focus-visible:border-ring"
               />
             </div>
           </div>
@@ -386,14 +472,14 @@ export function PayrollScreen({ days, employees, history, initialEmployeeId }: P
               <label className="text-sm font-medium" htmlFor="adjustmentReason">
                 {t("adjustmentReason")} <span className="text-destructive">*</span>
               </label>
-              <input
+              <Input
                 id="adjustmentReason"
                 type="text"
                 maxLength={500}
                 value={adjustmentReason}
                 onChange={(e) => setAdjustmentReason(e.target.value)}
                 placeholder={t("adjustmentReasonPlaceholder")}
-                className="w-full h-9 rounded-md border border-input bg-transparent px-3 text-sm focus-visible:outline-none focus-visible:border-ring"
+                aria-required="true"
               />
             </div>
           )}
@@ -404,9 +490,12 @@ export function PayrollScreen({ days, employees, history, initialEmployeeId }: P
             </p>
           )}
 
+          {preview && finalAmountValue <= 0 && (
+            <p className="text-sm text-muted-foreground">{t("zeroPayoutHint")}</p>
+          )}
           <ConfirmationDialog
             trigger={
-              <Button size="sm" disabled={isPending}>
+              <Button size="sm" disabled={!canConfirm}>
                 {isPending ? (
                   <Loader2Icon className="size-3.5 animate-spin mr-1" />
                 ) : (
@@ -415,8 +504,16 @@ export function PayrollScreen({ days, employees, history, initialEmployeeId }: P
                 {t("confirm")}
               </Button>
             }
-            title={t("confirmPayoutTitle")}
-            description={t("confirmPayoutDescription")}
+            title={t("confirmPayTitle", {
+              amount: Number.isFinite(finalAmountValue) ? formatMoney(finalAmountValue) : "",
+              name: preview.employeeName,
+              method: t(method).toLowerCase(),
+            })}
+            description={t("confirmPayDescription", {
+              count: previewDates.length,
+              from: previewDates[0] ? dayLabel(previewDates[0]) : "",
+              to: previewDates.at(-1) ? dayLabel(previewDates.at(-1)!) : "",
+            })}
             confirmLabel={t("confirm")}
             onConfirm={handleRecord}
           />
@@ -475,11 +572,11 @@ export function PayrollScreen({ days, employees, history, initialEmployeeId }: P
                     <td className="px-3 py-2 text-right font-mono tabular-nums">
                       {formatMoney(p.amount)}
                       {p.adjustmentReason && (
-                        <span
-                          className="ml-1 text-xs text-status-attention-foreground"
-                          title={p.adjustmentReason}
-                        >
-                          *
+                        <span className="block text-xs font-sans text-status-attention-foreground">
+                          {t("adjustedFrom", {
+                            amount: formatMoney(p.originalComputedAmount),
+                            reason: p.adjustmentReason,
+                          })}
                         </span>
                       )}
                     </td>
@@ -487,10 +584,8 @@ export function PayrollScreen({ days, employees, history, initialEmployeeId }: P
                       {t(`${p.method}` as Parameters<typeof t>[0])}
                     </td>
                     <td className="px-3 py-2 text-muted-foreground text-xs">
-                      {new Date(p.paidAt).toLocaleDateString("es-CO", {
-                        timeZone: "America/Bogota",
-                        dateStyle: "medium",
-                      })}
+                      {formatDate(p.paidAt, "es", "EEE dd/MM/yyyy")}
+                      {p.notes && <span className="block">{p.notes}</span>}
                     </td>
                     <td className="px-3 py-2 text-center text-xs text-muted-foreground">
                       {p.periodDayCount}

@@ -260,6 +260,20 @@
       "when": 1792812551688,
       "tag": "0036_payout_needs_review",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1792881315667,
+      "tag": "0037_piece_approved_day",
+      "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1792881645833,
+      "tag": "0038_reopen_prepaid",
+      "breakpoints": true
     }
   ]
 }

@@ -70,7 +70,7 @@ export function CatalogAuditLog({ entityId }: { entityId: string }) {
     <div className="border-t pt-3">
       <button
         onClick={handleToggle}
-        className="flex w-full items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+        className="flex min-h-11 w-full items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground md:min-h-0"
         aria-expanded={expanded}
       >
         {expanded ? (

@@ -21,5 +21,6 @@ export const ticketPayments = pgTable(
     amount: bigint("amount", { mode: "number" }).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [check("chk_ticket_payments_amount", sql`${t.amount} > 0`)],
+  // M-80: a negative amount is a refund (devolución) when a reopened ticket ends up cheaper
+  (t) => [check("chk_ticket_payments_amount", sql`${t.amount} <> 0`)],
 );

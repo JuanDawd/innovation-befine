@@ -86,6 +86,7 @@ describe("Stylist earnings computation", () => {
 describe("clothierEarningsLine", () => {
   const base = {
     productId: "p",
+    businessDayId: "d",
     productPieceId: "pp",
     pieceName: "Bata",
     variantName: "Estándar",

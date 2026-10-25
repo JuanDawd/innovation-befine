@@ -9,7 +9,9 @@ import {
   boolean,
   index,
   bigint,
+  check,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { businessDays } from "./business-days";
 import { employees } from "./employees";
 import { clothPieces, clothPieceVariants } from "./cloth-pieces";
@@ -65,6 +67,14 @@ export const productPieces = pgTable(
     completedAt: timestamp("completed_at", { withTimezone: true }),
     approvedAt: timestamp("approved_at", { withTimezone: true }),
     approvedBy: uuid("approved_by").references(() => employees.id, { onDelete: "restrict" }),
+    /**
+     * H-57 — business day the piece was approved on. Piece-rate pay belongs to
+     * this day (not the product's day), so work approved after its product's
+     * day was paid still lands in an unpaid day.
+     */
+    approvedBusinessDayId: uuid("approved_business_day_id").references(() => businessDays.id, {
+      onDelete: "restrict",
+    }),
     version: integer("version").notNull().default(1),
     quantity: integer("quantity").notNull().default(1),
     color: varchar("color", { length: 80 }),
@@ -78,7 +88,13 @@ export const productPieces = pgTable(
   },
   (t) => [
     index("idx_craftable_pieces_employee_status").on(t.assignedToEmployeeId, t.status),
+    index("idx_craftable_pieces_approved_day").on(t.assignedToEmployeeId, t.approvedBusinessDayId),
     index("idx_craftable_pieces_craftable_id").on(t.productId),
     index("idx_craftable_pieces_sold_at").on(t.soldAt),
+    // H-57: an approved piece always knows the day its pay belongs to
+    check(
+      "chk_craftable_pieces_approved_day",
+      sql`${t.status} <> 'approved' OR ${t.approvedBusinessDayId} IS NOT NULL`,
+    ),
   ],
 );

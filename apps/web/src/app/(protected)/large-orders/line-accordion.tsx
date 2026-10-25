@@ -88,7 +88,7 @@ export function LineAccordion({
       <button
         type="button"
         onClick={onToggle}
-        className="flex w-full items-center justify-between px-3 py-2.5 text-left"
+        className="flex min-h-11 w-full items-center justify-between px-3 py-2.5 text-left"
       >
         <div className="min-w-0 flex-1">
           <span className="text-sm font-medium truncate block">{summaryLabel}</span>
@@ -116,7 +116,7 @@ export function LineAccordion({
 
       {open && (
         <div className="border-t px-3 pb-3 pt-3 space-y-3 bg-muted/20">
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <div className="space-y-1">
               <label className="text-xs font-medium text-muted-foreground">
                 {t("selectPiece")}
@@ -162,7 +162,7 @@ export function LineAccordion({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <div className="space-y-1">
               <label className="text-xs font-medium text-muted-foreground">{t("quantity")}</label>
               <input
@@ -207,7 +207,7 @@ export function LineAccordion({
             />
           </div>
 
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
             <div className="space-y-1">
               <label className="text-xs font-medium text-muted-foreground">{t("color")}</label>
               <input
@@ -267,7 +267,7 @@ export function LineAccordion({
               onClick={onRemove}
               disabled={!canRemove}
               aria-label={t("removeItem")}
-              className="ml-auto flex items-center gap-1 rounded px-2 py-1 text-xs text-destructive hover:bg-destructive/10 disabled:opacity-30"
+              className="ml-auto flex min-h-11 items-center gap-1 rounded px-2 py-1 text-xs text-destructive hover:bg-destructive/10 disabled:opacity-30 md:min-h-0"
             >
               <Trash2Icon className="size-3.5" />
               {t("removeItem")}

@@ -1,7 +1,7 @@
 "use client";
 
 import { notifyDataChanged } from "@/lib/data-events";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import { useFormatter, useTranslations } from "next-intl";
@@ -18,7 +18,8 @@ import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { toast } from "sonner";
 import { newUuid } from "@/lib/uuid";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ProductProgressBar } from "@/components/ui/product-progress-bar";
+import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/loading-skeleton";
 import { StatusBadge } from "@/components/ui/status-badge";
 import {
   claimPiece,
@@ -32,6 +33,7 @@ import { fetchQuery } from "@/lib/action-query";
 function PieceNotes({ piece }: { piece: ProductPieceRow }) {
   const t = useTranslations("clothierWork");
   const [open, setOpen] = useState(false);
+  const notesId = useId();
   const hasNotes = piece.color || piece.style || piece.size || piece.instructions;
 
   if (!hasNotes) return null;
@@ -43,6 +45,7 @@ function PieceNotes({ piece }: { piece: ProductPieceRow }) {
         className="-ml-2 flex min-h-11 items-center gap-1 rounded-md px-2 text-sm text-muted-foreground hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
+        aria-controls={notesId}
       >
         {open ? (
           <ChevronUpIcon className="size-4" aria-hidden="true" />
@@ -52,7 +55,7 @@ function PieceNotes({ piece }: { piece: ProductPieceRow }) {
         {t("viewNotes")}
       </button>
       {open && (
-        <dl className="mt-1 grid grid-cols-2 gap-x-4 gap-y-0.5 text-xs">
+        <dl id={notesId} className="mt-1 grid grid-cols-2 gap-x-4 gap-y-0.5 text-xs">
           {piece.color && (
             <>
               <dt className="text-muted-foreground">{t("color")}</dt>
@@ -110,10 +113,10 @@ export function ClothierWorkBoard({ employeeId }: { employeeId: string }) {
   const myPieces = pieces.filter((p) => p.assignedToEmployeeId === employeeId);
   const available = pieces.filter((p) => p.assignedToEmployeeId === null);
 
-  const doneCount = myPieces.filter(
-    (p) => p.status === "done_pending_approval" || p.status === "approved",
-  ).length;
-  const totalMine = myPieces.length;
+  // Progress counts garments, not rows: "Toalla ×12" is twelve pieces of work.
+  const garments = (list: ProductPieceRow[]) => list.reduce((sum, p) => sum + p.quantity, 0);
+  const doneCount = garments(myPieces.filter((p) => p.status !== "pending"));
+  const totalMine = garments(myPieces);
 
   async function handleClaim(piece: ProductPieceRow) {
     setPendingId(piece.id);
@@ -143,6 +146,7 @@ export function ClothierWorkBoard({ employeeId }: { employeeId: string }) {
         ...m,
         [piece.id]: res.error.code === "STALE_DATA" ? t("staleError") : t("markDoneError"),
       }));
+      if (res.error.code === "STALE_DATA") notifyDataChanged("products");
     } else {
       toast.success(t("markDoneSuccess", { piece: piece.clothPieceName }));
       notifyDataChanged("products");
@@ -151,8 +155,12 @@ export function ClothierWorkBoard({ employeeId }: { employeeId: string }) {
 
   if (isLoading && pieces.length === 0) {
     return (
-      <div className="flex items-center justify-center py-16">
-        <Loader2Icon className="size-6 animate-spin text-muted-foreground" aria-hidden="true" />
+      <div className="flex flex-col gap-4 px-4 pt-4" aria-busy="true">
+        <Skeleton className="h-4 w-40" />
+        <Skeleton className="h-2 w-full" />
+        {[1, 2, 3].map((i) => (
+          <Skeleton key={i} className="h-20 w-full rounded-xl" />
+        ))}
       </div>
     );
   }
@@ -221,10 +229,12 @@ export function ClothierWorkBoard({ employeeId }: { employeeId: string }) {
               ? t("allDone")
               : t("progress", { done: doneCount, total: totalMine })}
           </p>
-          <ProductProgressBar
-            pct={Math.round((doneCount / totalMine) * 100)}
-            showLabel={false}
-            className="w-full"
+          <Progress
+            value={doneCount}
+            max={totalMine}
+            aria-label={t("progress", { done: doneCount, total: totalMine })}
+            className="h-1.5"
+            indicatorClassName={toDo.length === 0 ? "bg-status-success" : "bg-primary"}
           />
         </div>
       )}
@@ -234,7 +244,7 @@ export function ClothierWorkBoard({ employeeId }: { employeeId: string }) {
         <section aria-labelledby="pieces-todo">
           {sectionHeading("pieces-todo", t("groupToDo"), toDo.length)}
           <ul className="divide-y divide-border">
-            {toDo.map((piece) => (
+            {toDo.map((piece, index) => (
               <li key={piece.id} className="flex flex-col gap-3 px-4 py-4">
                 <div className="flex items-start gap-3">
                   <CircleIcon
@@ -248,7 +258,13 @@ export function ClothierWorkBoard({ employeeId }: { employeeId: string }) {
                 </div>
                 <ConfirmationDialog
                   trigger={
-                    <Button className="h-11 w-full gap-1.5" disabled={pendingId === piece.id}>
+                    // Only the next piece gets the filled button — a stack of
+                    // identical magenta bars hides which one is next.
+                    <Button
+                      variant={index === 0 ? "default" : "outline"}
+                      className="h-11 w-full gap-1.5"
+                      disabled={pendingId === piece.id}
+                    >
                       {pendingId === piece.id ? (
                         <Loader2Icon className="animate-spin" aria-hidden="true" />
                       ) : (

@@ -236,6 +236,8 @@ export async function makeProduct(
       status?: "pending" | "done_pending_approval" | "approved";
       quantity?: number;
       soldPrice?: number;
+      /** Day the piece was approved on (H-57); defaults to the product's day */
+      approvedDayId?: string;
     }[];
   },
 ): Promise<{ productId: string; pieceIds: string[] }> {
@@ -259,6 +261,8 @@ export async function makeProduct(
         clothPieceVariantId: p.cloth.variantId,
         assignedToEmployeeId: p.assignedTo ?? null,
         status: p.status ?? "pending",
+        approvedBusinessDayId:
+          (p.status ?? "pending") === "approved" ? (p.approvedDayId ?? opts.dayId) : null,
         quantity: p.quantity ?? 1,
         soldAt: p.soldPrice !== undefined ? new Date() : null,
         soldPrice: p.soldPrice ?? null,

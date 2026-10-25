@@ -9,7 +9,7 @@
 
 import { and, eq, inArray } from "drizzle-orm";
 import type { Database } from "@befine/db";
-import { tickets, ticketItems, serviceVariants, services } from "@befine/db/schema";
+import { tickets, ticketItems, serviceVariants, services, clients } from "@befine/db/schema";
 
 /** Variant names that only restate the default — the service name alone says it. */
 const DEFAULT_VARIANTS = new Set(["Estándar", "Standard"]);
@@ -21,6 +21,9 @@ export function earningsLineLabel(service: string, variant: string): string {
 
 export type StylistEarningsLine = {
   ticketId: string;
+  businessDayId: string;
+  /** Saved client's name or the guest name — so a pay slip line is recognisable */
+  clientName: string | null;
   serviceVariantId: string;
   serviceName: string | null;
   quantity: number;
@@ -62,6 +65,9 @@ export async function computeStylistEarnings(
   const rows = await db
     .select({
       ticketId: tickets.id,
+      businessDayId: tickets.businessDayId,
+      guestName: tickets.guestName,
+      savedClientName: clients.name,
       needsReview: tickets.needsReview,
       ticketItemId: ticketItems.id,
       serviceVariantId: ticketItems.serviceVariantId,
@@ -76,6 +82,7 @@ export async function computeStylistEarnings(
     .innerJoin(ticketItems, eq(ticketItems.ticketId, tickets.id))
     .innerJoin(serviceVariants, eq(ticketItems.serviceVariantId, serviceVariants.id))
     .innerJoin(services, eq(serviceVariants.serviceId, services.id))
+    .leftJoin(clients, eq(tickets.clientId, clients.id))
     .where(
       and(
         eq(tickets.employeeId, employeeId),
@@ -105,6 +112,8 @@ export async function computeStylistEarnings(
 
     lines.push({
       ticketId: row.ticketId,
+      businessDayId: row.businessDayId,
+      clientName: row.savedClientName ?? row.guestName,
       serviceVariantId: row.serviceVariantId,
       serviceName: earningsLineLabel(row.serviceName, row.variantName),
       quantity: row.quantity,

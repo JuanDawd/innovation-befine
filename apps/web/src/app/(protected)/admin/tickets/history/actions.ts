@@ -12,7 +12,7 @@
 import { headers } from "next/headers";
 import { eq, and, or, ilike, desc, inArray, ne } from "drizzle-orm";
 import { auth } from "@/lib/auth";
-import { getDb } from "@/lib/db";
+import { getDb, getTxDb } from "@/lib/db";
 import {
   tickets,
   ticketItems,
@@ -403,51 +403,70 @@ export async function reopenTicket(rawTicketId: unknown): Promise<ActionResult<{
       error: { code: "CONFLICT", message: "Solo se pueden reabrir tickets cerrados" },
     };
 
-  // Transition ticket: closed → reopened, detach from checkout session, bump version
-  const [updated] = await db
-    .update(tickets)
-    .set({
-      status: "reopened",
-      checkoutSessionId: null,
-      closedAt: null,
-      closedBy: null,
-      version: ticket.version + 1,
-    })
-    .where(and(eq(tickets.id, ticketId), eq(tickets.version, ticket.version)))
-    .returning({ id: tickets.id, status: tickets.status });
+  // M-80: everything in one transaction — the ticket, the session flag and the
+  // payout flags change together or not at all.
+  const updated = await getTxDb().transaction(async (tx) => {
+    // What this ticket was paid at close: its current total. The next checkout
+    // charges (or refunds) only the difference, so the money counts once.
+    const items = await tx
+      .select({
+        unitPrice: ticketItems.unitPrice,
+        overridePrice: ticketItems.overridePrice,
+        quantity: ticketItems.quantity,
+      })
+      .from(ticketItems)
+      .where(eq(ticketItems.ticketId, ticketId));
+    const paid = items.reduce((sum, i) => sum + (i.overridePrice ?? i.unitPrice) * i.quantity, 0);
+
+    // Transition ticket: closed → reopened, detach from checkout session, bump version
+    const [row] = await tx
+      .update(tickets)
+      .set({
+        status: "reopened",
+        checkoutSessionId: null,
+        closedAt: null,
+        closedBy: null,
+        prepaidAmount: paid,
+        version: ticket.version + 1,
+      })
+      .where(and(eq(tickets.id, ticketId), eq(tickets.version, ticket.version)))
+      .returning({ id: tickets.id, status: tickets.status });
+    if (!row) return null;
+
+    // If there was a checkout session, check if other closed tickets remain in it.
+    // If so, mark it partially_reopened so cashier knows.
+    if (ticket.checkoutSessionId) {
+      const [sibling] = await tx
+        .select({ id: tickets.id })
+        .from(tickets)
+        .where(
+          and(
+            eq(tickets.checkoutSessionId, ticket.checkoutSessionId),
+            eq(tickets.status, "closed"),
+            ne(tickets.id, ticketId),
+          ),
+        )
+        .limit(1);
+
+      if (sibling) {
+        await tx
+          .update(checkoutSessions)
+          .set({ isPartiallyReopened: true })
+          .where(eq(checkoutSessions.id, ticket.checkoutSessionId));
+      }
+    }
+
+    // M-28: a payout that already paid commission on this ticket may no longer match
+    // once the ticket is edited and re-closed — flag it for the admin to review.
+    await flagPayoutsCoveringTicket(tx as unknown as ReturnType<typeof getDb>, ticketId);
+    return row;
+  });
 
   if (!updated)
     return {
       success: false,
       error: { code: "STALE_DATA", message: "El ticket fue modificado por otra sesión" },
     };
-
-  // If there was a checkout session, check if other closed tickets remain in it.
-  // If so, mark it partially_reopened so cashier knows.
-  if (ticket.checkoutSessionId) {
-    const [sibling] = await db
-      .select({ id: tickets.id })
-      .from(tickets)
-      .where(
-        and(
-          eq(tickets.checkoutSessionId, ticket.checkoutSessionId),
-          eq(tickets.status, "closed"),
-          ne(tickets.id, ticketId),
-        ),
-      )
-      .limit(1);
-
-    if (sibling) {
-      await db
-        .update(checkoutSessions)
-        .set({ isPartiallyReopened: true })
-        .where(eq(checkoutSessions.id, ticket.checkoutSessionId));
-    }
-  }
-
-  // M-28: a payout that already paid commission on this ticket may no longer match
-  // once the ticket is edited and re-closed — flag it for the admin to review.
-  await flagPayoutsCoveringTicket(db, ticketId);
 
   await publishEvent("cashier", "ticket_updated", { ticketId: updated.id, status: updated.status });
   revalidatePath("/cashier");

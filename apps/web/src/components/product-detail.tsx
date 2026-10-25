@@ -31,10 +31,14 @@ function deriveProductStatus(pieces: ProductPieceDetailRow[]): ProductStatusKey 
   return "not_started";
 }
 
+/** Garments approved over garments ordered — the same measure as the products list. */
 function productProgressPct(pieces: ProductPieceDetailRow[]): number {
-  if (pieces.length === 0) return 0;
-  const approved = pieces.filter((p) => p.status === "approved").length;
-  return Math.round((approved / pieces.length) * 100);
+  const total = pieces.reduce((sum, p) => sum + p.quantity, 0);
+  if (total === 0) return 0;
+  const approved = pieces
+    .filter((p) => p.status === "approved")
+    .reduce((sum, p) => sum + p.quantity, 0);
+  return Math.round((approved / total) * 100);
 }
 
 // ─── Collapsible notes ────────────────────────────────────────────────────────
@@ -148,7 +152,7 @@ function EditPieceDialog({ piece, onSaved }: EditDialogProps) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="inline-flex size-8 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring max-md:size-11"
         aria-label={t("editPiece")}
       >
         <PencilIcon className="size-3.5" />

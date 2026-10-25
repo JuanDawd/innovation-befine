@@ -221,14 +221,14 @@ export function CreateProductForm({
           return (
             <div key={line.key} className="flex flex-col gap-1 rounded-lg border border-input p-2">
               {/* Row 1: selectors + quantity + assignee + remove */}
-              <div className="flex gap-2 items-start">
+              <div className="grid grid-cols-2 items-start gap-2 sm:flex">
                 {/* Piece type */}
                 <div className="flex-1 min-w-0">
-                  {idx === 0 && (
-                    <label className="text-xs text-muted-foreground mb-1 block">
-                      {t("pieceType")}
-                    </label>
-                  )}
+                  <label
+                    className={`mb-1 block text-xs text-muted-foreground ${idx === 0 ? "" : "sm:hidden"}`}
+                  >
+                    {t("pieceType")}
+                  </label>
                   <NativeSelect
                     aria-label={t("pieceType")}
                     value={line.clothPieceId}
@@ -249,11 +249,11 @@ export function CreateProductForm({
 
                 {/* Variant */}
                 <div className="flex-1 min-w-0">
-                  {idx === 0 && (
-                    <label className="text-xs text-muted-foreground mb-1 block">
-                      {t("variant")}
-                    </label>
-                  )}
+                  <label
+                    className={`mb-1 block text-xs text-muted-foreground ${idx === 0 ? "" : "sm:hidden"}`}
+                  >
+                    {t("variant")}
+                  </label>
                   <NativeSelect
                     aria-label={t("variant")}
                     value={line.clothPieceVariantId}
@@ -278,12 +278,12 @@ export function CreateProductForm({
                 </div>
 
                 {/* Quantity */}
-                <div className="w-16 shrink-0">
-                  {idx === 0 && (
-                    <label className="text-xs text-muted-foreground mb-1 block">
-                      {t("quantity")}
-                    </label>
-                  )}
+                <div className="shrink-0 sm:w-16">
+                  <label
+                    className={`mb-1 block text-xs text-muted-foreground ${idx === 0 ? "" : "sm:hidden"}`}
+                  >
+                    {t("quantity")}
+                  </label>
                   <input
                     type="number"
                     aria-label={t("quantity")}
@@ -300,11 +300,11 @@ export function CreateProductForm({
 
                 {/* Assigned clothier */}
                 <div className="flex-1 min-w-0">
-                  {idx === 0 && (
-                    <label className="text-xs text-muted-foreground mb-1 block">
-                      {t("assignTo")}
-                    </label>
-                  )}
+                  <label
+                    className={`mb-1 block text-xs text-muted-foreground ${idx === 0 ? "" : "sm:hidden"}`}
+                  >
+                    {t("assignTo")}
+                  </label>
                   <NativeSelect
                     aria-label={t("assignTo")}
                     value={line.assignedToEmployeeId ?? ""}
@@ -326,7 +326,9 @@ export function CreateProductForm({
                 </div>
 
                 {/* Remove button */}
-                <div className={idx === 0 ? "mt-5" : ""}>
+                <div
+                  className={`col-span-2 justify-self-end sm:col-span-1 ${idx === 0 ? "sm:mt-5" : ""}`}
+                >
                   <Button
                     type="button"
                     variant="ghost"
@@ -341,7 +343,7 @@ export function CreateProductForm({
               </div>
 
               {/* Row 2: spec fields */}
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                 <div>
                   <label className="text-xs text-muted-foreground mb-1 block">{t("color")}</label>
                   <input

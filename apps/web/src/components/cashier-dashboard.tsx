@@ -401,7 +401,7 @@ export function CashierDashboard({
             className="pr-8 pl-8"
           />
           <kbd
-            className="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 rounded border bg-muted px-1.5 font-mono text-[11px] text-muted-foreground"
+            className="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 rounded border bg-muted px-1.5 font-mono text-[11px] text-muted-foreground max-md:hidden"
             aria-hidden="true"
           >
             /

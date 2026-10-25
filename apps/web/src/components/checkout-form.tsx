@@ -25,6 +25,8 @@ import { toast } from "sonner";
 import { PlusIcon, Trash2Icon, Loader2Icon, PrinterIcon, TriangleAlertIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { amountDue } from "@/lib/checkout-due";
+import { MoneyInput } from "@/components/ui/money-input";
 import {
   Dialog,
   DialogContent,
@@ -105,10 +107,24 @@ export function CheckoutForm({
   const groups = groupByClient(allTickets);
   const selectedClients = [...new Set(selected.map((tk) => tk.clientName))];
   const clientList = selectedClients.join(", ");
-  const grandTotal = selected.reduce((s, tk) => s + tk.total, 0);
+  // M-80: reopened tickets were already paid — collect (or refund) only the difference
+  const due = amountDue(selected);
+  const isRefund = due < 0;
+  const nothingDue = selected.length > 0 && due === 0;
+  const prepaidTotal = selected.reduce((s, tk) => s + tk.prepaid, 0);
+  // Amounts are typed as positive numbers; a refund is sent negative
+  const grandTotal = Math.abs(due);
   const paymentSum = payments.reduce((s, p) => s + (parseInt(p.amount, 10) || 0), 0);
+  const cashAmount = payments
+    .filter((p) => p.method === "cash")
+    .reduce((s, p) => s + (parseInt(p.amount, 10) || 0), 0);
+  const [cashReceived, setCashReceived] = useState("");
+  const change = (parseInt(cashReceived, 10) || 0) - cashAmount;
   const paymentValid =
-    paymentSum === grandTotal && payments.every((p) => parseInt(p.amount, 10) > 0);
+    nothingDue ||
+    (paymentSum === grandTotal &&
+      grandTotal > 0 &&
+      payments.every((p) => parseInt(p.amount, 10) > 0));
   const canSubmit = selected.length > 0 && paymentValid && !isPending;
 
   async function saveOverride(ticketItemId: string) {
@@ -205,7 +221,12 @@ export function CheckoutForm({
     startSubmitTransition(async () => {
       const result = await processCheckout({
         ticketIds: [...selectedIds],
-        payments: payments.map((p) => ({ method: p.method, amount: parseInt(p.amount, 10) })),
+        payments: nothingDue
+          ? []
+          : payments.map((p) => ({
+              method: p.method,
+              amount: (isRefund ? -1 : 1) * parseInt(p.amount, 10),
+            })),
         idempotencyKey: newUuid(),
       });
       if (result.success) {
@@ -275,9 +296,16 @@ export function CheckoutForm({
             <span>{t("total")}</span>
             <span className="font-mono tabular-nums">{formatMoney(summary.grandTotal)}</span>
           </div>
+          {summary.prepaid > 0 && (
+            <div className="flex justify-between text-sm text-muted-foreground">
+              <span>{t("paidBefore")}</span>
+              <span className="font-mono tabular-nums">{formatMoney(summary.prepaid)}</span>
+            </div>
+          )}
           {summary.payments.map((p, i) => (
             <div key={i} className="flex justify-between text-sm text-muted-foreground">
               <span>
+                {p.amount < 0 && `${t("refund")} · `}
                 {METHODS.includes(p.method as PaymentMethod)
                   ? t(`method.${p.method as PaymentMethod}`)
                   : p.method}
@@ -351,6 +379,10 @@ export function CheckoutForm({
                     type="checkbox"
                     checked={selectedIds.has(tk.id)}
                     onChange={() => toggleTicket(tk.id)}
+                    aria-label={t("selectTicket", {
+                      services: tk.lineItems.map((li) => li.serviceName).join(", "),
+                      amount: formatMoney(tk.total),
+                    })}
                     className="mt-0.5 size-4"
                   />
                   <div className="flex-1 min-w-0">
@@ -462,8 +494,15 @@ export function CheckoutForm({
                       );
                     })}
                   </div>
-                  <span className="shrink-0 font-mono text-sm font-medium tabular-nums">
-                    {formatMoney(tk.total)}
+                  <span className="shrink-0 text-right">
+                    <span className="block font-mono text-sm font-medium tabular-nums">
+                      {formatMoney(tk.total)}
+                    </span>
+                    {tk.prepaid > 0 && (
+                      <span className="block text-xs text-muted-foreground tabular-nums">
+                        {t("alreadyPaid", { amount: formatMoney(tk.prepaid) })}
+                      </span>
+                    )}
                   </span>
                 </label>
               ))}
@@ -482,18 +521,30 @@ export function CheckoutForm({
         </p>
       )}
 
-      {/* Total */}
-      <div className="flex justify-between rounded-lg border bg-muted/40 px-4 py-3 font-semibold">
-        <span>{t("totalToCharge")}</span>
-        <span className="font-mono tabular-nums">{formatMoney(grandTotal)}</span>
+      {/* Total — what this checkout moves */}
+      <div className="space-y-1 rounded-lg border bg-muted/40 px-4 py-3">
+        {prepaidTotal > 0 && (
+          <div className="flex justify-between text-sm text-muted-foreground">
+            <span>{t("paidBefore")}</span>
+            <span className="font-mono tabular-nums">{formatMoney(prepaidTotal)}</span>
+          </div>
+        )}
+        <div className="flex justify-between font-semibold">
+          <span>{isRefund ? t("totalToRefund") : t("totalToCharge")}</span>
+          <span className="font-mono tabular-nums">{formatMoney(grandTotal)}</span>
+        </div>
+        {nothingDue && <p className="text-sm text-muted-foreground">{t("nothingDue")}</p>}
       </div>
 
-      {/* Payments */}
-      <section className="space-y-2">
-        <h2 className="text-sm font-semibold">{t("paymentMethods")}</h2>
+      {/* Payments — none when a reopened ticket kept its price */}
+      <section className={`space-y-2 ${nothingDue ? "hidden" : ""}`}>
+        <h2 className="text-sm font-semibold">
+          {isRefund ? t("refundMethods") : t("paymentMethods")}
+        </h2>
         {payments.map((p, i) => (
-          <div key={i} className="flex items-center gap-2">
+          <div key={i} className="flex flex-wrap items-center gap-2">
             <NativeSelect
+              className="min-w-[10.5rem]"
               value={p.method}
               onChange={(e) => updatePayment(i, "method", e.target.value)}
               selectClassName="text-sm"
@@ -505,14 +556,12 @@ export function CheckoutForm({
                 </option>
               ))}
             </NativeSelect>
-            <Input
-              type="number"
-              min={1}
+            <MoneyInput
               value={p.amount}
-              onChange={(e) => updatePayment(i, "amount", e.target.value)}
+              onValueChange={(digits) => updatePayment(i, "amount", digits)}
               placeholder={t("amount")}
               className="w-36"
-              aria-label={t("amount")}
+              aria-label={t("amountFor", { method: t(`method.${p.method}`) })}
             />
             <Button
               type="button"
@@ -536,10 +585,37 @@ export function CheckoutForm({
             )}
           </div>
         ))}
-        {paymentSum !== grandTotal && grandTotal > 0 && (
-          <p className="text-xs text-destructive">
-            {t("unassigned", { amount: formatMoney(grandTotal - paymentSum) })}
-          </p>
+        <p className="text-xs text-destructive" aria-live="polite">
+          {paymentSum !== grandTotal && grandTotal > 0
+            ? t("unassigned", { amount: formatMoney(grandTotal - paymentSum) })
+            : ""}
+        </p>
+        {/* Cash: what the client handed over, and the change to give back */}
+        {cashAmount > 0 && !isRefund && (
+          <div className="flex flex-wrap items-center gap-2">
+            <label htmlFor="cash-received" className="text-sm text-muted-foreground">
+              {t("cashReceived")}
+            </label>
+            <MoneyInput
+              id="cash-received"
+              value={cashReceived}
+              onValueChange={setCashReceived}
+              className="w-36"
+            />
+            <p className="text-sm tabular-nums" aria-live="polite">
+              {cashReceived !== "" &&
+                (change >= 0 ? (
+                  <>
+                    {t("change")}{" "}
+                    <span className="font-mono font-semibold">{formatMoney(change)}</span>
+                  </>
+                ) : (
+                  <span className="text-destructive">
+                    {t("cashShort", { amount: formatMoney(-change) })}
+                  </span>
+                ))}
+            </p>
+          </div>
         )}
         <Button type="button" variant="outline" size="sm" onClick={addPaymentRow}>
           <PlusIcon className="mr-1 size-3.5" aria-hidden="true" />
@@ -566,7 +642,14 @@ export function CheckoutForm({
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>
-              {t("confirmTitle", { amount: formatMoney(grandTotal), clients: clientList })}
+              {nothingDue
+                ? t("confirmNoChargeTitle", { clients: clientList })
+                : isRefund
+                  ? t("confirmRefundTitle", {
+                      amount: formatMoney(grandTotal),
+                      clients: clientList,
+                    })
+                  : t("confirmTitle", { amount: formatMoney(grandTotal), clients: clientList })}
             </DialogTitle>
           </DialogHeader>
           {selectedClients.length > 1 && (
@@ -574,8 +657,29 @@ export function CheckoutForm({
               {t("multiClientWarning", { count: selectedClients.length, clients: clientList })}
             </p>
           )}
+          {/* Restate how it is being paid — the moment a wrong method gets caught */}
+          <ul className="space-y-1 rounded-lg border bg-muted/40 px-3 py-2 text-sm">
+            {payments
+              .filter((p) => (parseInt(p.amount, 10) || 0) > 0)
+              .map((p, i) => (
+                <li key={i} className="flex justify-between gap-4">
+                  <span>{t(`method.${p.method}`)}</span>
+                  <span className="font-mono tabular-nums">
+                    {formatMoney(parseInt(p.amount, 10))}
+                  </span>
+                </li>
+              ))}
+            {cashReceived !== "" && change > 0 && (
+              <li className="flex justify-between gap-4 text-muted-foreground">
+                <span>{t("change")}</span>
+                <span className="font-mono tabular-nums">{formatMoney(change)}</span>
+              </li>
+            )}
+          </ul>
           <p className="text-sm text-muted-foreground">
-            {t("confirmDescription", { count: selected.length })}
+            {isRefund
+              ? t("confirmRefundDescription", { count: selected.length })
+              : t("confirmDescription", { count: selected.length })}
           </p>
           <DialogFooter>
             <DialogClose render={<Button variant="outline" />}>{tc("cancel")}</DialogClose>
