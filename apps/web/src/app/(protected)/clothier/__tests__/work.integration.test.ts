@@ -37,7 +37,7 @@ vi.mock("@/lib/business-day", async () => {
 });
 
 import * as s from "@befine/db/schema";
-import { getDb } from "@/lib/db";
+import { getDb, getTxDb } from "@/lib/db";
 import { hasTestDb, makeFixture, type PedidoFixture } from "@/test/pedido-db-fixture";
 import { createPedido } from "../../pedidos/actions";
 import { assignUnits } from "../../pedidos/production-actions";
@@ -106,6 +106,34 @@ describe.skipIf(!hasTestDb)("Mi trabajo actions (T123)", () => {
     expect(w.success && w.data.held).toBe(6);
     expect(w.success && w.data.claimLimit).toBe(10);
     expect(JSON.stringify(w)).not.toContain("45000");
+  });
+
+  it("sees units another clothier claimed while it waited for the lock", async () => {
+    const p = await newPedido(4);
+    // Another clothier takes all 4 units and holds the cell's lock a moment.
+    let locked!: () => void;
+    const lockHeld = new Promise<void>((resolve) => (locked = resolve));
+    const other = getTxDb().transaction(async (tx) => {
+      await tx.execute(sql`SELECT 1 FROM pedido_line_cells WHERE id = ${p.cellId} FOR UPDATE`);
+      await tx.insert(s.assignments).values({
+        cellId: p.cellId,
+        employeeId: f.clothier2.employeeId,
+        quantity: 4,
+        pieceRate: 12_000,
+        source: "claimed",
+        createdBy: f.clothier2.employeeId,
+      });
+      locked();
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    });
+    await lockHeld;
+
+    // Her screen still shows 4 free; the claim waits for the lock, then must
+    // count the other claim instead of tripping the database guard.
+    const res = await claimUnits({ cellId: p.cellId, quantity: 4, expectedUnassigned: 4 });
+    await other;
+    expect(!res.success && res.error.code).toBe("STALE_DATA");
+    expect(!res.success && res.error.message).toMatch(/Otra persona ya tomó/);
   });
 
   it("releases only while nothing was reported", async () => {
