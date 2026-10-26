@@ -48,3 +48,5 @@ blob-report/
 # Graphify analysis artifacts
 graphify-out/
 packages/graphify-out/
+# Workday simulator output (apps/web/sim)
+sim-runs/
