@@ -41,10 +41,16 @@ export const AUTH_STATE_DIR = "e2e/.auth";
 export async function loginAs(page: Page, role: Role): Promise<void> {
   const { email, password } = CREDS[role];
   await page.goto("/login", { waitUntil: "networkidle" });
+  // Click only once React owns the form: an earlier click submits it natively.
+  await page.waitForFunction(() => {
+    const button = document.querySelector('button[type="submit"]');
+    return !!button && Object.keys(button).some((k) => k.startsWith("__reactProps"));
+  });
   await page.locator("#email").fill(email);
   await page.locator("#password").fill(password);
   await page.getByRole("button", { name: /iniciar sesión/i }).click();
-  await page.waitForURL((url) => !url.pathname.includes("/login"), { timeout: 15_000 });
+  // The first visit to a role's home compiles it on a dev server.
+  await page.waitForURL((url) => !url.pathname.includes("/login"), { timeout: 45_000 });
 }
 
 export const ROLE_HOME: Record<Role, string> = {

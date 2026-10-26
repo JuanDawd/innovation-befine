@@ -60,7 +60,8 @@ export function ChangePasswordForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
+    // method="post": a submit before hydration must never put credentials in the URL (H-61).
+    <form method="post" onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
       {success && (
         <p
           className="rounded-lg border border-status-success-foreground/30 bg-status-success px-3 py-2 text-sm text-status-success-foreground"

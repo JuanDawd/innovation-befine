@@ -76,7 +76,8 @@ export function SetNewPasswordForm({ token }: SetNewPasswordFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
+    // method="post": a submit before hydration must never put credentials in the URL (H-61).
+    <form method="post" onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
       {serverError && (
         <p
           className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"

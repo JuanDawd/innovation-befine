@@ -550,6 +550,15 @@
 - **Description:** Found in the back-office design critique (verified live: "Bata de spa" priced $8.000 — its piece rate — instead of its $35.000 selling price). Picking a piece set the line's unit price from `pieceRate`, and the order total is computed from the lines, so totals, deposits and balances came out at the clothier's pay instead of the client's price.
 - **Fix:** lines prefill from the variant's `sellingPrice` via `orderUnitPrice()` (tested); pieces without a selling price start at 0 so the price is typed in. Phase 11 (Pedidos, `docs/pedidos-spec` branch) replaces this flow and keeps the selling-price snapshot.
 
+### H-61 — Login form put the email and password in the URL when submitted before hydration
+
+- **Severity:** High
+- **Status:** Resolved (2026-10-26)
+- **Affected:** login, forgot password, set new password, change password forms
+- **Description:** Found while running the T134 e2e. The forms had an `onSubmit` handler but no `method`, so a submit before React hydrated (a quick tap on a slow phone, or an automated click) fell back to a native GET: `/login?email=…&password=…`. The password then lands in the browser history, in server and proxy access logs and in Vercel request logs.
+- **Fix:** every password form has `method="post"`, so a pre-hydration submit posts the body instead (regression test in login-form.test.tsx). The e2e login helper now waits for React before clicking.
+- **Follow-up:** the stylist seed password appeared in a local dev-server log during the investigation (the line was redacted); rotate the test-environment seed passwords. Check Vercel request logs for `password=` in production.
+
 ### H-60 — Clothier payout failed when a review had approved units and paid scraps
 
 - **Severity:** High
@@ -2190,3 +2199,4 @@
 | H-60     | 2026-10-25    | Clothier payout links each unit review once (payoutReviewIds)                                                   | feat/phase-11-pedidos          |
 | M-80     | 2026-10-25    | Shared pgErrorCode(): double-pay → CONFLICT and appointment reopen → "horario ocupado" with wrapped errors      | feat/phase-11-pedidos          |
 | M-81     | 2026-10-25    | Cancelled pedidos owe nothing; everything paid is saldo a favor (list and detail)                               | feat/phase-11-pedidos          |
+| H-61     | 2026-10-26    | Password forms use method="post"; a pre-hydration submit can't put credentials in the URL                       | feat/phase-11-pedidos          |
