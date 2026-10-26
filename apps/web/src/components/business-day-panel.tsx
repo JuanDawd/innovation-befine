@@ -47,6 +47,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { daysSince } from "@/components/cashier-dashboard-helpers";
+import { IncomeBreakdown } from "@/components/income-breakdown";
 import type { BusinessDay } from "@/lib/business-day";
 import {
   openBusinessDay,
@@ -212,7 +213,10 @@ function CloseDayDialog({
         {t("close")}
       </Button>
       <Dialog open={open} onOpenChange={(next) => void handleOpenChange(next)}>
-        <DialogContent className="max-w-md" showCloseButton={false}>
+        <DialogContent
+          className="max-h-[90dvh] overflow-y-auto sm:max-w-xl"
+          showCloseButton={false}
+        >
           <DialogHeader>
             <DialogTitle>{t("confirmClose")}</DialogTitle>
             <DialogDescription>{t("confirmCloseDescription")}</DialogDescription>
@@ -248,6 +252,7 @@ function CloseDayDialog({
                     </div>
                   ))}
                 </dl>
+                {stats.data && <IncomeBreakdown income={stats.data.income} />}
                 {openCount > 0 && (
                   <p className="flex items-start gap-2 rounded-lg bg-status-attention px-3 py-2.5 text-sm text-status-attention-foreground">
                     <AlertTriangleIcon className="mt-0.5 size-4 shrink-0" aria-hidden="true" />

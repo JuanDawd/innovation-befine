@@ -124,7 +124,7 @@
     "summaryRevenue": "Revenue",
     "summaryClosed": "Charged",
     "summaryOpen": "Unpaid",
-    "closeSuccessSummary": "Day closed: {revenue} across {count, plural, one {# ticket} other {# tickets}}",
+    "closeSuccessSummary": "Day closed: {revenue} in the till",
     "openSince": "Open since {date}",
     "staleDay": "Open for {days, plural, one {# day} other {# days}}. Close it at the end of the workday.",
     "reopenReasonTooShort": "The reason must be at least 5 characters",
@@ -1638,5 +1638,25 @@
         "restructure": "Restructure"
       }
     }
+  },
+  "dayIncome": {
+    "caption": "Today's income by source and payment method",
+    "source": "Source",
+    "total": "Total",
+    "sources": {
+      "services": "Services",
+      "pedidos": "Pedidos",
+      "prendas": "Garments"
+    },
+    "methods": {
+      "cash": "Cash",
+      "card": "Card",
+      "transfer": "Transfer",
+      "unknown": "No method"
+    },
+    "count": "{count, plural, =0 {no entries} one {# entry} other {# entries}}",
+    "afterHoursShort": "after hours {amount}",
+    "afterHoursTitle": "After hours: {amount}",
+    "afterHoursDetail": "{count, plural, one {# payment} other {# payments}} taken with no day open (pedidos {pedidos} · garments {prendas}); already included above."
   }
 }

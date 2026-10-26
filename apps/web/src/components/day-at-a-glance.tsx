@@ -5,7 +5,8 @@
  *
  * Cashier home summary strip. Leads with what the front desk acts on next —
  * "Por cobrar" (awaiting-payment total + count, with a shortcut to checkout) —
- * followed by revenue, charged tickets and work in progress.
+ * followed by the till (split Servicios · Pedidos · Prendas, T130), charged
+ * tickets and work in progress.
  *
  * Shares `tickets.open` with CashierDashboard (one cached query) and reads
  * `businessDay.stats` for revenue / closed count. A failed server read is never
@@ -24,6 +25,7 @@ import { queryKeys } from "@/lib/query-keys";
 import { formatMoney } from "@/i18n";
 import { fetchQuery } from "@/lib/action-query";
 import { cn } from "@/lib/utils";
+import { IncomeBreakdown } from "@/components/income-breakdown";
 
 interface DayAtAGlanceProps {
   initialStats: DayStats;
@@ -39,7 +41,15 @@ const CELL = "flex min-w-0 flex-col bg-card p-4 lg:p-5";
 const DISPLAY_NUMBER = "font-display font-light leading-none tracking-[-0.02em] tabular-nums";
 
 /** A compact label/value row on phones; a stacked stat from `sm` up. */
-function SecondaryStat({ label, value, sub }: { label: string; value: string; sub: string }) {
+function SecondaryStat({
+  label,
+  value,
+  sub,
+}: {
+  label: string;
+  value: string;
+  sub: React.ReactNode;
+}) {
   return (
     <div
       className={cn(
@@ -56,7 +66,7 @@ function SecondaryStat({ label, value, sub }: { label: string; value: string; su
       >
         {value}
       </p>
-      <p className="hidden text-xs text-muted-foreground sm:block">{sub}</p>
+      <div className="hidden text-xs text-muted-foreground sm:block">{sub}</div>
     </div>
   );
 }
@@ -145,7 +155,7 @@ export function DayAtAGlance({
           <SecondaryStat
             label={t("revenueToday")}
             value={formatMoney(stats.revenue)}
-            sub={t("revenueSubOpen")}
+            sub={<IncomeBreakdown income={stats.income} compact />}
           />
           <SecondaryStat
             label={t("closedTickets")}

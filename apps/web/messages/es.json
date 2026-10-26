@@ -125,7 +125,7 @@
     "summaryRevenue": "Ingresos",
     "summaryClosed": "Cobrados",
     "summaryOpen": "Sin cobrar",
-    "closeSuccessSummary": "Día cerrado: {revenue} en {count, plural, one {# ticket} other {# tickets}}",
+    "closeSuccessSummary": "Día cerrado: {revenue} en caja",
     "openSince": "Abierto desde el {date}",
     "staleDay": "Lleva {days, plural, one {# día} other {# días}} abierto. Ciérralo al terminar la jornada.",
     "reopenReasonTooShort": "El motivo debe tener al menos 5 caracteres",
@@ -1670,5 +1670,25 @@
         "restructure": "Reestructuración"
       }
     }
+  },
+  "dayIncome": {
+    "caption": "Ingresos del día por origen y medio de pago",
+    "source": "Origen",
+    "total": "Total",
+    "sources": {
+      "services": "Servicios",
+      "pedidos": "Pedidos",
+      "prendas": "Prendas"
+    },
+    "methods": {
+      "cash": "Efectivo",
+      "card": "Tarjeta",
+      "transfer": "Transferencia",
+      "unknown": "Sin medio"
+    },
+    "count": "{count, plural, =0 {sin movimientos} one {# movimiento} other {# movimientos}}",
+    "afterHoursShort": "fuera de horario {amount}",
+    "afterHoursTitle": "Fuera de horario: {amount}",
+    "afterHoursDetail": "{count, plural, one {# pago tomado} other {# pagos tomados}} sin día abierto (pedidos {pedidos} · prendas {prendas}); ya está incluido arriba."
   }
 }

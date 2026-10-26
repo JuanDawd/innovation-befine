@@ -9,7 +9,8 @@
     ".": "./src/index.ts",
     "./schema": "./src/schema/index.ts",
     "./pedido-totals": "./src/queries/pedido-totals.ts",
-    "./pedido-status": "./src/queries/pedido-status.ts"
+    "./pedido-status": "./src/queries/pedido-status.ts",
+    "./day-income": "./src/queries/day-income.ts"
   },
   "scripts": {
     "db:generate": "dotenv -e ../../.env.local -- drizzle-kit generate",
