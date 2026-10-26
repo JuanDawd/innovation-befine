@@ -2,7 +2,7 @@
  * Activity log — T114 (spec: docs/Business/pedidos-spec.md §3.9)
  *
  * One immutable record of who did what, when, on which business day. Replaces
- * catalog_audit_log (its rows were copied here by the migration).
+ * the old catalog audit table (its rows were copied here by migration 0046).
  *
  * Written only through logActivity() (src/activity-log.ts), inside the same
  * transaction as the action it describes — a failed action leaves no entry.

@@ -224,56 +224,80 @@ export async function makeClothVariant(
   return { pieceId: piece!.id, variantId: variant!.id };
 }
 
-/** A product (craftable) on a day with the given pieces. */
-export async function makeProduct(
+/**
+ * Units a clothier made and a reviewer approved on a day (T126, T135): an
+ * inventory pedido line, an assignment at `rate`, the report and the review.
+ * `pendingReview` units are reported but not reviewed yet.
+ */
+export async function makeApprovedUnits(
   db: Database,
   opts: {
     dayId: string;
+    clothierId: string;
     createdBy: string;
-    largeOrderId?: string;
-    source?: "manual" | "large_order";
-    autoApproved?: boolean;
-    pieces: {
-      cloth: { pieceId: string; variantId: string };
-      assignedTo?: string | null;
-      status?: "pending" | "done_pending_approval" | "approved";
-      quantity?: number;
-      soldPrice?: number;
-      /** Day the piece was approved on (H-57); defaults to the product's day */
-      approvedDayId?: string;
-    }[];
+    cloth: { pieceId: string; variantId: string };
+    rate: number;
+    approved: number;
+    returned?: number;
+    scrapped?: number;
+    scrapPaid?: boolean;
+    pendingReview?: number;
   },
-): Promise<{ productId: string; pieceIds: string[] }> {
-  const [product] = await db
-    .insert(s.products)
+): Promise<{ assignmentId: string }> {
+  const returned = opts.returned ?? 0;
+  const scrapped = opts.scrapped ?? 0;
+  const pending = opts.pendingReview ?? 0;
+  const reviewed = opts.approved + returned + scrapped;
+  const [p] = await db
+    .insert(s.pedidos)
+    .values({ destination: "inventory", createdBy: opts.createdBy })
+    .returning({ id: s.pedidos.id });
+  const [l] = await db
+    .insert(s.pedidoLines)
     .values({
-      businessDayId: opts.dayId,
-      createdBy: opts.createdBy,
-      largeOrderId: opts.largeOrderId ?? null,
-      source: opts.source ?? "manual",
-      autoApproved: opts.autoApproved ?? false,
+      pedidoId: p!.id,
+      kind: "garment",
+      clothPieceVariantId: opts.cloth.variantId,
+      unitPrice: 0,
     })
-    .returning({ id: s.products.id });
-  const pieceIds: string[] = [];
-  for (const p of opts.pieces) {
-    const [row] = await db
-      .insert(s.productPieces)
-      .values({
-        productId: product!.id,
-        clothPieceId: p.cloth.pieceId,
-        clothPieceVariantId: p.cloth.variantId,
-        assignedToEmployeeId: p.assignedTo ?? null,
-        status: p.status ?? "pending",
-        approvedBusinessDayId:
-          (p.status ?? "pending") === "approved" ? (p.approvedDayId ?? opts.dayId) : null,
-        quantity: p.quantity ?? 1,
-        soldAt: p.soldPrice !== undefined ? new Date() : null,
-        soldPrice: p.soldPrice ?? null,
-      })
-      .returning({ id: s.productPieces.id });
-    pieceIds.push(row!.id);
-  }
-  return { productId: product!.id, pieceIds };
+    .returning({ id: s.pedidoLines.id });
+  const [c] = await db
+    .insert(s.pedidoLineCells)
+    .values({ lineId: l!.id, sizeOther: "Única", quantity: reviewed + pending })
+    .returning({ id: s.pedidoLineCells.id });
+  const [a] = await db
+    .insert(s.assignments)
+    .values({
+      cellId: c!.id,
+      employeeId: opts.clothierId,
+      quantity: reviewed + pending,
+      pieceRate: opts.rate,
+      source: "assigned",
+      createdBy: opts.createdBy,
+    })
+    .returning({ id: s.assignments.id });
+  await db.insert(s.unitReports).values({
+    assignmentId: a!.id,
+    quantity: reviewed + pending,
+    kind: "report",
+    businessDayId: opts.dayId,
+    reportedBy: opts.clothierId,
+  });
+  if (reviewed > 0)
+    await db.insert(s.unitReviews).values({
+      assignmentId: a!.id,
+      approved: opts.approved,
+      returned,
+      scrapped,
+      reason: returned ? "Costura" : null,
+      returnCode: returned ? "costura" : null,
+      scrapCode: scrapped ? "mancha" : null,
+      scrapReason: scrapped ? "Mancha" : null,
+      scrapPaid: scrapped > 0 && (opts.scrapPaid ?? false),
+      businessDayId: opts.dayId,
+      reviewedBy: opts.createdBy,
+    });
+  return { assignmentId: a!.id };
 }
 
 export async function makeClothSale(
@@ -309,68 +333,4 @@ export async function makeAbsence(
   },
 ): Promise<void> {
   await db.insert(s.employeeAbsences).values(opts);
-}
-
-/** A large order for a new client, with order items. */
-export async function makeLargeOrder(
-  db: Database,
-  opts: {
-    createdBy: string;
-    clientName?: string;
-    items: { cloth: { pieceId: string; variantId: string }; quantity: number; name?: string }[];
-  },
-): Promise<{ orderId: string; itemIds: string[] }> {
-  const [client] = await db
-    .insert(s.clients)
-    .values({ name: opts.clientName ?? `Cliente ${next()}` })
-    .returning({ id: s.clients.id });
-  const [order] = await db
-    .insert(s.largeOrders)
-    .values({
-      clientId: client!.id,
-      description: "Pedido de prueba",
-      totalPrice: 1_000_000,
-      createdBy: opts.createdBy,
-    })
-    .returning({ id: s.largeOrders.id });
-  const itemIds: string[] = [];
-  for (const it of opts.items) {
-    const [row] = await db
-      .insert(s.orderItems)
-      .values({
-        largeOrderId: order!.id,
-        clothPieceId: it.cloth.pieceId,
-        clothPieceVariantId: it.cloth.variantId,
-        pieceName: it.name ?? "Bata",
-        quantity: it.quantity,
-      })
-      .returning({ id: s.orderItems.id });
-    itemIds.push(row!.id);
-  }
-  return { orderId: order!.id, itemIds };
-}
-
-export async function makeAssignment(
-  db: Database,
-  opts: {
-    orderItemId: string;
-    productPieceId: string;
-    assigneeId: string;
-    assigned: number;
-    completed?: number;
-    approved?: number;
-  },
-): Promise<string> {
-  const [row] = await db
-    .insert(s.clothPieceAssignments)
-    .values({
-      orderItemId: opts.orderItemId,
-      productPieceId: opts.productPieceId,
-      assigneeId: opts.assigneeId,
-      assignedQuantity: opts.assigned,
-      completedQuantity: opts.completed ?? 0,
-      approvedQuantity: opts.approved ?? 0,
-    })
-    .returning({ id: s.clothPieceAssignments.id });
-  return row!.id;
 }

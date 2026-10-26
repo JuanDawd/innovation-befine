@@ -24,12 +24,9 @@ import {
   payouts,
   payoutPeriodDays,
   payoutTicketItems,
-  payoutProductPieces,
   payoutUnitReviews,
   ticketItems,
-  productPieces,
   tickets,
-  products,
   assignments,
   unitReviews,
 } from "@befine/db/schema";
@@ -380,24 +377,7 @@ export async function recordPayout(rawInput: unknown): Promise<ActionResult<{ id
             .values(items.map((item) => ({ payoutId: payout.id, ticketItemId: item.id })));
       }
 
-      // Link covered product pieces (clothiers)
       if (emp.role === "clothier") {
-        const pieces = await tx
-          .select({ id: productPieces.id })
-          .from(productPieces)
-          .innerJoin(products, eq(productPieces.productId, products.id))
-          .where(
-            and(
-              eq(productPieces.assignedToEmployeeId, input.employeeId),
-              eq(productPieces.status, "approved"),
-              inArray(productPieces.approvedBusinessDayId, input.businessDayIds),
-            ),
-          );
-        if (pieces.length > 0)
-          await tx
-            .insert(payoutProductPieces)
-            .values(pieces.map((p) => ({ payoutId: payout.id, productPieceId: p.id })));
-
         // T126: the pedido unit reviews this payout pays. UNIQUE(unit_review_id)
         // makes a second payout of the same review fail and roll back.
         const reviewIds = payoutReviewIds(
@@ -635,32 +615,18 @@ export async function getUnsettledEmployees(): Promise<ActionResult<UnsettledEmp
         (d) => workDays.some((w) => w.businessDayId === d.id) && !settled.has(d.id),
       );
     } else if (emp.role === "clothier") {
-      const [pieceDays, reviewDays] = await Promise.all([
-        db
-          .selectDistinct({ businessDayId: productPieces.approvedBusinessDayId })
-          .from(productPieces)
-          .innerJoin(products, eq(productPieces.productId, products.id))
-          .where(
-            and(
-              eq(productPieces.assignedToEmployeeId, emp.id),
-              eq(productPieces.status, "approved"),
-              inArray(productPieces.approvedBusinessDayId, closedDayIds),
-            ),
+      // T126: days with reviewed pedido units (approved, or scrapped and paid)
+      const workDays = await db
+        .selectDistinct({ businessDayId: unitReviews.businessDayId })
+        .from(unitReviews)
+        .innerJoin(assignments, eq(unitReviews.assignmentId, assignments.id))
+        .where(
+          and(
+            eq(assignments.employeeId, emp.id),
+            inArray(unitReviews.businessDayId, closedDayIds),
+            sql`(${unitReviews.approved} > 0 OR (${unitReviews.scrapPaid} AND ${unitReviews.scrapped} > 0))`,
           ),
-        // T126: days with reviewed pedido units (approved, or scrapped and paid)
-        db
-          .selectDistinct({ businessDayId: unitReviews.businessDayId })
-          .from(unitReviews)
-          .innerJoin(assignments, eq(unitReviews.assignmentId, assignments.id))
-          .where(
-            and(
-              eq(assignments.employeeId, emp.id),
-              inArray(unitReviews.businessDayId, closedDayIds),
-              sql`(${unitReviews.approved} > 0 OR (${unitReviews.scrapPaid} AND ${unitReviews.scrapped} > 0))`,
-            ),
-          ),
-      ]);
-      const workDays = [...pieceDays, ...reviewDays];
+        );
       unsettledDays = closedDays.filter(
         (d) => workDays.some((w) => w.businessDayId === d.id) && !settled.has(d.id),
       );

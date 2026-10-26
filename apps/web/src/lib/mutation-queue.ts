@@ -6,13 +6,12 @@
  * retries are safe. Works in the browser only — guards against SSR.
  *
  * Supported mutation types:
- *   - "markPieceDone"   — clothier marks a product piece as done
  *   - "createTicket"    — cashier creates a ticket while offline
  *   - "paidOffline"     — cashier marks checkout as paid_offline
  *   - "reportUnits"     — clothier reports finished pedido units (T123)
  */
 
-export type MutationType = "markPieceDone" | "createTicket" | "paidOffline" | "reportUnits";
+export type MutationType = "createTicket" | "paidOffline" | "reportUnits";
 
 export type QueuedMutation = {
   id: string; // client-generated UUID (also the idempotency key)

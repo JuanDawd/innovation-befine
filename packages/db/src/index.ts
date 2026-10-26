@@ -54,8 +54,6 @@ export type TxDatabase = ReturnType<typeof createTxDb>;
 export { schema };
 export * from "./queries/analytics";
 export * from "./queries/payroll";
-export * from "./queries/products";
-export * from "./queries/order-items";
 export * from "./queries/pedido-totals";
 export * from "./queries/pedido-progress";
 export * from "./queries/pedido-balance";

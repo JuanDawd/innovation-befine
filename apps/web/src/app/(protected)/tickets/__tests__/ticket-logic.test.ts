@@ -189,14 +189,6 @@ function canAdminMarkApproved(status: PieceStatus): boolean {
   return status === "pending";
 }
 
-function canMarkDone(
-  status: PieceStatus,
-  assignedToEmployeeId: string | null,
-  claimantEmployeeId: string,
-): boolean {
-  return status === "pending" && assignedToEmployeeId === claimantEmployeeId;
-}
-
 describe("Product piece state guards", () => {
   describe("approveProductPiece", () => {
     it("allows approval from done_pending_approval", () => {
@@ -223,24 +215,6 @@ describe("Product piece state guards", () => {
 
     it("rejects from already approved", () => {
       expect(canAdminMarkApproved("approved")).toBe(false);
-    });
-  });
-
-  describe("markPieceDone — self-claim auth guard", () => {
-    it("allows when piece is assigned to the requesting clothier", () => {
-      expect(canMarkDone("pending", "emp-1", "emp-1")).toBe(true);
-    });
-
-    it("rejects when piece is assigned to a different clothier", () => {
-      expect(canMarkDone("pending", "emp-2", "emp-1")).toBe(false);
-    });
-
-    it("rejects when piece is already in done_pending_approval", () => {
-      expect(canMarkDone("done_pending_approval", "emp-1", "emp-1")).toBe(false);
-    });
-
-    it("rejects when piece is unassigned (must claim first)", () => {
-      expect(canMarkDone("pending", null, "emp-1")).toBe(false);
     });
   });
 });

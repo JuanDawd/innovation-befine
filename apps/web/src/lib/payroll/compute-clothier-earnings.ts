@@ -7,9 +7,6 @@
  * Returned units earn nothing until their rework is approved, so a correction
  * is paid exactly once. Units later moved out of a pedido by a restructure
  * stay paid: the review rows do not change.
- *
- * Product pieces from the previous model are still included (labelled
- * "producto") until T135 retires that model.
  */
 
 import { and, eq, inArray } from "drizzle-orm";
@@ -22,8 +19,6 @@ import {
   pedidoLineCells,
   pedidoLines,
   pedidos,
-  productPieces,
-  products,
   unitReviews,
 } from "@befine/db/schema";
 
@@ -34,8 +29,8 @@ export type ClothierEarningsLine = {
   quantity: number;
   pieceRate: number;
   earnings: number;
-  /** "pedido" (T126) or "producto" (previous model, until T135) */
-  source: "pedido" | "producto";
+  /** Always "pedido" since the previous model was retired (T135) */
+  source: "pedido";
   /** pedido lines: approved units, or scrapped units paid by the setting */
   kind: "approved" | "scrapped";
   pedidoNumber: number | null;
@@ -44,9 +39,6 @@ export type ClothierEarningsLine = {
   rateReason: string | null;
   /** Reviews this line pays (pedido lines) — linked to the payout */
   unitReviewIds: string[];
-  /** Previous model only */
-  productId?: string;
-  productPieceId?: string;
 };
 
 export type ClothierEarningsResult = {
@@ -122,28 +114,6 @@ export function payoutReviewIds(lines: ClothierEarningsLine[]): string[] {
   return [...new Set(lines.flatMap((l) => l.unitReviewIds))];
 }
 
-/** One payroll line per approved product piece (previous model) — kept for unit tests. */
-export function clothierEarningsLine(row: {
-  productId: string;
-  businessDayId: string;
-  productPieceId: string;
-  pieceName: string;
-  variantName: string;
-  quantity: number;
-  pieceRate: number;
-}): ClothierEarningsLine {
-  return {
-    ...row,
-    earnings: row.pieceRate * row.quantity,
-    source: "producto",
-    kind: "approved",
-    pedidoNumber: null,
-    sizeLabel: null,
-    rateReason: null,
-    unitReviewIds: [],
-  };
-}
-
 export async function computeClothierEarnings(
   db: Database,
   employeeId: string,
@@ -152,68 +122,40 @@ export async function computeClothierEarnings(
   if (businessDayIds.length === 0)
     return { employeeId, businessDayIds, totalEarnings: 0, lines: [] };
 
-  const [reviewRows, pieceRows] = await Promise.all([
-    db
-      .select({
-        reviewId: unitReviews.id,
-        businessDayId: unitReviews.businessDayId,
-        assignmentId: assignments.id,
-        pedidoNumber: pedidos.number,
-        pieceName: clothPieces.name,
-        variantName: clothPieceVariants.name,
-        sizeLabel: garmentSizes.label,
-        sizeOther: pedidoLineCells.sizeOther,
-        pieceRate: assignments.pieceRate,
-        rateReason: assignments.rateReason,
-        approved: unitReviews.approved,
-        scrapped: unitReviews.scrapped,
-        scrapPaid: unitReviews.scrapPaid,
-      })
-      .from(unitReviews)
-      .innerJoin(assignments, eq(unitReviews.assignmentId, assignments.id))
-      .innerJoin(pedidoLineCells, eq(assignments.cellId, pedidoLineCells.id))
-      .innerJoin(pedidoLines, eq(pedidoLineCells.lineId, pedidoLines.id))
-      .innerJoin(pedidos, eq(pedidoLines.pedidoId, pedidos.id))
-      .innerJoin(clothPieceVariants, eq(pedidoLines.clothPieceVariantId, clothPieceVariants.id))
-      .innerJoin(clothPieces, eq(clothPieceVariants.clothPieceId, clothPieces.id))
-      .leftJoin(garmentSizes, eq(pedidoLineCells.sizeId, garmentSizes.id))
-      .where(
-        and(
-          eq(assignments.employeeId, employeeId),
-          inArray(unitReviews.businessDayId, businessDayIds),
-        ),
+  const reviewRows = await db
+    .select({
+      reviewId: unitReviews.id,
+      businessDayId: unitReviews.businessDayId,
+      assignmentId: assignments.id,
+      pedidoNumber: pedidos.number,
+      pieceName: clothPieces.name,
+      variantName: clothPieceVariants.name,
+      sizeLabel: garmentSizes.label,
+      sizeOther: pedidoLineCells.sizeOther,
+      pieceRate: assignments.pieceRate,
+      rateReason: assignments.rateReason,
+      approved: unitReviews.approved,
+      scrapped: unitReviews.scrapped,
+      scrapPaid: unitReviews.scrapPaid,
+    })
+    .from(unitReviews)
+    .innerJoin(assignments, eq(unitReviews.assignmentId, assignments.id))
+    .innerJoin(pedidoLineCells, eq(assignments.cellId, pedidoLineCells.id))
+    .innerJoin(pedidoLines, eq(pedidoLineCells.lineId, pedidoLines.id))
+    .innerJoin(pedidos, eq(pedidoLines.pedidoId, pedidos.id))
+    .innerJoin(clothPieceVariants, eq(pedidoLines.clothPieceVariantId, clothPieceVariants.id))
+    .innerJoin(clothPieces, eq(clothPieceVariants.clothPieceId, clothPieces.id))
+    .leftJoin(garmentSizes, eq(pedidoLineCells.sizeId, garmentSizes.id))
+    .where(
+      and(
+        eq(assignments.employeeId, employeeId),
+        inArray(unitReviews.businessDayId, businessDayIds),
       ),
-    db
-      .select({
-        productId: products.id,
-        businessDayId: productPieces.approvedBusinessDayId,
-        productPieceId: productPieces.id,
-        pieceName: clothPieces.name,
-        variantName: clothPieceVariants.name,
-        pieceRate: clothPieceVariants.pieceRate,
-        quantity: productPieces.quantity,
-      })
-      .from(productPieces)
-      .innerJoin(products, eq(productPieces.productId, products.id))
-      .innerJoin(clothPieces, eq(productPieces.clothPieceId, clothPieces.id))
-      .innerJoin(clothPieceVariants, eq(productPieces.clothPieceVariantId, clothPieceVariants.id))
-      .where(
-        and(
-          eq(productPieces.assignedToEmployeeId, employeeId),
-          eq(productPieces.status, "approved"),
-          // H-57: pay belongs to the day the piece was approved
-          inArray(productPieces.approvedBusinessDayId, businessDayIds),
-        ),
-      ),
-  ]);
+    );
 
-  const lines = [
-    ...pedidoEarningsLines(
-      reviewRows.map((r) => ({ ...r, sizeLabel: r.sizeLabel ?? r.sizeOther ?? "—" })),
-    ),
-    // Filtered by approval day above, so it is always set
-    ...pieceRows.map((r) => clothierEarningsLine({ ...r, businessDayId: r.businessDayId! })),
-  ];
+  const lines = pedidoEarningsLines(
+    reviewRows.map((r) => ({ ...r, sizeLabel: r.sizeLabel ?? r.sizeOther ?? "—" })),
+  );
   const totalEarnings = lines.reduce((sum, l) => sum + l.earnings, 0);
   return { employeeId, businessDayIds, totalEarnings, lines };
 }

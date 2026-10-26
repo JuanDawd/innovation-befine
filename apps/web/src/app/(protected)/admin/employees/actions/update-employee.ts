@@ -19,8 +19,8 @@ import {
   payoutPeriodDays,
   businessDays,
   tickets,
-  productPieces,
-  products,
+  unitReviews,
+  assignments,
   employeeAbsences,
 } from "@befine/db/schema";
 import { computeEarningsTotal } from "@/lib/payroll/compute-total";
@@ -401,15 +401,16 @@ export async function getUnsettledPeriodsForEmployee(
       (d) => workDays.some((w) => w.businessDayId === d.id) && !settledIds.has(d.id),
     );
   } else if (emp.role === "clothier") {
+    // Days with paid pedido units (approved, or scrapped and paid) — the payroll rule (T126)
     const workDays = await db
-      .selectDistinct({ businessDayId: productPieces.approvedBusinessDayId })
-      .from(productPieces)
-      .innerJoin(products, eq(productPieces.productId, products.id))
+      .selectDistinct({ businessDayId: unitReviews.businessDayId })
+      .from(unitReviews)
+      .innerJoin(assignments, eq(unitReviews.assignmentId, assignments.id))
       .where(
         and(
-          eq(productPieces.assignedToEmployeeId, employeeId),
-          eq(productPieces.status, "approved"),
-          inArray(productPieces.approvedBusinessDayId, closedDayIds),
+          eq(assignments.employeeId, employeeId),
+          inArray(unitReviews.businessDayId, closedDayIds),
+          sql`(${unitReviews.approved} > 0 OR (${unitReviews.scrapPaid} AND ${unitReviews.scrapped} > 0))`,
         ),
       );
     unsettledDays = closedDays.filter(

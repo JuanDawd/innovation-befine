@@ -15,9 +15,6 @@ import type { Database } from "../index";
 import {
   tickets,
   ticketItems,
-  productPieces,
-  products,
-  clothPieceVariants,
   employees,
   users,
   businessDays,
@@ -100,7 +97,7 @@ export async function revenueByPeriod(
   if (businessDayIds.length === 0)
     return { totalRevenue: 0, serviceRevenue: 0, productSalesRevenue: 0, totalJobs: 0 };
 
-  const [ticketRows, salesRows, clothSaleRows] = await Promise.all([
+  const [ticketRows, clothSaleRows] = await Promise.all([
     db
       .select({
         revenue: sql<number>`
@@ -119,26 +116,14 @@ export async function revenueByPeriod(
         ),
       ),
     db
-      .select({
-        revenue: sql<number>`COALESCE(SUM(${productPieces.soldPrice}), 0)::bigint`,
-      })
-      .from(productPieces)
-      .innerJoin(products, eq(productPieces.productId, products.id))
-      .where(
-        and(
-          inArray(products.businessDayId, businessDayIds),
-          sql`${productPieces.soldAt} IS NOT NULL`,
-        ),
-      ),
-    db
       .select({ revenue: clothSaleTotal })
       .from(clothSales)
       .where(inArray(clothSales.businessDayId, businessDayIds)),
   ]);
 
   const serviceRevenue = Number(ticketRows[0]?.revenue ?? 0);
-  const productSalesRevenue =
-    Number(salesRows[0]?.revenue ?? 0) + Number(clothSaleRows[0]?.revenue ?? 0);
+  // Garment sales (Vender prenda); pedido payments are in Analítica's "Ingresos por fuente".
+  const productSalesRevenue = Number(clothSaleRows[0]?.revenue ?? 0);
 
   return {
     totalRevenue: serviceRevenue + productSalesRevenue,
@@ -194,7 +179,7 @@ export async function jobsCountByEmployee(
 /**
  * Total earnings + job count per active employee for the given business days.
  * Stylist: commission on closed ticket items, banker's rounding per item (as payroll).
- * Clothier: piece_rate × quantity for approved product pieces (per garment, M-78).
+ * Clothier: approved (+ paid scrapped) units × assignment rate (T126, T135).
  * Secretary: daysWorked × daily_rate with ISO-week expected_work_days cap,
  *   excluding vacation/approved_absence days.
  *
@@ -234,28 +219,37 @@ export async function earningsByEmployee(
     )
     .groupBy(tickets.employeeId, users.name, employees.role);
 
-  // Clothier earnings + job count (pieces)
-  const clothierRows = await db
-    .select({
-      employeeId: productPieces.assignedToEmployeeId,
-      employeeName: users.name,
-      role: employees.role,
-      totalEarnings: sql<number>`COALESCE(SUM(${clothPieceVariants.pieceRate} * ${productPieces.quantity}), 0)::bigint`,
-      jobCount: sql<number>`COALESCE(SUM(${productPieces.quantity}), 0)::int`,
-    })
-    .from(productPieces)
-    .innerJoin(products, eq(productPieces.productId, products.id))
-    .innerJoin(clothPieceVariants, eq(productPieces.clothPieceVariantId, clothPieceVariants.id))
-    .innerJoin(employees, eq(productPieces.assignedToEmployeeId, employees.id))
-    .innerJoin(users, eq(employees.userId, users.id))
-    .where(
-      and(
-        inArray(productPieces.approvedBusinessDayId, businessDayIds),
-        eq(productPieces.status, "approved"),
-        activeFilter,
-      ),
-    )
-    .groupBy(productPieces.assignedToEmployeeId, users.name, employees.role);
+  // Clothier earnings + job count: units approved in the period × assignment
+  // rate, plus scrapped units the review marked paid — the payroll rule (T126).
+  const clothierRes = await db.execute(sql`
+    SELECT a.employee_id, u.name AS employee_name, e.role,
+      coalesce(sum((r.approved + CASE WHEN r.scrap_paid THEN r.scrapped ELSE 0 END) * a.piece_rate), 0)::bigint AS total_earnings,
+      coalesce(sum(r.approved + CASE WHEN r.scrap_paid THEN r.scrapped ELSE 0 END), 0)::int AS job_count
+    FROM unit_reviews r
+    JOIN assignments a ON a.id = r.assignment_id
+    JOIN employees e ON e.id = a.employee_id
+    JOIN users u ON u.id = e.user_id
+    WHERE r.business_day_id IN (${sql.join(
+      businessDayIds.map((id) => sql`${id}::uuid`),
+      sql`, `,
+    )})
+      ${activeOnly ? sql`AND e.is_active` : sql``}
+    GROUP BY a.employee_id, u.name, e.role`);
+  const clothierRows = (
+    clothierRes.rows as {
+      employee_id: string;
+      employee_name: string;
+      role: EarningsByEmployee["role"];
+      total_earnings: string;
+      job_count: number;
+    }[]
+  ).map((r) => ({
+    employeeId: r.employee_id,
+    employeeName: r.employee_name,
+    role: r.role,
+    totalEarnings: Number(r.total_earnings),
+    jobCount: Number(r.job_count),
+  }));
 
   const result = new Map<string, EarningsByEmployee>();
 
@@ -422,7 +416,7 @@ export async function dailyRevenueBreakdown(
 ): Promise<DailyRevenueRow[]> {
   if (businessDayIds.length === 0) return [];
 
-  const [ticketRows, salesRows, clothSaleRows] = await Promise.all([
+  const [ticketRows, clothSaleRows] = await Promise.all([
     db
       .select({
         businessDayId: tickets.businessDayId,
@@ -446,27 +440,13 @@ export async function dailyRevenueBreakdown(
       .groupBy(tickets.businessDayId, businessDays.openedAt)
       .orderBy(businessDays.openedAt),
     db
-      .select({
-        businessDayId: products.businessDayId,
-        revenue: sql<number>`COALESCE(SUM(${productPieces.soldPrice}), 0)::bigint`,
-      })
-      .from(productPieces)
-      .innerJoin(products, eq(productPieces.productId, products.id))
-      .where(
-        and(
-          inArray(products.businessDayId, businessDayIds),
-          sql`${productPieces.soldAt} IS NOT NULL`,
-        ),
-      )
-      .groupBy(products.businessDayId),
-    db
       .select({ businessDayId: clothSales.businessDayId, revenue: clothSaleTotal })
       .from(clothSales)
       .where(inArray(clothSales.businessDayId, businessDayIds))
       .groupBy(clothSales.businessDayId),
   ]);
 
-  const salesByDay = new Map(salesRows.map((r) => [r.businessDayId, Number(r.revenue)]));
+  const salesByDay = new Map<string, number>();
   for (const r of clothSaleRows) {
     // inArray() already excludes after-hours sales not yet attached to a day.
     if (!r.businessDayId) continue;
@@ -603,7 +583,7 @@ export type EmployeeDayBreakdown = {
 
 /**
  * Day-by-day jobs + earnings for a single employee in the given business days.
- * Stylist: commission sum per day. Clothier: piece_rate × quantity per day.
+ * Stylist: commission sum per day. Clothier: paid units × assignment rate per day.
  */
 export async function employeeDayBreakdown(
   db: Database,
@@ -652,29 +632,25 @@ export async function employeeDayBreakdown(
   }
 
   if (emp.role === "clothier") {
-    const rows = await db
-      .select({
-        businessDayId: productPieces.approvedBusinessDayId,
-        openedAt: businessDays.openedAt,
-        jobs: sql<number>`COALESCE(SUM(${productPieces.quantity}), 0)::int`,
-        earnings: sql<number>`COALESCE(SUM(${clothPieceVariants.pieceRate} * ${productPieces.quantity}), 0)::bigint`,
-      })
-      .from(productPieces)
-      .innerJoin(clothPieceVariants, eq(productPieces.clothPieceVariantId, clothPieceVariants.id))
-      .innerJoin(businessDays, eq(productPieces.approvedBusinessDayId, businessDays.id))
-      .where(
-        and(
-          eq(productPieces.assignedToEmployeeId, employeeId),
-          inArray(productPieces.approvedBusinessDayId, businessDayIds),
-          eq(productPieces.status, "approved"),
-        ),
-      )
-      .groupBy(productPieces.approvedBusinessDayId, businessDays.openedAt)
-      .orderBy(businessDays.openedAt);
-
-    return rows.map((r) => ({
-      businessDayId: r.businessDayId!, // filtered by approval day above
-      date: toBogotaDate(new Date(r.openedAt)),
+    const res = await db.execute(sql`
+      SELECT r.business_day_id, d.opened_at,
+        sum(r.approved + CASE WHEN r.scrap_paid THEN r.scrapped ELSE 0 END)::int AS jobs,
+        sum((r.approved + CASE WHEN r.scrap_paid THEN r.scrapped ELSE 0 END) * a.piece_rate)::bigint AS earnings
+      FROM unit_reviews r
+      JOIN assignments a ON a.id = r.assignment_id
+      JOIN business_days d ON d.id = r.business_day_id
+      WHERE a.employee_id = ${employeeId}
+        AND r.business_day_id IN (${sql.join(
+          businessDayIds.map((id) => sql`${id}::uuid`),
+          sql`, `,
+        )})
+      GROUP BY r.business_day_id, d.opened_at
+      ORDER BY d.opened_at`);
+    return (
+      res.rows as { business_day_id: string; opened_at: string; jobs: number; earnings: string }[]
+    ).map((r) => ({
+      businessDayId: r.business_day_id,
+      date: toBogotaDate(new Date(r.opened_at)),
       jobs: Number(r.jobs),
       earnings: Number(r.earnings),
     }));

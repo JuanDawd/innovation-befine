@@ -469,7 +469,7 @@ Per-role menus: Pedidos, Producción, Inventario, Actividad, Mi trabajo; remove 
 ## T135 — Retire the old model and reset test data
 
 **Phase:** 11F — Rollout
-**Status:** pending
+**Status:** done (2026-10-26) — old tables moved to the `archive` schema by 0054 (not dropped: production data unchecked; drop the schema by hand once reviewed); guard test no-old-model.test.ts; reset script tested in a rolled-back transaction
 **Dependencies:** T134
 
 ### What to do
@@ -478,8 +478,8 @@ Drop `craftables`, `craftable_pieces`, `cloth_piece_assignments`, `production_lo
 
 ### Acceptance criteria
 
-- [ ] No references to dropped tables remain (typecheck + grep in CI)
-- [ ] Reset script is idempotent and refuses to run without an explicit flag
+- [x] No references to dropped tables remain (typecheck + grep in CI)
+- [x] Reset script is idempotent and refuses to run without an explicit flag
 
 ---
 

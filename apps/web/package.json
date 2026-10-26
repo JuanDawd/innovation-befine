@@ -15,7 +15,8 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "clean": "rm -rf .next .turbo"
+    "clean": "rm -rf .next .turbo",
+    "demo:seed": "vitest run --config vitest.demo.config.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",

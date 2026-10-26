@@ -379,6 +379,13 @@
       "when": 1792904691693,
       "tag": "0053_payout_unit_reviews",
       "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1793019994183,
+      "tag": "0054_retire_old_model",
+      "breakpoints": true
     }
   ]
 }

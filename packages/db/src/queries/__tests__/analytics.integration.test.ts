@@ -16,7 +16,7 @@ import {
   makeClothVariant,
   makeDay,
   makeEmployee,
-  makeProduct,
+  makeApprovedUnits,
   makeTicket,
   makeVariant,
   withCleanDb,
@@ -26,7 +26,7 @@ import {
 // pre-computed expected outputs (integer pesos).
 
 describeDb("revenueByPeriod", () => {
-  it("sums closed service revenue, sold pieces and cloth sales; ignores everything else", () =>
+  it("sums closed service revenue and garment sales; ignores everything else", () =>
     withCleanDb(async (db) => {
       const stylist = await makeEmployee(db);
       const day = await makeDay(db, "2026-10-22T13:00:00Z");
@@ -43,14 +43,6 @@ describeDb("revenueByPeriod", () => {
       await makeTicket(db, { ...base, dayId: other, unitPrice: 99_000 }); // other day
 
       const cloth = await makeClothVariant(db);
-      await makeProduct(db, {
-        dayId: day,
-        createdBy: stylist.id,
-        pieces: [
-          { cloth, status: "approved", soldPrice: 70_000 },
-          { cloth, status: "approved" }, // not sold
-        ],
-      });
       await makeClothSale(db, {
         dayId: day,
         soldBy: stylist.id,
@@ -68,8 +60,8 @@ describeDb("revenueByPeriod", () => {
 
       expect(await revenueByPeriod(db, [day])).toEqual({
         serviceRevenue: 110_000,
-        productSalesRevenue: 70_000 + 190_000 + 80_000,
-        totalRevenue: 110_000 + 340_000,
+        productSalesRevenue: 190_000 + 80_000,
+        totalRevenue: 110_000 + 270_000,
         totalJobs: 3,
       });
     }));
@@ -137,24 +129,33 @@ describeDb("earningsByEmployee", () => {
       });
     }));
 
-  it("clothier earns the piece rate for approved pieces only", () =>
+  it("clothier earns the assignment rate for approved (and paid scrapped) units only", () =>
     withCleanDb(async (db) => {
       const clothier = await makeEmployee(db, { name: "Confección", role: "clothier" });
       const admin = await makeEmployee(db, { role: "admin" });
       const day = await makeDay(db, "2026-10-22T13:00:00Z");
       const bata = await makeClothVariant(db, { pieceRate: 8_000 });
       const falda = await makeClothVariant(db, { pieceRate: 5_000 });
-      await makeProduct(db, {
-        dayId: day,
-        createdBy: admin.id,
-        pieces: [
-          { cloth: bata, assignedTo: clothier.id, status: "approved", quantity: 3 },
-          { cloth: falda, assignedTo: clothier.id, status: "approved" },
-          { cloth: bata, assignedTo: clothier.id, status: "done_pending_approval" },
-          { cloth: bata, assignedTo: clothier.id, status: "pending" },
-          { cloth: bata, assignedTo: null, status: "approved" }, // unassigned
-        ],
+      const base = { dayId: day, clothierId: clothier.id, createdBy: admin.id };
+      // 3 approved + 1 returned (unpaid) + 2 waiting for review (unpaid) at 8.000
+      await makeApprovedUnits(db, {
+        ...base,
+        cloth: bata,
+        rate: 8_000,
+        approved: 3,
+        returned: 1,
+        pendingReview: 2,
       });
+      // 1 approved at 5.000, 1 scrapped and paid by the setting, 1 scrapped unpaid
+      await makeApprovedUnits(db, {
+        ...base,
+        cloth: falda,
+        rate: 5_000,
+        approved: 1,
+        scrapped: 1,
+        scrapPaid: true,
+      });
+      await makeApprovedUnits(db, { ...base, cloth: falda, rate: 5_000, approved: 0, scrapped: 1 });
 
       const rows = await earningsByEmployee(db, [day]);
       expect(rows).toEqual([
@@ -162,35 +163,23 @@ describeDb("earningsByEmployee", () => {
           employeeId: clothier.id,
           employeeName: "Confección",
           role: "clothier",
-          totalEarnings: 29_000, // Bata ×3 at 8.000 + Falda 5.000 — per garment (M-78)
-          jobCount: 4,
-          earningsBySource: { service: 0, pieceCreated: 29_000, workedDay: 0 },
+          totalEarnings: 34_000, // 3 × 8.000 + 2 × 5.000
+          jobCount: 5,
+          earningsBySource: { service: 0, pieceCreated: 34_000, workedDay: 0 },
         },
       ]);
     }));
 
-  it("piece pay lands on the day it was approved, not its product's day (H-57)", () =>
+  it("unit pay lands on the day it was reviewed (H-57)", () =>
     withCleanDb(async (db) => {
       const clothier = await makeEmployee(db, { role: "clothier" });
       const admin = await makeEmployee(db, { role: "admin" });
       const monday = await makeDay(db, "2026-10-19T13:00:00Z");
       const wednesday = await makeDay(db, "2026-10-21T13:00:00Z");
       const bata = await makeClothVariant(db, { pieceRate: 8_000 });
-      // Product created Monday; one piece approved Monday, one only on Wednesday
-      await makeProduct(db, {
-        dayId: monday,
-        createdBy: admin.id,
-        pieces: [
-          { cloth: bata, assignedTo: clothier.id, status: "approved" },
-          {
-            cloth: bata,
-            assignedTo: clothier.id,
-            status: "approved",
-            quantity: 2,
-            approvedDayId: wednesday,
-          },
-        ],
-      });
+      const base = { clothierId: clothier.id, createdBy: admin.id, cloth: bata, rate: 8_000 };
+      await makeApprovedUnits(db, { ...base, dayId: monday, approved: 1 });
+      await makeApprovedUnits(db, { ...base, dayId: wednesday, approved: 2 });
 
       const pay = async (dayId: string) =>
         (await earningsByEmployee(db, [dayId])).find((r) => r.employeeId === clothier.id)
@@ -257,28 +246,6 @@ describeDb("earningsByEmployee", () => {
       expect(await earningsByEmployee(db, [])).toEqual([]);
     }));
 
-  it("adds piece-rate earnings to a stylist who also completed cloth pieces", () =>
-    withCleanDb(async (db) => {
-      const stylist = await makeEmployee(db, { name: "Multitarea" });
-      const day = await makeDay(db, "2026-10-22T13:00:00Z");
-      const v = await makeVariant(db);
-      await makeTicket(db, { dayId: day, employeeId: stylist.id, variantId: v, unitPrice: 50_000 });
-      const bata = await makeClothVariant(db, { pieceRate: 8_000 });
-      await makeProduct(db, {
-        dayId: day,
-        createdBy: stylist.id,
-        pieces: [{ cloth: bata, assignedTo: stylist.id, status: "approved" }],
-      });
-      const [row] = await earningsByEmployee(db, [day]);
-      expect(row).toEqual(
-        expect.objectContaining({
-          totalEarnings: 28_000,
-          jobCount: 2,
-          earningsBySource: { service: 20_000, pieceCreated: 8_000, workedDay: 0 },
-        }),
-      );
-    }));
-
   it("orders employees by total earnings", () =>
     withCleanDb(async (db) => {
       const low = await makeEmployee(db, { name: "Baja" });
@@ -305,11 +272,6 @@ describeDb("dailyRevenueBreakdown", () => {
       await makeTicket(db, { dayId: d20, employeeId: stylist.id, variantId: v, unitPrice: 15_000 });
       const cloth = await makeClothVariant(db);
       await makeClothSale(db, { dayId: d21, soldBy: stylist.id, cloth, unitPrice: 95_000 });
-      await makeProduct(db, {
-        dayId: d21,
-        createdBy: stylist.id,
-        pieces: [{ cloth, status: "approved", soldPrice: 5_000 }],
-      });
 
       expect(await dailyRevenueBreakdown(db, [d20, d21])).toEqual([
         {
@@ -323,9 +285,9 @@ describeDb("dailyRevenueBreakdown", () => {
         {
           businessDayId: d21,
           date: "2026-10-21",
-          revenue: 140_000,
+          revenue: 135_000,
           serviceRevenue: 40_000,
-          productSalesRevenue: 100_000,
+          productSalesRevenue: 95_000,
           jobs: 1,
         },
       ]);
@@ -398,20 +360,21 @@ describeDb("employeeDayBreakdown", () => {
       ]);
     }));
 
-  it("clothier: approved pieces and piece-rate earnings per day", () =>
+  it("clothier: approved units and their pay per day", () =>
     withCleanDb(async (db) => {
       const clothier = await makeEmployee(db, { role: "clothier" });
+      const admin = await makeEmployee(db, { role: "admin" });
       const day = await makeDay(db, "2026-10-21T13:00:00Z");
       const bata = await makeClothVariant(db, { pieceRate: 8_000 });
-      await makeProduct(db, {
+      const base = {
         dayId: day,
-        createdBy: clothier.id,
-        pieces: [
-          { cloth: bata, assignedTo: clothier.id, status: "approved" },
-          { cloth: bata, assignedTo: clothier.id, status: "approved", quantity: 2 },
-          { cloth: bata, assignedTo: clothier.id, status: "pending" },
-        ],
-      });
+        clothierId: clothier.id,
+        createdBy: admin.id,
+        cloth: bata,
+        rate: 8_000,
+      };
+      await makeApprovedUnits(db, { ...base, approved: 1 });
+      await makeApprovedUnits(db, { ...base, approved: 2, pendingReview: 1 });
       expect(await employeeDayBreakdown(db, clothier.id, [day])).toEqual([
         { businessDayId: day, date: "2026-10-21", jobs: 3, earnings: 24_000 },
       ]);

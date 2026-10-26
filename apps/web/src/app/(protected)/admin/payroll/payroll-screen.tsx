@@ -363,7 +363,6 @@ export function PayrollScreen({ days, employees, history, unsettled, initialEmpl
                                   {line.pieceName} — {line.variantName}
                                   {line.source === "pedido" &&
                                     ` · #${String(line.pedidoNumber).padStart(4, "0")} · ${t("lineSize", { size: line.sizeLabel ?? "" })}`}
-                                  {line.source === "producto" && ` · ${t("lineOldProduct")}`}
                                 </span>
                                 <span className="block text-xs text-muted-foreground tabular-nums">
                                   {t(

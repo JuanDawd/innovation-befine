@@ -20,15 +20,11 @@ import {
   listSellableStock,
 } from "@/app/(protected)/cashier/actions/cloth-sales";
 import { getAwaitingPaymentTickets } from "@/app/(protected)/cashier/checkout/actions";
-import { listTodayProductPieces } from "@/app/(protected)/clothier/actions";
 import { getMyWork } from "@/app/(protected)/clothier/work-actions";
 import {
   getProductionBoard,
   listClothiersWithoutClosing,
 } from "@/app/(protected)/produccion/actions";
-import { listActiveClothiers } from "@/app/(protected)/large-orders/assignment-actions";
-import { getProductsDashboardData } from "@/app/(protected)/products/actions";
-import { listPendingProductPieceApprovals } from "@/app/(protected)/products/approval-actions";
 import { listActiveStylists, listOpenTickets } from "@/app/(protected)/tickets/actions";
 import {
   listMyEditRequests,
@@ -38,7 +34,6 @@ import {
 
 export const QUERIES = {
   activeClothPieces: () => listActiveClothPieces(),
-  activeClothiers: () => listActiveClothiers(),
   activeServices: () => listActiveServices(),
   activeStylists: () => listActiveStylists(),
   appointmentsForDate: (p: URLSearchParams) =>
@@ -53,11 +48,8 @@ export const QUERIES = {
   myOpenTicketItems: () => listMyOpenTicketItems(),
   openTickets: () => listOpenTickets(),
   pendingEditRequests: () => listPendingEditRequests(),
-  pendingProductPieceApprovals: () => listPendingProductPieceApprovals(),
   productionBoard: () => getProductionBoard(),
-  productsDashboard: () => getProductsDashboardData(),
   sellableStock: () => listSellableStock(),
-  todayProductPieces: () => listTodayProductPieces(),
 } satisfies Record<string, (params: URLSearchParams) => Promise<unknown>>;
 
 export type QueryRegistry = typeof QUERIES;

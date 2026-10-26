@@ -44,7 +44,6 @@ export {
   stockMovements,
   restructures,
 } from "./pedido-money-stock";
-export { catalogEntityTypeEnum, catalogActionEnum, catalogAuditLog } from "./catalog-audit-log";
 export { activityLog } from "./activity-log";
 export { clients } from "./clients";
 export { ticketStatusEnum, checkoutSessions, tickets } from "./tickets";
@@ -53,33 +52,14 @@ export { ticketPayments } from "./ticket-payments";
 export {
   servicesRelations,
   serviceVariantsRelations,
-  largeOrdersRelations,
-  largeOrderPaymentsRelations,
-  productsRelations,
   pedidosRelations,
   pedidoLinesRelations,
   pedidoLineCellsRelations,
 } from "./relations";
 export { notificationTypeEnum, notifications } from "./notifications";
 export { editRequestStatusEnum, ticketEditRequests } from "./ticket-edit-requests";
-export {
-  productPieceStatusEnum,
-  productClaimSourceEnum,
-  productSourceEnum,
-  products,
-  productPieces,
-} from "./products";
 export { appointmentStatusEnum, appointments } from "./appointments";
-export { largeOrderStatusEnum, largeOrders, orderItems, largeOrderPayments } from "./large-orders";
 export { absenceTypeEnum, employeeAbsences } from "./absences";
-export {
-  payouts,
-  payoutPeriodDays,
-  payoutTicketItems,
-  payoutProductPieces,
-  payoutUnitReviews,
-} from "./payouts";
+export { payouts, payoutPeriodDays, payoutTicketItems, payoutUnitReviews } from "./payouts";
 export { idempotencyKeys } from "./idempotency";
-export { clothPieceAssignments } from "./assignments";
-export { productionLogs } from "./production-logs";
 export { clothSales } from "./cloth-sales";

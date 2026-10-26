@@ -4,7 +4,7 @@
  * Catalog audit log read action — T025 (T02R-R1)
  *
  * Fetches the audit history for a specific catalog entity.
- * Admin-only. Reads activity_log since T114 (catalog_audit_log was folded in).
+ * Admin-only. Reads activity_log since T114 (the old catalog audit table was folded in).
  */
 
 import { headers } from "next/headers";

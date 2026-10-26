@@ -19,12 +19,6 @@ const SRC = join(__dirname, "..", "..");
 
 /** Whole files outside the rule. */
 const EXEMPT_FILES: Record<string, string> = {
-  "app/(protected)/large-orders/actions.ts": "previous order model, retired in T135",
-  "app/(protected)/large-orders/assignment-actions.ts": "previous order model, retired in T135",
-  "app/(protected)/large-orders/order-items-actions.ts": "previous order model, retired in T135",
-  "app/(protected)/products/actions.ts": "previous production model, retired in T135",
-  "app/(protected)/products/approval-actions.ts": "previous production model, retired in T135",
-  "app/(protected)/clothier/actions.ts": "previous production model, retired in T135",
   "app/(protected)/notifications/actions.ts":
     "read receipts and the user's own notifications, not business data",
 };
