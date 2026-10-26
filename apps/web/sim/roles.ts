@@ -15,6 +15,15 @@ export type Shared = {
 const SIM_STYLIST = /^Sim /;
 const SIM_CLOTHIER = /^Sim Confección/;
 
+/** Waits up to `ms` for the element (isVisible() answers immediately, ignoring timeouts). */
+async function appears(locator: Locator, ms: number): Promise<boolean> {
+  return locator
+    .first()
+    .waitFor({ state: "visible", timeout: ms })
+    .then(() => true)
+    .catch(() => false);
+}
+
 /** The visible "Registrar servicio" button (sidebar + page each have one). */
 async function lastButton(a: Actor, name: RegExp): Promise<Locator> {
   const buttons = a.page.getByRole("button", { name });
@@ -39,7 +48,7 @@ async function pickSaved(a: Actor, scope: Locator, name: string): Promise<boolea
     .getByRole("option", { name: new RegExp(name.split(" ")[0]!) })
     .or(scope.getByRole("button", { name: new RegExp(name.split(" ")[0]!) }))
     .first();
-  if (!(await option.isVisible({ timeout: 4_000 }).catch(() => false))) return false;
+  if (!(await appears(option, 4_000))) return false;
   await option.click();
   return true;
 }
@@ -70,7 +79,7 @@ async function fillServiceAndClient(a: Actor, shared: Shared, dialog: Locator): 
   await chooseOption(dialog.getByRole("combobox", { name: "Servicio" }), (l) => a.rng.pick(l));
   // Services with several variants show one more select.
   const variant = dialog.getByRole("combobox", { name: /Variante|Opción/ });
-  if (await variant.isVisible({ timeout: 1_500 }).catch(() => false)) {
+  if (await appears(variant, 1_500)) {
     await chooseOption(variant, (l) => a.rng.pick(l));
   }
   if (a.rng.chance(0.15)) await dialog.getByRole("spinbutton", { name: "Cantidad" }).fill("2");
@@ -166,8 +175,7 @@ export async function charge(a: Actor): Promise<void> {
   await a.submit(confirmCharge);
   const confirm = a.page.getByRole("dialog", { name: /^¿?Cobrar \$/ });
   // A double tap can open and dismiss the confirmation; people just tap again.
-  if (!(await confirm.isVisible({ timeout: 3_000 }).catch(() => false)))
-    await confirmCharge.click();
+  if (!(await appears(confirm, 3_000))) await confirmCharge.click();
   await confirm.getByRole("button", { name: "Confirmar" }).click({ timeout: 10_000 });
   await expectToast(a.page, /Pago registrado correctamente/, 20_000);
 }
@@ -389,8 +397,7 @@ export async function approveClosing(a: Actor): Promise<void> {
 export async function deliver(a: Actor, shared: Shared): Promise<void> {
   await openSomePedido(a, shared);
   const button = a.page.getByRole("button", { name: "Registrar entrega" });
-  if (!(await button.isVisible({ timeout: 3_000 }).catch(() => false)))
-    throw new Rejected("nothing to deliver");
+  if (!(await appears(button, 3_000))) throw new Rejected("nothing to deliver");
   await button.click();
   const dialog = a.page.getByRole("dialog", { name: "Registrar entrega" });
   await a.submit(dialog.getByRole("button", { name: /^Registrar \d+ unidad/ }));
@@ -401,8 +408,7 @@ export async function pedidoPayment(a: Actor, shared: Shared): Promise<void> {
   // Stock pedidos have no payments; pick a client pedido that still owes.
   await openSomePedido(a, shared, true);
   const button = a.page.getByRole("button", { name: "Registrar pago" });
-  if (!(await button.isVisible({ timeout: 3_000 }).catch(() => false)))
-    throw new Rejected("no payment button");
+  if (!(await appears(button, 3_000))) throw new Rejected("no payment button");
   await button.click();
   const dialog = a.page.getByRole("dialog", { name: "Registrar pago" });
   if (a.rng.chance(0.4)) {
@@ -420,9 +426,10 @@ export async function pedidoPayment(a: Actor, shared: Shared): Promise<void> {
 
 export async function claimWork(a: Actor): Promise<void> {
   await a.goto("/clothier");
-  const take = a.page.getByRole("button", { name: "Tomar" });
+  // Disabled when she reached her claim limit.
+  const take = a.page.getByRole("button", { name: "Tomar" }).and(a.page.locator(":enabled"));
   const n = await take.count();
-  if (n === 0) throw new Rejected("nothing available");
+  if (n === 0) throw new Rejected("nothing available or claim limit reached");
   await take.nth(a.rng.int(0, n - 1)).click();
   const dialog = a.page.getByRole("dialog", { name: "¿Cuántas tomas?" });
   const more = dialog.getByRole("button", { name: "Una más" });

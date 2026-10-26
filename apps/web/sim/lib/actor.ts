@@ -77,6 +77,8 @@ export class Actor {
       const text = msg.text();
       // The browser already reports failed responses; avoid double counting.
       if (/Failed to load resource/.test(text)) return;
+      // Vercel's preview feedback toolbar is blocked by the app's CSP — preview-only noise.
+      if (/vercel\.live/.test(text)) return;
       this.emit("console_error", text, page.url());
     });
     page.on("response", (res) => {
@@ -92,7 +94,7 @@ export class Actor {
       const failure = req.failure()?.errorText ?? "unknown";
       if (IGNORED_FAILURES.some((f) => failure.includes(f))) return;
       const url = new URL(req.url());
-      if (url.hostname.endsWith("sentry.io")) return;
+      if (url.hostname.endsWith("sentry.io") || url.hostname === "vercel.live") return;
       this.emit("request_failed", `${failure} ${req.method()} ${url.pathname}`, page.url());
     });
   }
