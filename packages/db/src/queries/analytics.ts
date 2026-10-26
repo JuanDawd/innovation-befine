@@ -504,11 +504,18 @@ function toBogotaDate(d: Date): string {
  * revenue is visible. Prior window is closed days only.
  * period = "day" | "week" | "month" — boundaries anchored to America/Bogota.
  */
-export async function getBusinessDayIdsByPeriod(
-  db: Database,
+export type PeriodWindows = {
+  currentStart: Date;
+  currentEnd: Date;
+  priorStart: Date;
+  priorEnd: Date;
+};
+
+/** Current and prior period boundaries (America/Bogota), shared by every section. */
+export function periodWindows(
   period: "day" | "week" | "month",
   bogotaToday: string,
-): Promise<PeriodDays> {
+): PeriodWindows {
   const today = new Date(bogotaToday + "T12:00:00-05:00");
 
   let currentStart: Date;
@@ -550,6 +557,15 @@ export async function getBusinessDayIdsByPeriod(
     priorStart = new Date(priorFirst.toISOString().slice(0, 10) + "T00:00:00-05:00");
     priorEnd = new Date(priorLast.toISOString().slice(0, 10) + "T23:59:59-05:00");
   }
+  return { currentStart, currentEnd, priorStart, priorEnd };
+}
+
+export async function getBusinessDayIdsByPeriod(
+  db: Database,
+  period: "day" | "week" | "month",
+  bogotaToday: string,
+): Promise<PeriodDays> {
+  const { currentStart, currentEnd, priorStart, priorEnd } = periodWindows(period, bogotaToday);
 
   // Single query: fetch all days in the combined window.
   // Current: include open day (no closedAt filter) — shows live revenue.

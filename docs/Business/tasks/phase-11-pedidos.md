@@ -433,7 +433,7 @@ Admin "Actividad": timeline with filters (person, action type, date range, pedid
 ## T133 — Analítica additions
 
 **Phase:** 11E — Log and analytics
-**Status:** pending
+**Status:** done (2026-10-25) — reconciliation test (packages/db analytics-pedidos) and browser check passed on the Neon test branch
 **Dependencies:** T127, T126, T128
 
 ### What to do
@@ -442,8 +442,8 @@ Add sections per spec §3.11: ingresos por fuente; pedidos (cuentas por cobrar, 
 
 ### Acceptance criteria
 
-- [ ] Admin-only; secretary never sees these figures
-- [ ] Figures reconcile with the underlying ledgers (tests on seeded data)
+- [x] Admin-only; secretary never sees these figures
+- [x] Figures reconcile with the underlying ledgers (tests on seeded data)
 
 ---
 

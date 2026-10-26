@@ -76,6 +76,8 @@ export type PedidoListFilter = {
   q?: string;
   /** "Today" in Bogotá, injectable for tests */
   today?: string;
+  /** Default 500 (the list screen); Analítica reads them all */
+  limit?: number;
 };
 
 export type PedidoListItem = {
@@ -181,13 +183,16 @@ export async function listPedidoOverviews(
               : sql``
       }
     ORDER BY p.number DESC
-    LIMIT 500
+    LIMIT ${filter.limit ?? 500}
   `);
 
   return rows.rows
     .map((r): PedidoListItem => {
       const total = Number(r.total);
-      const money = computePedidoBalance(total, [{ amount: Number(r.paid) }]);
+      // Cancelled: nothing is owed any more and everything paid is owed back.
+      const money = computePedidoBalance(r.cancelled_at !== null ? 0 : total, [
+        { amount: Number(r.paid) },
+      ]);
       const estimatedDeliveryDate = r.estimated_delivery_at
         ? bogotaDate(new Date(r.estimated_delivery_at))
         : null;
@@ -537,7 +542,8 @@ export async function getPedidoDetail(
 
   const progress = sumProgress(lines.flatMap((l) => (l.kind === "garment" ? [l.progress] : [])));
   const total = lines.reduce((t, l) => t + (l.kind === "garment" ? l.total : l.amount), 0);
-  const money = computePedidoBalance(total, paymentRows);
+  // Cancelled: nothing is owed any more and everything paid is owed back.
+  const money = computePedidoBalance(pedido.cancelledAt !== null ? 0 : total, paymentRows);
   const estimatedDeliveryDate = pedido.estimatedDeliveryAt
     ? bogotaDate(pedido.estimatedDeliveryAt)
     : null;

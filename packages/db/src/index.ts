@@ -66,5 +66,6 @@ export * from "./queries/production-review";
 export * from "./queries/day-closings";
 export * from "./queries/day-income";
 export * from "./queries/activity";
+export * from "./queries/analytics-pedidos";
 export * from "./queries/stock";
 export * from "./activity-log";

@@ -578,6 +578,14 @@
 
 ## Medium-priority issues
 
+### M-81 — A cancelled pedido showed a balance due and no saldo a favor
+
+- **Severity:** Medium
+- **Status:** Resolved (2026-10-25)
+- **Affected:** T119 cancel, T117 pedido list/detail, T127 refunds, T133 Analítica
+- **Description:** Found while building cuentas por cobrar. listPedidoOverviews and getPedidoDetail computed a cancelled pedido's money against its full line total, so a cancelled pedido paid $100.000 of $450.000 reported a $350.000 balance and $0 saldo a favor — it would have counted as a receivable and the credit owed back was invisible.
+- **Fix:** both compute a cancelled pedido's money with a total of $0: nothing is owed, everything paid is saldo a favor. Covered by the T133 analytics integration test.
+
 ### M-80 — Postgres error-code checks missed Drizzle-wrapped errors
 
 - **Severity:** Medium
@@ -2181,3 +2189,4 @@
 | H-57     | 2026-10-24    | Piece pay belongs to the day it's approved (approved_business_day_id, migration 0037)                           | feat/redesign                  |
 | H-60     | 2026-10-25    | Clothier payout links each unit review once (payoutReviewIds)                                                   | feat/phase-11-pedidos          |
 | M-80     | 2026-10-25    | Shared pgErrorCode(): double-pay → CONFLICT and appointment reopen → "horario ocupado" with wrapped errors      | feat/phase-11-pedidos          |
+| M-81     | 2026-10-25    | Cancelled pedidos owe nothing; everything paid is saldo a favor (list and detail)                               | feat/phase-11-pedidos          |
