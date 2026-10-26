@@ -259,24 +259,30 @@ describe("Role gate: appointments/actions", () => {
 });
 
 describe("Role gate: clients/actions", () => {
-  it("searchClients — allowed: admin, secretary, stylist", () => {
-    expectOnlyRoles(["admin", "secretary", "stylist"], "admin", "secretary", "stylist");
+  it("searchClients — allowed: admin, secretary, stylist, cashier", () => {
+    expectOnlyRoles(
+      ["admin", "secretary", "stylist", "cashier"],
+      "admin",
+      "secretary",
+      "stylist",
+      "cashier",
+    );
   });
 
-  it("createClient — allowed: admin, secretary", () => {
-    expectOnlyRoles(["admin", "secretary"], "admin", "secretary");
+  it("createClient — allowed: admin, secretary, cashier (T030)", () => {
+    expectOnlyRoles(["admin", "secretary", "cashier"], "admin", "secretary", "cashier");
   });
 
-  it("editClient — allowed: admin, secretary", () => {
-    expectOnlyRoles(["admin", "secretary"], "admin", "secretary");
+  it("editClient — allowed: admin, secretary, cashier (T030)", () => {
+    expectOnlyRoles(["admin", "secretary", "cashier"], "admin", "secretary", "cashier");
   });
 
-  it("archiveClient — allowed: admin, secretary", () => {
-    expectOnlyRoles(["admin", "secretary"], "admin", "secretary");
+  it("archiveClient — allowed: admin, secretary, cashier (T030)", () => {
+    expectOnlyRoles(["admin", "secretary", "cashier"], "admin", "secretary", "cashier");
   });
 
-  it("listClients — allowed: admin, secretary", () => {
-    expectOnlyRoles(["admin", "secretary"], "admin", "secretary");
+  it("listClients — allowed: admin, secretary, cashier (T030)", () => {
+    expectOnlyRoles(["admin", "secretary", "cashier"], "admin", "secretary", "cashier");
   });
 });
 
@@ -424,7 +430,7 @@ describe("UNAUTHORIZED: null session denied on all mutation gates", () => {
     { name: "createPedido", roles: ["admin", "cashier", "secretary"] },
     { name: "reportUnits", roles: ["clothier"] },
     { name: "createAppointment", roles: ["admin", "secretary"] },
-    { name: "createClient", roles: ["admin", "secretary"] },
+    { name: "createClient", roles: ["admin", "secretary", "cashier"] },
     { name: "recordPedidoPayment", roles: ["admin", "cashier"] },
     { name: "createEmployee", roles: ["admin"] },
     { name: "logAbsence", roles: ["admin"] },
