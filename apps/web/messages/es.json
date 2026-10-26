@@ -1125,15 +1125,6 @@
     "retry": "Reintentar",
     "retryWhenOnline": "Reintentar cuando haya conexión"
   },
-  "versionBanner": {
-    "message": "Hay una nueva versión disponible.",
-    "refresh": "Actualizar ahora",
-    "dismiss": "Ignorar",
-    "swMessage": "Actualización disponible — recarga para aplicar",
-    "swReload": "Recargar",
-    "swReloadLabel": "Recargar página",
-    "swClose": "Cerrar aviso"
-  },
   "settings": {
     "unsaved": "Cambios sin guardar",
     "pageTitle": "Configuración",

@@ -1061,15 +1061,6 @@
     "retry": "Retry",
     "retryWhenOnline": "Retry when online"
   },
-  "versionBanner": {
-    "message": "A new version is available.",
-    "refresh": "Refresh now",
-    "dismiss": "Dismiss",
-    "swMessage": "Update available — reload to apply",
-    "swReload": "Reload",
-    "swReloadLabel": "Reload page",
-    "swClose": "Dismiss"
-  },
   "settings": {
     "unsaved": "Unsaved changes",
     "pageTitle": "Settings",
