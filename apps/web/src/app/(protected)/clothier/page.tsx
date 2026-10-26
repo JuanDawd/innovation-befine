@@ -1,32 +1,38 @@
 /**
- * Clothier home — T046
+ * Clothier home: Mi trabajo — T123 (spec §3.10)
  *
- * Shows today's assigned pieces and unassigned (claimable) pieces.
- * Mobile-first, checklist style with progress bar.
+ * Phone-first: corrections, her work by delivery date, and Disponibles.
  */
 
+import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import { hasRole } from "@/lib/middleware-helpers";
-import { ClothierWorkBoard } from "@/components/clothier-work-board";
+import { MiTrabajo } from "@/components/mi-trabajo";
 import { PageHeader } from "@/components/page-header";
-import { getEmployeeRef } from "@/lib/employee-ref";
+import { buttonVariants } from "@/components/ui/button-variants";
+import { MoonIcon } from "lucide-react";
 
 export default async function ClothierHomePage() {
-  const t = await getTranslations("clothierWork");
+  const t = await getTranslations("miTrabajo");
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session || !hasRole(session.user, "clothier")) redirect("/login");
 
-  const emp = await getEmployeeRef(session.user.id);
-
-  if (!emp) redirect("/login");
-
   return (
-    <div className="flex flex-col min-h-screen">
-      <PageHeader title={t("pageTitle")} className="px-4 pt-6 pb-2" />
-      <ClothierWorkBoard employeeId={emp.id} />
+    <div className="flex min-h-screen flex-col">
+      <PageHeader
+        title={t("pageTitle")}
+        className="px-4 pt-6 pb-2"
+        actions={
+          <Link href="/clothier/cierre" className={buttonVariants({ variant: "outline" })}>
+            <MoonIcon className="size-4" aria-hidden="true" />
+            {t("closeDay")}
+          </Link>
+        }
+      />
+      <MiTrabajo />
     </div>
   );
 }

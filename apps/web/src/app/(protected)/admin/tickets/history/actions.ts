@@ -25,7 +25,8 @@ import {
   businessDays,
   checkoutSessions,
 } from "@befine/db/schema";
-import { flagPayoutsCoveringTicket } from "@befine/db";
+import { flagPayoutsCoveringTicket, formatPesos } from "@befine/db";
+import { logActivity } from "@/lib/activity";
 import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
 import { revalidatePath } from "next/cache";
@@ -87,7 +88,12 @@ async function requireAdminOrCashier() {
   if (!session) return { ok: false, code: "UNAUTHORIZED" as const, userId: null };
   if (!hasRole(session.user, "cashier", "admin"))
     return { ok: false, code: "FORBIDDEN" as const, userId: null };
-  return { ok: true, code: null, userId: session.user.id };
+  return {
+    ok: true,
+    code: null,
+    userId: session.user.id,
+    role: (session.user as { role?: string | null }).role ?? null,
+  };
 }
 
 // ─── List business days ───────────────────────────────────────────────────────
@@ -459,6 +465,15 @@ export async function reopenTicket(rawTicketId: unknown): Promise<ActionResult<{
     // M-28: a payout that already paid commission on this ticket may no longer match
     // once the ticket is edited and re-closed — flag it for the admin to review.
     await flagPayoutsCoveringTicket(tx as unknown as ReturnType<typeof getDb>, ticketId);
+    await logActivity(tx, {
+      actor: { userId: guard.userId, role: guard.role ?? null },
+      action: "ticket.reopen",
+      entityType: "ticket",
+      entityId: ticketId,
+      summary: `Reabrió un ticket cobrado (${formatPesos(paid)}); el próximo cobro solo cobra o devuelve la diferencia`,
+      before: { status: "closed", checkoutSessionId: ticket.checkoutSessionId },
+      after: { status: "reopened", prepaidAmount: paid },
+    });
     return row;
   });
 

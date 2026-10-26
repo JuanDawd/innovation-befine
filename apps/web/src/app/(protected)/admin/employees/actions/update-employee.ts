@@ -19,8 +19,8 @@ import {
   payoutPeriodDays,
   businessDays,
   tickets,
-  productPieces,
-  products,
+  unitReviews,
+  assignments,
   employeeAbsences,
 } from "@befine/db/schema";
 import { computeEarningsTotal } from "@/lib/payroll/compute-total";
@@ -30,6 +30,22 @@ import type { EmployeeListItem } from "./list-employees";
 import { hasRole } from "@/lib/middleware-helpers";
 import { businessDateOf } from "@/lib/dates";
 import { getEmployeeRef } from "@/lib/employee-ref";
+import { actorOf, logActivity, type ActivityTx } from "@/lib/activity";
+import { formatPesos } from "@befine/db";
+
+const FIELD_ES: Record<string, string> = {
+  name: "nombre",
+  role: "rol",
+  stylistSubtype: "especialidad",
+  dailyRate: "tarifa diaria",
+  expectedWorkDays: "días de trabajo",
+  birthday: "cumpleaños",
+};
+
+async function nameOf(tx: ActivityTx, userId: string): Promise<string> {
+  const [u] = await tx.select({ name: users.name }).from(users).where(eq(users.id, userId));
+  return u?.name ?? "—";
+}
 
 // ---------------------------------------------------------------------------
 // Edit employee (name, role, subtype, daily rate) — T014
@@ -86,21 +102,64 @@ export async function editEmployee(
     parsed.data;
   const db = getDb();
 
-  // Optimistic locking: only update if version matches; increment version
-  const empRows = await db
-    .update(employees)
-    .set({
+  const [before] = await db
+    .select({
+      name: users.name,
+      role: employees.role,
+      stylistSubtype: employees.stylistSubtype,
+      dailyRate: employees.dailyRate,
+      expectedWorkDays: employees.expectedWorkDays,
+      birthday: employees.birthday,
+    })
+    .from(employees)
+    .innerJoin(users, eq(users.id, employees.userId))
+    .where(eq(employees.id, employeeId))
+    .limit(1);
+
+  // Optimistic locking: only update if version matches; increment version.
+  // The employee row, the name and the log entry commit together (T131).
+  const emp = await getTxDb().transaction(async (tx) => {
+    const [row] = await tx
+      .update(employees)
+      .set({
+        role,
+        stylistSubtype: stylistSubtype ?? null,
+        dailyRate: role === "secretary" ? (dailyRate ?? null) : null,
+        expectedWorkDays,
+        birthday: birthday || null,
+        version: sql<number>`${employees.version} + 1`,
+      })
+      .where(and(eq(employees.id, employeeId), eq(employees.version, version)))
+      .returning();
+    if (!row) return null;
+    await tx.update(users).set({ name, updatedAt: new Date() }).where(eq(users.id, row.userId));
+    const after = {
+      name,
       role,
       stylistSubtype: stylistSubtype ?? null,
-      dailyRate: role === "secretary" ? (dailyRate ?? null) : null,
+      dailyRate: row.dailyRate,
       expectedWorkDays,
       birthday: birthday || null,
-      version: sql<number>`${employees.version} + 1`,
-    })
-    .where(and(eq(employees.id, employeeId), eq(employees.version, version)))
-    .returning();
+    };
+    const changed = before
+      ? (Object.keys(after) as (keyof typeof after)[]).filter(
+          (k) => String(before[k] ?? "") !== String(after[k] ?? ""),
+        )
+      : [];
+    await logActivity(tx, {
+      actor: actorOf(session.user),
+      action: "employee.update",
+      entityType: "employee",
+      entityId: employeeId,
+      summary:
+        `Editó el empleado «${name}»` +
+        (changed.length ? `: ${changed.map((k) => FIELD_ES[k]).join(", ")}` : ""),
+      before,
+      after,
+    });
+    return row;
+  });
 
-  const emp = empRows[0];
   if (!emp) {
     // Either not found or stale version
     const [existing] = await db
@@ -118,9 +177,6 @@ export async function editEmployee(
         }
       : { success: false, error: { code: "NOT_FOUND", message: "Empleado no encontrado" } };
   }
-
-  // Update name in auth users table
-  await db.update(users).set({ name, updatedAt: new Date() }).where(eq(users.id, emp.userId));
 
   // Update role in auth system — capture prior role for rollback if needed
   const [priorUser] = await db
@@ -195,12 +251,23 @@ export async function setShowEarnings(
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
   }
 
-  const db = getDb();
-  const rows = await db
-    .update(employees)
-    .set({ showEarnings })
-    .where(eq(employees.id, employeeId))
-    .returning({ showEarnings: employees.showEarnings });
+  const rows = await getTxDb().transaction(async (tx) => {
+    const updated = await tx
+      .update(employees)
+      .set({ showEarnings })
+      .where(eq(employees.id, employeeId))
+      .returning({ showEarnings: employees.showEarnings, userId: employees.userId });
+    if (updated[0])
+      await logActivity(tx, {
+        actor: actorOf(session.user),
+        action: "employee.update",
+        entityType: "employee",
+        entityId: employeeId,
+        summary: `${showEarnings ? "Mostró" : "Ocultó"} las ganancias en la app de ${await nameOf(tx, updated[0].userId)}`,
+        after: { showEarnings },
+      });
+    return updated;
+  });
 
   const row = rows[0];
   if (!row) {
@@ -238,14 +305,25 @@ export async function deactivateEmployee(
     };
   }
 
-  const db = getDb();
   const now = new Date();
 
-  const empRows = await db
-    .update(employees)
-    .set({ isActive: false, deactivatedAt: now })
-    .where(and(eq(employees.id, employeeId), eq(employees.isActive, true)))
-    .returning({ userId: employees.userId, deactivatedAt: employees.deactivatedAt });
+  const empRows = await getTxDb().transaction(async (tx) => {
+    const updated = await tx
+      .update(employees)
+      .set({ isActive: false, deactivatedAt: now })
+      .where(and(eq(employees.id, employeeId), eq(employees.isActive, true)))
+      .returning({ userId: employees.userId, deactivatedAt: employees.deactivatedAt });
+    if (updated[0])
+      await logActivity(tx, {
+        actor: actorOf(session.user),
+        action: "employee.deactivate",
+        entityType: "employee",
+        entityId: employeeId,
+        data: { name: await nameOf(tx, updated[0].userId) },
+        after: { isActive: false, deactivatedAt: now },
+      });
+    return updated;
+  });
 
   const emp = empRows[0];
   if (!emp || !emp.deactivatedAt) {
@@ -323,15 +401,16 @@ export async function getUnsettledPeriodsForEmployee(
       (d) => workDays.some((w) => w.businessDayId === d.id) && !settledIds.has(d.id),
     );
   } else if (emp.role === "clothier") {
+    // Days with paid pedido units (approved, or scrapped and paid) — the payroll rule (T126)
     const workDays = await db
-      .selectDistinct({ businessDayId: productPieces.approvedBusinessDayId })
-      .from(productPieces)
-      .innerJoin(products, eq(productPieces.productId, products.id))
+      .selectDistinct({ businessDayId: unitReviews.businessDayId })
+      .from(unitReviews)
+      .innerJoin(assignments, eq(unitReviews.assignmentId, assignments.id))
       .where(
         and(
-          eq(productPieces.assignedToEmployeeId, employeeId),
-          eq(productPieces.status, "approved"),
-          inArray(productPieces.approvedBusinessDayId, closedDayIds),
+          eq(assignments.employeeId, employeeId),
+          inArray(unitReviews.businessDayId, closedDayIds),
+          sql`(${unitReviews.approved} > 0 OR (${unitReviews.scrapPaid} AND ${unitReviews.scrapped} > 0))`,
         ),
       );
     unsettledDays = closedDays.filter(
@@ -478,6 +557,24 @@ export async function terminateEmployee(
       .returning({ userId: employees.userId, deactivatedAt: employees.deactivatedAt });
 
     if (!emp?.deactivatedAt) throw new Error("NOT_FOUND");
+    await logActivity(tx, {
+      actor: actorOf(session.user),
+      action: "employee.terminate",
+      entityType: "employee",
+      entityId: employeeId,
+      summary:
+        `Retiró al empleado «${await nameOf(tx, emp.userId)}»` +
+        (unsettled?.businessDayIds.length
+          ? ` con liquidación final de ${formatPesos(terminationAmount)} (calculado ${formatPesos(computedAmount)})`
+          : ""),
+      after: {
+        terminationAmount,
+        computedAmount,
+        method,
+        businessDayIds: unsettled?.businessDayIds ?? [],
+      },
+      reason,
+    });
     return { userId: emp.userId, deactivatedAt: emp.deactivatedAt };
   });
 

@@ -5,7 +5,7 @@
  * payout_period_days: junction table replacing period_business_day_ids array.
  *   UNIQUE(employee_id, business_day_id) physically prevents double-pay under concurrency.
  * payout_ticket_items: links a stylist payout to the ticket items it covers.
- * payout_craftable_pieces: links a clothier payout to the product pieces it covers.
+ * payout_unit_reviews: links a clothier payout to the pedido unit reviews it paid (T126).
  *
  * idempotency_key: client-generated UUID; UNIQUE prevents duplicate inserts on retry.
  * original_computed_amount: what the system computed before any admin adjustment.
@@ -26,8 +26,8 @@ import {
 import { employees } from "./employees";
 import { businessDays } from "./business-days";
 import { ticketItems } from "./ticket-items";
-import { productPieces } from "./products";
 import { paymentMethodEnum } from "./enums";
+import { unitReviews } from "./production";
 
 export const payouts = pgTable(
   "payouts",
@@ -88,16 +88,23 @@ export const payoutTicketItems = pgTable(
   (table) => [index("idx_payout_ticket_items_payout").on(table.payoutId)],
 );
 
-/** Links a clothier payout to the specific product pieces it covers (T066) */
-export const payoutProductPieces = pgTable(
-  "payout_craftable_pieces",
+/**
+ * T126 — links a clothier payout to the unit reviews it paid (approved units,
+ * plus scrapped units when the review was marked paid). UNIQUE(unit_review_id):
+ * a review is paid once, whatever day ranges are settled.
+ */
+export const payoutUnitReviews = pgTable(
+  "payout_unit_reviews",
   {
     payoutId: uuid("payout_id")
       .notNull()
       .references(() => payouts.id, { onDelete: "restrict" }),
-    productPieceId: uuid("craftable_piece_id")
+    unitReviewId: uuid("unit_review_id")
       .notNull()
-      .references(() => productPieces.id, { onDelete: "restrict" }),
+      .references(() => unitReviews.id, { onDelete: "restrict" }),
   },
-  (table) => [index("idx_payout_craftable_pieces_payout").on(table.payoutId)],
+  (table) => [
+    unique("uq_payout_unit_reviews_review").on(table.unitReviewId),
+    index("idx_payout_unit_reviews_payout").on(table.payoutId),
+  ],
 );

@@ -69,7 +69,8 @@ export function ForgotPasswordForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
+    // method="post": a submit before hydration must never put credentials in the URL (H-61).
+    <form method="post" onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
       <div className="space-y-1.5">
         <label htmlFor="reset-email" className="text-sm font-medium">
           {t("email")}

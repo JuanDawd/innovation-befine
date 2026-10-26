@@ -57,6 +57,20 @@ const nextConfig: NextConfig = {
     "pino-pretty",
     "thread-stream",
   ],
+  // T134 — the previous order/product screens left the navigation; old links
+  // land on their replacements (spec §3.10).
+  async redirects() {
+    return [
+      { source: "/large-orders/:path*", destination: "/pedidos", permanent: false },
+      { source: "/large-orders", destination: "/pedidos", permanent: false },
+      { source: "/admin/products/:path*", destination: "/produccion", permanent: false },
+      { source: "/admin/products", destination: "/produccion", permanent: false },
+      { source: "/secretary/products/:path*", destination: "/produccion", permanent: false },
+      { source: "/secretary/products", destination: "/produccion", permanent: false },
+      { source: "/clothier/productos/:path*", destination: "/clothier", permanent: false },
+      { source: "/clothier/productos", destination: "/clothier", permanent: false },
+    ];
+  },
   async headers() {
     return [
       {
@@ -96,10 +110,12 @@ const withPWAConfig = withPWA({
         },
       },
       {
-        // Catalog & reference data — Stale While Revalidate (GET only)
+        // API reads (GET only) — Network First: /api/q/* is live data, and a
+        // stale-while-revalidate copy undid every save on the post-mutation
+        // refetch. The cache is only the offline fallback.
         urlPattern: ({ url, request }: { url: URL; request: Request }) =>
           request.method === "GET" && /\/api\/(?!realtime)/i.test(url.pathname),
-        handler: "StaleWhileRevalidate",
+        handler: "NetworkFirst",
         options: {
           cacheName: "api-cache",
           expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 },

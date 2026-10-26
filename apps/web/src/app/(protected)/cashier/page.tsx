@@ -33,6 +33,7 @@ import {
 } from "@/components/pending-edit-requests";
 import { DayAtAGlance, DayAtAGlanceSkeleton } from "@/components/day-at-a-glance";
 import { PageHeader } from "@/components/page-header";
+import { summarizeDayIncome } from "@befine/db/day-income";
 import { EmptyState } from "@/components/ui/empty-state";
 import { UpcomingBirthdays } from "@/components/upcoming-birthdays";
 
@@ -59,7 +60,7 @@ async function StatsAndBoard() {
   const openTickets = openResult.success ? openResult.data : [];
   const stats = statsResult.success
     ? statsResult.data
-    : { revenue: 0, closedCount: 0, businessDayId: null };
+    : { revenue: 0, income: summarizeDayIncome([]), closedCount: 0, businessDayId: null };
 
   return (
     <>

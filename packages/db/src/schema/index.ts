@@ -20,7 +20,31 @@ export { businessSettings, BUSINESS_SETTINGS_ID } from "./business-settings";
 export { businessDays } from "./business-days";
 export { services, serviceVariants } from "./services";
 export { clothPieces, clothPieceVariants } from "./cloth-pieces";
-export { catalogEntityTypeEnum, catalogActionEnum, catalogAuditLog } from "./catalog-audit-log";
+export { garmentSizes, garmentColors } from "./garment-attributes";
+export {
+  pedidoDestinationEnum,
+  pedidoLineKindEnum,
+  pedidos,
+  pedidoLines,
+  pedidoLineCells,
+} from "./pedidos";
+export {
+  assignmentSourceEnum,
+  unitReportKindEnum,
+  assignments,
+  unitReports,
+  unitReviews,
+  clothierDayClosings,
+  deliveries,
+  deliveryCells,
+} from "./production";
+export {
+  stockMovementKindEnum,
+  pedidoPayments,
+  stockMovements,
+  restructures,
+} from "./pedido-money-stock";
+export { activityLog } from "./activity-log";
 export { clients } from "./clients";
 export { ticketStatusEnum, checkoutSessions, tickets } from "./tickets";
 export { ticketItems } from "./ticket-items";
@@ -28,24 +52,14 @@ export { ticketPayments } from "./ticket-payments";
 export {
   servicesRelations,
   serviceVariantsRelations,
-  largeOrdersRelations,
-  largeOrderPaymentsRelations,
-  productsRelations,
+  pedidosRelations,
+  pedidoLinesRelations,
+  pedidoLineCellsRelations,
 } from "./relations";
 export { notificationTypeEnum, notifications } from "./notifications";
 export { editRequestStatusEnum, ticketEditRequests } from "./ticket-edit-requests";
-export {
-  productPieceStatusEnum,
-  productClaimSourceEnum,
-  productSourceEnum,
-  products,
-  productPieces,
-} from "./products";
 export { appointmentStatusEnum, appointments } from "./appointments";
-export { largeOrderStatusEnum, largeOrders, orderItems, largeOrderPayments } from "./large-orders";
 export { absenceTypeEnum, employeeAbsences } from "./absences";
-export { payouts, payoutPeriodDays, payoutTicketItems, payoutProductPieces } from "./payouts";
+export { payouts, payoutPeriodDays, payoutTicketItems, payoutUnitReviews } from "./payouts";
 export { idempotencyKeys } from "./idempotency";
-export { clothPieceAssignments } from "./assignments";
-export { productionLogs } from "./production-logs";
 export { clothSales } from "./cloth-sales";

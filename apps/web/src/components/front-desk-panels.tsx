@@ -2,8 +2,8 @@
 
 /**
  * Front-desk panels for the secretary home: what needs her next — the day's
- * remaining appointments (with their one-tap next step), pieces waiting for
- * approval, and large orders due soon. Each links to its full screen.
+ * remaining appointments (with their one-tap next step), units waiting for
+ * review in Producción, and pedidos due soon. Each links to its full screen.
  */
 
 import Link from "next/link";
@@ -14,11 +14,11 @@ import { queryKeys } from "@/lib/query-keys";
 import { fetchQuery } from "@/lib/action-query";
 import { notifyDataChanged } from "@/lib/data-events";
 import { todayInBogota } from "@/lib/dates";
-import { formatMoney } from "@/i18n";
+import { formatDate, formatMoney } from "@/i18n";
 import { AppointmentStatusActions } from "@/components/appointment-status-actions";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Skeleton } from "@/components/ui/loading-skeleton";
-import type { LargeOrderListRow } from "@/app/(protected)/large-orders/actions";
+import type { PedidoListItem } from "@befine/db";
 
 const BOGOTA = "America/Bogota";
 
@@ -120,53 +120,53 @@ export function UpcomingAppointmentsPanel() {
   );
 }
 
-/** How many finished pieces wait for her approval. */
+/** How many reported units wait for review in Producción (T134). */
 export function ApprovalsWaitingPanel() {
   const t = useTranslations("frontDesk");
-  const { data: pieces = [], isPending } = useQuery({
-    queryKey: queryKeys.products.approvals,
-    queryFn: () => fetchQuery("pendingProductPieceApprovals"),
+  const { data: board, isPending } = useQuery({
+    queryKey: queryKeys.pedidos.productionBoard,
+    queryFn: () => fetchQuery("productionBoard"),
     refetchInterval: 60_000,
   });
 
   if (isPending) return <Skeleton className="h-16 w-full rounded-xl" />;
+  const pending = board?.queue.reduce((n, g) => n + g.pending, 0) ?? 0;
 
   return (
     <Link
-      href="/secretary/products"
+      href="/produccion"
       className="flex items-center justify-between gap-3 rounded-xl border bg-card px-3.5 py-3 transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
     >
       <span className="min-w-0">
         <span className="block text-sm font-medium">{t("approvalsTitle")}</span>
         <span className="block text-xs text-muted-foreground">
-          {pieces.length === 0 ? t("approvalsNone") : t("approvalsHint")}
+          {pending === 0 ? t("approvalsNone") : t("approvalsHint")}
         </span>
       </span>
       <span
         className={
-          pieces.length > 0
+          pending > 0
             ? "rounded-full bg-status-attention px-2.5 py-0.5 text-sm font-semibold tabular-nums text-status-attention-foreground"
             : "text-sm tabular-nums text-muted-foreground"
         }
       >
-        {pieces.length}
+        {pending}
       </span>
     </Link>
   );
 }
 
-/** Large orders ready to hand over or due within a week. */
-export function OrdersDuePanel({ orders }: { orders: LargeOrderListRow[] }) {
+/** Pedidos ready to hand over or due within a week (T134). */
+export function OrdersDuePanel({ orders }: { orders: PedidoListItem[] }) {
   const t = useTranslations("frontDesk");
-  const tOrders = useTranslations("largeOrders");
-  const format = useFormatter();
+  const tStatus = useTranslations("pedidos.status");
 
   return (
     <section aria-labelledby="fd-orders" className="flex flex-col gap-2">
       <PanelHeading
         id="fd-orders"
         title={t("ordersTitle")}
-        href="/large-orders"
+        href="/pedidos"
         linkLabel={t("openOrders")}
       />
       {orders.length === 0 ? (
@@ -176,31 +176,29 @@ export function OrdersDuePanel({ orders }: { orders: LargeOrderListRow[] }) {
           {orders.map((order) => (
             <li key={order.id}>
               <Link
-                href={`/large-orders/${order.id}`}
+                href={`/pedidos/${order.id}`}
                 className="flex flex-col gap-0.5 px-3.5 py-3 transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-inset focus-visible:ring-ring/50"
               >
                 <span className="flex items-center justify-between gap-2">
-                  <span className="min-w-0 truncate text-sm font-medium">{order.clientName}</span>
-                  <StatusBadge status={order.status} label={tOrders(`status_${order.status}`)} />
+                  <span className="min-w-0 truncate text-sm font-medium">
+                    #{String(order.number).padStart(4, "0")} {order.clientName}
+                  </span>
+                  <StatusBadge status={order.status} label={tStatus(order.status)} />
                 </span>
                 <span className="truncate text-xs text-muted-foreground">
-                  {order.estimatedDeliveryAt
-                    ? t("dueOn", {
-                        date: format.dateTime(new Date(order.estimatedDeliveryAt), {
-                          timeZone: BOGOTA,
-                          weekday: "short",
-                          day: "numeric",
-                          month: "short",
-                        }),
-                      })
-                    : order.description}
-                  {order.balanceDue > 0 && (
+                  {order.estimatedDeliveryDate &&
+                    t("dueOn", {
+                      date: formatDate(
+                        `${order.estimatedDeliveryDate}T12:00:00-05:00`,
+                        "es",
+                        "EEE d MMM",
+                      ),
+                    })}
+                  {order.balance > 0 && (
                     <>
-                      {" · "}
+                      {order.estimatedDeliveryDate && " · "}
                       {t("balance")}{" "}
-                      <span className="font-mono tabular-nums">
-                        {formatMoney(order.balanceDue)}
-                      </span>
+                      <span className="font-mono tabular-nums">{formatMoney(order.balance)}</span>
                     </>
                   )}
                 </span>

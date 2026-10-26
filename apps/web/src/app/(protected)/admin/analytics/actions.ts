@@ -21,6 +21,20 @@ import {
   type EmployeeDayBreakdown,
   revenueByMethod,
   type RevenueByMethod,
+  periodWindows,
+  getIncomeRows,
+  summarizeDayIncome,
+  pedidoFiguresNow,
+  pedidoFiguresForPeriod,
+  productionFigures,
+  inventoryFiguresNow,
+  inventoryFiguresForPeriod,
+  type DayIncome,
+  type PedidoNowFigures,
+  type PedidoPeriodFigures,
+  type ProductionFigures,
+  type InventoryNowFigures,
+  type InventoryPeriodFigures,
 } from "@befine/db";
 import {
   analyticsQuerySchema,
@@ -321,4 +335,143 @@ export async function getEmployeeDrillDown(
     return { success: false, error: { code: "NOT_FOUND", message: "Empleado no encontrado" } };
 
   return { success: true, data: { employeeId, employeeName: emp.name, role: emp.role, days } };
+}
+
+// ─── Pedidos, producción, inventario — T133 (spec §3.11) ─────────────────────
+
+export type PedidoAnalytics = {
+  period: "day" | "week" | "month";
+  income: { current: DayIncome; prior: DayIncome };
+  pedidos: { now: PedidoNowFigures; current: PedidoPeriodFigures; prior: PedidoPeriodFigures };
+  production: { current: ProductionFigures; prior: ProductionFigures };
+  inventory: {
+    now: InventoryNowFigures;
+    current: InventoryPeriodFigures;
+    prior: InventoryPeriodFigures;
+  };
+};
+
+async function loadPedidoAnalytics(period: "day" | "week" | "month"): Promise<PedidoAnalytics> {
+  const db = getDb();
+  const today = todayInBogota();
+  const { current, prior } = await getBusinessDayIdsByPeriod(db, period, today);
+  const w = periodWindows(period, today);
+  const cw = { start: w.currentStart, end: w.currentEnd };
+  const pw = { start: w.priorStart, end: w.priorEnd };
+  const [incC, incP, now, pedC, pedP, prodC, prodP, invNow, invC, invP] = await Promise.all([
+    getIncomeRows(db, current),
+    getIncomeRows(db, prior),
+    pedidoFiguresNow(db, today),
+    pedidoFiguresForPeriod(db, cw),
+    pedidoFiguresForPeriod(db, pw),
+    productionFigures(db, current),
+    productionFigures(db, prior),
+    inventoryFiguresNow(db),
+    inventoryFiguresForPeriod(db, cw, current),
+    inventoryFiguresForPeriod(db, pw, prior),
+  ]);
+  return {
+    period,
+    income: { current: summarizeDayIncome(incC), prior: summarizeDayIncome(incP) },
+    pedidos: { now, current: pedC, prior: pedP },
+    production: { current: prodC, prior: prodP },
+    inventory: { now: invNow, current: invC, prior: invP },
+  };
+}
+
+/** Admin only: the secretary never sees these figures (spec §3.8). */
+export async function getPedidoAnalytics(
+  rawPeriod: unknown,
+): Promise<ActionResult<PedidoAnalytics>> {
+  const guard = await requireAdmin();
+  if (!guard.ok)
+    return {
+      success: false,
+      error: {
+        code: guard.code,
+        message: guard.code === "UNAUTHORIZED" ? "No autenticado" : "Sin permisos",
+      },
+    };
+  const parsed = analyticsPeriodSchema.safeParse(rawPeriod);
+  if (!parsed.success)
+    return { success: false, error: { code: "VALIDATION_ERROR", message: "Período inválido" } };
+  return { success: true, data: await loadPedidoAnalytics(parsed.data) };
+}
+
+const csvCell = (v: string | number | null) => {
+  const s = v === null ? "" : String(v);
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+};
+
+/** CSV of every T133 section for the period (section,item,metric,value). */
+export async function getPedidoAnalyticsCsv(
+  rawPeriod: unknown,
+): Promise<ActionResult<{ csv: string; filename: string }>> {
+  const res = await getPedidoAnalytics(rawPeriod);
+  if (!res.success) return res;
+  const a = res.data;
+  const rows: (string | number | null)[][] = [["seccion", "elemento", "metrica", "valor"]];
+  for (const src of ["services", "pedidos", "prendas"] as const)
+    rows.push(["ingresos", src, "total", a.income.current.bySource[src].total]);
+  for (const m of ["cash", "card", "transfer", "unknown"] as const)
+    rows.push(["ingresos", "medio", m, a.income.current.byMethod[m]]);
+  rows.push(["ingresos", "fuera_de_horario", "total", a.income.current.afterHours.total]);
+  const p = a.pedidos;
+  rows.push(
+    ["pedidos", "periodo", "creados", p.current.created],
+    ["pedidos", "periodo", "unidades", p.current.units],
+    ["pedidos", "periodo", "entregados", p.current.completed],
+    ["pedidos", "periodo", "a_tiempo", p.current.onTime],
+    ["pedidos", "periodo", "con_fecha", p.current.withPromise],
+    ["pedidos", "periodo", "dias_promedio_entrega", p.current.avgLeadDays],
+    ["pedidos", "ahora", "cuentas_por_cobrar", p.now.receivablesTotal],
+    ["pedidos", "ahora", "saldo_a_favor", p.now.saldoAFavorTotal],
+    ["pedidos", "ahora", "atrasados", p.now.overdue.length],
+  );
+  for (const r of p.now.receivables)
+    rows.push([
+      "cuentas_por_cobrar",
+      `#${String(r.number).padStart(4, "0")} ${r.clientName ?? ""}`.trim(),
+      "saldo",
+      r.balance,
+    ]);
+  for (const c of a.production.current.byClothier)
+    rows.push(
+      ["produccion", c.name, "aprobadas", c.approved],
+      ["produccion", c.name, "devueltas", c.returned],
+      ["produccion", c.name, "tasa_devolucion_pct", c.returnRate],
+    );
+  for (const g of a.production.current.byGarment)
+    rows.push(
+      ["produccion_prenda", g.garment, "aprobadas", g.approved],
+      ["produccion_prenda", g.garment, "costo_mano_obra", g.labourCost],
+      ["produccion_prenda", g.garment, "precio", g.price],
+      ["produccion_prenda", g.garment, "margen", g.margin],
+    );
+  rows.push(
+    [
+      "produccion",
+      "todas",
+      "horas_asignacion_a_aprobacion",
+      a.production.current.avgAssignToApprovalHours,
+    ],
+    ["inventario", "ahora", "unidades", a.inventory.now.unitsOnHand],
+    ["inventario", "ahora", "valor_a_precio_venta", a.inventory.now.valueAtPrice],
+    ["inventario", "periodo", "vendidas", a.inventory.current.unitsSold],
+    ["inventario", "periodo", "bajas", a.inventory.current.writeOffUnits],
+  );
+  for (const sm of a.inventory.now.slowMovers)
+    rows.push([
+      "inventario_lento",
+      [sm.garment, sm.sizeLabel, sm.colorLabel].filter(Boolean).join(" · "),
+      "unidades",
+      sm.onHand,
+    ]);
+  return {
+    success: true,
+    data: {
+      csv: rows.map((r) => r.map(csvCell).join(",")).join("\n"),
+      filename: `befine-pedidos-${a.period}-${todayInBogota()}.csv`,
+    },
+  };
 }

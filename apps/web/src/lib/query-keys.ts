@@ -18,23 +18,22 @@ export const queryKeys = {
   appointments: {
     byDate: (date: string, stylistId: string) => ["appointments", date, stylistId] as const,
   },
-  products: {
-    dashboard: ["products", "dashboard"] as const,
-    approvals: ["products", "approvals"] as const,
-    clothierBoard: ["products", "clothierBoard"] as const,
-  },
   // Reference data — changes rarely; invalidated by catalog edits.
   catalog: {
     services: ["catalog", "services"] as const,
-    sellableClothPieces: ["catalog", "sellableClothPieces"] as const,
+    sellableStock: ["catalog", "sellableStock"] as const,
     clothPieceOptions: ["catalog", "clothPieceOptions"] as const,
   },
   staff: {
     activeStylists: ["staff", "activeStylists"] as const,
     bookingStylists: ["staff", "bookingStylists"] as const,
-    activeClothiers: ["staff", "activeClothiers"] as const,
   },
   clients: {
     options: ["clients", "options"] as const,
+  },
+  pedidos: {
+    myWork: ["pedidos", "myWork"] as const,
+    productionBoard: ["pedidos", "productionBoard"] as const,
+    clothiersWithoutClosing: ["pedidos", "clothiersWithoutClosing"] as const,
   },
 } as const;

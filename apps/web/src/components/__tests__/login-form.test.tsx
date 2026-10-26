@@ -55,3 +55,11 @@ describe("LoginForm rate limit", () => {
     expect(submit()).toBeEnabled();
   });
 });
+
+describe("LoginForm before hydration (H-61)", () => {
+  it("posts natively, so credentials never end up in the URL", () => {
+    renderForm();
+    const form = submit().closest("form")!;
+    expect(form.getAttribute("method")).toBe("post");
+  });
+});

@@ -65,7 +65,8 @@ export function LoginForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
+    // method="post": a submit before hydration must never put credentials in the URL (H-61).
+    <form method="post" onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
       {/* Email */}
       <div className="space-y-1">
         <label htmlFor="email" className="text-sm font-medium">

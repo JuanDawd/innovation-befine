@@ -12,7 +12,8 @@ import { revalidatePath } from "next/cache";
 import { eq, ilike, or, and, isNotNull } from "drizzle-orm";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
-import { getDb } from "@/lib/db";
+import { getDb, getTxDb } from "@/lib/db";
+import { actorOf, logActivity } from "@/lib/activity";
 import { clients, employees, users } from "@befine/db/schema";
 import { createClientSchema, editClientSchema } from "@befine/types";
 import type { ActionResult } from "@/lib/action-result";
@@ -115,18 +116,28 @@ export async function createClient(rawInput: unknown): Promise<ActionResult<Clie
   }
 
   const { name, phone, email, notes, birthday } = parsed.data;
-  const db = getDb();
-
-  const [row] = await db
-    .insert(clients)
-    .values({
-      name,
-      phone: phone || null,
-      email: email || null,
-      notes: notes || null,
-      birthday: birthday || null,
-    })
-    .returning();
+  const [row] = await getTxDb().transaction(async (tx) => {
+    const rows = await tx
+      .insert(clients)
+      .values({
+        name,
+        phone: phone || null,
+        email: email || null,
+        notes: notes || null,
+        birthday: birthday || null,
+      })
+      .returning();
+    if (rows[0])
+      await logActivity(tx, {
+        actor: actorOf(session.user),
+        action: "client.create",
+        entityType: "client",
+        entityId: rows[0].id,
+        data: { name: rows[0].name },
+        after: { name, hasPhone: Boolean(phone), hasEmail: Boolean(email) },
+      });
+    return rows;
+  });
 
   revalidatePath("/cashier/clients");
   revalidatePath("/secretary/clients");
@@ -165,20 +176,29 @@ export async function editClient(
   }
 
   const { name, phone, email, notes, birthday } = parsed.data;
-  const db = getDb();
-
-  const [row] = await db
-    .update(clients)
-    .set({
-      name,
-      phone: phone || null,
-      email: email || null,
-      notes: notes || null,
-      birthday: birthday || null,
-      updatedAt: new Date(),
-    })
-    .where(and(eq(clients.id, clientId), eq(clients.isActive, true)))
-    .returning();
+  const [row] = await getTxDb().transaction(async (tx) => {
+    const rows = await tx
+      .update(clients)
+      .set({
+        name,
+        phone: phone || null,
+        email: email || null,
+        notes: notes || null,
+        birthday: birthday || null,
+        updatedAt: new Date(),
+      })
+      .where(and(eq(clients.id, clientId), eq(clients.isActive, true)))
+      .returning();
+    if (rows[0])
+      await logActivity(tx, {
+        actor: actorOf(session.user),
+        action: "client.update",
+        entityType: "client",
+        entityId: clientId,
+        data: { name: rows[0].name },
+      });
+    return rows;
+  });
 
   if (!row)
     return {
@@ -207,12 +227,22 @@ export async function archiveClient(clientId: string): Promise<ActionResult<null
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
   }
 
-  const db = getDb();
-  const [row] = await db
-    .update(clients)
-    .set({ isActive: false, updatedAt: new Date() })
-    .where(and(eq(clients.id, clientId), eq(clients.isActive, true)))
-    .returning({ id: clients.id });
+  const [row] = await getTxDb().transaction(async (tx) => {
+    const rows = await tx
+      .update(clients)
+      .set({ isActive: false, updatedAt: new Date() })
+      .where(and(eq(clients.id, clientId), eq(clients.isActive, true)))
+      .returning({ id: clients.id, name: clients.name });
+    if (rows[0])
+      await logActivity(tx, {
+        actor: actorOf(session.user),
+        action: "client.archive",
+        entityType: "client",
+        entityId: clientId,
+        data: { name: rows[0].name },
+      });
+    return rows;
+  });
 
   if (!row)
     return {
@@ -241,12 +271,22 @@ export async function unarchiveClient(clientId: string): Promise<ActionResult<nu
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
   }
 
-  const db = getDb();
-  const [row] = await db
-    .update(clients)
-    .set({ isActive: true, updatedAt: new Date() })
-    .where(and(eq(clients.id, clientId), eq(clients.isActive, false)))
-    .returning({ id: clients.id });
+  const [row] = await getTxDb().transaction(async (tx) => {
+    const rows = await tx
+      .update(clients)
+      .set({ isActive: true, updatedAt: new Date() })
+      .where(and(eq(clients.id, clientId), eq(clients.isActive, false)))
+      .returning({ id: clients.id, name: clients.name });
+    if (rows[0])
+      await logActivity(tx, {
+        actor: actorOf(session.user),
+        action: "client.restore",
+        entityType: "client",
+        entityId: clientId,
+        data: { name: rows[0].name },
+      });
+    return rows;
+  });
 
   if (!row)
     return {

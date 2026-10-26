@@ -4,7 +4,7 @@ import { test, expect } from "@playwright/test";
  * Appointment booking E2E — secretary books an appointment.
  *
  * Verifies the full booking dialog flow: client (guest), stylist selection,
- * service summary, datetime, duration → submit → success toast.
+ * service summary, datetime, duration → submit → read-back success toast.
  *
  * Requires a seeded DB with at least one active stylist.
  */
@@ -58,7 +58,7 @@ test.describe("appointment booking", () => {
     // Submit
     await dialog.getByRole("button", { name: /reservar cita/i }).click();
 
-    // Verify success toast ("Cita reservada correctamente")
-    await expect(page.getByText(/cita reservada correctamente/i)).toBeVisible({ timeout: 10_000 });
+    // Verify success toast — reads the booking back ("Cita para {client} con {stylist}, {when}")
+    await expect(page.getByText(/cita para test e2e con/i)).toBeVisible({ timeout: 10_000 });
   });
 });

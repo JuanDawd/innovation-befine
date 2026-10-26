@@ -171,234 +171,6 @@ describe("Flow (a): appointment → ticket → checkout → payout coverage", ()
   });
 });
 
-// ─── Flow (b): Product → Pieces Done → Approve → Payout Includes Pieces ─────
-
-describe("Flow (b): product → pieces done → approve → clothier payout coverage", () => {
-  type PieceStatus = "pending" | "done_pending_approval" | "approved";
-  type ProductPiece = {
-    id: string;
-    productId: string;
-    businessDayId: string;
-    assignedToEmployeeId: string;
-    status: PieceStatus;
-    pieceRate: number;
-  };
-
-  function computeClothierUnsettled(
-    pieces: ProductPiece[],
-    settledDays: { employeeId: string; businessDayId: string }[],
-    employeeId: string,
-    closedDayIds: string[],
-  ): string[] {
-    const settled = new Set(
-      settledDays.filter((s) => s.employeeId === employeeId).map((s) => s.businessDayId),
-    );
-    const workedDays = new Set(
-      pieces
-        .filter(
-          (p) =>
-            p.assignedToEmployeeId === employeeId &&
-            p.status === "approved" &&
-            closedDayIds.includes(p.businessDayId),
-        )
-        .map((p) => p.businessDayId),
-    );
-    return [...workedDays].filter((d) => !settled.has(d));
-  }
-
-  it("approved pieces create an unsettled day for the clothier", () => {
-    const empId = uuid();
-    const dayId = uuid();
-
-    const piece: ProductPiece = {
-      id: uuid(),
-      productId: uuid(),
-      businessDayId: dayId,
-      assignedToEmployeeId: empId,
-      status: "approved",
-      pieceRate: 15_000,
-    };
-
-    const unsettled = computeClothierUnsettled([piece], [], empId, [dayId]);
-    expect(unsettled).toContain(dayId);
-  });
-
-  it("done_pending_approval pieces do NOT create unsettled day until approved", () => {
-    const empId = uuid();
-    const dayId = uuid();
-
-    const piece: ProductPiece = {
-      id: uuid(),
-      productId: uuid(),
-      businessDayId: dayId,
-      assignedToEmployeeId: empId,
-      status: "done_pending_approval",
-      pieceRate: 15_000,
-    };
-
-    const unsettled = computeClothierUnsettled([piece], [], empId, [dayId]);
-    expect(unsettled).toHaveLength(0);
-  });
-
-  it("payout total = sum of approved piece rates", () => {
-    const empId = uuid();
-    const dayId = uuid();
-    const pieces: ProductPiece[] = [
-      {
-        id: uuid(),
-        productId: uuid(),
-        businessDayId: dayId,
-        assignedToEmployeeId: empId,
-        status: "approved",
-        pieceRate: 15_000,
-      },
-      {
-        id: uuid(),
-        productId: uuid(),
-        businessDayId: dayId,
-        assignedToEmployeeId: empId,
-        status: "approved",
-        pieceRate: 20_000,
-      },
-      {
-        id: uuid(),
-        productId: uuid(),
-        businessDayId: dayId,
-        assignedToEmployeeId: empId,
-        status: "done_pending_approval",
-        pieceRate: 99_000,
-      },
-    ];
-
-    const total = pieces
-      .filter((p) => p.assignedToEmployeeId === empId && p.status === "approved")
-      .reduce((sum, p) => sum + p.pieceRate, 0);
-
-    expect(total).toBe(35_000);
-  });
-
-  it("day settles after payout covers it — no more unsettled", () => {
-    const empId = uuid();
-    const dayId = uuid();
-    const piece: ProductPiece = {
-      id: uuid(),
-      productId: uuid(),
-      businessDayId: dayId,
-      assignedToEmployeeId: empId,
-      status: "approved",
-      pieceRate: 15_000,
-    };
-
-    const settled = [{ employeeId: empId, businessDayId: dayId }];
-    const unsettled = computeClothierUnsettled([piece], settled, empId, [dayId]);
-
-    expect(unsettled).toHaveLength(0);
-  });
-
-  it("piece variant rate is used (not cloth_piece base rate)", () => {
-    // Invariant: product_pieces joins cloth_piece_variants, not cloth_pieces directly
-    // Simulate variant resolution
-    const variants = [
-      { id: "v1", clothPieceId: "cp1", name: "Dos piezas", pieceRate: 12_000 },
-      { id: "v2", clothPieceId: "cp1", name: "Entera", pieceRate: 18_000 },
-    ];
-
-    const productPieceVariantId = "v2";
-    const resolvedRate = variants.find((v) => v.id === productPieceVariantId)?.pieceRate;
-
-    expect(resolvedRate).toBe(18_000);
-  });
-});
-
-// ─── Flow (c): Large-order → Link products → Payments → paid_in_full ────────
-
-describe("Flow (c): large-order payment auto-transition to paid_in_full", () => {
-  type OrderStatus = "pending" | "in_progress" | "paid_in_full" | "cancelled";
-
-  type LargeOrder = {
-    id: string;
-    totalAmount: number;
-    status: OrderStatus;
-    payments: number[];
-  };
-
-  function computeOrderStatus(order: LargeOrder): OrderStatus {
-    if (order.status === "cancelled") return "cancelled";
-    const paid = order.payments.reduce((s, p) => s + p, 0);
-    if (paid >= order.totalAmount) return "paid_in_full";
-    if (paid > 0) return "in_progress";
-    return "pending";
-  }
-
-  it("order transitions to paid_in_full when payments sum ≥ total", () => {
-    const order: LargeOrder = {
-      id: uuid(),
-      totalAmount: 500_000,
-      status: "in_progress",
-      payments: [200_000, 300_000],
-    };
-    expect(computeOrderStatus(order)).toBe("paid_in_full");
-  });
-
-  it("order stays in_progress when partially paid", () => {
-    const order: LargeOrder = {
-      id: uuid(),
-      totalAmount: 500_000,
-      status: "in_progress",
-      payments: [200_000],
-    };
-    expect(computeOrderStatus(order)).toBe("in_progress");
-  });
-
-  it("overpayment also triggers paid_in_full (graceful rounding)", () => {
-    const order: LargeOrder = {
-      id: uuid(),
-      totalAmount: 500_000,
-      status: "in_progress",
-      payments: [500_001],
-    };
-    expect(computeOrderStatus(order)).toBe("paid_in_full");
-  });
-
-  it("cancelled order cannot transition to paid_in_full", () => {
-    const order: LargeOrder = {
-      id: uuid(),
-      totalAmount: 500_000,
-      status: "cancelled",
-      payments: [500_000],
-    };
-    expect(computeOrderStatus(order)).toBe("cancelled");
-  });
-
-  it("no payments leaves order pending", () => {
-    const order: LargeOrder = {
-      id: uuid(),
-      totalAmount: 500_000,
-      status: "pending",
-      payments: [],
-    };
-    expect(computeOrderStatus(order)).toBe("pending");
-  });
-
-  it("linked product pieces are included in order value", () => {
-    // Invariant: product_pieces linked via products.large_order_id
-    // Simulate total computation including linked products
-    const orderTotal = 800_000;
-    const productPieces = [
-      { largeOrderId: "order-1", pieceRate: 15_000, status: "approved" as const },
-      { largeOrderId: "order-1", pieceRate: 20_000, status: "approved" as const },
-      { largeOrderId: "order-2", pieceRate: 99_000, status: "approved" as const },
-    ];
-
-    const linkedCost = productPieces
-      .filter((p) => p.largeOrderId === "order-1" && p.status === "approved")
-      .reduce((s, p) => s + p.pieceRate, 0);
-
-    expect(linkedCost).toBe(35_000);
-    expect(linkedCost).toBeLessThanOrEqual(orderTotal);
-  });
-});
-
 // ─── Flow (d): Offline queue flush deduplication ──────────────────────────────
 
 describe("Flow (d): offline queue flush deduplication", () => {
@@ -436,7 +208,7 @@ describe("Flow (d): offline queue flush deduplication", () => {
     const key = uuid();
 
     expect(check(key)).toBeNull();
-    store(key, "markPieceDone", { success: true });
+    store(key, "reportUnits", { success: true });
     expect(check(key)).toEqual({ success: true });
   });
 
@@ -450,7 +222,7 @@ describe("Flow (d): offline queue flush deduplication", () => {
       if (cached) return cached;
       execCount++;
       const result = { success: true, data: { id: "piece-123" } };
-      store(key, "markPieceDone", result);
+      store(key, "reportUnits", result);
       return result;
     }
 
@@ -465,8 +237,8 @@ describe("Flow (d): offline queue flush deduplication", () => {
     const key1 = uuid();
     const key2 = uuid();
 
-    store(key1, "markPieceDone", { success: true, data: { id: "piece-1" } });
-    store(key2, "markPieceDone", { success: true, data: { id: "piece-2" } });
+    store(key1, "reportUnits", { success: true, data: { id: "piece-1" } });
+    store(key2, "reportUnits", { success: true, data: { id: "piece-2" } });
 
     expect(check(key1)).toEqual({ success: true, data: { id: "piece-1" } });
     expect(check(key2)).toEqual({ success: true, data: { id: "piece-2" } });
@@ -476,7 +248,7 @@ describe("Flow (d): offline queue flush deduplication", () => {
     const { check, store } = makeIdempotencyStore();
     const key = uuid();
 
-    store(key, "markPieceDone", { success: true }, -1); // already expired
+    store(key, "reportUnits", { success: true }, -1); // already expired
     expect(check(key)).toBeNull(); // lazy expiry returns null
   });
 
@@ -532,8 +304,8 @@ describe("Flow (d): offline queue flush deduplication", () => {
 
     // Simulate two identical queued mutations with the same idempotency key
     const queue = [
-      { id: key, type: "markPieceDone", payload: { pieceId: "p1", expectedVersion: 1 } },
-      { id: key, type: "markPieceDone", payload: { pieceId: "p1", expectedVersion: 1 } },
+      { id: key, type: "reportUnits", payload: { pieceId: "p1", expectedVersion: 1 } },
+      { id: key, type: "reportUnits", payload: { pieceId: "p1", expectedVersion: 1 } },
     ];
 
     const processed: string[] = [];

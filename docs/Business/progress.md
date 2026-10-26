@@ -696,32 +696,32 @@ Update `apps/web/src/lib/db/README.md` with a short "When to use `getDb()` vs `g
 
 | ID   | Task                                                         | Status  | Dependencies                 |
 | ---- | ------------------------------------------------------------ | ------- | ---------------------------- |
-| T110 | Sizes and colours catalog                                    | pending | —                            |
-| T111 | Pedido core schema                                           | pending | T110                         |
-| T112 | Production schema                                            | pending | T111                         |
-| T113 | Money and stock schema                                       | pending | T111                         |
-| T114 | Activity log foundation                                      | pending | —                            |
-| T115 | New settings (secretary payments, claim limit, scrapped pay) | pending | —                            |
-| T116 | Create / edit pedido                                         | pending | T111, T030                   |
-| T117 | Pedidos list and detail                                      | pending | T116, T118                   |
-| T118 | Derived status engine                                        | pending | T112, T113                   |
-| T119 | Edit rules after production starts                           | pending | T116, T112                   |
+| T110 | Sizes and colours catalog                                    | done    | —                            |
+| T111 | Pedido core schema                                           | done    | T110                         |
+| T112 | Production schema                                            | done    | T111                         |
+| T113 | Money and stock schema                                       | done    | T111                         |
+| T114 | Activity log foundation                                      | done    | —                            |
+| T115 | New settings (secretary payments, claim limit, scrapped pay) | done    | —                            |
+| T116 | Create / edit pedido                                         | done    | T111, T030                   |
+| T117 | Pedidos list and detail                                      | done    | T116, T118                   |
+| T118 | Derived status engine                                        | done    | T112, T113                   |
+| T119 | Edit rules after production starts                           | done    | T116, T112                   |
 | T120 | Admin-approved restructure                                   | pending | T119, T127, T128             |
-| T121 | Deliveries in units                                          | pending | T112                         |
-| T122 | Assigning work                                               | pending | T112                         |
-| T123 | Mi trabajo (clothier)                                        | pending | T122, T115                   |
-| T124 | Producción review queue                                      | pending | T123                         |
-| T125 | Cerrar mi jornada                                            | pending | T123, T124                   |
-| T126 | Clothier payroll on approved units                           | pending | T124, T125                   |
-| T127 | Pedido payments and the till                                 | pending | T113, T115                   |
-| T128 | Stock ledger and Inventario                                  | pending | T113, T124                   |
-| T129 | Vender prenda from stock                                     | pending | T128, T127                   |
-| T130 | Caja de hoy and close summary by source                      | pending | T127, T129, T125             |
-| T131 | Activity log coverage                                        | pending | T114                         |
-| T132 | Actividad screen and Historial tabs                          | pending | T131                         |
-| T133 | Analítica additions                                          | pending | T127, T126, T128             |
-| T134 | Navigation and RBAC                                          | pending | T117, T123, T124, T128, T132 |
-| T135 | Retire the old model and reset test data                     | pending | T134                         |
+| T121 | Deliveries in units                                          | done    | T112                         |
+| T122 | Assigning work                                               | done    | T112                         |
+| T123 | Mi trabajo (clothier)                                        | done    | T122, T115                   |
+| T124 | Producción review queue                                      | done    | T123                         |
+| T125 | Cerrar mi jornada                                            | done    | T123, T124                   |
+| T126 | Clothier payroll on approved units                           | done    | T124, T125                   |
+| T127 | Pedido payments and the till                                 | done    | T113, T115                   |
+| T128 | Stock ledger and Inventario                                  | done    | T113, T124                   |
+| T129 | Vender prenda from stock                                     | done    | T128, T127                   |
+| T130 | Caja de hoy and close summary by source                      | done    | T127, T129, T125             |
+| T131 | Activity log coverage                                        | done    | T114                         |
+| T132 | Actividad screen and Historial tabs                          | done    | T131                         |
+| T133 | Analítica additions                                          | done    | T127, T126, T128             |
+| T134 | Navigation and RBAC                                          | done    | T117, T123, T124, T128, T132 |
+| T135 | Retire the old model and reset test data                     | done    | T134                         |
 | T136 | E2E, training guide and screenshots                          | pending | T135                         |
 
 ---

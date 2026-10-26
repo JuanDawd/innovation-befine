@@ -4,15 +4,17 @@ import { notifyDataChanged } from "@/lib/data-events";
 import { useRef, useState, useTransition } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
-import { Loader2Icon } from "lucide-react";
+import { Loader2Icon, PackageIcon } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   createClothSale,
-  type SellableClothPiece,
+  type SellableStockItem,
   type ClientOption,
 } from "@/app/(protected)/cashier/actions/cloth-sales";
+import { checkSaleStock } from "@/lib/stock-rules";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
@@ -35,11 +37,12 @@ export function SellClothPieceModal({ open, onOpenChange, ticketId }: SellClothP
   const tc = useTranslations("common");
   const tm = useTranslations("checkout.method");
   const [isPending, startTransition] = useTransition();
-  // Loaded when the modal first opens, then cached (reopening is instant).
-  const piecesQuery = useQuery({
-    queryKey: queryKeys.catalog.sellableClothPieces,
-    queryFn: () => fetchQuery("sellableClothPieces"),
-    staleTime: 5 * 60_000,
+  // Stock changes with every sale: refetched each time the modal opens.
+  const stockQuery = useQuery({
+    queryKey: queryKeys.catalog.sellableStock,
+    queryFn: () => fetchQuery("sellableStock"),
+    staleTime: 0,
+    refetchOnMount: "always",
     enabled: open,
   });
   const clientsQuery = useQuery({
@@ -48,12 +51,22 @@ export function SellClothPieceModal({ open, onOpenChange, ticketId }: SellClothP
     staleTime: 5 * 60_000,
     enabled: open,
   });
-  const pieces: SellableClothPiece[] = piecesQuery.data ?? [];
+  const items: SellableStockItem[] = stockQuery.data?.items ?? [];
+  const canOversell = stockQuery.data?.canOversell ?? false;
+  const afterHours = stockQuery.data?.afterHours ?? false;
   const clients: ClientOption[] = clientsQuery.data ?? [];
-  const isLoading = piecesQuery.isPending || clientsQuery.isPending;
+  const isLoading = stockQuery.isPending || clientsQuery.isPending;
 
-  const [selectedPieceId, setSelectedPieceId] = useState("");
+  // Garments (variants) that have at least one sellable size/colour.
+  const garments = Array.from(
+    new Map(items.map((i) => [i.clothPieceVariantId, i.garment])).entries(),
+  );
+  const keyOf = (i: SellableStockItem) => `${i.sizeId ?? "-"}:${i.colorId ?? "-"}`;
+
   const [selectedVariantId, setSelectedVariantId] = useState("");
+  const [selectedOption, setSelectedOption] = useState("");
+  const [oversell, setOversell] = useState(false);
+  const [oversellReason, setOversellReason] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [priceOverride, setPriceOverride] = useState("");
   const [customerType, setCustomerType] = useState<"none" | "client" | "guest">("none");
@@ -65,16 +78,28 @@ export function SellClothPieceModal({ open, onOpenChange, ticketId }: SellClothP
   // Changed inputs or a recorded sale get a new key.
   const attempt = useRef<{ signature: string; key: string } | null>(null);
 
-  const selectedPiece = pieces.find((p) => p.id === selectedPieceId);
-  const selectedVariant = selectedPiece?.variants.find((v) => v.id === selectedVariantId);
-  const basePrice = selectedVariant?.sellingPrice ?? null;
+  const options = items.filter((i) => i.clothPieceVariantId === selectedVariantId);
+  const selectedItem = options.find((i) => keyOf(i) === selectedOption);
+  const basePrice = selectedItem?.sellingPrice ?? null;
+  const stockProblem = selectedItem
+    ? checkSaleStock({
+        quantity,
+        onHand: selectedItem.onHand,
+        isAdmin: canOversell,
+        oversell,
+        oversellReason,
+      })
+    : null;
+  const needsOversell = !!selectedItem && quantity > selectedItem.onHand;
   const effectiveUnitPrice = priceOverride !== "" ? parseInt(priceOverride, 10) : basePrice;
   const total =
     effectiveUnitPrice != null && !isNaN(effectiveUnitPrice) ? effectiveUnitPrice * quantity : null;
 
   function reset() {
-    setSelectedPieceId("");
     setSelectedVariantId("");
+    setSelectedOption("");
+    setOversell(false);
+    setOversellReason("");
     setQuantity(1);
     setPriceOverride("");
     setCustomerType("none");
@@ -89,22 +114,22 @@ export function SellClothPieceModal({ open, onOpenChange, ticketId }: SellClothP
     onOpenChange(next);
   }
 
-  function handlePieceChange(pieceId: string) {
-    setSelectedPieceId(pieceId);
-    setSelectedVariantId("");
-    setPriceOverride("");
-  }
-
   function handleVariantChange(variantId: string) {
     setSelectedVariantId(variantId);
+    const only = items.filter((i) => i.clothPieceVariantId === variantId);
+    setSelectedOption(only.length === 1 ? keyOf(only[0]!) : "");
     setPriceOverride("");
+    setOversell(false);
   }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!selectedVariantId || !paymentMethod) return;
+    if (!selectedItem || !paymentMethod || stockProblem) return;
     const signature = JSON.stringify([
       selectedVariantId,
+      selectedOption,
+      oversell,
+      oversellReason,
       quantity,
       priceOverride,
       customerType,
@@ -120,8 +145,12 @@ export function SellClothPieceModal({ open, onOpenChange, ticketId }: SellClothP
       let res: Awaited<ReturnType<typeof createClothSale>>;
       try {
         res = await createClothSale({
-          clothPieceVariantId: selectedVariantId,
+          clothPieceVariantId: selectedItem.clothPieceVariantId,
+          sizeId: selectedItem.sizeId,
+          colorId: selectedItem.colorId,
           quantity,
+          oversell: needsOversell && oversell ? true : undefined,
+          oversellReason: needsOversell && oversell ? oversellReason.trim() : null,
           priceOverride: priceOverride !== "" ? parseInt(priceOverride, 10) : null,
           clientId: customerType === "client" && clientId ? clientId : null,
           guestName: customerType === "guest" && guestName.trim() ? guestName.trim() : null,
@@ -139,8 +168,13 @@ export function SellClothPieceModal({ open, onOpenChange, ticketId }: SellClothP
         toast.error(res.error.message);
         return;
       }
-      toast.success(t("success", { total: formatMoney(res.data.effectiveTotal) }));
+      toast.success(
+        t(res.data.afterHours ? "successAfterHours" : "success", {
+          total: formatMoney(res.data.effectiveTotal),
+        }),
+      );
       notifyDataChanged("clothSales", "tickets", "businessDay");
+      void stockQuery.refetch();
       reset();
       onOpenChange(false);
     });
@@ -158,51 +192,64 @@ export function SellClothPieceModal({ open, onOpenChange, ticketId }: SellClothP
             <Loader2Icon className="size-4 animate-spin mr-2" aria-hidden="true" />
             {tc("loading")}
           </div>
+        ) : items.length === 0 ? (
+          <EmptyState
+            icon={PackageIcon}
+            title={t("noStockTitle")}
+            description={t("noStockDescription")}
+          />
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Piece selector */}
+            {afterHours && (
+              <p className="rounded-lg border border-status-attention-foreground/30 bg-status-attention/40 px-3 py-2 text-sm">
+                {t("afterHoursWarning")}
+              </p>
+            )}
+
+            {/* Garment */}
             <div className="space-y-1">
               <label className="text-sm font-medium" htmlFor="sell-piece">
                 {t("piece")} <span className="text-destructive">*</span>
               </label>
               <NativeSelect
                 id="sell-piece"
-                value={selectedPieceId}
-                onChange={(e) => handlePieceChange(e.target.value)}
+                value={selectedVariantId}
+                onChange={(e) => handleVariantChange(e.target.value)}
                 required
                 className="w-full"
                 selectClassName="h-9 text-sm"
               >
                 <option value="">{t("piecePlaceholder")}</option>
-                {pieces.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
+                {garments.map(([id, label]) => (
+                  <option key={id} value={id}>
+                    {label}
                   </option>
                 ))}
               </NativeSelect>
             </div>
 
-            {/* Variant selector */}
-            {selectedPiece && (
+            {/* Size + colour with live availability */}
+            {selectedVariantId && (
               <div className="space-y-1">
                 <label className="text-sm font-medium" htmlFor="sell-variant">
                   {t("variant")} <span className="text-destructive">*</span>
                 </label>
                 <NativeSelect
                   id="sell-variant"
-                  value={selectedVariantId}
-                  onChange={(e) => handleVariantChange(e.target.value)}
+                  value={selectedOption}
+                  onChange={(e) => {
+                    setSelectedOption(e.target.value);
+                    setOversell(false);
+                  }}
                   required
                   className="w-full"
                   selectClassName="h-9 text-sm"
                 >
                   <option value="">{t("variantPlaceholder")}</option>
-                  {selectedPiece.variants.map((v) => (
-                    <option key={v.id} value={v.id}>
-                      {v.name}
-                      {v.sellingPrice != null
-                        ? ` — ${formatMoney(v.sellingPrice)}`
-                        : ` — ${t("noPrice")}`}
+                  {options.map((o) => (
+                    <option key={keyOf(o)} value={keyOf(o)}>
+                      {[o.sizeLabel ?? t("noSize"), o.colorLabel ?? t("noColor")].join(" · ")} —{" "}
+                      {t("available", { n: o.onHand })}
                     </option>
                   ))}
                 </NativeSelect>
@@ -210,7 +257,7 @@ export function SellClothPieceModal({ open, onOpenChange, ticketId }: SellClothP
             )}
 
             {/* Quantity + price row */}
-            {selectedVariantId && (
+            {selectedItem && (
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <label className="text-sm font-medium" htmlFor="sell-qty">
@@ -220,7 +267,10 @@ export function SellClothPieceModal({ open, onOpenChange, ticketId }: SellClothP
                     id="sell-qty"
                     type="number"
                     min={1}
+                    max={canOversell ? undefined : selectedItem.onHand}
                     value={quantity}
+                    aria-invalid={!!stockProblem && !(needsOversell && canOversell && oversell)}
+                    aria-describedby={stockProblem ? "sell-stock-problem" : undefined}
                     onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value, 10) || 1))}
                     className="h-9 font-mono"
                   />
@@ -248,6 +298,36 @@ export function SellClothPieceModal({ open, onOpenChange, ticketId }: SellClothP
               </div>
             )}
 
+            {/* Oversell: admin only, with a reason; otherwise blocked */}
+            {needsOversell && canOversell && (
+              <div className="space-y-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3">
+                <label className="flex min-h-11 cursor-pointer items-start gap-2 text-sm md:min-h-0">
+                  <input
+                    type="checkbox"
+                    checked={oversell}
+                    onChange={(e) => setOversell(e.target.checked)}
+                    className="mt-0.5 size-4"
+                  />
+                  {t("oversell", { n: selectedItem!.onHand })}
+                </label>
+                {oversell && (
+                  <Input
+                    value={oversellReason}
+                    onChange={(e) => setOversellReason(e.target.value)}
+                    maxLength={300}
+                    placeholder={t("oversellReason")}
+                    aria-label={t("oversellReason")}
+                    className="h-9"
+                  />
+                )}
+              </div>
+            )}
+            {stockProblem && (!canOversell || oversell) && (
+              <p id="sell-stock-problem" className="text-sm text-destructive">
+                {stockProblem}
+              </p>
+            )}
+
             {/* Total preview */}
             {total != null && (
               <div className="flex items-center justify-between rounded-md bg-muted/40 px-3 py-2 text-sm">
@@ -257,7 +337,7 @@ export function SellClothPieceModal({ open, onOpenChange, ticketId }: SellClothP
             )}
 
             {/* Customer (optional) */}
-            {selectedVariantId && (
+            {selectedItem && (
               <div className="space-y-2">
                 <p className="text-sm font-medium">
                   {t("customer")}{" "}
@@ -318,7 +398,7 @@ export function SellClothPieceModal({ open, onOpenChange, ticketId }: SellClothP
             )}
 
             {/* Payment method — the sale is paid on the spot */}
-            {selectedVariantId && (
+            {selectedItem && (
               <fieldset className="space-y-2">
                 <legend className="text-sm font-medium">
                   {t("paymentMethod")} <span className="text-destructive">*</span>
@@ -349,7 +429,11 @@ export function SellClothPieceModal({ open, onOpenChange, ticketId }: SellClothP
               <Button
                 type="submit"
                 disabled={
-                  isPending || !selectedVariantId || effectiveUnitPrice == null || !paymentMethod
+                  isPending ||
+                  !selectedItem ||
+                  !!stockProblem ||
+                  effectiveUnitPrice == null ||
+                  !paymentMethod
                 }
                 className="flex-1"
               >

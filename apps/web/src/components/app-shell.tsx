@@ -18,7 +18,6 @@ import { signOut } from "@/lib/auth-client";
 import { NAV_ITEMS, MOBILE_BOTTOM_NAV_ROLES, type NavItem, resolveGroups } from "./nav-config";
 
 import { NotificationBell } from "./notification-bell";
-import { VersionBanner } from "./version-banner";
 import { RealtimeQueryBridge } from "@/components/realtime-query-bridge";
 import { getQueryClient } from "@/lib/query-client";
 import { useTheme } from "@/hooks/use-theme";
@@ -367,7 +366,6 @@ export function AppShell({
           </div>
         </header>
 
-        <VersionBanner />
         <RealtimeQueryBridge role={role} />
 
         <main id="main" className="flex-1 overflow-y-auto pb-[var(--app-bottom-inset)]">
@@ -429,7 +427,8 @@ export function AppShell({
                 <span>{t("tickets.logService")}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
-            {(role === "cashier" || role === "admin" || role === "secretary") && (
+            {/* Vender prenda sells from stock: admin + cashier (T129) */}
+            {(role === "cashier" || role === "admin") && (
               <SidebarMenuItem>
                 <SidebarMenuButton
                   onClick={() => setSellOpen(true)}
@@ -482,7 +481,6 @@ export function AppShell({
           </div>
         </header>
 
-        <VersionBanner />
         <RealtimeQueryBridge role={role} />
 
         <main id="main" className="flex-1 overflow-y-auto">

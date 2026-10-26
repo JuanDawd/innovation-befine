@@ -6,6 +6,7 @@
 
 import { useState, useTransition, useRef, useCallback } from "react";
 import { useTranslations } from "next-intl";
+import { PedidoAnalytics } from "./pedido-analytics";
 import dynamic from "next/dynamic";
 import {
   TrendingUpIcon,
@@ -59,7 +60,7 @@ function delta(
   return { pct: Math.abs(pct), dir: pct > 0 ? "up" : pct < 0 ? "down" : "flat" };
 }
 
-function DeltaIndicator({ current, prior }: { current: number; prior: number }) {
+export function DeltaIndicator({ current, prior }: { current: number; prior: number }) {
   const { pct, dir } = delta(current, prior);
   if (pct === null) return null;
   return (
@@ -84,7 +85,7 @@ function DeltaIndicator({ current, prior }: { current: number; prior: number }) 
   );
 }
 
-function MetricCard({
+export function MetricCard({
   label,
   value,
   priorValue,
@@ -587,6 +588,9 @@ export function AnalyticsDashboard({ initialData }: { initialData: AnalyticsSumm
           </div>
         </>
       )}
+
+      {/* T133 — pedidos, producción, inventario */}
+      <PedidoAnalytics period={period} />
     </div>
   );
 }

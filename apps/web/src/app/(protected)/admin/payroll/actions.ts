@@ -24,25 +24,30 @@ import {
   payouts,
   payoutPeriodDays,
   payoutTicketItems,
-  payoutProductPieces,
+  payoutUnitReviews,
   ticketItems,
-  productPieces,
   tickets,
-  products,
+  assignments,
+  unitReviews,
 } from "@befine/db/schema";
 import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
 import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
 import { revalidatePath } from "next/cache";
 import { markPayoutReviewedSchema, recordPayoutSchema } from "@befine/types";
-import { getUnpaidPastBusinessDays } from "@befine/db";
+import { getUnpaidPastBusinessDays, type Database } from "@befine/db";
+import { clothierClosingBlocks, closingBlockMessage } from "@/lib/payroll/clothier-closing-gate";
 import { computeStylistEarnings, earningsLineLabel } from "@/lib/payroll/compute-stylist-earnings";
 import { earningsPeriods } from "@/lib/payroll/my-earnings-days";
 import { checkPayout } from "@/lib/payroll/payout-check";
 import { computeEarningsTotal } from "@/lib/payroll/compute-total";
-import { computeClothierEarnings } from "@/lib/payroll/compute-clothier-earnings";
+import { computeClothierEarnings, payoutReviewIds } from "@/lib/payroll/compute-clothier-earnings";
 import { computeSecretaryEarnings } from "@/lib/payroll/compute-secretary-earnings";
 import { businessDateOf } from "@/lib/dates";
+import { isUniqueViolation } from "@/lib/pg-error";
+import { actorOf, logActivity } from "@/lib/activity";
+import { formatPesos } from "@befine/db";
+import { METHOD_ES } from "@/lib/payment-method-labels";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -71,6 +76,8 @@ export type EarningsPreview = {
         lines: import("@/lib/payroll/compute-clothier-earnings").ClothierEarningsLine[];
       }
     | { type: "secretary"; daysWorked: number; dailyRate: number; expectedWorkDays: number };
+  /** T126 — clothiers: why these days cannot be settled yet (closing missing or unapproved) */
+  closingBlock: string | null;
 };
 
 export type PayoutRow = {
@@ -184,15 +191,20 @@ export async function previewEarnings(
 
   let computedAmount = 0;
   let breakdown: EarningsPreview["breakdown"];
+  let closingBlock: string | null = null;
 
   if (emp.role === "stylist") {
     const result = await computeStylistEarnings(db, employeeId, businessDayIds);
     computedAmount = result.totalEarnings;
     breakdown = { type: "stylist", lines: result.lines };
   } else if (emp.role === "clothier") {
-    const result = await computeClothierEarnings(db, employeeId, businessDayIds);
+    const [result, blocks] = await Promise.all([
+      computeClothierEarnings(db, employeeId, businessDayIds),
+      clothierClosingBlocks(db, employeeId, businessDayIds),
+    ]);
     computedAmount = result.totalEarnings;
     breakdown = { type: "clothier", lines: result.lines };
+    closingBlock = closingBlockMessage(emp.name, blocks);
   } else {
     const result = await computeSecretaryEarnings(db, employeeId, businessDayIds);
     computedAmount = result.totalEarnings;
@@ -213,6 +225,7 @@ export async function previewEarnings(
       computedAmount,
       businessDayIds,
       breakdown,
+      closingBlock,
     },
   };
 }
@@ -260,12 +273,22 @@ export async function recordPayout(rawInput: unknown): Promise<ActionResult<{ id
     return { success: false, error: { code: "NOT_FOUND", message: "Empleado no encontrado" } };
 
   const [emp] = await db
-    .select({ id: employees.id, role: employees.role })
+    .select({ id: employees.id, role: employees.role, name: users.name })
     .from(employees)
+    .innerJoin(users, eq(employees.userId, users.id))
     .where(eq(employees.id, input.employeeId))
     .limit(1);
   if (!emp)
     return { success: false, error: { code: "NOT_FOUND", message: "Empleado no encontrado" } };
+
+  // T126 — a clothier's day is settled only after her closing is approved.
+  if (emp.role === "clothier") {
+    const block = closingBlockMessage(
+      emp.name,
+      await clothierClosingBlocks(db, input.employeeId, input.businessDayIds),
+    );
+    if (block) return { success: false, error: { code: "CONFLICT", message: block } };
+  }
 
   // H-59: never trust the preview the client saw — recompute for these days.
   const serverComputedAmount = await computeEarningsTotal(
@@ -354,31 +377,55 @@ export async function recordPayout(rawInput: unknown): Promise<ActionResult<{ id
             .values(items.map((item) => ({ payoutId: payout.id, ticketItemId: item.id })));
       }
 
-      // Link covered product pieces (clothiers)
       if (emp.role === "clothier") {
-        const pieces = await tx
-          .select({ id: productPieces.id })
-          .from(productPieces)
-          .innerJoin(products, eq(productPieces.productId, products.id))
-          .where(
-            and(
-              eq(productPieces.assignedToEmployeeId, input.employeeId),
-              eq(productPieces.status, "approved"),
-              inArray(productPieces.approvedBusinessDayId, input.businessDayIds),
-            ),
-          );
-        if (pieces.length > 0)
+        // T126: the pedido unit reviews this payout pays. UNIQUE(unit_review_id)
+        // makes a second payout of the same review fail and roll back.
+        const reviewIds = payoutReviewIds(
+          (
+            await computeClothierEarnings(
+              tx as unknown as Database,
+              input.employeeId,
+              input.businessDayIds,
+            )
+          ).lines,
+        );
+        if (reviewIds.length > 0)
           await tx
-            .insert(payoutProductPieces)
-            .values(pieces.map((p) => ({ payoutId: payout.id, productPieceId: p.id })));
+            .insert(payoutUnitReviews)
+            .values(reviewIds.map((id) => ({ payoutId: payout.id, unitReviewId: id })));
       }
+
+      // T131 — logged with the employee's name, the days and how it differs from the computed figure.
+      const [who] = await tx
+        .select({ name: users.name })
+        .from(employees)
+        .innerJoin(users, eq(users.id, employees.userId))
+        .where(eq(employees.id, input.employeeId));
+      const adjusted = input.amount !== serverComputedAmount;
+      await logActivity(tx, {
+        actor: actorOf(guard.user),
+        action: "payroll.payout",
+        entityType: "employee",
+        entityId: input.employeeId,
+        summary:
+          `Liquidó ${formatPesos(input.amount)} (${METHOD_ES[input.method]}) a ${who?.name ?? "—"} por ` +
+          `${input.businessDayIds.length === 1 ? "1 día" : `${input.businessDayIds.length} días`}` +
+          (adjusted ? ` · calculado ${formatPesos(serverComputedAmount)}` : ""),
+        after: {
+          payoutId: payout.id,
+          amount: input.amount,
+          computed: serverComputedAmount,
+          businessDayIds: input.businessDayIds,
+          method: input.method,
+        },
+        reason: input.adjustmentReason ?? null,
+      });
 
       return payout.id;
     });
   } catch (err) {
     // Postgres unique violation on payout_period_days = double-pay attempt
-    const code = (err as { code?: string }).code;
-    if (code === "23505") {
+    if (isUniqueViolation(err)) {
       return {
         success: false,
         error: {
@@ -478,11 +525,22 @@ export async function markPayoutReviewed(rawPayoutId: unknown): Promise<ActionRe
       error: { code: "RATE_LIMITED", message: "Demasiadas solicitudes. Intenta de nuevo." },
     };
 
-  const [updated] = await getDb()
-    .update(payouts)
-    .set({ needsReview: false })
-    .where(eq(payouts.id, parsed.data.payoutId))
-    .returning({ id: payouts.id });
+  const updated = await getTxDb().transaction(async (tx) => {
+    const [row] = await tx
+      .update(payouts)
+      .set({ needsReview: false })
+      .where(eq(payouts.id, parsed.data.payoutId))
+      .returning({ id: payouts.id, employeeId: payouts.employeeId });
+    if (row)
+      await logActivity(tx, {
+        actor: actorOf(guard.user),
+        action: "payroll.payout_review",
+        entityType: "employee",
+        entityId: row.employeeId,
+        after: { payoutId: row.id, needsReview: false },
+      });
+    return row;
+  });
   if (!updated)
     return { success: false, error: { code: "NOT_FOUND", message: "Pago no encontrado" } };
 
@@ -557,15 +615,16 @@ export async function getUnsettledEmployees(): Promise<ActionResult<UnsettledEmp
         (d) => workDays.some((w) => w.businessDayId === d.id) && !settled.has(d.id),
       );
     } else if (emp.role === "clothier") {
+      // T126: days with reviewed pedido units (approved, or scrapped and paid)
       const workDays = await db
-        .selectDistinct({ businessDayId: productPieces.approvedBusinessDayId })
-        .from(productPieces)
-        .innerJoin(products, eq(productPieces.productId, products.id))
+        .selectDistinct({ businessDayId: unitReviews.businessDayId })
+        .from(unitReviews)
+        .innerJoin(assignments, eq(unitReviews.assignmentId, assignments.id))
         .where(
           and(
-            eq(productPieces.assignedToEmployeeId, emp.id),
-            eq(productPieces.status, "approved"),
-            inArray(productPieces.approvedBusinessDayId, closedDayIds),
+            eq(assignments.employeeId, emp.id),
+            inArray(unitReviews.businessDayId, closedDayIds),
+            sql`(${unitReviews.approved} > 0 OR (${unitReviews.scrapPaid} AND ${unitReviews.scrapped} > 0))`,
           ),
         );
       unsettledDays = closedDays.filter(
@@ -704,8 +763,14 @@ export async function getMyEarnings(): Promise<ActionResult<MyEarningsSummary>> 
       computeClothierEarnings(db, emp.id, openDays),
     ]);
     [todayAmt, weekAmt, monthAmt, openAmt] = [t, w, m, o].map((r) => r.totalEarnings);
+    // Same lines the cashier settles (T126): pedido, size, and why it is paid.
     todayLines = t.lines.map((l) => ({
-      label: earningsLineLabel(l.pieceName, l.variantName),
+      label:
+        earningsLineLabel(l.pieceName, l.variantName) +
+        (l.source === "pedido"
+          ? ` · #${String(l.pedidoNumber).padStart(4, "0")} · talla ${l.sizeLabel}` +
+            (l.kind === "scrapped" ? " · descartadas (se pagan)" : "")
+          : ""),
       quantity: l.quantity,
       basis: { kind: "pieceRate" as const, rate: l.pieceRate },
       amount: l.earnings,

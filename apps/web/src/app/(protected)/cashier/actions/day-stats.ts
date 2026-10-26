@@ -1,10 +1,10 @@
-"use server";
-
 /**
- * Day-at-a-glance stats — T093
+ * Day-at-a-glance stats — T093, T130
  *
- * Returns today's revenue (closed tickets + cloth sales — H-50), closed ticket count, and open
- * ticket count for the current business day.
+ * Today's till: everything taken on the current business day, split into
+ * Servicios · Pedidos · Prendas with totals per method and the after-hours
+ * line (getDayIncome — ticket payments, pedido payments and garment sales,
+ * refunds netted). Plus the charged ticket count.
  * Requires cashier or admin role.
  */
 
@@ -12,13 +12,16 @@ import { headers } from "next/headers";
 import { eq, and, count, sql } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import { tickets, ticketItems, clothSales } from "@befine/db/schema";
+import { tickets } from "@befine/db/schema";
+import { getDayIncome, summarizeDayIncome, type DayIncome } from "@befine/db";
 import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
 import { getCurrentBusinessDay } from "@/lib/business-day";
 
 export type DayStats = {
+  /** Everything the till took today (= income.total) */
   revenue: number;
+  income: DayIncome;
   closedCount: number;
   businessDayId: string | null;
 };
@@ -32,21 +35,14 @@ export async function getDayStats(): Promise<ActionResult<DayStats>> {
 
   const businessDay = await getCurrentBusinessDay();
   if (!businessDay)
-    return { success: true, data: { revenue: 0, closedCount: 0, businessDayId: null } };
+    return {
+      success: true,
+      data: { revenue: 0, income: summarizeDayIncome([]), closedCount: 0, businessDayId: null },
+    };
 
   const db = getDb();
-
-  const [revenueRows, countRows, clothSaleRows] = await Promise.all([
-    db
-      .select({
-        unitPrice: ticketItems.unitPrice,
-        overridePrice: ticketItems.overridePrice,
-        quantity: ticketItems.quantity,
-      })
-      .from(ticketItems)
-      .innerJoin(tickets, eq(ticketItems.ticketId, tickets.id))
-      .where(and(eq(tickets.businessDayId, businessDay.id), eq(tickets.status, "closed"))),
-
+  const [income, countRows] = await Promise.all([
+    getDayIncome(db, businessDay.id),
     db
       .select({ cnt: count() })
       .from(tickets)
@@ -56,19 +52,15 @@ export async function getDayStats(): Promise<ActionResult<DayStats>> {
           sql`${tickets.status} IN ('closed', 'paid_offline')`,
         ),
       ),
-
-    db
-      .select({
-        total: sql<number>`COALESCE(SUM(COALESCE(${clothSales.priceOverride}, ${clothSales.unitPrice}) * ${clothSales.quantity}), 0)::bigint`,
-      })
-      .from(clothSales)
-      .where(eq(clothSales.businessDayId, businessDay.id)),
   ]);
 
-  const revenue =
-    revenueRows.reduce((sum, r) => sum + (r.overridePrice ?? r.unitPrice) * r.quantity, 0) +
-    Number(clothSaleRows[0]?.total ?? 0);
-  const closedCount = countRows[0]?.cnt ?? 0;
-
-  return { success: true, data: { revenue, closedCount, businessDayId: businessDay.id } };
+  return {
+    success: true,
+    data: {
+      revenue: income.total,
+      income,
+      closedCount: countRows[0]?.cnt ?? 0,
+      businessDayId: businessDay.id,
+    },
+  };
 }

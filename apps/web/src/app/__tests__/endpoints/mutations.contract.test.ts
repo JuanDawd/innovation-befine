@@ -72,26 +72,6 @@ const recordPayoutSchema = z.object({
   notes: z.string().max(500).nullish(),
 });
 
-const createProductSchema = z.object({
-  notes: z.string().max(500).optional(),
-  largeOrderId: z.uuid().optional(),
-  pieces: z
-    .array(
-      z.object({
-        clothPieceId: z.uuid(),
-        clothPieceVariantId: z.uuid(),
-        assignedToEmployeeId: z.uuid().nullable(),
-      }),
-    )
-    .min(1),
-});
-
-const markPieceDoneSchema = z.object({
-  pieceId: z.uuid(),
-  expectedVersion: z.number().int().nonnegative(),
-  idempotencyKey: z.uuid().optional(),
-});
-
 const createAppointmentSchema = z
   .object({
     stylistId: z.uuid(),
@@ -228,41 +208,39 @@ describe("Role gate: admin/payroll/actions", () => {
   });
 });
 
-describe("Role gate: products/actions", () => {
-  it("createProduct — allowed: admin, secretary", () => {
-    expectOnlyRoles(["admin", "secretary"], "admin", "secretary");
+describe("Role gate: pedidos/actions (T116–T121)", () => {
+  it("createPedido — allowed: admin, cashier, secretary", () => {
+    expectOnlyRoles(["admin", "cashier", "secretary"], "admin", "cashier", "secretary");
   });
 
-  it("listActiveClothiers — allowed: admin, secretary", () => {
-    expectOnlyRoles(["admin", "secretary"], "admin", "secretary");
+  it("recordPedidoPayment — allowed: admin, cashier (secretary by setting)", () => {
+    expectOnlyRoles(["admin", "cashier"], "admin", "cashier");
   });
 });
 
-describe("Role gate: products/approval-actions", () => {
-  it("approveProductPiece — allowed: admin, secretary", () => {
-    expectOnlyRoles(["admin", "secretary"], "admin", "secretary");
+describe("Role gate: produccion/actions (T124)", () => {
+  it("reviewUnits — allowed: admin, cashier, secretary", () => {
+    expectOnlyRoles(["admin", "cashier", "secretary"], "admin", "cashier", "secretary");
+  });
+});
+
+describe("Role gate: clothier/work-actions (T123, T125)", () => {
+  it("claimUnits — clothier only", () => {
+    expectOnlyRoles(["clothier"], "clothier");
   });
 
-  it("adminMarkProductPieceApproved — admin only", () => {
+  it("reportUnits — clothier only", () => {
+    expectOnlyRoles(["clothier"], "clothier");
+  });
+
+  it("submitMyClosing — clothier only", () => {
+    expectOnlyRoles(["clothier"], "clothier");
+  });
+});
+
+describe("Role gate: inventario/actions (T128)", () => {
+  it("adjustStock — admin only", () => {
     expectOnlyRoles(["admin"], "admin");
-  });
-
-  it("listPendingProductPieceApprovals — allowed: admin, secretary", () => {
-    expectOnlyRoles(["admin", "secretary"], "admin", "secretary");
-  });
-});
-
-describe("Role gate: clothier/actions", () => {
-  it("listTodayProductPieces — clothier only", () => {
-    expectOnlyRoles(["clothier"], "clothier");
-  });
-
-  it("claimPiece — clothier only", () => {
-    expectOnlyRoles(["clothier"], "clothier");
-  });
-
-  it("markPieceDone — clothier only", () => {
-    expectOnlyRoles(["clothier"], "clothier");
   });
 });
 
@@ -298,20 +276,6 @@ describe("Role gate: clients/actions", () => {
   });
 
   it("listClients — allowed: admin, secretary", () => {
-    expectOnlyRoles(["admin", "secretary"], "admin", "secretary");
-  });
-});
-
-describe("Role gate: large-orders/actions", () => {
-  it("createLargeOrder — allowed: admin, secretary", () => {
-    expectOnlyRoles(["admin", "secretary"], "admin", "secretary");
-  });
-
-  it("recordLargeOrderPayment — admin only", () => {
-    expectOnlyRoles(["admin"], "admin");
-  });
-
-  it("transitionLargeOrder — allowed: admin, secretary", () => {
     expectOnlyRoles(["admin", "secretary"], "admin", "secretary");
   });
 });
@@ -457,11 +421,11 @@ describe("UNAUTHORIZED: null session denied on all mutation gates", () => {
     { name: "processPaidOfflineCheckout", roles: ["cashier", "admin"] },
     { name: "recordPayout", roles: ["admin"] },
     { name: "markPayoutReviewed", roles: ["admin"] },
-    { name: "createProduct", roles: ["admin", "secretary"] },
-    { name: "markPieceDone", roles: ["clothier"] },
+    { name: "createPedido", roles: ["admin", "cashier", "secretary"] },
+    { name: "reportUnits", roles: ["clothier"] },
     { name: "createAppointment", roles: ["admin", "secretary"] },
     { name: "createClient", roles: ["admin", "secretary"] },
-    { name: "recordLargeOrderPayment", roles: ["admin"] },
+    { name: "recordPedidoPayment", roles: ["admin", "cashier"] },
     { name: "createEmployee", roles: ["admin"] },
     { name: "logAbsence", roles: ["admin"] },
     { name: "createService", roles: ["admin"] },
@@ -652,60 +616,6 @@ describe("VALIDATION_ERROR: recordPayoutSchema", () => {
     expect(
       recordPayoutSchema.safeParse({ ...validPayout, adjustmentReason: null, notes: null }).success,
     ).toBe(true);
-  });
-});
-
-describe("VALIDATION_ERROR: createProductSchema", () => {
-  const validProduct = {
-    pieces: [
-      {
-        clothPieceId: uid(),
-        clothPieceVariantId: uid(),
-        assignedToEmployeeId: null,
-      },
-    ],
-  };
-
-  it("accepts valid product input", () => {
-    expect(createProductSchema.safeParse(validProduct).success).toBe(true);
-  });
-
-  it("rejects empty pieces array", () => {
-    expect(createProductSchema.safeParse({ pieces: [] }).success).toBe(false);
-  });
-
-  it("rejects non-uuid clothPieceId", () => {
-    expect(
-      createProductSchema.safeParse({
-        pieces: [
-          {
-            clothPieceId: "bad",
-            clothPieceVariantId: uid(),
-            assignedToEmployeeId: null,
-          },
-        ],
-      }).success,
-    ).toBe(false);
-  });
-});
-
-describe("VALIDATION_ERROR: markPieceDoneSchema", () => {
-  it("accepts valid input", () => {
-    expect(markPieceDoneSchema.safeParse({ pieceId: uid(), expectedVersion: 1 }).success).toBe(
-      true,
-    );
-  });
-
-  it("rejects non-uuid pieceId", () => {
-    expect(markPieceDoneSchema.safeParse({ pieceId: "bad", expectedVersion: 1 }).success).toBe(
-      false,
-    );
-  });
-
-  it("rejects negative expectedVersion", () => {
-    expect(markPieceDoneSchema.safeParse({ pieceId: uid(), expectedVersion: -1 }).success).toBe(
-      false,
-    );
   });
 });
 

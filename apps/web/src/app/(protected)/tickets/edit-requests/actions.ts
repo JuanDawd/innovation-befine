@@ -31,6 +31,7 @@ import { revalidatePath } from "next/cache";
 import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
 import { requestEditSchema, resolveEditRequestSchema } from "@befine/types";
 import { getEmployeeRef } from "@/lib/employee-ref";
+import { actorOf, logActivity } from "@/lib/activity";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -174,14 +175,24 @@ export async function requestEdit(
       error: { code: "NOT_FOUND", message: "Variante no encontrada o inactiva" },
     };
 
-  const [req] = await db
-    .insert(ticketEditRequests)
-    .values({
-      ticketItemId,
-      requestedBy: employeeId,
-      newServiceVariantId,
-    })
-    .returning({ id: ticketEditRequests.id });
+  const req = await getTxDb().transaction(async (tx) => {
+    const [row] = await tx
+      .insert(ticketEditRequests)
+      .values({
+        ticketItemId,
+        requestedBy: employeeId,
+        newServiceVariantId,
+      })
+      .returning({ id: ticketEditRequests.id });
+    await logActivity(tx, {
+      actor: actorOf(session.user),
+      action: "ticket.edit_request",
+      entityType: "ticket",
+      entityId: item.ticketId,
+      after: { requestId: row!.id, ticketItemId, newServiceVariantId },
+    });
+    return row!;
+  });
 
   // Fire SSE so cashier dashboard badge updates
   await publishEvent("cashier", "ticket_updated", {
@@ -386,15 +397,32 @@ export async function resolveEditRequest(
           .where(eq(ticketItems.id, req.ticketItemId));
       }
 
-      await tx
+      const [resolved] = await tx
         .update(ticketEditRequests)
         .set({ status: decision, resolvedAt: now, resolvedBy: cashierId })
-        .where(eq(ticketEditRequests.id, requestId));
+        .where(and(eq(ticketEditRequests.id, requestId), eq(ticketEditRequests.status, "pending")))
+        .returning({ id: ticketEditRequests.id });
+      // Two cashiers resolving at once: the second one changes nothing.
+      if (!resolved) throw new Error("ALREADY_RESOLVED");
+
+      await logActivity(tx, {
+        actor: actorOf(session.user),
+        action: "ticket.edit_resolve",
+        entityType: "ticket",
+        entityId: ticketId ?? null,
+        data: { approved: decision === "approved" },
+        after: { requestId, decision, newServiceVariantId: req.newServiceVariantId },
+      });
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "";
     if (msg === "VARIANT_NOT_FOUND")
       return { success: false, error: { code: "NOT_FOUND", message: "Variante no encontrada" } };
+    if (msg === "ALREADY_RESOLVED")
+      return {
+        success: false,
+        error: { code: "CONFLICT", message: "La solicitud ya fue resuelta" },
+      };
     return {
       success: false,
       error: { code: "INTERNAL_ERROR", message: "Error al resolver la solicitud" },

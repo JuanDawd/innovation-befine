@@ -23,7 +23,8 @@ export type DataScope =
   | "payouts"
   | "clients"
   | "catalog"
-  | "staff";
+  | "staff"
+  | "pedidos";
 
 export function notifyDataChanged(...scopes: DataScope[]): void {
   if (typeof window === "undefined") return;

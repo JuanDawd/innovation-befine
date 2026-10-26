@@ -17,13 +17,23 @@ vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("@/lib/auth", () => ({
   auth: { api: { getSession: async () => ({ user: { id: "u1", role: state.role } }) } },
 }));
-vi.mock("@/lib/db", () => ({
-  getDb: () =>
-    drizzle(async (sql) => {
-      state.queries.push(sql);
-      return { rows: state.respond(sql) };
-    }),
-}));
+// Till totals and after-hours attach have their own tests; here only the guard and the log.
+vi.mock("@befine/db", async (importOriginal) => {
+  const mod = await importOriginal<typeof import("@befine/db")>();
+  return { ...mod, getDayIncome: async () => ({ ...mod.summarizeDayIncome([]), total: 125_000 }) };
+});
+vi.mock("@/lib/after-hours", () => ({ attachAfterHoursPayments: async () => 0 }));
+vi.mock("@/lib/db", () => {
+  const db = drizzle(async (sql) => {
+    state.queries.push(sql);
+    return { rows: state.respond(sql) };
+  });
+  // pg-proxy has no transactions; run the callback on the same instance.
+  return {
+    getDb: () => db,
+    getTxDb: () => ({ transaction: <T>(fn: (tx: typeof db) => Promise<T>) => fn(db) }),
+  };
+});
 
 import { closeBusinessDay, openBusinessDay } from "../actions/business-day";
 
@@ -50,7 +60,9 @@ describe("closeBusinessDay", () => {
     state.respond = (sql) => (sql.startsWith("update") ? [dayRow()] : []);
     const res = await closeBusinessDay(DAY_ID);
     expect(res.success).toBe(true);
-    expect(state.queries).toHaveLength(1);
+    // The guarded update, then its activity log entry in the same transaction (T131).
+    expect(state.queries).toHaveLength(2);
+    expect(state.queries[1]).toMatch(/^insert into "activity_log"/);
     const sql = state.queries[0]!;
     expect(sql).toMatch(/"closed_at" is null/);
     expect(sql).toMatch(/not exists \(select .* from "tickets"/);
@@ -100,7 +112,8 @@ describe("openBusinessDay", () => {
     state.respond = (sql) => (sql.startsWith("insert") ? [dayRow({ closedAt: null })] : []);
     const res = await openBusinessDay();
     expect(res.success).toBe(true);
-    expect(state.queries).toHaveLength(1);
+    expect(state.queries).toHaveLength(2);
+    expect(state.queries[1]).toMatch(/^insert into "activity_log"/);
     expect(state.queries[0]).toMatch(
       /^insert into "business_days" .* select .* where not exists \(select .*"closed_at" is null\)/s,
     );

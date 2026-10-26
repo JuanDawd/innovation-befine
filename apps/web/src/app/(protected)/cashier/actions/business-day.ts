@@ -14,12 +14,16 @@ import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { and, eq, isNull, desc, isNotNull, inArray, notExists, count, sql } from "drizzle-orm";
 import { auth } from "@/lib/auth";
-import { getDb } from "@/lib/db";
+import { getDb, getTxDb } from "@/lib/db";
 import { businessDays, tickets } from "@befine/db/schema";
 import { reopenBusinessDaySchema } from "@befine/types";
 import type { ActionResult } from "@/lib/action-result";
 import type { BusinessDay } from "@/lib/business-day";
 import { hasRole } from "@/lib/middleware-helpers";
+import { attachAfterHoursPayments } from "@/lib/after-hours";
+import { actorOf, logActivity } from "@/lib/activity";
+import { formatPesos, getDayIncome, type Database } from "@befine/db";
+import { logger } from "@/lib/logger";
 
 // ---------------------------------------------------------------------------
 // Open business day
@@ -34,38 +38,47 @@ export async function openBusinessDay(): Promise<ActionResult<BusinessDay>> {
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
   }
 
-  const db = getDb();
-
   // One statement (M-62): insert only if no day is open. The partial unique
   // index uq_business_days_single_open is the real safety net — this also
   // holds where it is missing (H-48).
-  const rows = await db
-    .insert(businessDays)
-    .select(
-      db
-        .select({
-          id: sql`gen_random_uuid()`.as("id"),
-          openedAt: sql`now()`.as("opened_at"),
-          closedAt: sql`NULL::timestamptz`.as("closed_at"),
-          openedBy: sql`${session.user.id}`.as("opened_by"),
-          closedBy: sql`NULL`.as("closed_by"),
-          reopenedBy: sql`NULL`.as("reopened_by"),
-          reopenedAt: sql`NULL::timestamptz`.as("reopened_at"),
-          reopenReason: sql`NULL`.as("reopen_reason"),
-          createdAt: sql`now()`.as("created_at"),
-          updatedAt: sql`now()`.as("updated_at"),
-        })
-        .from(sql`(SELECT 1) AS one`)
-        .where(
-          notExists(
-            db
-              .select({ id: businessDays.id })
-              .from(businessDays)
-              .where(isNull(businessDays.closedAt)),
+  const rows = await getTxDb().transaction(async (tx) => {
+    const inserted = await tx
+      .insert(businessDays)
+      .select(
+        tx
+          .select({
+            id: sql`gen_random_uuid()`.as("id"),
+            openedAt: sql`now()`.as("opened_at"),
+            closedAt: sql`NULL::timestamptz`.as("closed_at"),
+            openedBy: sql`${session.user.id}`.as("opened_by"),
+            closedBy: sql`NULL`.as("closed_by"),
+            reopenedBy: sql`NULL`.as("reopened_by"),
+            reopenedAt: sql`NULL::timestamptz`.as("reopened_at"),
+            reopenReason: sql`NULL`.as("reopen_reason"),
+            createdAt: sql`now()`.as("created_at"),
+            updatedAt: sql`now()`.as("updated_at"),
+          })
+          .from(sql`(SELECT 1) AS one`)
+          .where(
+            notExists(
+              tx
+                .select({ id: businessDays.id })
+                .from(businessDays)
+                .where(isNull(businessDays.closedAt)),
+            ),
           ),
-        ),
-    )
-    .returning();
+      )
+      .returning();
+    if (inserted[0])
+      await logActivity(tx, {
+        actor: actorOf(session.user),
+        action: "day.open",
+        entityType: "business_day",
+        entityId: inserted[0].id,
+        businessDayId: inserted[0].id,
+      });
+    return inserted;
+  });
 
   if (rows.length === 0) {
     return {
@@ -78,6 +91,12 @@ export async function openBusinessDay(): Promise<ActionResult<BusinessDay>> {
   if (!day) {
     return { success: false, error: { code: "INTERNAL_ERROR", message: "Error al abrir el día" } };
   }
+
+  // T127: after-hours pedido payments belong to the day that opens next.
+  // Idempotent, so a failure here is retried on the next open or payment read.
+  await attachAfterHoursPayments(day.id, actorOf(session.user)).catch((err) =>
+    logger.error({ err, businessDayId: day.id }, "Could not attach after-hours payments"),
+  );
 
   revalidatePath("/cashier");
   return { success: true, data: day };
@@ -106,25 +125,40 @@ export async function closeBusinessDay(businessDayId: string): Promise<ActionRes
   const db = getDb();
 
   // Single statement so a ticket logged between a check and the update can't
-  // slip through.
+  // slip through. Logged with the day's till total in the same transaction.
   const unpaid = and(
     eq(tickets.businessDayId, businessDayId),
     inArray(tickets.status, UNPAID_STATUSES),
   );
-  const rows = await db
-    .update(businessDays)
-    .set({
-      closedAt: new Date(),
-      closedBy: session.user.id,
-    })
-    .where(
-      and(
-        eq(businessDays.id, businessDayId),
-        isNull(businessDays.closedAt),
-        notExists(db.select({ id: tickets.id }).from(tickets).where(unpaid)),
-      ),
-    )
-    .returning();
+  const rows = await getTxDb().transaction(async (tx) => {
+    const updated = await tx
+      .update(businessDays)
+      .set({
+        closedAt: new Date(),
+        closedBy: session.user.id,
+      })
+      .where(
+        and(
+          eq(businessDays.id, businessDayId),
+          isNull(businessDays.closedAt),
+          notExists(tx.select({ id: tickets.id }).from(tickets).where(unpaid)),
+        ),
+      )
+      .returning();
+    if (updated[0]) {
+      const income = await getDayIncome(tx as unknown as Database, businessDayId);
+      await logActivity(tx, {
+        actor: actorOf(session.user),
+        action: "day.close",
+        entityType: "business_day",
+        entityId: businessDayId,
+        businessDayId,
+        data: { amount: formatPesos(income.total) },
+        after: { total: income.total, bySource: income.bySource, afterHours: income.afterHours },
+      });
+    }
+    return updated;
+  });
 
   const day = rows[0];
   if (!day) {
@@ -213,17 +247,30 @@ export async function reopenBusinessDay(rawInput: unknown): Promise<ActionResult
     };
   }
 
-  const rows = await db
-    .update(businessDays)
-    .set({
-      closedAt: null,
-      closedBy: null,
-      reopenedBy: session.user.id,
-      reopenedAt: new Date(),
-      reopenReason: parsed.data.reason,
-    })
-    .where(eq(businessDays.id, target.id))
-    .returning();
+  const rows = await getTxDb().transaction(async (tx) => {
+    const updated = await tx
+      .update(businessDays)
+      .set({
+        closedAt: null,
+        closedBy: null,
+        reopenedBy: session.user.id,
+        reopenedAt: new Date(),
+        reopenReason: parsed.data.reason,
+      })
+      .where(and(eq(businessDays.id, target.id), isNotNull(businessDays.closedAt)))
+      .returning();
+    if (updated[0])
+      await logActivity(tx, {
+        actor: actorOf(session.user),
+        action: "day.reopen",
+        entityType: "business_day",
+        entityId: target.id,
+        businessDayId: target.id,
+        reason: parsed.data.reason,
+        before: { closedAt: target.closedAt, closedBy: target.closedBy },
+      });
+    return updated;
+  });
 
   const day = rows[0];
   if (!day) {

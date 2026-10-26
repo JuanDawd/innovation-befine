@@ -274,6 +274,118 @@
       "when": 1792881645833,
       "tag": "0038_reopen_prepaid",
       "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1792891154947,
+      "tag": "0039_garment_sizes_colors",
+      "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1792892156619,
+      "tag": "0040_pedidos_core",
+      "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1792892385893,
+      "tag": "0041_production",
+      "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1792892386435,
+      "tag": "0042_production_unit_guards",
+      "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1792892690516,
+      "tag": "0043_pedido_money_stock",
+      "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1792892691083,
+      "tag": "0044_ledger_immutability",
+      "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1792892972677,
+      "tag": "0045_activity_log",
+      "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1792892973234,
+      "tag": "0046_activity_log_immutable",
+      "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1792893396122,
+      "tag": "0047_pedido_settings",
+      "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1792896145038,
+      "tag": "0048_pedido_spec_change",
+      "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1792896844997,
+      "tag": "0049_delivery_idempotency",
+      "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1792897944335,
+      "tag": "0050_unit_report_idempotency",
+      "breakpoints": true
+    },
+    {
+      "idx": 51,
+      "version": "7",
+      "when": 1792903193672,
+      "tag": "0051_review_defects",
+      "breakpoints": true
+    },
+    {
+      "idx": 52,
+      "version": "7",
+      "when": 1792903843162,
+      "tag": "0052_closing_lines",
+      "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1792904691693,
+      "tag": "0053_payout_unit_reviews",
+      "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1793019994183,
+      "tag": "0054_retire_old_model",
+      "breakpoints": true
     }
   ]
 }

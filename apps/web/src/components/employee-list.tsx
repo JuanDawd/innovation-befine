@@ -14,6 +14,7 @@ import { notifyDataChanged } from "@/lib/data-events";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { RecordHistoryButton } from "@/components/record-history";
 import * as Sentry from "@sentry/nextjs";
 import { toast } from "sonner";
 import { UserIcon, UserXIcon, PencilIcon, Loader2Icon, CheckIcon, XIcon } from "lucide-react";
@@ -318,6 +319,7 @@ export function EmployeeList({ initialEmployees }: EmployeeListProps) {
                       : ""}
                   </span>
                 </div>
+                <RecordHistoryButton entityType="employee" entityId={emp.id} title={emp.name} />
                 <Button
                   variant="ghost"
                   size="icon-sm"

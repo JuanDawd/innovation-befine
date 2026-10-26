@@ -117,6 +117,8 @@ export const rateLimits = {
   payoutRecording: makeLimit("payoutRecording", 5, 60),
   /** 60 requests / 60s — general mutations (checkout, override, edit-requests, products, pieces) */
   general: makeLimit("general", 60, 60),
+  /** 20 requests / 60s — catalog edits (sizes and colours, T110) */
+  catalogEdit: makeLimit("catalogEdit", 20, 60),
   /** 20 requests / 60s — analytics CSV export (heavier, must not be easily enumerated) */
   analyticsCsv: makeLimit("analyticsCsv", 20, 60),
   /** 60 requests / 60s — public /api/health endpoint, IP-keyed (T10R-R10) */

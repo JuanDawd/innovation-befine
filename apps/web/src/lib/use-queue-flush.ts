@@ -23,13 +23,9 @@ async function dispatchMutation(
   mutation: QueuedMutation,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    if (mutation.type === "markPieceDone") {
-      const { markPieceDone } = await import("@/app/(protected)/clothier/actions");
-      const p = mutation.payload as { pieceId: string; expectedVersion: number };
-      const result = await markPieceDone(p.pieceId, p.expectedVersion, mutation.id);
-      if (!result.success) return { success: false, error: result.error.message };
-      return { success: true };
-    }
+    // Previous production model (retired in T135): a phone may still hold one
+    // in its queue; the piece no longer exists, so there is nothing to replay.
+    if ((mutation.type as string) === "markPieceDone") return { success: true };
 
     if (mutation.type === "createTicket") {
       const { createTicket } = await import("@/app/(protected)/tickets/actions");
@@ -46,6 +42,14 @@ async function dispatchMutation(
       const { processPaidOfflineCheckout } =
         await import("@/app/(protected)/cashier/checkout/actions");
       const result = await processPaidOfflineCheckout(mutation.payload);
+      if (!result.success) return { success: false, error: result.error.message };
+      return { success: true };
+    }
+
+    if (mutation.type === "reportUnits") {
+      const { reportUnits } = await import("@/app/(protected)/clothier/work-actions");
+      // The queued payload carries the original idempotency key: a replay is recorded once.
+      const result = await reportUnits(mutation.payload);
       if (!result.success) return { success: false, error: result.error.message };
       return { success: true };
     }

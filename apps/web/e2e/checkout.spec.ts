@@ -54,7 +54,7 @@ test.describe("checkout", () => {
         .getByRole("textbox", { name: "Monto" })
         .or(dialog.getByRole("spinbutton", { name: "Monto" }))
         .first(),
-    ).toHaveValue(String(E2E_SERVICE.price));
+    ).toHaveValue(cop(E2E_SERVICE.price).slice(1)); // MoneyInput shows "50.000", no sign
 
     await dialog.getByRole("button", { name: "Confirmar cobro" }).click();
     const confirm = page.getByRole("dialog", {

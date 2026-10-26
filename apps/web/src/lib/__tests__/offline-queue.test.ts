@@ -81,7 +81,7 @@ describe("mutation-queue (fake-indexeddb)", () => {
 
   it("enqueue then listQueued returns the item", async () => {
     const { enqueue, listQueued } = await import("@/lib/mutation-queue");
-    await enqueue({ id: "id-1", type: "markPieceDone", payload: {}, createdAt: Date.now() });
+    await enqueue({ id: "id-1", type: "reportUnits", payload: {}, createdAt: Date.now() });
     const items = await listQueued();
     expect(items).toHaveLength(1);
     expect(items[0].id).toBe("id-1");
@@ -107,7 +107,7 @@ describe("mutation-queue (fake-indexeddb)", () => {
 
   it("markAttempted twice accumulates attempts", async () => {
     const { enqueue, markAttempted, listQueued } = await import("@/lib/mutation-queue");
-    await enqueue({ id: "id-4", type: "markPieceDone", payload: {}, createdAt: Date.now() });
+    await enqueue({ id: "id-4", type: "reportUnits", payload: {}, createdAt: Date.now() });
     await markAttempted("id-4", "err1");
     await markAttempted("id-4", "err2");
     const items = await listQueued();
@@ -155,7 +155,7 @@ describe("dispatchMutation routing (pure mocks)", () => {
 
   it("unknown mutation type returns error", () => {
     const type = "unknownType";
-    const isKnown = ["markPieceDone", "createTicket", "paidOffline"].includes(type);
+    const isKnown = ["reportUnits", "createTicket", "paidOffline"].includes(type);
     expect(isKnown).toBe(false);
   });
 });

@@ -189,6 +189,35 @@
 
 ---
 
+## Phase 11 — Pedidos, producción, inventario (T134)
+
+Cajero is listed separately here: since Phase 11 the cashier and admin differ (spec §3.8).
+Routes are enforced by middleware (`ROLE_SCOPED_APP_PATHS`) and again by every action.
+Automated: `apps/web/e2e/phase11-rbac.spec.ts` (every route × admin, secretary, stylist,
+clothier; the menus; old routes redirecting) and the route matrix in
+`apps/web/src/lib/__tests__/middleware-helpers.test.ts` (all five roles, cashier included).
+
+| Screen / action                              | Admin | Cajero | Secretary     | Stylist | Clothier | Task ref   |
+| -------------------------------------------- | ----- | ------ | ------------- | ------- | -------- | ---------- |
+| Pedidos: list, create, edit, cancel, deliver | Yes   | Yes    | Yes           | No      | No       | T116–T121  |
+| Edit line prices                             | Yes   | Yes    | No            | No      | No       | T116       |
+| Record pedido payments / refunds             | Yes   | Yes    | Setting (off) | No      | No       | T127       |
+| Producción: assign, review, approve closings | Yes   | Yes    | Yes           | No      | No       | T122–T125  |
+| Mi trabajo: claim, report, close own day     | No    | No     | No            | No      | Own      | T123, T125 |
+| Inventario: view                             | Yes   | Yes    | No            | No      | No       | T128       |
+| Inventario: adjust, oversell override        | Yes   | No     | No            | No      | No       | T128, T129 |
+| Vender prenda                                | Yes   | Yes    | No            | No      | No       | T129       |
+| Caja de hoy / close summary by source        | Yes   | Yes    | No            | No      | No       | T130       |
+| Actividad                                    | Yes   | No     | No            | No      | No       | T132       |
+| Historial: pedido, ticket, client            | Yes   | Yes    | Yes           | No      | No       | T132       |
+| Historial: employee                          | Yes   | No     | No            | No      | No       | T132       |
+| Analítica: pedidos, producción, inventario   | Yes   | No     | No            | No      | No       | T133       |
+
+Old routes `/large-orders`, `/admin/products`, `/secretary/products` and `/clothier/productos`
+redirect to `/pedidos`, `/produccion` and `/clothier` (next.config `redirects`).
+
+---
+
 ## Negative test count summary
 
 | Role      | Total "No" cells | Notes                                                        |

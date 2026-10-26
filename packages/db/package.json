@@ -7,7 +7,10 @@
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./schema": "./src/schema/index.ts"
+    "./schema": "./src/schema/index.ts",
+    "./pedido-totals": "./src/queries/pedido-totals.ts",
+    "./pedido-status": "./src/queries/pedido-status.ts",
+    "./day-income": "./src/queries/day-income.ts"
   },
   "scripts": {
     "db:generate": "dotenv -e ../../.env.local -- drizzle-kit generate",
@@ -16,7 +19,6 @@
     "db:studio": "dotenv -e ../../.env.local -- drizzle-kit studio",
     "db:check": "dotenv -e ../../.env.local -- drizzle-kit check",
     "db:seed": "dotenv -e ../../.env.local -- node --import tsx/esm src/seed.ts",
-    "db:seed:analytics": "dotenv -e ../../.env.local -- node --import tsx/esm src/seed-analytics.ts --analytics --confirm-destructive",
     "db:bench:analytics": "dotenv -e ../../.env.local -- node --import tsx/esm src/bench-analytics.ts",
     "db:import:clients": "dotenv -e ../../.env.local -- node --import tsx/esm src/import-clients.ts",
     "lint": "eslint .",
@@ -24,7 +26,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "db:reset-test-data": "node --import tsx/esm src/reset-test-data.ts"
   },
   "dependencies": {
     "@better-auth/utils": "^0.4.0",

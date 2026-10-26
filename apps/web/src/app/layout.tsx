@@ -5,7 +5,7 @@ import { Fraunces, Inter_Tight, JetBrains_Mono } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
-import { SwUpdatePrompt } from "@/components/sw-update-prompt";
+import { AppUpdater } from "@/components/app-updater";
 import { QueryProvider } from "@/components/query-provider";
 import { Toaster } from "sonner";
 import { BRAND_FULL_NAME } from "@/lib/brand";
@@ -71,7 +71,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <NextIntlClientProvider messages={messages}>
           <QueryProvider>
             {children}
-            <SwUpdatePrompt />
+            <AppUpdater />
             <Toaster
               richColors
               closeButton

@@ -7,19 +7,20 @@
  * cloth_piece_variants: construction types with piece_rate.
  *
  * Only admin can mutate; secretary can read (T028).
+ * Every mutation writes to activity_log in the same transaction (T114).
  */
 
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
-import { eq, and } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
-import { getDb } from "@/lib/db";
-import { clothPieces, clothPieceVariants, catalogAuditLog, productPieces } from "@befine/db/schema";
+import { getDb, getTxDb } from "@/lib/db";
+import { clothPieces, clothPieceVariants } from "@befine/db/schema";
 import { createClothPieceSchema, editClothPieceSchema } from "@befine/types";
 import { z } from "zod";
 import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
-import { getEmployeeRef } from "@/lib/employee-ref";
+import { actorOf, logActivity, type ActivityTx } from "@/lib/activity";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -68,23 +69,33 @@ async function getAdminSession() {
   return session;
 }
 
+const CATALOG_ACTION = {
+  create: "catalog.create",
+  update: "catalog.update",
+  soft_delete: "catalog.deactivate",
+  restore: "catalog.restore",
+} as const;
+
 function writeAuditLog(
-  db: ReturnType<typeof getDb>,
+  tx: ActivityTx,
   params: {
+    entityType?: "cloth_piece" | "cloth_piece_variant";
     entityId: string;
-    action: "create" | "update" | "soft_delete" | "restore";
-    changedBy: string;
+    action: keyof typeof CATALOG_ACTION;
+    actor: { id: string; role?: string | null };
+    name: string;
     previousData?: unknown;
     newData?: unknown;
   },
 ) {
-  return db.insert(catalogAuditLog).values({
-    entityType: "cloth_piece",
+  return logActivity(tx, {
+    actor: actorOf(params.actor),
+    action: CATALOG_ACTION[params.action],
+    entityType: params.entityType ?? "cloth_piece",
     entityId: params.entityId,
-    action: params.action,
-    changedBy: params.changedBy,
-    previousData: params.previousData ?? null,
-    newData: params.newData ?? null,
+    data: { name: params.name },
+    before: params.previousData,
+    after: params.newData,
   });
 }
 
@@ -164,17 +175,20 @@ export async function createClothPiece(rawInput: unknown): Promise<ActionResult<
       },
     };
 
-  const db = getDb();
-  const [piece] = await db
-    .insert(clothPieces)
-    .values({ name: parsed.data.name, description: parsed.data.description ?? null })
-    .returning({ id: clothPieces.id });
+  const piece = await getTxDb().transaction(async (tx) => {
+    const [created] = await tx
+      .insert(clothPieces)
+      .values({ name: parsed.data.name, description: parsed.data.description ?? null })
+      .returning({ id: clothPieces.id });
 
-  await writeAuditLog(db, {
-    entityId: piece.id,
-    action: "create",
-    changedBy: session.user.id,
-    newData: parsed.data,
+    await writeAuditLog(tx, {
+      entityId: created.id,
+      action: "create",
+      actor: session.user,
+      name: parsed.data.name,
+      newData: parsed.data,
+    });
+    return created;
   });
   revalidatePath("/admin/catalog");
   return { success: true, data: { id: piece.id } };
@@ -209,20 +223,23 @@ export async function editClothPiece(
   if (!existing)
     return { success: false, error: { code: "NOT_FOUND", message: "Pieza no encontrada" } };
 
-  await db
-    .update(clothPieces)
-    .set({
+  await getTxDb().transaction(async (tx) => {
+    await tx
+      .update(clothPieces)
+      .set({
+        name: parsed.data.name,
+        description: parsed.data.description ?? null,
+        updatedAt: new Date(),
+      })
+      .where(eq(clothPieces.id, id));
+    await writeAuditLog(tx, {
+      entityId: id,
+      action: "update",
+      actor: session.user,
       name: parsed.data.name,
-      description: parsed.data.description ?? null,
-      updatedAt: new Date(),
-    })
-    .where(eq(clothPieces.id, id));
-  await writeAuditLog(db, {
-    entityId: id,
-    action: "update",
-    changedBy: session.user.id,
-    previousData: { name: existing.name, description: existing.description },
-    newData: parsed.data,
+      previousData: { name: existing.name, description: existing.description },
+      newData: parsed.data,
+    });
   });
 
   revalidatePath("/admin/catalog");
@@ -238,18 +255,25 @@ export async function deactivateClothPiece(id: string): Promise<ActionResult<nul
     if (!s) return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
   }
-  const db = getDb();
-  await db
-    .update(clothPieces)
-    .set({ isActive: false, updatedAt: new Date() })
-    .where(eq(clothPieces.id, id));
-  await writeAuditLog(db, {
-    entityId: id,
-    action: "soft_delete",
-    changedBy: session.user.id,
-    previousData: { isActive: true },
-    newData: { isActive: false },
+  const found = await getTxDb().transaction(async (tx) => {
+    const [row] = await tx
+      .update(clothPieces)
+      .set({ isActive: false, updatedAt: new Date() })
+      .where(eq(clothPieces.id, id))
+      .returning({ name: clothPieces.name });
+    if (!row) return false;
+    await writeAuditLog(tx, {
+      entityId: id,
+      action: "soft_delete",
+      actor: session.user,
+      name: row.name,
+      previousData: { isActive: true },
+      newData: { isActive: false },
+    });
+    return true;
   });
+  if (!found)
+    return { success: false, error: { code: "NOT_FOUND", message: "Pieza no encontrada" } };
   revalidatePath("/admin/catalog");
   return { success: true, data: null };
 }
@@ -261,17 +285,25 @@ export async function restoreClothPiece(id: string): Promise<ActionResult<null>>
     if (!s) return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
   }
-  const db = getDb();
-  await db
-    .update(clothPieces)
-    .set({ isActive: true, updatedAt: new Date() })
-    .where(eq(clothPieces.id, id));
-  await writeAuditLog(db, {
-    entityId: id,
-    action: "restore",
-    changedBy: session.user.id,
-    newData: { isActive: true },
+  const found = await getTxDb().transaction(async (tx) => {
+    const [row] = await tx
+      .update(clothPieces)
+      .set({ isActive: true, updatedAt: new Date() })
+      .where(eq(clothPieces.id, id))
+      .returning({ name: clothPieces.name });
+    if (!row) return false;
+    await writeAuditLog(tx, {
+      entityId: id,
+      action: "restore",
+      actor: session.user,
+      name: row.name,
+      previousData: { isActive: false },
+      newData: { isActive: true },
+    });
+    return true;
   });
+  if (!found)
+    return { success: false, error: { code: "NOT_FOUND", message: "Pieza no encontrada" } };
   revalidatePath("/admin/catalog");
   return { success: true, data: null };
 }
@@ -300,16 +332,26 @@ export async function createClothPieceVariant(
       },
     };
 
-  const db = getDb();
-  const [variant] = await db
-    .insert(clothPieceVariants)
-    .values({
-      clothPieceId,
-      name: parsed.data.name,
-      pieceRate: parsed.data.pieceRate,
-      sellingPrice: parsed.data.sellingPrice ?? null,
-    })
-    .returning();
+  const variant = await getTxDb().transaction(async (tx) => {
+    const [created] = await tx
+      .insert(clothPieceVariants)
+      .values({
+        clothPieceId,
+        name: parsed.data.name,
+        pieceRate: parsed.data.pieceRate,
+        sellingPrice: parsed.data.sellingPrice ?? null,
+      })
+      .returning();
+    await writeAuditLog(tx, {
+      entityType: "cloth_piece_variant",
+      entityId: created.id,
+      action: "create",
+      actor: session.user,
+      name: created.name,
+      newData: parsed.data,
+    });
+    return created;
+  });
 
   revalidatePath("/admin/catalog");
   return { success: true, data: variant };
@@ -337,17 +379,38 @@ export async function editClothPieceVariant(
       },
     };
 
-  const db = getDb();
-  const [updated] = await db
-    .update(clothPieceVariants)
-    .set({
-      name: parsed.data.name,
-      pieceRate: parsed.data.pieceRate,
-      sellingPrice: parsed.data.sellingPrice ?? null,
-      updatedAt: new Date(),
-    })
-    .where(eq(clothPieceVariants.id, variantId))
-    .returning();
+  const updated = await getTxDb().transaction(async (tx) => {
+    const [existing] = await tx
+      .select({
+        name: clothPieceVariants.name,
+        pieceRate: clothPieceVariants.pieceRate,
+        sellingPrice: clothPieceVariants.sellingPrice,
+      })
+      .from(clothPieceVariants)
+      .where(eq(clothPieceVariants.id, variantId))
+      .for("update");
+    if (!existing) return null;
+    const [row] = await tx
+      .update(clothPieceVariants)
+      .set({
+        name: parsed.data.name,
+        pieceRate: parsed.data.pieceRate,
+        sellingPrice: parsed.data.sellingPrice ?? null,
+        updatedAt: new Date(),
+      })
+      .where(eq(clothPieceVariants.id, variantId))
+      .returning();
+    await writeAuditLog(tx, {
+      entityType: "cloth_piece_variant",
+      entityId: variantId,
+      action: "update",
+      actor: session.user,
+      name: row.name,
+      previousData: existing,
+      newData: parsed.data,
+    });
+    return row;
+  });
 
   if (!updated)
     return { success: false, error: { code: "NOT_FOUND", message: "Variante no encontrada" } };
@@ -363,11 +426,26 @@ export async function deactivateClothPieceVariant(variantId: string): Promise<Ac
     if (!s) return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
   }
-  const db = getDb();
-  await db
-    .update(clothPieceVariants)
-    .set({ isActive: false, updatedAt: new Date() })
-    .where(eq(clothPieceVariants.id, variantId));
+  const found = await getTxDb().transaction(async (tx) => {
+    const [row] = await tx
+      .update(clothPieceVariants)
+      .set({ isActive: false, updatedAt: new Date() })
+      .where(eq(clothPieceVariants.id, variantId))
+      .returning({ name: clothPieceVariants.name });
+    if (!row) return false;
+    await writeAuditLog(tx, {
+      entityType: "cloth_piece_variant",
+      entityId: variantId,
+      action: "soft_delete",
+      actor: session.user,
+      name: row.name,
+      previousData: { isActive: true },
+      newData: { isActive: false },
+    });
+    return true;
+  });
+  if (!found)
+    return { success: false, error: { code: "NOT_FOUND", message: "Variante no encontrada" } };
   revalidatePath("/admin/catalog");
   return { success: true, data: null };
 }
@@ -379,96 +457,26 @@ export async function restoreClothPieceVariant(variantId: string): Promise<Actio
     if (!s) return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
     return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
   }
-  const db = getDb();
-  await db
-    .update(clothPieceVariants)
-    .set({ isActive: true, updatedAt: new Date() })
-    .where(eq(clothPieceVariants.id, variantId));
+  const found = await getTxDb().transaction(async (tx) => {
+    const [row] = await tx
+      .update(clothPieceVariants)
+      .set({ isActive: true, updatedAt: new Date() })
+      .where(eq(clothPieceVariants.id, variantId))
+      .returning({ name: clothPieceVariants.name });
+    if (!row) return false;
+    await writeAuditLog(tx, {
+      entityType: "cloth_piece_variant",
+      entityId: variantId,
+      action: "restore",
+      actor: session.user,
+      name: row.name,
+      previousData: { isActive: false },
+      newData: { isActive: true },
+    });
+    return true;
+  });
+  if (!found)
+    return { success: false, error: { code: "NOT_FOUND", message: "Variante no encontrada" } };
   revalidatePath("/admin/catalog");
   return { success: true, data: null };
-}
-
-// ─── Sell product piece ─────────────────────────────────────────────────────
-
-const sellProductPieceSchema = z.object({
-  productPieceId: z.string().uuid("ID de pieza inválido"),
-  priceOverride: z.number().int().min(0).nullable().optional(),
-});
-
-/**
- * Marks an approved product_piece as sold.
- * Snapshots the selling price from the variant (or a cashier override).
- * Gated to admin.
- */
-export async function sellProductPiece(
-  rawInput: unknown,
-): Promise<ActionResult<{ soldPrice: number }>> {
-  const session = await getAdminSession();
-  if (!session) {
-    const s = await auth.api.getSession({ headers: await headers() });
-    if (!s) return { success: false, error: { code: "UNAUTHORIZED", message: "No autenticado" } };
-    return { success: false, error: { code: "FORBIDDEN", message: "Sin permisos" } };
-  }
-
-  const parsed = sellProductPieceSchema.safeParse(rawInput);
-  if (!parsed.success)
-    return {
-      success: false,
-      error: {
-        code: "VALIDATION_ERROR",
-        message: "Datos inválidos",
-        details: parsed.error.issues.map((i) => ({ field: i.path.join("."), message: i.message })),
-      },
-    };
-
-  const db = getDb();
-
-  const emp = await getEmployeeRef(session.user.id);
-
-  const [piece] = await db
-    .select({
-      id: productPieces.id,
-      status: productPieces.status,
-      soldAt: productPieces.soldAt,
-      clothPieceVariantId: productPieces.clothPieceVariantId,
-    })
-    .from(productPieces)
-    .where(eq(productPieces.id, parsed.data.productPieceId))
-    .limit(1);
-
-  if (!piece)
-    return { success: false, error: { code: "NOT_FOUND", message: "Pieza no encontrada" } };
-  if (piece.status !== "approved")
-    return {
-      success: false,
-      error: { code: "CONFLICT", message: "Solo se pueden vender piezas aprobadas" },
-    };
-  if (piece.soldAt)
-    return { success: false, error: { code: "CONFLICT", message: "Esta pieza ya fue vendida" } };
-
-  const [variant] = await db
-    .select({ sellingPrice: clothPieceVariants.sellingPrice })
-    .from(clothPieceVariants)
-    .where(eq(clothPieceVariants.id, piece.clothPieceVariantId))
-    .limit(1);
-
-  const effectivePrice = parsed.data.priceOverride ?? variant?.sellingPrice ?? null;
-  if (effectivePrice === null)
-    return {
-      success: false,
-      error: { code: "CONFLICT", message: "Esta variante no tiene precio de venta configurado" },
-    };
-
-  await db
-    .update(productPieces)
-    .set({
-      soldAt: new Date(),
-      soldPrice: effectivePrice,
-      soldBy: emp?.id ?? null,
-    })
-    .where(
-      and(eq(productPieces.id, parsed.data.productPieceId), eq(productPieces.status, "approved")),
-    );
-
-  return { success: true, data: { soldPrice: effectivePrice } };
 }

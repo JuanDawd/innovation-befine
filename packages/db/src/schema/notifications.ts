@@ -18,6 +18,7 @@ export const notificationTypeEnum = pgEnum("notification_type_enum", [
   "piece_assigned",
   "appointment_reminder",
   "price_changed",
+  "pedido_changed",
   "generic",
 ]);
 

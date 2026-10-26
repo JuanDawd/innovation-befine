@@ -11,7 +11,7 @@
 ## T110 — Sizes and colours catalog
 
 **Phase:** 11A — Data model
-**Status:** pending
+**Status:** done
 **Dependencies:** —
 
 ### What to do
@@ -20,16 +20,16 @@ Create `garment_sizes` (`id`, `label`, `sort_order`, `is_active`) and `garment_c
 
 ### Acceptance criteria
 
-- [ ] Admin can add, rename, reorder and deactivate sizes and colours; deactivated ones stay on existing records
-- [ ] Changes are written to the activity log (once T114 lands; until then the catalog audit log)
-- [ ] Non-admin roles cannot edit the lists
+- [x] Admin can add, rename, reorder and deactivate sizes and colours; deactivated ones stay on existing records
+- [x] Changes are written to the activity log (once T114 lands; until then the catalog audit log)
+- [x] Non-admin roles cannot edit the lists
 
 ---
 
 ## T111 — Pedido core schema
 
 **Phase:** 11A — Data model
-**Status:** pending
+**Status:** done
 **Dependencies:** T110
 
 ### What to do
@@ -38,17 +38,17 @@ Create `pedidos`, `pedido_lines` (`kind` garment | adjustment) and `pedido_line_
 
 ### Acceptance criteria
 
-- [ ] Migrations run; enums via `pgEnum`; money as `bigint`
-- [ ] CHECK constraints: destination ↔ client, quantities ≥ 1, prices ≥ 0
-- [ ] Optimistic locking `version` on `pedidos`
-- [ ] Unit tests for the total = sum of lines (garment cells × unit price + adjustment amounts)
+- [x] Migrations run; enums via `pgEnum`; money as `bigint`
+- [x] CHECK constraints: destination ↔ client, quantities ≥ 1, prices ≥ 0
+- [x] Optimistic locking `version` on `pedidos`
+- [x] Unit tests for the total = sum of lines (garment cells × unit price + adjustment amounts)
 
 ---
 
 ## T112 — Production schema
 
 **Phase:** 11A — Data model
-**Status:** pending
+**Status:** done
 **Dependencies:** T111
 
 ### What to do
@@ -57,16 +57,16 @@ Create `assignments`, `unit_reports`, `unit_reviews`, `clothier_day_closings`, `
 
 ### Acceptance criteria
 
-- [ ] DB constraints: sum of assignments per cell ≤ cell quantity; approved + returned + scrapped per assignment ≤ reported; delivered per cell ≤ approved
-- [ ] One closing per employee per business day (unique)
-- [ ] Pure query helpers for per-cell assigned / reported / approved / delivered, with unit tests
+- [x] DB constraints: sum of assignments per cell ≤ cell quantity; approved + returned + scrapped per assignment ≤ reported; delivered per cell ≤ approved
+- [x] One closing per employee per business day (unique)
+- [x] Pure query helpers for per-cell assigned / reported / approved / delivered, with unit tests
 
 ---
 
 ## T113 — Money and stock schema
 
 **Phase:** 11A — Data model
-**Status:** pending
+**Status:** done
 **Dependencies:** T111
 
 ### What to do
@@ -75,16 +75,16 @@ Create `pedido_payments` (signed amount for refunds, `business_day_id` nullable 
 
 ### Acceptance criteria
 
-- [ ] Stock on hand per variant + size + colour is a query (sum of movements), never a column
-- [ ] Balance and saldo a favor are queries, never columns
-- [ ] Unit tests: balance with partial payments, refunds, adjustment lines
+- [x] Stock on hand per variant + size + colour is a query (sum of movements), never a column
+- [x] Balance and saldo a favor are queries, never columns
+- [x] Unit tests: balance with partial payments, refunds, adjustment lines
 
 ---
 
 ## T114 — Activity log foundation
 
 **Phase:** 11A — Data model
-**Status:** pending
+**Status:** done
 **Dependencies:** —
 
 ### What to do
@@ -93,17 +93,17 @@ Create `activity_log` per spec §4 and a `logActivity(tx, entry)` helper that mu
 
 ### Acceptance criteria
 
-- [ ] No update/delete path exists for `activity_log` (app code and a DB trigger rejecting UPDATE/DELETE)
-- [ ] An action that fails rolls back its log entry (integration test)
-- [ ] Sign-in, sign-out and failed attempts are logged with device info
-- [ ] Spanish summary generated per action type
+- [x] No update/delete path exists for `activity_log` (app code and a DB trigger rejecting UPDATE/DELETE)
+- [x] An action that fails rolls back its log entry (integration test)
+- [x] Sign-in, sign-out and failed attempts are logged with device info
+- [x] Spanish summary generated per action type
 
 ---
 
 ## T115 — New settings
 
 **Phase:** 11A — Data model
-**Status:** pending
+**Status:** done
 **Dependencies:** —
 
 ### What to do
@@ -112,8 +112,8 @@ Add to `business_settings` and Configuración: **secretary can record pedido pay
 
 ### Acceptance criteria
 
-- [ ] Admin-only edit; each change logged
-- [ ] Defaults applied on existing deployments
+- [x] Admin-only edit; each change logged
+- [x] Defaults applied on existing deployments
 
 ---
 
@@ -122,7 +122,7 @@ Add to `business_settings` and Configuración: **secretary can record pedido pay
 ## T116 — Create / edit pedido
 
 **Phase:** 11B — Pedidos
-**Status:** pending
+**Status:** done
 **Dependencies:** T111, T030
 
 ### What to do
@@ -131,36 +131,36 @@ One form (modal + full page, per the creation-route pattern) for client or inven
 
 ### Acceptance criteria
 
-- [ ] Guests cannot be selected; inline-created clients require a phone
-- [ ] Line price defaults to `selling_price` (never `piece_rate`); variants without one require a typed price + reason
-- [ ] Total is always the sum of lines; no free-typed total
-- [ ] Works with or without an open business day; nothing is silently skipped
-- [ ] Validation inline, keyboard operable, 44 px targets on touch
+- [x] Guests cannot be selected; inline-created clients require a phone
+- [x] Line price defaults to `selling_price` (never `piece_rate`); variants without one require a typed price + reason
+- [x] Total is always the sum of lines; no free-typed total
+- [x] Works with or without an open business day; nothing is silently skipped
+- [x] Validation inline, keyboard operable, 44 px targets on touch
 
 ---
 
 ## T117 — Pedidos list and detail
 
 **Phase:** 11B — Pedidos
-**Status:** pending
+**Status:** done
 **Dependencies:** T116, T118
 
 ### What to do
 
-List with filters: destino, estado, **grandes (10+ units)**, atrasados; whole row opens the pedido. Detail: lines × sizes with assigned · approved · delivered per cell, status explanation ("128 de 150 aprobadas"), payments and balance, deliveries, **Historial** tab (T132).
+List with filters: destino, estado, **grandes (10+ units)**, atrasados; whole row opens the pedido. Detail: lines × sizes with assigned · approved · delivered per cell, status explanation ("128 de 150 aprobadas"), payments and balance, deliveries, **Historial** tab (T132 — added there).
 
 ### Acceptance criteria
 
-- [ ] Status shown is derived (T118), with its reason
-- [ ] Phone, tablet and desktop layouts; no horizontal overflow
-- [ ] Secretary sees totals and balances but no revenue figures
+- [x] Status shown is derived (T118), with its reason
+- [x] Phone, tablet and desktop layouts; no horizontal overflow
+- [x] Secretary sees totals and balances but no revenue figures
 
 ---
 
 ## T118 — Derived status engine
 
 **Phase:** 11B — Pedidos
-**Status:** pending
+**Status:** done
 **Dependencies:** T112, T113
 
 ### What to do
@@ -169,15 +169,15 @@ Pure function computing Pendiente / En producción / Listo / Entrega parcial / E
 
 ### Acceptance criteria
 
-- [ ] 100 % branch coverage unit tests, including partial delivery, payments before delivery, restructure and cancellation
-- [ ] No status column is written by app code (cancellation fields aside)
+- [x] 100 % branch coverage unit tests, including partial delivery, payments before delivery, restructure and cancellation
+- [x] No status column is written by app code (cancellation fields aside)
 
 ---
 
 ## T119 — Edit rules after production starts
 
 **Phase:** 11B — Pedidos
-**Status:** pending
+**Status:** done
 **Dependencies:** T116, T112
 
 ### What to do
@@ -186,9 +186,9 @@ Enforce spec §3.4.16: increases always; decreases only down to assigned units; 
 
 ### Acceptance criteria
 
-- [ ] Server rejects edits that would drop below assigned / approved / delivered units, with a clear Spanish message
-- [ ] Assigned clothiers get a notification and see "Cambió: …" on their work
-- [ ] Every edit logged with before/after and reason
+- [x] Server rejects edits that would drop below assigned / approved / delivered units, with a clear Spanish message
+- [x] Assigned clothiers get a notification and see "Cambió: …" on their work
+- [x] Every edit logged with before/after and reason
 
 ---
 
@@ -213,7 +213,7 @@ Enforce spec §3.4.16: increases always; decreases only down to assigned units; 
 ## T121 — Deliveries in units
 
 **Phase:** 11B — Pedidos
-**Status:** pending
+**Status:** done
 **Dependencies:** T112
 
 ### What to do
@@ -222,9 +222,9 @@ Enforce spec §3.4.16: increases always; decreases only down to assigned units; 
 
 ### Acceptance criteria
 
-- [ ] Cannot deliver more than approved − delivered per cell
-- [ ] Status moves to Entrega parcial / Entregado automatically
-- [ ] Logged
+- [x] Cannot deliver more than approved − delivered per cell
+- [x] Status moves to Entrega parcial / Entregado automatically
+- [x] Logged
 
 ---
 
@@ -233,25 +233,25 @@ Enforce spec §3.4.16: increases always; decreases only down to assigned units; 
 ## T122 — Assigning work
 
 **Phase:** 11C — Production
-**Status:** pending
+**Status:** done
 **Dependencies:** T112
 
 ### What to do
 
-Secretary/admin assign units of a cell to a clothier (from the pedido detail and from Producción). Piece rate copied from the variant; admin can override one assignment's rate with reason.
+Secretary/admin assign units of a cell to a clothier (from the pedido detail; the Producción board entry point comes with T124). Piece rate copied from the variant; admin can override one assignment's rate with reason.
 
 ### Acceptance criteria
 
-- [ ] Cannot assign beyond the cell's unassigned units (optimistic locking)
-- [ ] Clothier notified; sees rate and expected earnings
-- [ ] Rate override visible to the clothier before work starts; logged
+- [x] Cannot assign beyond the cell's unassigned units (optimistic locking)
+- [x] Clothier notified; sees rate and expected earnings
+- [x] Rate override visible to the clothier before work starts; logged
 
 ---
 
 ## T123 — Mi trabajo (clothier)
 
 **Phase:** 11C — Production
-**Status:** pending
+**Status:** done
 **Dependencies:** T122, T115
 
 ### What to do
@@ -260,17 +260,17 @@ Phone-first screen: **Correcciones** first, then assigned work by delivery date 
 
 ### Acceptance criteria
 
-- [ ] Claim limit enforced server-side
-- [ ] Release only when nothing on the assignment has been reported
-- [ ] No client prices anywhere on clothier screens
-- [ ] 44 px targets, one-handed use, works offline-tolerant like the current board
+- [x] Claim limit enforced server-side
+- [x] Release only when nothing on the assignment has been reported
+- [x] No client prices anywhere on clothier screens
+- [x] 44 px targets, one-handed use, works offline-tolerant like the current board
 
 ---
 
 ## T124 — Producción review queue
 
 **Phase:** 11C — Production
-**Status:** pending
+**Status:** done
 **Dependencies:** T123
 
 ### What to do
@@ -279,35 +279,35 @@ Queue of reported units grouped by clothier. Per report: approve N, return M as 
 
 ### Acceptance criteria
 
-- [ ] Approve + return + scrap ≤ reported (server-checked)
-- [ ] Rework is paid once when approved, at the assignment rate
-- [ ] Scrapped-unit pay follows the setting
-- [ ] Defect reasons stored for analytics
+- [x] Approve + return + scrap ≤ reported (server-checked)
+- [x] Rework is paid once when approved, at the assignment rate (returned units are never approved twice; pay itself is T126)
+- [x] Scrapped-unit pay follows the setting
+- [x] Defect reasons stored for analytics
 
 ---
 
 ## T125 — Cerrar mi jornada
 
 **Phase:** 11C — Production
-**Status:** pending
+**Status:** done
 **Dependencies:** T123, T124
 
 ### What to do
 
-Clothier closing: today's assignments with "¿Cuántas terminaste hoy?" prefilled from the day's reports; 0 must be confirmed. Secretary/admin approve or correct (reason) in Producción. Reminder notification near closing time.
+Clothier closing: today's assignments with "¿Cuántas terminaste hoy?" prefilled from the day's reports; 0 must be confirmed. Secretary/admin approve or correct (reason) in Producción. Reminder notification near closing time (a "Enviar recordatorio" button in Producción → Cierres; there is no closing-time setting or scheduler yet to send it automatically).
 
 ### Acceptance criteria
 
-- [ ] One closing per clothier per business day
-- [ ] Corrections logged with reason; clothier sees the corrected numbers
-- [ ] Close-business-day dialog lists clothiers without a closing (warning, not a block)
+- [x] One closing per clothier per business day
+- [x] Corrections logged with reason; clothier sees the corrected numbers
+- [x] Close-business-day dialog lists clothiers without a closing (warning, not a block)
 
 ---
 
 ## T126 — Clothier payroll on approved units
 
 **Phase:** 11C — Production
-**Status:** pending
+**Status:** done — DB integration tests and browser check passed on a Neon test branch (2026-10-25).
 **Dependencies:** T124, T125
 
 ### What to do
@@ -327,7 +327,7 @@ Replace `compute-clothier-earnings` with approved units × assignment rate (plus
 ## T127 — Pedido payments and the till
 
 **Phase:** 11D — Money and stock
-**Status:** pending
+**Status:** done — DB integration tests and browser check passed on a Neon test branch (2026-10-25). Applying saldo a favor to another pedido is not built yet: refunds only.
 **Dependencies:** T113, T115
 
 ### What to do
@@ -345,7 +345,7 @@ Record payments (cash / card / transfer) on the pedido; attach to the open busin
 ## T128 — Stock ledger and Inventario
 
 **Phase:** 11D — Money and stock
-**Status:** pending
+**Status:** done — DB integration tests and browser check passed on a Neon test branch (2026-10-25).
 **Dependencies:** T113, T124
 
 ### What to do
@@ -362,7 +362,7 @@ Approved units of inventory pedidos create `+` movements automatically. Inventar
 ## T129 — Vender prenda from stock
 
 **Phase:** 11D — Money and stock
-**Status:** pending
+**Status:** done — DB integration tests and browser check passed on a Neon test branch (2026-10-25).
 **Dependencies:** T128, T127
 
 ### What to do
@@ -379,7 +379,7 @@ Rebuild Vender prenda: pick garment, colour, size with live availability; block 
 ## T130 — Caja de hoy and close summary by source
 
 **Phase:** 11D — Money and stock
-**Status:** pending
+**Status:** done — integration test (packages/db day-income) and browser check passed on the Neon test branch (2026-10-25)
 **Dependencies:** T127, T129, T125
 
 ### What to do
@@ -388,8 +388,8 @@ Summary strip and close-day dialog split income into Servicios · Pedidos · Pre
 
 ### Acceptance criteria
 
-- [ ] Totals reconcile with the sum of tickets, pedido payments and sales for the day (integration test)
-- [ ] After-hours money shown separately on the day it attached to
+- [x] Totals reconcile with the sum of tickets, pedido payments and sales for the day (integration test)
+- [x] After-hours money shown separately on the day it attached to
 
 ---
 
@@ -398,7 +398,7 @@ Summary strip and close-day dialog split income into Servicios · Pedidos · Pre
 ## T131 — Activity log coverage
 
 **Phase:** 11E — Log and analytics
-**Status:** pending
+**Status:** done (2026-10-25) — coverage enforced by lib/**tests**/activity-coverage.test.ts; legacy large-orders/products actions exempt until T135
 **Dependencies:** T114 and the actions it covers
 
 ### What to do
@@ -407,15 +407,15 @@ Call `logActivity` from every action listed in spec §3.9.27 (money, production,
 
 ### Acceptance criteria
 
-- [ ] A test enumerates server actions and fails when one mutates data without logging
-- [ ] Summaries readable in Spanish, money formatted `$12.500`
+- [x] A test enumerates server actions and fails when one mutates data without logging
+- [x] Summaries readable in Spanish, money formatted `$12.500`
 
 ---
 
 ## T132 — Actividad screen and Historial tabs
 
 **Phase:** 11E — Log and analytics
-**Status:** pending
+**Status:** done (2026-10-25) — 100k-entry index/keyset test and browser check passed on the Neon test branch
 **Dependencies:** T131
 
 ### What to do
@@ -424,16 +424,16 @@ Admin "Actividad": timeline with filters (person, action type, date range, pedid
 
 ### Acceptance criteria
 
-- [ ] Admin-only Actividad route (RBAC tested)
-- [ ] Before/after shown as a readable diff
-- [ ] Handles 100k+ entries with indexed filters
+- [x] Admin-only Actividad route (RBAC tested)
+- [x] Before/after shown as a readable diff
+- [x] Handles 100k+ entries with indexed filters
 
 ---
 
 ## T133 — Analítica additions
 
 **Phase:** 11E — Log and analytics
-**Status:** pending
+**Status:** done (2026-10-25) — reconciliation test (packages/db analytics-pedidos) and browser check passed on the Neon test branch
 **Dependencies:** T127, T126, T128
 
 ### What to do
@@ -442,8 +442,8 @@ Add sections per spec §3.11: ingresos por fuente; pedidos (cuentas por cobrar, 
 
 ### Acceptance criteria
 
-- [ ] Admin-only; secretary never sees these figures
-- [ ] Figures reconcile with the underlying ledgers (tests on seeded data)
+- [x] Admin-only; secretary never sees these figures
+- [x] Figures reconcile with the underlying ledgers (tests on seeded data)
 
 ---
 
@@ -452,7 +452,7 @@ Add sections per spec §3.11: ingresos por fuente; pedidos (cuentas por cobrar, 
 ## T134 — Navigation and RBAC
 
 **Phase:** 11F — Rollout
-**Status:** pending
+**Status:** done (2026-10-26) — e2e/phase11-rbac.spec.ts (41 tests) passed against the dev database
 **Dependencies:** T117, T123, T124, T128, T132
 
 ### What to do
@@ -461,15 +461,15 @@ Per-role menus: Pedidos, Producción, Inventario, Actividad, Mi trabajo; remove 
 
 ### Acceptance criteria
 
-- [ ] RBAC e2e covers every new route for every role
-- [ ] Old routes redirect to their replacements
+- [x] RBAC e2e covers every new route for every role
+- [x] Old routes redirect to their replacements
 
 ---
 
 ## T135 — Retire the old model and reset test data
 
 **Phase:** 11F — Rollout
-**Status:** pending
+**Status:** done (2026-10-26) — old tables moved to the `archive` schema by 0054 (not dropped: production data unchecked; drop the schema by hand once reviewed); guard test no-old-model.test.ts; reset script tested in a rolled-back transaction
 **Dependencies:** T134
 
 ### What to do
@@ -478,8 +478,8 @@ Drop `craftables`, `craftable_pieces`, `cloth_piece_assignments`, `production_lo
 
 ### Acceptance criteria
 
-- [ ] No references to dropped tables remain (typecheck + grep in CI)
-- [ ] Reset script is idempotent and refuses to run without an explicit flag
+- [x] No references to dropped tables remain (typecheck + grep in CI)
+- [x] Reset script is idempotent and refuses to run without an explicit flag
 
 ---
 

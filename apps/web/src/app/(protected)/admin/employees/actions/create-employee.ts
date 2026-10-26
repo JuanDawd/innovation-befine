@@ -17,7 +17,9 @@
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
-import { getDb } from "@/lib/db";
+import { getTxDb } from "@/lib/db";
+import { actorOf, logActivity } from "@/lib/activity";
+import { ROLE_ES } from "./role-labels";
 import { employees } from "@befine/db/schema";
 import { createEmployeeSchema } from "@befine/types";
 import type { ActionResult } from "@/lib/action-result";
@@ -91,20 +93,38 @@ export async function createEmployee(rawInput: unknown): Promise<ActionResult<Cr
   const userId = createUserResult.user.id;
 
   // Insert employee record linked to the auth user
-  const db = getDb();
-  const employeeRows = await db
-    .insert(employees)
-    .values({
-      userId,
-      role,
-      stylistSubtype: stylistSubtype ?? null,
-      dailyRate: role === "secretary" ? (dailyRate ?? null) : null,
-      expectedWorkDays: expectedWorkDays ?? 6,
-      birthday: birthday || null,
-      showEarnings: false,
-      isActive: true,
-    })
-    .returning();
+  // T131 — the employee row and its log entry commit together (no password logged).
+  const employeeRows = await getTxDb().transaction(async (tx) => {
+    const rows = await tx
+      .insert(employees)
+      .values({
+        userId,
+        role,
+        stylistSubtype: stylistSubtype ?? null,
+        dailyRate: role === "secretary" ? (dailyRate ?? null) : null,
+        expectedWorkDays: expectedWorkDays ?? 6,
+        birthday: birthday || null,
+        showEarnings: false,
+        isActive: true,
+      })
+      .returning();
+    if (rows[0])
+      await logActivity(tx, {
+        actor: actorOf(session.user),
+        action: "employee.create",
+        entityType: "employee",
+        entityId: rows[0].id,
+        summary: `Creó el empleado «${name}» (${ROLE_ES[role] ?? role})`,
+        after: {
+          name,
+          email,
+          role,
+          stylistSubtype: stylistSubtype ?? null,
+          dailyRate: dailyRate ?? null,
+        },
+      });
+    return rows;
+  });
 
   const employee = employeeRows[0];
   if (!employee) {

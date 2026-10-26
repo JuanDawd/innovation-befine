@@ -550,6 +550,31 @@
 - **Description:** Found in the back-office design critique (verified live: "Bata de spa" priced $8.000 — its piece rate — instead of its $35.000 selling price). Picking a piece set the line's unit price from `pieceRate`, and the order total is computed from the lines, so totals, deposits and balances came out at the clothier's pay instead of the client's price.
 - **Fix:** lines prefill from the variant's `sellingPrice` via `orderUnitPrice()` (tested); pieces without a selling price start at 0 so the price is typed in. Phase 11 (Pedidos, `docs/pedidos-spec` branch) replaces this flow and keeps the selling-price snapshot.
 
+### H-62 — Service worker served the previous API response after every save
+
+- **Severity:** High
+- **Status:** Resolved (2026-10-26)
+- **Affected:** every screen that reads through `/api/q/*` (TanStack Query, since b4e7362); seen in Cobrar → Ajustar (M-70 e2e)
+- **Description:** The PWA's runtime caching used `StaleWhileRevalidate` for every GET under `/api/`, live queries included. After a mutation, `notifyDataChanged` refetched, the service worker answered from its cache with the pre-save response, and that overwrote the optimistic update — an adjusted price snapped back to the old total until a later refetch. Found because the M-70 e2e failed once the earlier checkout spec stopped masking it.
+- **Fix:** the `/api/` GET rule is `NetworkFirst`; the cache is only the offline fallback.
+
+### H-61 — Login form put the email and password in the URL when submitted before hydration
+
+- **Severity:** High
+- **Status:** Resolved (2026-10-26)
+- **Affected:** login, forgot password, set new password, change password forms
+- **Description:** Found while running the T134 e2e. The forms had an `onSubmit` handler but no `method`, so a submit before React hydrated (a quick tap on a slow phone, or an automated click) fell back to a native GET: `/login?email=…&password=…`. The password then lands in the browser history, in server and proxy access logs and in Vercel request logs.
+- **Fix:** every password form has `method="post"`, so a pre-hydration submit posts the body instead (regression test in login-form.test.tsx). The e2e login helper now waits for React before clicking.
+- **Follow-up:** the stylist seed password appeared in a local dev-server log during the investigation (the line was redacted); rotate the test-environment seed passwords. Check Vercel request logs for `password=` in production.
+
+### H-60 — Clothier payout failed when a review had approved units and paid scraps
+
+- **Severity:** High
+- **Status:** Resolved (2026-10-25)
+- **Affected:** T126 `recordPayout` (clothier pedido payroll)
+- **Description:** Found when the T126 integration test first ran against a real database (Neon test branch). A unit review with approved units and scrapped units paid by the setting produces two earnings lines, both carrying the review id. `recordPayout` linked every line's reviews to the payout, so the same review was inserted twice into `payout_unit_reviews`, hit `uq_payout_unit_reviews_review` and rolled back — the clothier could not be paid at all whenever "pagar unidades descartadas" was on and a review mixed both.
+- **Fix:** `payoutReviewIds()` links each review once (unit tested); the integration test covers the approved + paid-scrap case.
+
 ### H-59 — Payouts recorded the client's computed amount without recomputing
 
 - **Severity:** High
@@ -569,6 +594,22 @@
 ---
 
 ## Medium-priority issues
+
+### M-81 — A cancelled pedido showed a balance due and no saldo a favor
+
+- **Severity:** Medium
+- **Status:** Resolved (2026-10-25)
+- **Affected:** T119 cancel, T117 pedido list/detail, T127 refunds, T133 Analítica
+- **Description:** Found while building cuentas por cobrar. listPedidoOverviews and getPedidoDetail computed a cancelled pedido's money against its full line total, so a cancelled pedido paid $100.000 of $450.000 reported a $350.000 balance and $0 saldo a favor — it would have counted as a receivable and the credit owed back was invisible.
+- **Fix:** both compute a cancelled pedido's money with a total of $0: nothing is owed, everything paid is saldo a favor. Covered by the T133 analytics integration test.
+
+### M-80 — Postgres error-code checks missed Drizzle-wrapped errors
+
+- **Severity:** Medium
+- **Status:** Resolved (2026-10-25)
+- **Affected:** T067/T126 `recordPayout` double-pay, T05R-R4 appointment reopen, catalog
+- **Description:** Drizzle ≥ 0.44 wraps driver errors in `DrizzleQueryError` with the Postgres error on `cause`. `recordPayout` read `err.code === "23505"`, so paying the same day twice threw a 500 instead of returning CONFLICT (the unique constraint still blocked the double pay). Appointment reopen read `err.code === "23P01"` the same way, so a reopen into a now-taken slot threw instead of "El horario ya está ocupado". Catalog already handled `cause`.
+- **Fix:** shared `pgErrorCode()` / `isUniqueViolation()` in `lib/pg-error.ts` (unit tested), used by all three call sites.
 
 ### M-01 — No-show count never decrements
 
@@ -1981,19 +2022,20 @@
 
 > This section is populated during development. Each entry documents what went wrong, the root cause, and how to prevent it in the future.
 
-| Date       | Phase   | Issue                                                                                                    | Root cause                                                                                                                         | Prevention                                                                                                                                                                  |
-| ---------- | ------- | -------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-04-02 | Pre-dev | 12 issues fixable by documentation update were left open                                                 | Issues identified but fixes deferred — no process to batch-resolve documentation-only issues                                       | Schedule a documentation fix sweep after each review round; don't wait for development to start                                                                             |
-| 2026-04-02 | Pre-dev | No test plans, QA strategy, or edge case scenarios existed despite 106 well-specified tasks              | Acceptance criteria were treated as sufficient for testing; no QA perspective in review cycle                                      | Include a QA review as a standard step after every major planning document is created; ACs define _what_ to verify, test plans define _how_ and _what else_ to try breaking |
-| 2026-04-02 | Pre-dev | Two independent project assessments found the same gaps — confirming they are real, not reviewer opinion | Both reviews converged on: currency decision, data privacy, test plans, auth fallback, Pusher reliability, Neon storage/cold-start | When multiple reviewers agree on a gap, prioritize it immediately — convergence is a strong signal                                                                          |
-| 2026-04-02 | Pre-dev | 17 stakeholder decisions were needed before development could start                                      | Decisions accumulated across 4 review rounds without a resolution session                                                          | Schedule a dedicated decision session after each review round — don't let open questions pile up                                                                            |
-| 2026-04-09 | 0A      | Dev dependencies (`pino-pretty`) referenced in code but never installed; would crash on first import     | Package was assumed to be a transitive dep or was forgotten during implementation                                                  | After adding any `import` or `require` for a new package, verify it's in the relevant `package.json` before committing                                                      |
-| 2026-04-09 | 0A      | Seed script non-transactional inserts could leave orphaned user rows                                     | Two related inserts (user + account) were written sequentially without a transaction wrapper                                       | Any multi-row insert that must succeed or fail together must use `db.transaction()` — especially when idempotency checks skip existing records                              |
-| 2026-04-11 | 1       | Deactivating an employee only revoked sessions but didn't ban the user — they could log back in          | `revokeUserSessions` clears active sessions but doesn't prevent new ones; Better Auth's `banUser` API was not called               | When implementing "block access" features, verify both existing sessions AND future login attempts are blocked — revocation alone is never sufficient                       |
-| 2026-04-11 | 1       | Two tables missing `updated_at` despite CLAUDE.md requiring it on all tables                             | Convention was followed for newer tables (business_settings) but missed on earlier ones (employees, business_days)                 | After creating a table schema, run a checklist: uuid PK, created_at, updated_at, correct naming convention, FK naming. Automate this check if possible.                     |
-| 2026-04-11 | 3       | `editClient` allows editing archived clients — UI hides button but server has no guard                   | Soft-delete enforcement was only implemented on the UI layer, not the server action                                                | Soft-delete guards must be enforced server-side, not just by hiding UI controls. Any action on a soft-deleted record should check `isActive` in the WHERE clause.           |
-| 2026-04-11 | 3       | Hardcoded aria-label and button text bypassed i18n                                                       | Quick implementation shortcuts — easy to miss non-visible strings like aria-labels                                                 | After implementing any component, grep for hardcoded strings (quotes around Spanish/English text). aria-labels and button text are user-facing and must go through `t()`.   |
-| 2026-04-11 | 3       | T032 work bundled into T030/T031 commits instead of a dedicated commit                                   | No-show display was simple enough to implement alongside the component it lives in, leading to skipping the separate commit        | Follow the one-commit-per-task rule even for small tasks. The git history should mirror the task list. Small tasks get small commits — that's fine.                         |
+| Date       | Phase   | Issue                                                                                                    | Root cause                                                                                                                               | Prevention                                                                                                                                                                    |
+| ---------- | ------- | -------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-04-02 | Pre-dev | 12 issues fixable by documentation update were left open                                                 | Issues identified but fixes deferred — no process to batch-resolve documentation-only issues                                             | Schedule a documentation fix sweep after each review round; don't wait for development to start                                                                               |
+| 2026-04-02 | Pre-dev | No test plans, QA strategy, or edge case scenarios existed despite 106 well-specified tasks              | Acceptance criteria were treated as sufficient for testing; no QA perspective in review cycle                                            | Include a QA review as a standard step after every major planning document is created; ACs define _what_ to verify, test plans define _how_ and _what else_ to try breaking   |
+| 2026-04-02 | Pre-dev | Two independent project assessments found the same gaps — confirming they are real, not reviewer opinion | Both reviews converged on: currency decision, data privacy, test plans, auth fallback, Pusher reliability, Neon storage/cold-start       | When multiple reviewers agree on a gap, prioritize it immediately — convergence is a strong signal                                                                            |
+| 2026-04-02 | Pre-dev | 17 stakeholder decisions were needed before development could start                                      | Decisions accumulated across 4 review rounds without a resolution session                                                                | Schedule a dedicated decision session after each review round — don't let open questions pile up                                                                              |
+| 2026-04-09 | 0A      | Dev dependencies (`pino-pretty`) referenced in code but never installed; would crash on first import     | Package was assumed to be a transitive dep or was forgotten during implementation                                                        | After adding any `import` or `require` for a new package, verify it's in the relevant `package.json` before committing                                                        |
+| 2026-04-09 | 0A      | Seed script non-transactional inserts could leave orphaned user rows                                     | Two related inserts (user + account) were written sequentially without a transaction wrapper                                             | Any multi-row insert that must succeed or fail together must use `db.transaction()` — especially when idempotency checks skip existing records                                |
+| 2026-04-11 | 1       | Deactivating an employee only revoked sessions but didn't ban the user — they could log back in          | `revokeUserSessions` clears active sessions but doesn't prevent new ones; Better Auth's `banUser` API was not called                     | When implementing "block access" features, verify both existing sessions AND future login attempts are blocked — revocation alone is never sufficient                         |
+| 2026-04-11 | 1       | Two tables missing `updated_at` despite CLAUDE.md requiring it on all tables                             | Convention was followed for newer tables (business_settings) but missed on earlier ones (employees, business_days)                       | After creating a table schema, run a checklist: uuid PK, created_at, updated_at, correct naming convention, FK naming. Automate this check if possible.                       |
+| 2026-04-11 | 3       | `editClient` allows editing archived clients — UI hides button but server has no guard                   | Soft-delete enforcement was only implemented on the UI layer, not the server action                                                      | Soft-delete guards must be enforced server-side, not just by hiding UI controls. Any action on a soft-deleted record should check `isActive` in the WHERE clause.             |
+| 2026-04-11 | 3       | Hardcoded aria-label and button text bypassed i18n                                                       | Quick implementation shortcuts — easy to miss non-visible strings like aria-labels                                                       | After implementing any component, grep for hardcoded strings (quotes around Spanish/English text). aria-labels and button text are user-facing and must go through `t()`.     |
+| 2026-04-11 | 3       | T032 work bundled into T030/T031 commits instead of a dedicated commit                                   | No-show display was simple enough to implement alongside the component it lives in, leading to skipping the separate commit              | Follow the one-commit-per-task rule even for small tasks. The git history should mirror the task list. Small tasks get small commits — that's fine.                           |
+| 2026-10-25 | 11      | Two payroll bugs (H-60, M-80) passed every unit test and surfaced only on a real database                | Mocked drivers return raw errors and never hit unique constraints; DB integration tests were skipped for days while the test DB was down | Don't let DB-backed tests stay skipped across tasks: when the usual test DB is down, switch to a Neon test branch (`TEST_DATABASE_NEON=1`). Read SQLSTATE via `pgErrorCode()` |
 
 ---
 
@@ -2162,3 +2204,8 @@
 | H-58     | 2026-10-24    | Large-order lines priced from the variant's selling price, never the piece rate                                 | feat/redesign                  |
 | H-59     | 2026-10-24    | recordPayout recomputes server-side; stale preview → STALE_DATA; $0 payouts refused                             | feat/redesign                  |
 | H-57     | 2026-10-24    | Piece pay belongs to the day it's approved (approved_business_day_id, migration 0037)                           | feat/redesign                  |
+| H-60     | 2026-10-25    | Clothier payout links each unit review once (payoutReviewIds)                                                   | feat/phase-11-pedidos          |
+| M-80     | 2026-10-25    | Shared pgErrorCode(): double-pay → CONFLICT and appointment reopen → "horario ocupado" with wrapped errors      | feat/phase-11-pedidos          |
+| M-81     | 2026-10-25    | Cancelled pedidos owe nothing; everything paid is saldo a favor (list and detail)                               | feat/phase-11-pedidos          |
+| H-61     | 2026-10-26    | Password forms use method="post"; a pre-hydration submit can't put credentials in the URL                       | feat/phase-11-pedidos          |
+| H-62     | 2026-10-26    | Service worker /api/ GETs NetworkFirst, not StaleWhileRevalidate — refetch after a save no longer serves stale  | feat/phase-11-pedidos          |

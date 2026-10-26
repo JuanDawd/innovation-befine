@@ -4,6 +4,7 @@ import {
   asRole,
   chargeInCash,
   closeDay,
+  containing,
   cop,
   E2E_SERVICE,
   E2E_STYLIST,
@@ -58,11 +59,13 @@ test.describe("payroll settlement", () => {
 
     // Every paid E2E Corte line earns exactly the commission; the total is their sum
     // (earlier runs on the same database may have left more unpaid lines).
-    const lines = review.getByText(`${E2E_SERVICE.name} ×1`);
+    const lines = review.getByText(`${E2E_SERVICE.name} · `);
+    await expect(lines.first()).toBeVisible();
     const lineCount = await lines.count();
     expect(lineCount).toBeGreaterThanOrEqual(1);
     for (let i = 0; i < lineCount; i++) {
-      await expect(lines.nth(i).locator("..")).toContainText(cop(E2E_SERVICE.commission));
+      // label → name/basis column → row, which holds the amount
+      await expect(lines.nth(i).locator("../..")).toContainText(cop(E2E_SERVICE.commission));
     }
     await expect(review.getByText("Total calculado").locator("..")).toContainText(
       cop(E2E_SERVICE.commission * lineCount),
@@ -77,9 +80,13 @@ test.describe("payroll settlement", () => {
     ).toEqual([]);
 
     await review.getByRole("button", { name: "Confirmar pago" }).click();
+    // Title restates the payout: "¿Pagar $X a <name> en efectivo?"
+    const confirmName = containing(
+      `¿Pagar ${cop(E2E_SERVICE.commission * lineCount)} a ${E2E_STYLIST}`,
+    );
     const confirm = page
-      .getByRole("alertdialog", { name: "¿Confirmar el pago?" })
-      .or(page.getByRole("dialog", { name: "¿Confirmar el pago?" }));
+      .getByRole("alertdialog", { name: confirmName })
+      .or(page.getByRole("dialog", { name: confirmName }));
     await confirm.getByRole("button", { name: "Confirmar pago" }).click();
     await expect(page.getByText("Pago registrado correctamente")).toBeVisible({ timeout: 15_000 });
 
