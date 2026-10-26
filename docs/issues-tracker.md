@@ -550,6 +550,14 @@
 - **Description:** Found in the back-office design critique (verified live: "Bata de spa" priced $8.000 — its piece rate — instead of its $35.000 selling price). Picking a piece set the line's unit price from `pieceRate`, and the order total is computed from the lines, so totals, deposits and balances came out at the clothier's pay instead of the client's price.
 - **Fix:** lines prefill from the variant's `sellingPrice` via `orderUnitPrice()` (tested); pieces without a selling price start at 0 so the price is typed in. Phase 11 (Pedidos, `docs/pedidos-spec` branch) replaces this flow and keeps the selling-price snapshot.
 
+### H-62 — Service worker served the previous API response after every save
+
+- **Severity:** High
+- **Status:** Resolved (2026-10-26)
+- **Affected:** every screen that reads through `/api/q/*` (TanStack Query, since b4e7362); seen in Cobrar → Ajustar (M-70 e2e)
+- **Description:** The PWA's runtime caching used `StaleWhileRevalidate` for every GET under `/api/`, live queries included. After a mutation, `notifyDataChanged` refetched, the service worker answered from its cache with the pre-save response, and that overwrote the optimistic update — an adjusted price snapped back to the old total until a later refetch. Found because the M-70 e2e failed once the earlier checkout spec stopped masking it.
+- **Fix:** the `/api/` GET rule is `NetworkFirst`; the cache is only the offline fallback.
+
 ### H-61 — Login form put the email and password in the URL when submitted before hydration
 
 - **Severity:** High
@@ -2200,3 +2208,4 @@
 | M-80     | 2026-10-25    | Shared pgErrorCode(): double-pay → CONFLICT and appointment reopen → "horario ocupado" with wrapped errors      | feat/phase-11-pedidos          |
 | M-81     | 2026-10-25    | Cancelled pedidos owe nothing; everything paid is saldo a favor (list and detail)                               | feat/phase-11-pedidos          |
 | H-61     | 2026-10-26    | Password forms use method="post"; a pre-hydration submit can't put credentials in the URL                       | feat/phase-11-pedidos          |
+| H-62     | 2026-10-26    | Service worker /api/ GETs NetworkFirst, not StaleWhileRevalidate — refetch after a save no longer serves stale  | feat/phase-11-pedidos          |

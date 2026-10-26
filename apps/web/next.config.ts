@@ -110,10 +110,12 @@ const withPWAConfig = withPWA({
         },
       },
       {
-        // Catalog & reference data — Stale While Revalidate (GET only)
+        // API reads (GET only) — Network First: /api/q/* is live data, and a
+        // stale-while-revalidate copy undid every save on the post-mutation
+        // refetch. The cache is only the offline fallback.
         urlPattern: ({ url, request }: { url: URL; request: Request }) =>
           request.method === "GET" && /\/api\/(?!realtime)/i.test(url.pathname),
-        handler: "StaleWhileRevalidate",
+        handler: "NetworkFirst",
         options: {
           cacheName: "api-cache",
           expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 },
