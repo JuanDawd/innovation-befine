@@ -20,13 +20,15 @@ const MAX_BACKOFF_MS = 60 * 60 * 1000;
 const JITTER_MS = 60 * 1000;
 const MIN_FOCUS_RECHECK_MS = 60 * 1000;
 
-/** Spread the salon's devices (one public IP, rate-limited endpoint) apart. */
-function nextDelay(failures: number): number {
+/**
+ * Spread the salon's devices (one public IP, rate-limited endpoint) apart.
+ * The offset comes from the clock, not a random source: every device loads and
+ * re-checks at its own moment, which spreads them as well as randomness would.
+ */
+export function nextDelay(failures: number, now = Date.now()): number {
   const base =
     failures === 0 ? BASE_INTERVAL_MS : Math.min(BASE_INTERVAL_MS * 2 ** failures, MAX_BACKOFF_MS);
-  // Timing spread only, not security: crypto keeps scanners quiet and costs nothing.
-  const [r] = crypto.getRandomValues(new Uint32Array(1));
-  const jitter = Math.floor((r! / 2 ** 32) * (2 * JITTER_MS + 1)) - JITTER_MS;
+  const jitter = (now % (2 * JITTER_MS + 1)) - JITTER_MS;
   return base + jitter;
 }
 

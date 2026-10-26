@@ -6,7 +6,7 @@ import { act, render } from "@testing-library/react";
 const nav = vi.hoisted(() => ({ path: "/cashier" }));
 vi.mock("next/navigation", () => ({ usePathname: () => nav.path }));
 
-import { AppUpdater } from "../app-updater";
+import { AppUpdater, nextDelay } from "../app-updater";
 
 const reload = vi.fn();
 let remoteBuild = "build-1";
@@ -54,5 +54,14 @@ describe("AppUpdater", () => {
     nav.path = "/pedidos";
     rerender(<AppUpdater />);
     expect(reload).not.toHaveBeenCalled();
+  });
+
+  it("waits about 15 minutes, ± 1 minute, backing off to an hour on failures", () => {
+    for (const now of [0, 59_999, 60_000, 120_000, 1_792_972_974_519]) {
+      const d = nextDelay(0, now);
+      expect(d).toBeGreaterThanOrEqual(14 * 60_000);
+      expect(d).toBeLessThanOrEqual(16 * 60_000);
+    }
+    expect(nextDelay(3, 60_000)).toBe(60 * 60_000); // capped, no offset at the midpoint
   });
 });
