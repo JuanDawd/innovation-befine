@@ -34,7 +34,7 @@ export const SHARED_PATHS: string[] = [];
 export const AUTHENTICATED_API_PATHS = ["/api/realtime", "/api/q/"];
 
 /** App paths any authenticated role may access (regardless of role prefix) */
-export const SHARED_APP_PATHS = ["/profile", "/large-orders"];
+export const SHARED_APP_PATHS = ["/profile"];
 
 /**
  * App paths shared by some roles only, outside any role prefix (T116).

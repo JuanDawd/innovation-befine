@@ -720,7 +720,7 @@ Update `apps/web/src/lib/db/README.md` with a short "When to use `getDb()` vs `g
 | T131 | Activity log coverage                                        | done    | T114                         |
 | T132 | Actividad screen and Historial tabs                          | done    | T131                         |
 | T133 | Analítica additions                                          | done    | T127, T126, T128             |
-| T134 | Navigation and RBAC                                          | pending | T117, T123, T124, T128, T132 |
+| T134 | Navigation and RBAC                                          | done    | T117, T123, T124, T128, T132 |
 | T135 | Retire the old model and reset test data                     | pending | T134                         |
 | T136 | E2E, training guide and screenshots                          | pending | T135                         |
 

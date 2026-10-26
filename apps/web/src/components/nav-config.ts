@@ -1,5 +1,5 @@
 /**
- * Role-aware navigation configuration — T090
+ * Role-aware navigation configuration — T090, T134 (spec §3.8, §3.10)
  *
  * Each role gets its own ordered list of nav items.
  * `href` must match the route prefix owned by that role.
@@ -20,6 +20,8 @@ import {
   Wallet,
   BarChart3,
   Settings,
+  Package,
+  History,
   type LucideIcon,
 } from "lucide-react";
 import type { AppRole } from "@befine/types";
@@ -38,27 +40,31 @@ export const NAV_ITEMS: Record<AppRole, NavItem[]> = {
     { key: "dashboard", href: "/cashier", icon: LayoutDashboard },
     { key: "ticketHistory", href: "/cashier/tickets/history", icon: ReceiptIcon },
     { key: "appointments", href: "/cashier/appointments", icon: CalendarDays },
-    { key: "largeOrders", href: "/large-orders", icon: ShoppingBag },
+    { key: "pedidos", href: "/pedidos", icon: ShoppingBag },
+    { key: "produccion", href: "/produccion", icon: Layers },
+    { key: "inventario", href: "/inventario", icon: Package },
     { key: "clients", href: "/cashier/clients", icon: Users },
   ],
   admin: [
     { key: "dashboard", href: "/cashier", icon: LayoutDashboard },
     { key: "ticketHistory", href: "/cashier/tickets/history", icon: ReceiptIcon },
     { key: "appointments", href: "/cashier/appointments", icon: CalendarDays },
-    { key: "largeOrders", href: "/large-orders", icon: ShoppingBag },
-    { key: "products", href: "/admin/products", icon: Layers },
+    { key: "pedidos", href: "/pedidos", icon: ShoppingBag },
+    { key: "produccion", href: "/produccion", icon: Layers },
+    { key: "inventario", href: "/inventario", icon: Package },
     { key: "clients", href: "/cashier/clients", icon: Users },
     { key: "employees", href: "/admin/employees", icon: Users },
     { key: "catalog", href: "/admin/catalog", icon: BookOpen },
     { key: "absences", href: "/admin/absences", icon: CalendarOff },
     { key: "payroll", href: "/admin/payroll", icon: Wallet },
     { key: "analytics", href: "/admin/analytics", icon: BarChart3 },
+    { key: "actividad", href: "/actividad", icon: History },
     { key: "settings", href: "/admin/settings", icon: Settings },
   ],
   secretary: [
     { key: "dashboard", href: "/secretary", icon: LayoutDashboard },
-    { key: "largeOrders", href: "/large-orders", icon: ShoppingBag },
-    { key: "products", href: "/secretary/products", icon: Layers },
+    { key: "pedidos", href: "/pedidos", icon: ShoppingBag },
+    { key: "produccion", href: "/produccion", icon: Layers },
     { key: "appointments", href: "/secretary/appointments", icon: CalendarDays },
     { key: "clients", href: "/secretary/clients", icon: Users },
     { key: "myEarnings", href: "/secretary/earnings", icon: Wallet },
@@ -80,7 +86,7 @@ export const NAV_GROUPS: NavGroup[] = [
   },
   {
     labelKey: "groupOperations",
-    items: ["appointments", "largeOrders", "products", "ticketHistory"],
+    items: ["appointments", "pedidos", "produccion", "inventario", "ticketHistory"],
   },
   {
     labelKey: "groupPeople",
@@ -92,7 +98,7 @@ export const NAV_GROUPS: NavGroup[] = [
   },
   {
     labelKey: "groupManagement",
-    items: ["catalog", "absences", "analytics", "settings"],
+    items: ["catalog", "absences", "analytics", "actividad", "settings"],
   },
 ];
 

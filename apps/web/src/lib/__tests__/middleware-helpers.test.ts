@@ -199,19 +199,24 @@ describe("roleCanAccess", () => {
     expect(roleCanAccess("stylist", "/pedidosx")).toBe(false);
   });
 
-  it("admin, cashier and secretary can access /large-orders (shared app path)", () => {
-    expect(roleCanAccess("admin", "/large-orders")).toBe(true);
-    expect(roleCanAccess("admin", "/large-orders/new")).toBe(true);
-    expect(roleCanAccess("admin", "/large-orders/abc-123")).toBe(true);
-    expect(roleCanAccess("cashier", "/large-orders")).toBe(true);
-    expect(roleCanAccess("secretary", "/large-orders")).toBe(true);
-    expect(roleCanAccess("secretary", "/large-orders/new")).toBe(true);
+  it("/large-orders is no longer a shared path — next.config redirects it to /pedidos (T134)", () => {
+    for (const role of ["admin", "cashier", "secretary", "stylist", "clothier"] as const)
+      expect(roleCanAccess(role, "/large-orders")).toBe(false);
   });
 
-  it("stylist and clothier can technically reach /large-orders path (middleware allows; server actions enforce role)", () => {
-    // SHARED_APP_PATHS bypasses prefix check — server actions do the role gate
-    expect(roleCanAccess("stylist", "/large-orders")).toBe(true);
-    expect(roleCanAccess("clothier", "/large-orders")).toBe(true);
+  it("each role reaches exactly the Phase 11 screens of spec §3.10 (T134)", () => {
+    const matrix = {
+      "/pedidos": ["admin", "cashier", "secretary"],
+      "/produccion": ["admin", "cashier", "secretary"],
+      "/inventario": ["admin", "cashier"],
+      "/actividad": ["admin"],
+      "/clothier": ["clothier"],
+    } as const;
+    for (const [path, allowed] of Object.entries(matrix))
+      for (const role of ["admin", "cashier", "secretary", "stylist", "clothier"] as const)
+        expect(roleCanAccess(role, path), `${role} ${path}`).toBe(
+          (allowed as readonly string[]).includes(role),
+        );
   });
 
   it("cashierCanAccessAdmin=false: cashier cannot access /admin routes (default)", () => {

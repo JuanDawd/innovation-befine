@@ -452,7 +452,7 @@ Add sections per spec §3.11: ingresos por fuente; pedidos (cuentas por cobrar, 
 ## T134 — Navigation and RBAC
 
 **Phase:** 11F — Rollout
-**Status:** pending
+**Status:** done (2026-10-26) — e2e/phase11-rbac.spec.ts (41 tests) passed against the dev database
 **Dependencies:** T117, T123, T124, T128, T132
 
 ### What to do
@@ -461,8 +461,8 @@ Per-role menus: Pedidos, Producción, Inventario, Actividad, Mi trabajo; remove 
 
 ### Acceptance criteria
 
-- [ ] RBAC e2e covers every new route for every role
-- [ ] Old routes redirect to their replacements
+- [x] RBAC e2e covers every new route for every role
+- [x] Old routes redirect to their replacements
 
 ---
 

@@ -2,7 +2,6 @@
  * Clothier home: Mi trabajo — T123 (spec §3.10)
  *
  * Phone-first: corrections, her work by delivery date, and Disponibles.
- * The previous products board lives at /clothier/productos until T135.
  */
 
 import Link from "next/link";
@@ -34,14 +33,6 @@ export default async function ClothierHomePage() {
         }
       />
       <MiTrabajo />
-      <p className="px-4 pb-8 text-center text-sm">
-        <Link
-          href="/clothier/productos"
-          className="text-muted-foreground underline underline-offset-4"
-        >
-          {t("oldBoard")}
-        </Link>
-      </p>
     </div>
   );
 }

@@ -57,6 +57,20 @@ const nextConfig: NextConfig = {
     "pino-pretty",
     "thread-stream",
   ],
+  // T134 — the previous order/product screens left the navigation; old links
+  // land on their replacements (spec §3.10).
+  async redirects() {
+    return [
+      { source: "/large-orders/:path*", destination: "/pedidos", permanent: false },
+      { source: "/large-orders", destination: "/pedidos", permanent: false },
+      { source: "/admin/products/:path*", destination: "/produccion", permanent: false },
+      { source: "/admin/products", destination: "/produccion", permanent: false },
+      { source: "/secretary/products/:path*", destination: "/produccion", permanent: false },
+      { source: "/secretary/products", destination: "/produccion", permanent: false },
+      { source: "/clothier/productos/:path*", destination: "/clothier", permanent: false },
+      { source: "/clothier/productos", destination: "/clothier", permanent: false },
+    ];
+  },
   async headers() {
     return [
       {

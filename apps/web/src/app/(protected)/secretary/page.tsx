@@ -1,6 +1,6 @@
 /**
  * Secretary home — the front desk. Leads with what needs her next: the day's
- * remaining appointments, pieces to approve and orders due; then today's
+ * remaining appointments, units to review and pedidos due; then today's
  * services (everyone's, with the stylist named) and upcoming birthdays.
  */
 import { Suspense } from "react";
@@ -11,7 +11,8 @@ import {
   listMyEditRequests,
 } from "@/app/(protected)/tickets/edit-requests/actions";
 import { getUpcomingBirthdays } from "@/app/(protected)/clients/actions";
-import { listLargeOrders, type LargeOrderListRow } from "@/app/(protected)/large-orders/actions";
+import { listPedidos } from "@/app/(protected)/pedidos/actions";
+import type { PedidoListItem } from "@befine/db";
 import { MyEditRequests, MyEditRequestsSkeleton } from "@/components/my-edit-requests";
 import { UpcomingBirthdays } from "@/components/upcoming-birthdays";
 import {
@@ -38,25 +39,26 @@ async function EditRequestsSection() {
   );
 }
 
-/** Orders ready to hand over, or due within a week — soonest first. */
-function ordersDueSoon(orders: LargeOrderListRow[]): LargeOrderListRow[] {
-  const horizon = Date.now() + WEEK_MS;
-  const due = (o: LargeOrderListRow) =>
-    o.estimatedDeliveryAt ? new Date(o.estimatedDeliveryAt).getTime() : 0;
-  return orders
+/** Client pedidos ready to hand over, or due within a week — soonest first. */
+function ordersDueSoon(pedidos: PedidoListItem[]): PedidoListItem[] {
+  const horizon = new Date(Date.now() + WEEK_MS).toLocaleDateString("en-CA", {
+    timeZone: "America/Bogota",
+  });
+  const open = ["pending", "in_production", "ready", "partially_delivered"];
+  return pedidos
     .filter(
-      (o) =>
-        o.status === "ready" ||
-        ((o.status === "pending" || o.status === "in_production") &&
-          o.estimatedDeliveryAt !== null &&
-          due(o) <= horizon),
+      (p) =>
+        p.destination === "client" &&
+        open.includes(p.status) &&
+        (p.status === "ready" ||
+          (p.estimatedDeliveryDate !== null && p.estimatedDeliveryDate <= horizon)),
     )
-    .sort((a, b) => due(a) - due(b))
+    .sort((a, b) => (a.estimatedDeliveryDate ?? "9").localeCompare(b.estimatedDeliveryDate ?? "9"))
     .slice(0, 5);
 }
 
 async function OrdersDueSection() {
-  const result = await listLargeOrders();
+  const result = await listPedidos({ destination: "client" });
   return <OrdersDuePanel orders={ordersDueSoon(result.success ? result.data : [])} />;
 }
 
