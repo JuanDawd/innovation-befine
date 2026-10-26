@@ -46,8 +46,11 @@ const nextConfig: NextConfig = {
     // The DSN is public by design; reusing SENTRY_DSN turns browser reporting on
     // wherever server reporting is configured.
     NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN ?? process.env.SENTRY_DSN ?? "",
+    // Same names the SDK used before ("vercel-production", "vercel-preview"), so
+    // issue history stays in one environment.
     NEXT_PUBLIC_SENTRY_ENVIRONMENT:
-      process.env.SENTRY_ENVIRONMENT ?? process.env.VERCEL_ENV ?? "development",
+      process.env.SENTRY_ENVIRONMENT ??
+      (process.env.VERCEL_ENV ? `vercel-${process.env.VERCEL_ENV}` : "development"),
     // H-47: inlined into the bundled `ws` so it uses its pure-JS mask(). Bundling turns
     // the optional `bufferutil` import into a stub without mask(), which crashed every
     // Neon WebSocket transaction frame >= 48 bytes ("b.mask is not a function").
