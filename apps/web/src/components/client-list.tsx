@@ -13,6 +13,7 @@ import { cloneElement, useState, useTransition, useEffect, useRef } from "react"
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
+import { RecordHistoryButton } from "@/components/record-history";
 import { useToast } from "@/hooks/use-toast";
 import {
   PlusIcon,
@@ -311,6 +312,11 @@ function ClientCard({
       </p>
 
       <div className="-mr-2 flex shrink-0 items-center justify-end gap-0.5 max-md:row-start-1 max-md:col-start-2 max-md:self-start">
+        <RecordHistoryButton
+          entityType="client"
+          entityId={localClient.id}
+          title={localClient.name}
+        />
         {localClient.isActive && (
           <ClientDialog
             config={{ mode: "edit", client: localClient }}

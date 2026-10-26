@@ -32,8 +32,7 @@ import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
 import { getEmployeeRef } from "@/lib/employee-ref";
 import { actorOf, logActivity } from "@/lib/activity";
 import { formatPesos } from "@befine/db";
-
-const METHOD_ES = { cash: "efectivo", card: "tarjeta", transfer: "transferencia" } as const;
+import { METHOD_ES } from "@/lib/payment-method-labels";
 
 export type CheckoutLineItem = {
   ticketItemId: string;

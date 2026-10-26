@@ -36,63 +36,66 @@ export type ActivityEntityType =
   | "payout"
   | "appointment";
 
-export type ActivityAction =
-  | "auth.sign_in"
-  | "auth.sign_out"
-  | "auth.sign_in_failed"
-  | "catalog.create"
-  | "catalog.update"
-  | "catalog.deactivate"
-  | "catalog.restore"
-  | "catalog.reorder"
-  | "settings.update"
-  | "client.create"
-  | "client.update"
-  | "pedido.create"
-  | "pedido.update"
-  | "pedido.cancel"
-  | "pedido.deliver"
-  | "production.assign"
-  | "production.rate_change"
-  | "production.release"
-  | "production.claim"
-  | "production.report"
-  | "production.review"
-  | "production.closing_submit"
-  | "production.closing_approve"
-  | "pedido.payment"
-  | "pedido.refund"
-  | "pedido.payment_attach"
-  | "stock.adjust"
-  | "stock.sale"
-  | "stock.sale_attach"
-  | "auth.password_change"
-  | "day.open"
-  | "day.close"
-  | "day.reopen"
-  | "ticket.create"
-  | "ticket.ready"
-  | "ticket.undo_ready"
-  | "ticket.void"
-  | "ticket.reopen"
-  | "ticket.price_override"
-  | "ticket.edit_request"
-  | "ticket.edit_resolve"
-  | "checkout.complete"
-  | "checkout.paid_offline"
-  | "payroll.payout"
-  | "payroll.payout_review"
-  | "employee.create"
-  | "employee.update"
-  | "employee.deactivate"
-  | "employee.terminate"
-  | "employee.absence"
-  | "employee.absence_delete"
-  | "client.archive"
-  | "client.restore"
-  | "appointment.create"
-  | "appointment.status"
-  | "appointment.price_ack";
+export const ACTIVITY_ACTIONS = [
+  "auth.sign_in",
+  "auth.sign_out",
+  "auth.sign_in_failed",
+  "catalog.create",
+  "catalog.update",
+  "catalog.deactivate",
+  "catalog.restore",
+  "catalog.reorder",
+  "settings.update",
+  "client.create",
+  "client.update",
+  "pedido.create",
+  "pedido.update",
+  "pedido.cancel",
+  "pedido.deliver",
+  "production.assign",
+  "production.rate_change",
+  "production.release",
+  "production.claim",
+  "production.report",
+  "production.review",
+  "production.closing_submit",
+  "production.closing_approve",
+  "pedido.payment",
+  "pedido.refund",
+  "pedido.payment_attach",
+  "stock.adjust",
+  "stock.sale",
+  "stock.sale_attach",
+  "auth.password_change",
+  "day.open",
+  "day.close",
+  "day.reopen",
+  "ticket.create",
+  "ticket.ready",
+  "ticket.undo_ready",
+  "ticket.void",
+  "ticket.reopen",
+  "ticket.price_override",
+  "ticket.edit_request",
+  "ticket.edit_resolve",
+  "checkout.complete",
+  "checkout.paid_offline",
+  "payroll.payout",
+  "payroll.payout_review",
+  "employee.create",
+  "employee.update",
+  "employee.deactivate",
+  "employee.terminate",
+  "employee.absence",
+  "employee.absence_delete",
+  "client.archive",
+  "client.restore",
+  "appointment.create",
+  "appointment.status",
+  "appointment.price_ack",
+] as const;
+
+export type ActivityAction = (typeof ACTIVITY_ACTIONS)[number];
 
 export type ActivityEntry = {
   actor: { userId: string | null; role: string | null };

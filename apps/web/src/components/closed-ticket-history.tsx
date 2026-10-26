@@ -9,6 +9,7 @@
 
 import { useState, useTransition, useCallback } from "react";
 import { useTranslations } from "next-intl";
+import { RecordHistory } from "@/components/record-history";
 import {
   ReceiptIcon,
   SearchIcon,
@@ -60,6 +61,7 @@ export function ClosedTicketHistory({
   initialTickets,
 }: ClosedTicketHistoryProps) {
   const t = useTranslations("ticketHistory");
+  const ta = useTranslations("activity");
   const tc = useTranslations("common");
   const tCheckout = useTranslations("checkout");
   const methodLabel = (m: string) =>
@@ -513,6 +515,16 @@ export function ClosedTicketHistory({
 
           {!detailLoading && !detail && (
             <p className="mt-6 text-sm text-muted-foreground">{t("detailError")}</p>
+          )}
+
+          {/* T132 — what happened to this ticket */}
+          {!detailLoading && detail && selectedTicketId && (
+            <section aria-labelledby="ticket-history" className="space-y-2 border-t pt-4">
+              <h3 id="ticket-history" className="text-sm font-semibold">
+                {ta("history")}
+              </h3>
+              <RecordHistory entityType="ticket" entityId={selectedTicketId} />
+            </section>
           )}
         </DialogContent>
       </Dialog>

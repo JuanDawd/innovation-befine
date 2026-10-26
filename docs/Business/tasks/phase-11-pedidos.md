@@ -415,7 +415,7 @@ Call `logActivity` from every action listed in spec §3.9.27 (money, production,
 ## T132 — Actividad screen and Historial tabs
 
 **Phase:** 11E — Log and analytics
-**Status:** pending
+**Status:** done (2026-10-25) — 100k-entry index/keyset test and browser check passed on the Neon test branch
 **Dependencies:** T131
 
 ### What to do
@@ -424,9 +424,9 @@ Admin "Actividad": timeline with filters (person, action type, date range, pedid
 
 ### Acceptance criteria
 
-- [ ] Admin-only Actividad route (RBAC tested)
-- [ ] Before/after shown as a readable diff
-- [ ] Handles 100k+ entries with indexed filters
+- [x] Admin-only Actividad route (RBAC tested)
+- [x] Before/after shown as a readable diff
+- [x] Handles 100k+ entries with indexed filters
 
 ---
 

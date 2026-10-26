@@ -50,8 +50,7 @@ import { businessDateOf } from "@/lib/dates";
 import { isUniqueViolation } from "@/lib/pg-error";
 import { actorOf, logActivity } from "@/lib/activity";
 import { formatPesos } from "@befine/db";
-
-const METHOD_ES = { cash: "efectivo", card: "tarjeta", transfer: "transferencia" } as const;
+import { METHOD_ES } from "@/lib/payment-method-labels";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 

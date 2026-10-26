@@ -1690,5 +1690,59 @@
     "afterHoursShort": "fuera de horario {amount}",
     "afterHoursTitle": "Fuera de horario: {amount}",
     "afterHoursDetail": "{count, plural, one {# pago tomado} other {# pagos tomados}} sin día abierto (pedidos {pedidos} · prendas {prendas}); ya está incluido arriba."
+  },
+  "activity": {
+    "pageTitle": "Actividad",
+    "pageSubtitle": "Todo lo que se hizo en el sistema: quién, cuándo y qué cambió.",
+    "loading": "Cargando…",
+    "loadMore": "Ver más",
+    "system": "Sistema",
+    "reason": "Motivo",
+    "openPedido": "Ver pedido",
+    "showChanges": "{count, plural, one {Ver # cambio} other {Ver # cambios}}",
+    "hideChanges": "Ocultar cambios",
+    "changesCaption": "Antes y después",
+    "field": "Campo",
+    "before": "Antes",
+    "after": "Después",
+    "emptyTitle": "Sin actividad",
+    "emptyDescription": "Aquí aparece cada acción en cuanto ocurre.",
+    "noMatchesTitle": "Nada con esos filtros",
+    "noMatchesDescription": "Prueba con otras fechas, otra persona u otro tipo.",
+    "history": "Historial",
+    "historyOf": "Historial de {name}",
+    "historyEmptyTitle": "Sin historial",
+    "historyEmptyDescription": "Los cambios de este registro aparecen aquí.",
+    "roles": {
+      "admin": "Administrador",
+      "cashier": "Cajero",
+      "secretary": "Secretaria",
+      "stylist": "Estilista",
+      "clothier": "Confeccionista"
+    },
+    "filters": {
+      "person": "Persona",
+      "anyone": "Todas",
+      "type": "Tipo",
+      "anyType": "Todos",
+      "from": "Desde",
+      "to": "Hasta",
+      "record": "Pedido o cliente",
+      "recordPlaceholder": "#12 o nombre del cliente",
+      "search": "Buscar",
+      "clear": "Limpiar"
+    },
+    "categories": {
+      "money": "Dinero",
+      "pedidos": "Pedidos",
+      "production": "Producción",
+      "stock": "Inventario",
+      "tickets": "Tickets",
+      "day": "Día de trabajo",
+      "people": "Empleados y clientes",
+      "appointments": "Citas",
+      "catalog": "Catálogo y configuración",
+      "auth": "Inicio de sesión"
+    }
   }
 }

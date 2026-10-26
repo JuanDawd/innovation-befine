@@ -177,6 +177,12 @@ describe("roleCanAccess", () => {
       expect(roleCanAccess(role, "/produccion")).toBe(false);
   });
 
+  it("only admin reaches /actividad (T132)", () => {
+    expect(roleCanAccess("admin", "/actividad")).toBe(true);
+    for (const role of ["cashier", "secretary", "stylist", "clothier"] as const)
+      expect(roleCanAccess(role, "/actividad")).toBe(false);
+  });
+
   it("only admin and cashier reach /inventario (T128)", () => {
     for (const role of ["admin", "cashier"] as const)
       expect(roleCanAccess(role, "/inventario")).toBe(true);

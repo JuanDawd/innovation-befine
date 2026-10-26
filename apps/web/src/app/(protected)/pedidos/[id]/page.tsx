@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { getPedido, type PedidoViewer } from "../actions";
 import { AssignButton, AssignmentRow } from "./assignment-controls";
 import { PaymentDialog } from "./payment-dialog";
+import { RecordHistory } from "@/components/record-history";
 import { afterHoursNote } from "@/lib/pedido-payments";
 import { CancelPedidoDialog } from "./cancel-pedido-dialog";
 import { RecordDeliveryDialog, type DeliverableLine } from "./record-delivery-dialog";
@@ -445,6 +446,7 @@ export default async function PedidoPage({ params }: { params: Promise<{ id: str
   const { id } = await params;
   const t = await getTranslations("pedidos");
   const tc = await getTranslations("common");
+  const ta = await getTranslations("activity");
   const res = await getPedido(id);
   if (!res.success) {
     if (res.error.code === "UNAUTHORIZED" || res.error.code === "FORBIDDEN") redirect("/403");
@@ -488,6 +490,12 @@ export default async function PedidoPage({ params }: { params: Promise<{ id: str
         }
       />
       <PedidoContent pedido={pedido} />
+      <section aria-labelledby="pedido-history" className="space-y-3 rounded-xl border bg-card p-4">
+        <h2 id="pedido-history" className="text-lg font-semibold">
+          {ta("history")}
+        </h2>
+        <RecordHistory entityType="pedido" entityId={id} />
+      </section>
     </div>
   );
 }

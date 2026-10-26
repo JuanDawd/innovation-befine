@@ -98,7 +98,7 @@ describe.skipIf(!hasTestDb)("pedido payments (T127)", () => {
         sql`SELECT summary, business_day_id FROM activity_log WHERE entity_id = ${id} AND action = 'pedido.payment' ORDER BY created_at LIMIT 1`,
       )
     ).rows as { summary: string; business_day_id: string }[];
-    expect(log!.summary).toMatch(/Registró un pago de \$200\.000 \(cash\) en el pedido #\d{4}/);
+    expect(log!.summary).toMatch(/Registró un pago de \$200\.000 \(efectivo\) en el pedido #\d{4}/);
     expect(log!.business_day_id).toBe(f.dayId);
   });
 

@@ -1658,5 +1658,59 @@
     "afterHoursShort": "after hours {amount}",
     "afterHoursTitle": "After hours: {amount}",
     "afterHoursDetail": "{count, plural, one {# payment} other {# payments}} taken with no day open (pedidos {pedidos} · garments {prendas}); already included above."
+  },
+  "activity": {
+    "pageTitle": "Activity",
+    "pageSubtitle": "Everything done in the system: who, when and what changed.",
+    "loading": "Loading…",
+    "loadMore": "Load more",
+    "system": "System",
+    "reason": "Reason",
+    "openPedido": "Open pedido",
+    "showChanges": "{count, plural, one {Show # change} other {Show # changes}}",
+    "hideChanges": "Hide changes",
+    "changesCaption": "Before and after",
+    "field": "Field",
+    "before": "Before",
+    "after": "After",
+    "emptyTitle": "No activity",
+    "emptyDescription": "Every action shows here as it happens.",
+    "noMatchesTitle": "Nothing matches",
+    "noMatchesDescription": "Try other dates, another person or another type.",
+    "history": "History",
+    "historyOf": "History of {name}",
+    "historyEmptyTitle": "No history",
+    "historyEmptyDescription": "Changes to this record show here.",
+    "roles": {
+      "admin": "Admin",
+      "cashier": "Cashier",
+      "secretary": "Secretary",
+      "stylist": "Stylist",
+      "clothier": "Clothier"
+    },
+    "filters": {
+      "person": "Person",
+      "anyone": "Anyone",
+      "type": "Type",
+      "anyType": "Any",
+      "from": "From",
+      "to": "To",
+      "record": "Pedido or client",
+      "recordPlaceholder": "#12 or client name",
+      "search": "Search",
+      "clear": "Clear"
+    },
+    "categories": {
+      "money": "Money",
+      "pedidos": "Pedidos",
+      "production": "Production",
+      "stock": "Stock",
+      "tickets": "Tickets",
+      "day": "Business day",
+      "people": "Employees and clients",
+      "appointments": "Appointments",
+      "catalog": "Catalog and settings",
+      "auth": "Sign-in"
+    }
   }
 }

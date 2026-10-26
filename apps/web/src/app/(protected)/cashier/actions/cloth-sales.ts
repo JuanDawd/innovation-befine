@@ -25,6 +25,7 @@ import { revalidatePath } from "next/cache";
 import { getEmployeeRef } from "@/lib/employee-ref";
 import { actorOf, logActivity } from "@/lib/activity";
 import { checkSaleStock, stockLockKey } from "@/lib/stock-rules";
+import { METHOD_ES } from "@/lib/payment-method-labels";
 
 export type ClientOption = { id: string; name: string; phone: string | null };
 
@@ -364,7 +365,7 @@ export async function createClothSale(
       entityId: `${variant.id}:${input.sizeId ?? "-"}:${input.colorId ?? "-"}`,
       businessDayId: businessDay?.id ?? null,
       summary:
-        `Vendió ${input.quantity} ${name} por ${formatPesos(total)} (${input.paymentMethod})` +
+        `Vendió ${input.quantity} ${name} por ${formatPesos(total)} (${METHOD_ES[input.paymentMethod]})` +
         (afterHours ? " · fuera de horario" : "") +
         (oversold ? ` · sin existencias (${onHand} → ${onHand - input.quantity})` : ""),
       after: {

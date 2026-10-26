@@ -33,6 +33,7 @@ import {
   toFail,
   validationError,
 } from "./action-helpers";
+import { METHOD_ES } from "@/lib/payment-method-labels";
 
 export async function recordPedidoPayment(
   pedidoId: string,
@@ -139,7 +140,7 @@ export async function recordPedidoPayment(
         businessDayId: dayId,
         data: { amount: formatPesos(input.amount), number },
         summary:
-          `${input.kind === "refund" ? "Registró una devolución" : "Registró un pago"} de ${formatPesos(input.amount)} (${input.method}) en el pedido ${number}` +
+          `${input.kind === "refund" ? "Registró una devolución" : "Registró un pago"} de ${formatPesos(input.amount)} (${METHOD_ES[input.method]}) en el pedido ${number}` +
           (dayId === null ? ` · ${afterHoursNote(receivedAt)}` : ""),
         after: {
           paymentId: row.id,
