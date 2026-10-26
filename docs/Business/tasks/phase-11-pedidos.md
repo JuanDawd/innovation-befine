@@ -379,7 +379,7 @@ Rebuild Vender prenda: pick garment, colour, size with live availability; block 
 ## T130 — Caja de hoy and close summary by source
 
 **Phase:** 11D — Money and stock
-**Status:** pending
+**Status:** done — integration test (packages/db day-income) and browser check passed on the Neon test branch (2026-10-25)
 **Dependencies:** T127, T129, T125
 
 ### What to do
@@ -388,8 +388,8 @@ Summary strip and close-day dialog split income into Servicios · Pedidos · Pre
 
 ### Acceptance criteria
 
-- [ ] Totals reconcile with the sum of tickets, pedido payments and sales for the day (integration test)
-- [ ] After-hours money shown separately on the day it attached to
+- [x] Totals reconcile with the sum of tickets, pedido payments and sales for the day (integration test)
+- [x] After-hours money shown separately on the day it attached to
 
 ---
 

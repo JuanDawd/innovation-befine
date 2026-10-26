@@ -716,7 +716,7 @@ Update `apps/web/src/lib/db/README.md` with a short "When to use `getDb()` vs `g
 | T127 | Pedido payments and the till                                 | done    | T113, T115                   |
 | T128 | Stock ledger and Inventario                                  | done    | T113, T124                   |
 | T129 | Vender prenda from stock                                     | done    | T128, T127                   |
-| T130 | Caja de hoy and close summary by source                      | pending | T127, T129, T125             |
+| T130 | Caja de hoy and close summary by source                      | done    | T127, T129, T125             |
 | T131 | Activity log coverage                                        | pending | T114                         |
 | T132 | Actividad screen and Historial tabs                          | pending | T131                         |
 | T133 | Analítica additions                                          | pending | T127, T126, T128             |
