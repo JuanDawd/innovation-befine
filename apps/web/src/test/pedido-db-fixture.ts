@@ -8,7 +8,8 @@ import { sql } from "drizzle-orm";
 import * as s from "@befine/db/schema";
 import { getDb } from "@/lib/db";
 
-const tag = () => Math.random().toString(36).slice(2, 8);
+// Unique per run; crypto, not Math.random (CodeQL js/insecure-randomness on user ids).
+const tag = () => crypto.randomUUID().slice(0, 8);
 
 export const hasTestDb =
   Boolean(process.env.TEST_DATABASE_URL) &&
