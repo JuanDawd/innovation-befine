@@ -171,11 +171,10 @@ export async function charge(a: Actor): Promise<void> {
   }
   await dialog.getByRole("button", { name: "Restante" }).last().click();
 
-  const confirmCharge = dialog.getByRole("button", { name: "Confirmar cobro" });
-  await a.submit(confirmCharge);
+  // Single tap here: a double tap opens the confirmation and its second tap
+  // dismisses it on the overlay (by design); a retry then races the exit animation.
+  await dialog.getByRole("button", { name: "Confirmar cobro" }).click();
   const confirm = a.page.getByRole("dialog", { name: /^¿?Cobrar \$/ });
-  // A double tap can open and dismiss the confirmation; people just tap again.
-  if (!(await appears(confirm, 3_000))) await confirmCharge.click();
   await confirm.getByRole("button", { name: "Confirmar" }).click({ timeout: 10_000 });
   await expectToast(a.page, /Pago registrado correctamente/, 20_000);
 }
