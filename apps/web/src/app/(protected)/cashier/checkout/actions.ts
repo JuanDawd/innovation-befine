@@ -30,6 +30,10 @@ import { revalidatePath } from "next/cache";
 import { publishEvent } from "@befine/realtime/server";
 import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
 import { getEmployeeRef } from "@/lib/employee-ref";
+import { actorOf, logActivity } from "@/lib/activity";
+import { formatPesos } from "@befine/db";
+
+const METHOD_ES = { cash: "efectivo", card: "tarjeta", transfer: "transferencia" } as const;
 
 export type CheckoutLineItem = {
   ticketItemId: string;
@@ -438,6 +442,25 @@ export async function processCheckout(rawInput: unknown): Promise<ActionResult<C
         ct.total += effectivePrice * item.quantity;
       }
 
+      // T131 — one entry per ticket, so each ticket's Historial shows its charge.
+      const paidTotal = input.payments.reduce((n, p) => n + p.amount, 0);
+      const how = input.payments
+        .map((p) => `${formatPesos(p.amount)} ${METHOD_ES[p.method]}`)
+        .join(" + ");
+      for (const ct of byTicket.values())
+        await logActivity(tx, {
+          actor: actorOf(session.user),
+          action: "checkout.complete",
+          entityType: "ticket",
+          entityId: ct.id,
+          businessDayId: businessDay.id,
+          summary:
+            `Cobró el ticket de ${ct.clientName} (${formatPesos(ct.total - ct.prepaid)})` +
+            (byTicket.size > 1 ? ` en un cobro de ${formatPesos(paidTotal)}` : "") +
+            (how ? `: ${how}` : ""),
+          after: { checkoutSessionId: sessionId, payments: input.payments, total: ct.total },
+        });
+
       return {
         sessionId,
         tickets: Array.from(byTicket.values()),
@@ -598,6 +621,20 @@ export async function processPaidOfflineCheckout(
         method: input.paymentMethod,
         amount: input.amount,
       });
+      for (const id of input.ticketIds)
+        await logActivity(tx, {
+          actor: actorOf(session.user),
+          action: "checkout.paid_offline",
+          entityType: "ticket",
+          entityId: id,
+          businessDayId: businessDay.id,
+          data: { amount: `${formatPesos(input.amount)} (${METHOD_ES[input.paymentMethod]})` },
+          after: {
+            checkoutSessionId: sessionId,
+            amount: input.amount,
+            method: input.paymentMethod,
+          },
+        });
 
       return { sessionId, closedAt };
     });
@@ -676,7 +713,12 @@ export async function setOverridePrice(
 
   // Verify the ticket is not yet closed
   const [item] = await db
-    .select({ id: ticketItems.id, ticketId: ticketItems.ticketId })
+    .select({
+      id: ticketItems.id,
+      ticketId: ticketItems.ticketId,
+      unitPrice: ticketItems.unitPrice,
+      overridePrice: ticketItems.overridePrice,
+    })
     .from(ticketItems)
     .where(eq(ticketItems.id, ticketItemId))
     .limit(1);
@@ -695,10 +737,22 @@ export async function setOverridePrice(
       error: { code: "CONFLICT", message: "No se puede modificar un ticket cerrado" },
     };
 
-  await db
-    .update(ticketItems)
-    .set({ overridePrice, overrideReason })
-    .where(eq(ticketItems.id, ticketItemId));
+  await getTxDb().transaction(async (tx) => {
+    await tx
+      .update(ticketItems)
+      .set({ overridePrice, overrideReason })
+      .where(eq(ticketItems.id, ticketItemId));
+    await logActivity(tx, {
+      actor: actorOf(session.user),
+      action: "ticket.price_override",
+      entityType: "ticket",
+      entityId: item.ticketId,
+      summary: `Cambió el precio de un servicio de ${formatPesos(item.overridePrice ?? item.unitPrice)} a ${formatPesos(overridePrice)}`,
+      before: { price: item.overridePrice ?? item.unitPrice },
+      after: { price: overridePrice, ticketItemId },
+      reason: overrideReason,
+    });
+  });
 
   return { success: true, data: { ticketItemId } };
 }

@@ -20,21 +20,22 @@ vi.mock("@/lib/rate-limit", () => ({
 vi.mock("@/lib/auth", () => ({
   auth: { api: { getSession: async () => ({ user: { id: "u1", role: state.role } }) } },
 }));
-vi.mock("@/lib/db", () => ({
-  getTxDb: vi.fn(),
-  getDb: () =>
-    drizzle(async (sql, params) => {
-      state.queries.push({ sql, params });
-      if (sql.startsWith("update")) return { rows: state.updateRows };
-      if (sql.includes('from "tickets"'))
-        return {
-          rows: state.ticket
-            ? [[TICKET_ID, state.ticket.status, "emp-x", state.ticket.version]]
-            : [],
-        };
-      return { rows: [["emp-cashier"]] }; // employee lookup
-    }),
-}));
+vi.mock("@/lib/db", () => {
+  const db = drizzle(async (sql, params) => {
+    state.queries.push({ sql, params });
+    if (sql.startsWith("update")) return { rows: state.updateRows };
+    if (sql.includes('from "tickets"'))
+      return {
+        rows: state.ticket ? [[TICKET_ID, state.ticket.status, "emp-x", state.ticket.version]] : [],
+      };
+    return { rows: [["emp-cashier"]] }; // employee lookup
+  });
+  // pg-proxy has no transactions; run the callback on the same instance.
+  return {
+    getDb: () => db,
+    getTxDb: () => ({ transaction: <T>(fn: (tx: typeof db) => Promise<T>) => fn(db) }),
+  };
+});
 
 import { voidTicket } from "../actions";
 
@@ -56,6 +57,11 @@ describe("voidTicket", () => {
     expect(update.sql).toMatch(/"version" = \$\d+/);
     expect(update.params).toEqual(
       expect.arrayContaining(["voided", "emp-cashier", "Se fue sin pagar", 4, 3]),
+    );
+    // T131 — logged with the reason, in the same transaction.
+    const log = state.queries.find((q) => q.sql.startsWith('insert into "activity_log"'))!;
+    expect(log.params).toEqual(
+      expect.arrayContaining(["ticket.void", "Anuló un ticket", "Se fue sin pagar"]),
     );
   });
 

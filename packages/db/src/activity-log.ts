@@ -29,7 +29,12 @@ export type ActivityEntityType =
   | "client"
   | "pedido"
   | "employee"
-  | "stock";
+  | "stock"
+  | "business_day"
+  | "ticket"
+  | "checkout"
+  | "payout"
+  | "appointment";
 
 export type ActivityAction =
   | "auth.sign_in"
@@ -60,7 +65,34 @@ export type ActivityAction =
   | "pedido.payment_attach"
   | "stock.adjust"
   | "stock.sale"
-  | "stock.sale_attach";
+  | "stock.sale_attach"
+  | "auth.password_change"
+  | "day.open"
+  | "day.close"
+  | "day.reopen"
+  | "ticket.create"
+  | "ticket.ready"
+  | "ticket.undo_ready"
+  | "ticket.void"
+  | "ticket.reopen"
+  | "ticket.price_override"
+  | "ticket.edit_request"
+  | "ticket.edit_resolve"
+  | "checkout.complete"
+  | "checkout.paid_offline"
+  | "payroll.payout"
+  | "payroll.payout_review"
+  | "employee.create"
+  | "employee.update"
+  | "employee.deactivate"
+  | "employee.terminate"
+  | "employee.absence"
+  | "employee.absence_delete"
+  | "client.archive"
+  | "client.restore"
+  | "appointment.create"
+  | "appointment.status"
+  | "appointment.price_ack";
 
 export type ActivityEntry = {
   actor: { userId: string | null; role: string | null };
@@ -101,6 +133,11 @@ const ENTITY_NOUN: Record<ActivityEntityType, string> = {
   pedido: "el pedido",
   employee: "el empleado",
   stock: "el inventario",
+  business_day: "el día",
+  ticket: "el ticket",
+  checkout: "el cobro",
+  payout: "la liquidación",
+  appointment: "la cita",
 };
 
 function named(entityType: ActivityEntityType, data: Record<string, unknown>): string {
@@ -187,6 +224,62 @@ export function activitySummary(
       return `Entregó ${data.units ?? ""} unidades del pedido ${data.number ?? ""}`
         .replace(/\s+/g, " ")
         .trim();
+    case "auth.password_change":
+      return "Cambió su contraseña";
+    case "day.open":
+      return "Abrió el día";
+    case "day.close":
+      return `Cerró el día${data.amount ? ` con ${data.amount} en caja` : ""}`;
+    case "day.reopen":
+      return "Reabrió el día";
+    case "ticket.create":
+      return `Registró un servicio${data.name ? `: ${data.name}` : ""}`;
+    case "ticket.ready":
+      return "Marcó un ticket listo para cobrar";
+    case "ticket.undo_ready":
+      return "Devolvió un ticket a en proceso";
+    case "ticket.void":
+      return "Anuló un ticket";
+    case "ticket.reopen":
+      return "Reabrió un ticket cobrado";
+    case "ticket.price_override":
+      return `Cambió el precio de un servicio${data.amount ? ` a ${data.amount}` : ""}`;
+    case "ticket.edit_request":
+      return "Pidió un cambio en un ticket";
+    case "ticket.edit_resolve":
+      return data.approved === false ? "Rechazó un cambio de ticket" : "Aprobó un cambio de ticket";
+    case "checkout.complete":
+      return `Cobró ${data.amount ?? ""}`.trim();
+    case "checkout.paid_offline":
+      return `Registró un cobro sin conexión de ${data.amount ?? ""}`.replace(/\s+/g, " ").trim();
+    case "payroll.payout":
+      return `Liquidó ${data.amount ?? ""}${data.name ? ` a ${data.name}` : ""}`
+        .replace(/\s+/g, " ")
+        .trim();
+    case "payroll.payout_review":
+      return "Marcó una liquidación como revisada";
+    case "employee.create":
+      return `Creó ${named(entityType, data)}`;
+    case "employee.update":
+      return `Editó ${named(entityType, data)}`;
+    case "employee.deactivate":
+      return `Desactivó ${named(entityType, data)}`;
+    case "employee.terminate":
+      return `Retiró ${named(entityType, data)}`;
+    case "employee.absence":
+      return `Registró una ausencia${data.name ? ` de ${data.name}` : ""}`;
+    case "employee.absence_delete":
+      return `Eliminó una ausencia${data.name ? ` de ${data.name}` : ""}`;
+    case "client.archive":
+      return `Archivó ${named(entityType, data)}`;
+    case "client.restore":
+      return `Restauró ${named(entityType, data)}`;
+    case "appointment.create":
+      return `Agendó una cita${data.name ? ` para ${data.name}` : ""}`;
+    case "appointment.status":
+      return `Cambió el estado de una cita${data.status ? ` a ${data.status}` : ""}`;
+    case "appointment.price_ack":
+      return "Confirmó el nuevo precio de una cita";
     case "settings.update":
       return typeof data.setting === "string" && data.setting
         ? `Cambió la configuración: ${data.setting}`

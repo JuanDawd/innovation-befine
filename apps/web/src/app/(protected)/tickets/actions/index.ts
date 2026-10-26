@@ -10,7 +10,7 @@
 import { headers } from "next/headers";
 import * as Sentry from "@sentry/nextjs";
 import { logger } from "@/lib/logger";
-import { eq, and, inArray, isNull } from "drizzle-orm";
+import { eq, and, inArray, isNull, sql } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { getDb, getTxDb } from "@/lib/db";
 import {
@@ -30,6 +30,8 @@ import { revalidatePath } from "next/cache";
 import { publishEvent } from "@befine/realtime/server";
 import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
 import { getEmployeeRef } from "@/lib/employee-ref";
+import { actorOf, logActivity, type ActivityTx } from "@/lib/activity";
+import { formatPesos } from "@befine/db";
 
 export type TicketRow = {
   id: string;
@@ -145,8 +147,10 @@ export async function createTicket(rawInput: unknown): Promise<ActionResult<Tick
         customerPrice: serviceVariants.customerPrice,
         commissionPct: serviceVariants.commissionPct,
         isActive: serviceVariants.isActive,
+        label: sql<string>`${services.name} || ' — ' || ${serviceVariants.name}`,
       })
       .from(serviceVariants)
+      .innerJoin(services, eq(services.id, serviceVariants.serviceId))
       .where(eq(serviceVariants.id, input.serviceVariantId))
       .limit(1),
     // The creator's employee id for createdBy
@@ -229,6 +233,25 @@ export async function createTicket(rawInput: unknown): Promise<ActionResult<Tick
         .innerJoin(users, eq(employees.userId, users.id))
         .where(eq(employees.id, input.employeeId))
         .limit(1);
+
+      const who = input.clientType === "guest" ? input.guestName : null;
+      await logActivity(tx, {
+        actor: actorOf(session.user),
+        action: "ticket.create",
+        entityType: "ticket",
+        entityId: newTicket.id,
+        businessDayId: businessDay.id,
+        summary:
+          `Registró ${input.quantity > 1 ? `${input.quantity} × ` : ""}${variant.label} (${formatPesos(variant.customerPrice * input.quantity)})` +
+          ` con ${empUser?.name ?? "—"}${who ? ` para ${who}` : ""}`,
+        after: {
+          employeeId: input.employeeId,
+          serviceVariantId: input.serviceVariantId,
+          quantity: input.quantity,
+          unitPrice: variant.customerPrice,
+          clientId: newTicket.clientId,
+        },
+      });
 
       return { ticket: newTicket, employeeName: empUser?.name ?? "" };
     });
@@ -359,6 +382,28 @@ export async function listOpenTickets(): Promise<ActionResult<DashboardTicket[]>
  */
 type TransitionInput = { ticketId: string };
 
+/** Runs a ticket status change and logs it in the same transaction (T131). */
+async function updateTicketLogged<T extends { id: string; status: string }>(
+  user: { id: string; role?: string | null },
+  action: "ticket.ready" | "ticket.undo_ready" | "ticket.void",
+  reason: string | null,
+  run: (tx: ActivityTx) => Promise<T[]>,
+): Promise<T | undefined> {
+  return getTxDb().transaction(async (tx) => {
+    const [row] = await run(tx as unknown as ActivityTx);
+    if (row)
+      await logActivity(tx as unknown as ActivityTx, {
+        actor: actorOf(user),
+        action,
+        entityType: "ticket",
+        entityId: row.id,
+        reason,
+        after: { status: row.status },
+      });
+    return row;
+  });
+}
+
 async function getTicketAndEmployee(ticketId: string, userId: string) {
   const db = getDb();
   // M-62: independent reads, one round trip.
@@ -420,12 +465,13 @@ export async function transitionToAwaitingPayment(
       error: { code: "FORBIDDEN", message: "Solo puedes modificar tus propios tickets" },
     };
 
-  const db = getDb();
-  const [updated] = await db
-    .update(tickets)
-    .set({ status: "awaiting_payment", version: ticket.version + 1 })
-    .where(and(eq(tickets.id, validInput.ticketId), eq(tickets.version, ticket.version)))
-    .returning({ id: tickets.id, status: tickets.status });
+  const updated = await updateTicketLogged(session.user, "ticket.ready", null, (tx) =>
+    tx
+      .update(tickets)
+      .set({ status: "awaiting_payment", version: ticket.version + 1 })
+      .where(and(eq(tickets.id, validInput.ticketId), eq(tickets.version, ticket.version)))
+      .returning({ id: tickets.id, status: tickets.status }),
+  );
 
   if (!updated)
     return {
@@ -485,18 +531,19 @@ export async function undoMarkReady(
       error: { code: "FORBIDDEN", message: "Solo puedes modificar tus propios tickets" },
     };
 
-  const db = getDb();
-  const [updated] = await db
-    .update(tickets)
-    .set({ status: "logged", version: ticket.version + 1 })
-    .where(
-      and(
-        eq(tickets.id, validInput.ticketId),
-        eq(tickets.version, ticket.version),
-        isNull(tickets.checkoutSessionId),
-      ),
-    )
-    .returning({ id: tickets.id, status: tickets.status });
+  const updated = await updateTicketLogged(session.user, "ticket.undo_ready", null, (tx) =>
+    tx
+      .update(tickets)
+      .set({ status: "logged", version: ticket.version + 1 })
+      .where(
+        and(
+          eq(tickets.id, validInput.ticketId),
+          eq(tickets.version, ticket.version),
+          isNull(tickets.checkoutSessionId),
+        ),
+      )
+      .returning({ id: tickets.id, status: tickets.status }),
+  );
 
   if (!updated)
     return {
@@ -542,12 +589,13 @@ export async function transitionReopenedToAwaitingPayment(
   if (ticket.status !== "reopened")
     return { success: false, error: { code: "CONFLICT", message: "Transición no permitida" } };
 
-  const db = getDb();
-  const [updated] = await db
-    .update(tickets)
-    .set({ status: "awaiting_payment", version: ticket.version + 1 })
-    .where(and(eq(tickets.id, validInput.ticketId), eq(tickets.version, ticket.version)))
-    .returning({ id: tickets.id, status: tickets.status });
+  const updated = await updateTicketLogged(session.user, "ticket.ready", null, (tx) =>
+    tx
+      .update(tickets)
+      .set({ status: "awaiting_payment", version: ticket.version + 1 })
+      .where(and(eq(tickets.id, validInput.ticketId), eq(tickets.version, ticket.version)))
+      .returning({ id: tickets.id, status: tickets.status }),
+  );
 
   if (!updated)
     return {
@@ -609,24 +657,25 @@ export async function voidTicket(
       error: { code: "CONFLICT", message: "Solo se pueden anular tickets sin cobrar" },
     };
 
-  const db = getDb();
-  const [updated] = await db
-    .update(tickets)
-    .set({
-      status: "voided",
-      voidedAt: new Date(),
-      voidedBy: employeeId,
-      voidReason: reason,
-      version: ticket.version + 1,
-    })
-    .where(
-      and(
-        eq(tickets.id, ticketId),
-        eq(tickets.version, ticket.version),
-        inArray(tickets.status, [...VOIDABLE_STATUSES]),
-      ),
-    )
-    .returning({ id: tickets.id, status: tickets.status });
+  const updated = await updateTicketLogged(session.user, "ticket.void", reason, (tx) =>
+    tx
+      .update(tickets)
+      .set({
+        status: "voided",
+        voidedAt: new Date(),
+        voidedBy: employeeId,
+        voidReason: reason,
+        version: ticket.version + 1,
+      })
+      .where(
+        and(
+          eq(tickets.id, ticketId),
+          eq(tickets.version, ticket.version),
+          inArray(tickets.status, [...VOIDABLE_STATUSES]),
+        ),
+      )
+      .returning({ id: tickets.id, status: tickets.status }),
+  );
 
   if (!updated)
     return {

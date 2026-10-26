@@ -12,7 +12,8 @@
 import { headers } from "next/headers";
 import { and, eq, gte, lte, sql } from "drizzle-orm";
 import { auth } from "@/lib/auth";
-import { getDb } from "@/lib/db";
+import { getDb, getTxDb } from "@/lib/db";
+import { logActivity, type ActivityTx } from "@/lib/activity";
 import { employees, users, employeeAbsences } from "@befine/db/schema";
 import { logAbsenceSchema, deleteAbsenceSchema } from "@befine/types";
 import type { ActionResult } from "@/lib/action-result";
@@ -37,6 +38,21 @@ export type EmployeeOption = {
   role: string;
 };
 
+const ABSENCE_ES: Record<string, string> = {
+  vacation: "vacaciones",
+  approved_absence: "una ausencia aprobada",
+  missed: "una falta",
+};
+
+async function employeeName(tx: ActivityTx, employeeId: string): Promise<string> {
+  const [row] = await tx
+    .select({ name: users.name })
+    .from(employees)
+    .innerJoin(users, eq(users.id, employees.userId))
+    .where(eq(employees.id, employeeId));
+  return row?.name ?? "—";
+}
+
 // ─── Auth helper ─────────────────────────────────────────────────────────────
 
 async function requireAdmin() {
@@ -44,7 +60,12 @@ async function requireAdmin() {
   if (!session) return { ok: false as const, code: "UNAUTHORIZED" as const, userId: null };
   if (!hasRole(session.user, "admin"))
     return { ok: false as const, code: "FORBIDDEN" as const, userId: null };
-  return { ok: true as const, code: null, userId: session.user.id };
+  return {
+    ok: true as const,
+    code: null,
+    userId: session.user.id,
+    role: (session.user as { role?: string | null }).role ?? null,
+  };
 }
 
 // ─── Log absence (T021) ──────────────────────────────────────────────────────
@@ -88,24 +109,36 @@ export async function logAbsence(rawInput: unknown): Promise<ActionResult<{ id: 
   if (!adminEmp)
     return { success: false, error: { code: "NOT_FOUND", message: "Empleado no encontrado" } };
 
-  // Upsert — if same employee+date exists, update type/note
-  const [absence] = await db
-    .insert(employeeAbsences)
-    .values({
-      employeeId: parsed.data.employeeId,
-      type: parsed.data.type,
-      date: parsed.data.date,
-      note: parsed.data.note ?? null,
-      createdBy: adminEmp.id,
-    })
-    .onConflictDoUpdate({
-      target: [employeeAbsences.employeeId, employeeAbsences.date],
-      set: {
-        type: sql`excluded.type`,
-        note: sql`excluded.note`,
-      },
-    })
-    .returning({ id: employeeAbsences.id });
+  // Upsert — if same employee+date exists, update type/note. Logged in the same transaction.
+  const [absence] = await getTxDb().transaction(async (tx) => {
+    const rows = await tx
+      .insert(employeeAbsences)
+      .values({
+        employeeId: parsed.data.employeeId,
+        type: parsed.data.type,
+        date: parsed.data.date,
+        note: parsed.data.note ?? null,
+        createdBy: adminEmp.id,
+      })
+      .onConflictDoUpdate({
+        target: [employeeAbsences.employeeId, employeeAbsences.date],
+        set: {
+          type: sql`excluded.type`,
+          note: sql`excluded.note`,
+        },
+      })
+      .returning({ id: employeeAbsences.id });
+    await logActivity(tx, {
+      actor: { userId: guard.userId, role: guard.role },
+      action: "employee.absence",
+      entityType: "employee",
+      entityId: parsed.data.employeeId,
+      summary: `Registró ${ABSENCE_ES[parsed.data.type] ?? "una ausencia"} de ${await employeeName(tx, parsed.data.employeeId)} el ${parsed.data.date}`,
+      after: { absenceId: rows[0]!.id, type: parsed.data.type, date: parsed.data.date },
+      reason: parsed.data.note ?? null,
+    });
+    return rows;
+  });
 
   revalidatePath("/admin/absences");
   return { success: true, data: { id: absence.id } };
@@ -135,11 +168,27 @@ export async function deleteAbsence(rawInput: unknown): Promise<ActionResult<nul
   if (!parsed.success)
     return { success: false, error: { code: "VALIDATION_ERROR", message: "Datos inválidos" } };
 
-  const db = getDb();
-  const result = await db
-    .delete(employeeAbsences)
-    .where(eq(employeeAbsences.id, parsed.data.absenceId))
-    .returning({ id: employeeAbsences.id });
+  const result = await getTxDb().transaction(async (tx) => {
+    const rows = await tx
+      .delete(employeeAbsences)
+      .where(eq(employeeAbsences.id, parsed.data.absenceId))
+      .returning({
+        id: employeeAbsences.id,
+        employeeId: employeeAbsences.employeeId,
+        type: employeeAbsences.type,
+        date: employeeAbsences.date,
+      });
+    if (rows[0])
+      await logActivity(tx, {
+        actor: { userId: guard.userId, role: guard.role },
+        action: "employee.absence_delete",
+        entityType: "employee",
+        entityId: rows[0].employeeId,
+        summary: `Eliminó ${ABSENCE_ES[rows[0].type] ?? "una ausencia"} de ${await employeeName(tx, rows[0].employeeId)} del ${rows[0].date}`,
+        before: rows[0],
+      });
+    return rows;
+  });
 
   if (!result.length)
     return { success: false, error: { code: "NOT_FOUND", message: "Ausencia no encontrada" } };

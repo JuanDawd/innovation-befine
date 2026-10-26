@@ -398,7 +398,7 @@ Summary strip and close-day dialog split income into Servicios · Pedidos · Pre
 ## T131 — Activity log coverage
 
 **Phase:** 11E — Log and analytics
-**Status:** pending
+**Status:** done (2026-10-25) — coverage enforced by lib/**tests**/activity-coverage.test.ts; legacy large-orders/products actions exempt until T135
 **Dependencies:** T114 and the actions it covers
 
 ### What to do
@@ -407,8 +407,8 @@ Call `logActivity` from every action listed in spec §3.9.27 (money, production,
 
 ### Acceptance criteria
 
-- [ ] A test enumerates server actions and fails when one mutates data without logging
-- [ ] Summaries readable in Spanish, money formatted `$12.500`
+- [x] A test enumerates server actions and fails when one mutates data without logging
+- [x] Summaries readable in Spanish, money formatted `$12.500`
 
 ---
 

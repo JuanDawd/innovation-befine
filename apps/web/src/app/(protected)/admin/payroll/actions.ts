@@ -48,6 +48,10 @@ import { computeClothierEarnings, payoutReviewIds } from "@/lib/payroll/compute-
 import { computeSecretaryEarnings } from "@/lib/payroll/compute-secretary-earnings";
 import { businessDateOf } from "@/lib/dates";
 import { isUniqueViolation } from "@/lib/pg-error";
+import { actorOf, logActivity } from "@/lib/activity";
+import { formatPesos } from "@befine/db";
+
+const METHOD_ES = { cash: "efectivo", card: "tarjeta", transfer: "transferencia" } as const;
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -412,6 +416,32 @@ export async function recordPayout(rawInput: unknown): Promise<ActionResult<{ id
             .values(reviewIds.map((id) => ({ payoutId: payout.id, unitReviewId: id })));
       }
 
+      // T131 — logged with the employee's name, the days and how it differs from the computed figure.
+      const [who] = await tx
+        .select({ name: users.name })
+        .from(employees)
+        .innerJoin(users, eq(users.id, employees.userId))
+        .where(eq(employees.id, input.employeeId));
+      const adjusted = input.amount !== serverComputedAmount;
+      await logActivity(tx, {
+        actor: actorOf(guard.user),
+        action: "payroll.payout",
+        entityType: "employee",
+        entityId: input.employeeId,
+        summary:
+          `Liquidó ${formatPesos(input.amount)} (${METHOD_ES[input.method]}) a ${who?.name ?? "—"} por ` +
+          `${input.businessDayIds.length === 1 ? "1 día" : `${input.businessDayIds.length} días`}` +
+          (adjusted ? ` · calculado ${formatPesos(serverComputedAmount)}` : ""),
+        after: {
+          payoutId: payout.id,
+          amount: input.amount,
+          computed: serverComputedAmount,
+          businessDayIds: input.businessDayIds,
+          method: input.method,
+        },
+        reason: input.adjustmentReason ?? null,
+      });
+
       return payout.id;
     });
   } catch (err) {
@@ -516,11 +546,22 @@ export async function markPayoutReviewed(rawPayoutId: unknown): Promise<ActionRe
       error: { code: "RATE_LIMITED", message: "Demasiadas solicitudes. Intenta de nuevo." },
     };
 
-  const [updated] = await getDb()
-    .update(payouts)
-    .set({ needsReview: false })
-    .where(eq(payouts.id, parsed.data.payoutId))
-    .returning({ id: payouts.id });
+  const updated = await getTxDb().transaction(async (tx) => {
+    const [row] = await tx
+      .update(payouts)
+      .set({ needsReview: false })
+      .where(eq(payouts.id, parsed.data.payoutId))
+      .returning({ id: payouts.id, employeeId: payouts.employeeId });
+    if (row)
+      await logActivity(tx, {
+        actor: actorOf(guard.user),
+        action: "payroll.payout_review",
+        entityType: "employee",
+        entityId: row.employeeId,
+        after: { payoutId: row.id, needsReview: false },
+      });
+    return row;
+  });
   if (!updated)
     return { success: false, error: { code: "NOT_FOUND", message: "Pago no encontrado" } };
 

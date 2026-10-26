@@ -20,21 +20,24 @@ vi.mock("@/lib/rate-limit", () => ({
 vi.mock("@/lib/auth", () => ({
   auth: { api: { getSession: async () => ({ user: { id: "u1", role: state.role } }) } },
 }));
-vi.mock("@/lib/db", () => ({
-  getTxDb: vi.fn(),
-  getDb: () =>
-    drizzle(async (sql, params) => {
-      state.queries.push({ sql, params });
-      if (sql.startsWith("update")) return { rows: state.updateRows };
-      if (sql.includes('from "tickets"'))
-        return {
-          rows: state.ticket
-            ? [[TICKET_ID, state.ticket.status, state.ticket.employeeId, state.ticket.version]]
-            : [],
-        };
-      return { rows: [["emp-own"]] }; // employee lookup
-    }),
-}));
+vi.mock("@/lib/db", () => {
+  const db = drizzle(async (sql, params) => {
+    state.queries.push({ sql, params });
+    if (sql.startsWith("update")) return { rows: state.updateRows };
+    if (sql.includes('from "tickets"'))
+      return {
+        rows: state.ticket
+          ? [[TICKET_ID, state.ticket.status, state.ticket.employeeId, state.ticket.version]]
+          : [],
+      };
+    return { rows: [["emp-own"]] }; // employee lookup
+  });
+  // pg-proxy has no transactions; run the callback on the same instance.
+  return {
+    getDb: () => db,
+    getTxDb: () => ({ transaction: <T>(fn: (tx: typeof db) => Promise<T>) => fn(db) }),
+  };
+});
 
 import { undoMarkReady } from "../actions";
 
@@ -55,6 +58,8 @@ describe("undoMarkReady", () => {
     const update = state.queries.find((q) => q.sql.startsWith("update"))!;
     expect(update.sql).toMatch(/"checkout_session_id" is null/);
     expect(update.params).toEqual(expect.arrayContaining(["logged", 3, 2]));
+    const log = state.queries.find((q) => q.sql.startsWith('insert into "activity_log"'));
+    expect(log?.params).toEqual(expect.arrayContaining(["ticket.undo_ready"]));
   });
 
   it("returns STALE_DATA when caja already started the checkout", async () => {

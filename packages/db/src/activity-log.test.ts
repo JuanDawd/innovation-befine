@@ -109,6 +109,36 @@ describe("activitySummary — clients and pedidos", () => {
       "Asignó al día una venta fuera de horario",
     );
   });
+
+  it("reads the T131 actions in Spanish, money as $12.500", () => {
+    expect(activitySummary("day.open", "business_day")).toBe("Abrió el día");
+    expect(activitySummary("day.close", "business_day", { amount: formatPesos(2_660_000) })).toBe(
+      "Cerró el día con $2.660.000 en caja",
+    );
+    expect(activitySummary("day.reopen", "business_day")).toBe("Reabrió el día");
+    expect(activitySummary("checkout.complete", "ticket", { amount: "$45.000" })).toBe(
+      "Cobró $45.000",
+    );
+    expect(activitySummary("payroll.payout", "employee", { amount: "$75.000", name: "Luz" })).toBe(
+      "Liquidó $75.000 a Luz",
+    );
+    expect(activitySummary("employee.create", "employee", { name: "Rosa" })).toBe(
+      "Creó el empleado «Rosa»",
+    );
+    expect(activitySummary("employee.deactivate", "employee", { name: "Rosa" })).toBe(
+      "Desactivó el empleado «Rosa»",
+    );
+    expect(activitySummary("client.archive", "client", { name: "Ana" })).toBe(
+      "Archivó el cliente «Ana»",
+    );
+    expect(activitySummary("ticket.edit_resolve", "ticket", { approved: false })).toBe(
+      "Rechazó un cambio de ticket",
+    );
+    expect(activitySummary("appointment.status", "appointment", { status: "cancelada" })).toBe(
+      "Cambió el estado de una cita a cancelada",
+    );
+    expect(activitySummary("auth.password_change", "user")).toBe("Cambió su contraseña");
+  });
 });
 
 describe("formatPesos", () => {

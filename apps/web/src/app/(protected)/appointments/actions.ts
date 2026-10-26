@@ -20,6 +20,17 @@ import { hasRole } from "@/lib/middleware-helpers";
 import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
 import { createNotification } from "@/lib/notifications";
 import { pgErrorCode } from "@/lib/pg-error";
+import { actorOf, logActivity } from "@/lib/activity";
+import { formatDateTime } from "@/i18n";
+
+const APPOINTMENT_STATUS_ES: Record<string, string> = {
+  booked: "reservada",
+  confirmed: "confirmada",
+  completed: "completada",
+  cancelled: "cancelada",
+  no_show: "no asistió",
+  rescheduled: "reprogramada",
+};
 
 export type AppointmentRow = {
   id: string;
@@ -139,20 +150,37 @@ export async function createAppointment(
     };
   }
 
-  // Insert appointment
-  const [row] = await db
-    .insert(appointments)
-    .values({
-      clientId: input.clientType === "saved" ? input.clientId : null,
-      guestName: input.clientType === "guest" ? input.guestName : null,
-      stylistEmployeeId: input.stylistEmployeeId,
-      serviceVariantId: input.serviceVariantId ?? null,
-      serviceSummary: input.serviceSummary,
-      scheduledAt,
-      durationMinutes,
-      createdBy: creatorEmp.id,
-    })
-    .returning();
+  // Insert appointment (logged in the same transaction — T131)
+  const [row] = await getTxDb().transaction(async (tx) => {
+    const rows = await tx
+      .insert(appointments)
+      .values({
+        clientId: input.clientType === "saved" ? input.clientId : null,
+        guestName: input.clientType === "guest" ? input.guestName : null,
+        stylistEmployeeId: input.stylistEmployeeId,
+        serviceVariantId: input.serviceVariantId ?? null,
+        serviceSummary: input.serviceSummary,
+        scheduledAt,
+        durationMinutes,
+        createdBy: creatorEmp.id,
+      })
+      .returning();
+    if (rows[0])
+      await logActivity(tx, {
+        actor: actorOf(guard.user!),
+        action: "appointment.create",
+        entityType: "appointment",
+        entityId: rows[0].id,
+        summary: `Agendó una cita: ${input.serviceSummary}, ${formatDateTime(scheduledAt)} (${durationMinutes} min)`,
+        after: {
+          stylistEmployeeId: input.stylistEmployeeId,
+          clientId: rows[0].clientId,
+          scheduledAt,
+          durationMinutes,
+        },
+      });
+    return rows;
+  });
 
   if (!row)
     return { success: false, error: { code: "INTERNAL_ERROR", message: "Error al crear la cita" } };
@@ -476,6 +504,22 @@ export async function transitionAppointment(
           .where(eq(appointments.id, appointmentId));
       }
 
+      await logActivity(tx, {
+        actor: actorOf(guard.user!),
+        action: "appointment.status",
+        entityType: "appointment",
+        entityId: appointmentId,
+        data: {
+          status:
+            newStatus === "rescheduled" && rescheduledAt
+              ? `reprogramada para ${formatDateTime(rescheduledAt)}`
+              : (APPOINTMENT_STATUS_ES[newStatus] ?? newStatus),
+        },
+        before: { status: previousStatus },
+        after: { status: newStatus, scheduledAt: rescheduledAt ?? undefined },
+        reason: newStatus === "cancelled" ? (cancellationReason ?? null) : null,
+      });
+
       // T05R-R7: if completing with an associated ticket, link it atomically
       if (newStatus === "completed" && ticketId) {
         await tx.update(tickets).set({ appointmentId }).where(eq(tickets.id, ticketId));
@@ -551,12 +595,21 @@ export async function acknowledgeAppointmentPriceChange(
   if (typeof appointmentId !== "string" || !appointmentId)
     return { success: false, error: { code: "VALIDATION_ERROR", message: "ID inválido" } };
 
-  const db = getDb();
-  const result = await db
-    .update(appointments)
-    .set({ priceChangeAcknowledged: true, updatedAt: new Date() })
-    .where(eq(appointments.id, appointmentId))
-    .returning({ id: appointments.id });
+  const result = await getTxDb().transaction(async (tx) => {
+    const rows = await tx
+      .update(appointments)
+      .set({ priceChangeAcknowledged: true, updatedAt: new Date() })
+      .where(eq(appointments.id, appointmentId))
+      .returning({ id: appointments.id });
+    if (rows[0])
+      await logActivity(tx, {
+        actor: actorOf(guard.user!),
+        action: "appointment.price_ack",
+        entityType: "appointment",
+        entityId: appointmentId,
+      });
+    return rows;
+  });
 
   if (!result.length)
     return { success: false, error: { code: "NOT_FOUND", message: "Cita no encontrada" } };

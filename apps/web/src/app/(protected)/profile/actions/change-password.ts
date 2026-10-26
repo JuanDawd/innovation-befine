@@ -11,6 +11,9 @@ import { headers } from "next/headers";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import type { ActionResult } from "@/lib/action-result";
+import { getTxDb } from "@/lib/db";
+import { logger } from "@/lib/logger";
+import { actorOf, deviceOf, logActivity } from "@/lib/activity";
 
 const changePasswordSchema = z
   .object({
@@ -58,6 +61,21 @@ export async function changePassword(rawInput: unknown): Promise<ActionResult<vo
       error: { code: "INTERNAL_ERROR", message: "No se pudo cambiar la contraseña" },
     };
   }
+
+  // T131 — Better Auth wrote the change in its own transaction; log it right
+  // after, like sign-in/out (auth-activity). Never the password itself.
+  const h = await headers();
+  await getTxDb()
+    .transaction((tx) =>
+      logActivity(tx, {
+        actor: actorOf(session.user),
+        action: "auth.password_change",
+        entityType: "user",
+        entityId: session.user.id,
+        ...deviceOf(h),
+      }),
+    )
+    .catch((err) => logger.error({ err }, "Could not log password change"));
 
   return { success: true, data: undefined };
 }
