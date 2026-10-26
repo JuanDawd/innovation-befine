@@ -7,7 +7,7 @@ import { getDb } from "./db";
 import { sendEmail } from "./email";
 import { PasswordResetEmail } from "@/emails/password-reset";
 import { BRAND_FULL_NAME } from "@/lib/brand";
-import { resolveTrustedOrigins } from "@/lib/trusted-origins";
+import { resolveAuthBaseURL, resolveTrustedOrigins } from "@/lib/trusted-origins";
 import { authActivityAfter, authActivityBefore } from "@/lib/auth-activity";
 
 /**
@@ -30,10 +30,11 @@ const adminRole = ac.newRole({
 const noAdminRole = ac.newRole({ user: [], session: [] });
 
 export const auth = betterAuth({
-  baseURL: process.env.BETTER_AUTH_URL,
+  baseURL: resolveAuthBaseURL(process.env),
   secret: process.env.BETTER_AUTH_SECRET,
 
-  /** L-48 — derived from BETTER_AUTH_URL / NEXT_PUBLIC_APP_URL / BETTER_AUTH_TRUSTED_ORIGINS. */
+  /** L-48 — derived from BETTER_AUTH_URL / NEXT_PUBLIC_APP_URL / BETTER_AUTH_TRUSTED_ORIGINS,
+   *  plus the deployment's own URLs on Vercel previews. */
   trustedOrigins: resolveTrustedOrigins(process.env),
 
   database: drizzleAdapter(getDb(), {
