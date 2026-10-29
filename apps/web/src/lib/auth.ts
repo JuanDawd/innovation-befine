@@ -102,7 +102,7 @@ export const auth = betterAuth({
     },
   },
 
-  /** T114 — sign-in, sign-out and failed attempts go to the activity log. */
+  /** T114 — sign-in, sign-out and failed attempts go to the activity log; session reads tag Sentry. */
   hooks: {
     before: authActivityBefore,
     after: authActivityAfter,

@@ -38,6 +38,7 @@ import {
 import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
 import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
+import { financialBreadcrumb, reportError } from "@/lib/observability";
 import { createNotification } from "@/lib/notifications";
 import { actorOf, logActivity, type ActivityTx } from "@/lib/activity";
 import {
@@ -62,7 +63,7 @@ async function sendNotices(notices: Notice[]) {
       type: "piece_assigned",
       message: n.message,
       link: "/clothier",
-    }).catch(() => {});
+    }).catch((err) => reportError(err, "createNotification"));
 }
 
 async function rateLimited(userId: string) {
@@ -360,6 +361,11 @@ export async function changeAssignmentRate(
 
     await sendNotices(notices);
     revalidatePath(`/pedidos/${pedidoId}`);
+    financialBreadcrumb("changeAssignmentRate", {
+      assignmentId,
+      pedidoId,
+      pieceRate: input.pieceRate,
+    });
     return { success: true, data: { id: assignmentId } };
   } catch (err) {
     const fail = toFail(err);

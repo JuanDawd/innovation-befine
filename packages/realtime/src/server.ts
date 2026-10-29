@@ -65,6 +65,17 @@ type Envelope = { key: string; data: unknown };
  * @example
  *   await publishEvent("cashier", "ticket_updated", { ticketId, status: "awaiting_payment" });
  */
+/**
+ * Where swallowed realtime failures go. Defaults to the console; the app
+ * points it at its error tracker so the package stays SDK-free.
+ */
+let reportError: (err: unknown, context: string) => void = (err, context) =>
+  console.error(`[realtime] ${context}`, err);
+
+export function setRealtimeErrorReporter(fn: (err: unknown, context: string) => void): void {
+  reportError = fn;
+}
+
 export function publishEvent<E extends RealtimeEvent>(
   channel: RealtimeChannel,
   event: E,
@@ -82,7 +93,7 @@ export function publishEvent<E extends RealtimeEvent>(
     .then(
       () => undefined,
       (err: unknown) => {
-        console.error("[realtime] pg_notify failed; local delivery only", err);
+        reportError(err, "pg_notify failed; local delivery only");
         bus.emit(key, data);
       },
     );
@@ -131,7 +142,7 @@ function startListener(url: string): void {
 
   const drop = (err?: unknown) => {
     if (listener.client !== client) return;
-    if (err) console.error("[realtime] LISTEN connection lost", err);
+    if (err) reportError(err, "LISTEN connection lost");
     listener.client = null;
     client.end().catch(() => {});
     if (listener.subscribers > 0 && !listener.retryTimer) {

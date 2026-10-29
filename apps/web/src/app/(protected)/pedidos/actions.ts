@@ -53,6 +53,7 @@ import {
 import { z } from "zod";
 import type { ActionResult } from "@/lib/action-result";
 import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
+import { financialBreadcrumb, reportError } from "@/lib/observability";
 import { hasRole } from "@/lib/middleware-helpers";
 import { getBusinessSettings } from "@/lib/business-settings";
 import { actorOf, logActivity, type ActivityTx } from "@/lib/activity";
@@ -529,6 +530,7 @@ export async function createPedido(
     });
 
     revalidatePath("/pedidos");
+    financialBreadcrumb("createPedido", { pedidoId: created.id, number: created.number });
     return { success: true, data: created };
   } catch (err) {
     const fail = toFail(err);
@@ -989,10 +991,11 @@ export async function updatePedido(
           type: "pedido_changed",
           message: n.message,
           link: "/clothier",
-        }).catch(() => {});
+        }).catch((err) => reportError(err, "createNotification"));
 
     revalidatePath("/pedidos");
     revalidatePath(`/pedidos/${id}`);
+    financialBreadcrumb("updatePedido", { pedidoId: id, saldoAFavor: result.saldoAFavor });
     return { success: true, data: result };
   } catch (err) {
     const fail = toFail(err);
@@ -1135,10 +1138,11 @@ export async function cancelPedido(
           type: "pedido_changed",
           message: r.message,
           link: "/clothier",
-        }).catch(() => {});
+        }).catch((err) => reportError(err, "createNotification"));
 
     revalidatePath("/pedidos");
     revalidatePath(`/pedidos/${id}`);
+    financialBreadcrumb("cancelPedido", { pedidoId: id });
     return { success: true, data: { id } };
   } catch (err) {
     const fail = toFail(err);
@@ -1273,6 +1277,11 @@ export async function recordDelivery(
 
     revalidatePath("/pedidos");
     revalidatePath(`/pedidos/${pedidoId}`);
+    financialBreadcrumb("recordDelivery", {
+      pedidoId,
+      deliveryId: result.deliveryId,
+      units: result.units,
+    });
     return { success: true, data: result };
   } catch (err) {
     const fail = toFail(err);

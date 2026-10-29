@@ -33,6 +33,7 @@ import {
 import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
 import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
+import { financialBreadcrumb } from "@/lib/observability";
 import { revalidatePath } from "next/cache";
 import { markPayoutReviewedSchema, recordPayoutSchema } from "@befine/types";
 import { getUnpaidPastBusinessDays, type Database } from "@befine/db";
@@ -438,6 +439,14 @@ export async function recordPayout(rawInput: unknown): Promise<ActionResult<{ id
   }
 
   revalidatePath("/admin/payroll");
+  financialBreadcrumb("recordPayout", {
+    payoutId,
+    employeeId: input.employeeId,
+    businessDayIds: input.businessDayIds,
+    amount: input.amount,
+    computed: serverComputedAmount,
+    method: input.method,
+  });
   return { success: true, data: { id: payoutId } };
 }
 

@@ -34,6 +34,7 @@ export async function makeFixture() {
   };
   const admin = await mkEmployee("admin");
   const clothier = await mkEmployee("clothier");
+  const clothier2 = await mkEmployee("clothier");
   // Reuse the open day if one exists (only one may be open).
   const [open] = await db
     .select({ id: s.businessDays.id })
@@ -79,6 +80,7 @@ export async function makeFixture() {
   return {
     admin,
     clothier,
+    clothier2,
     dayId,
     variantId: variant!.id,
     S: sz!.id,

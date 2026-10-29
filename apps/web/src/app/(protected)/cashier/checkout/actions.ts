@@ -33,6 +33,7 @@ import { getEmployeeRef } from "@/lib/employee-ref";
 import { actorOf, logActivity } from "@/lib/activity";
 import { formatPesos } from "@befine/db";
 import { METHOD_ES } from "@/lib/payment-method-labels";
+import { financialBreadcrumb, reportError } from "@/lib/observability";
 
 export type CheckoutLineItem = {
   ticketItemId: string;
@@ -478,6 +479,14 @@ export async function processCheckout(rawInput: unknown): Promise<ActionResult<C
     );
     revalidatePath("/cashier");
 
+    financialBreadcrumb("processCheckout", {
+      sessionId: result.sessionId,
+      ticketIds: input.ticketIds,
+      businessDayId: businessDay.id,
+      grandTotal: result.grandTotal,
+      prepaid: result.prepaid,
+      methods: input.payments.map((p) => p.method),
+    });
     return { success: true, data: result };
   } catch (err) {
     const msg = err instanceof Error ? err.message : "UNKNOWN";
@@ -507,6 +516,11 @@ export async function processCheckout(rawInput: unknown): Promise<ActionResult<C
           message: "Uno o más tickets fueron modificados por otra sesión",
         },
       };
+    reportError(err, "processCheckout", {
+      businessDayId: businessDay.id,
+      idempotencyKey: input.idempotencyKey,
+      ticketIds: input.ticketIds,
+    });
     return {
       success: false,
       error: { code: "INTERNAL_ERROR", message: "Error al procesar el pago" },
@@ -645,6 +659,13 @@ export async function processPaidOfflineCheckout(
     );
     revalidatePath("/cashier");
 
+    financialBreadcrumb("processPaidOfflineCheckout", {
+      sessionId: result.sessionId,
+      ticketIds: input.ticketIds,
+      businessDayId: businessDay.id,
+      amount: input.amount,
+      method: input.paymentMethod,
+    });
     return { success: true, data: { sessionId: result.sessionId } };
   } catch (err) {
     const msg = err instanceof Error ? err.message : "UNKNOWN";
@@ -666,6 +687,11 @@ export async function processPaidOfflineCheckout(
           message: "Uno o más tickets fueron modificados por otra sesión",
         },
       };
+    reportError(err, "processPaidOfflineCheckout", {
+      businessDayId: businessDay.id,
+      idempotencyKey: input.idempotencyKey,
+      ticketIds: input.ticketIds,
+    });
     return {
       success: false,
       error: { code: "INTERNAL_ERROR", message: "Error al procesar pago offline" },
@@ -753,6 +779,12 @@ export async function setOverridePrice(
     });
   });
 
+  financialBreadcrumb("setOverridePrice", {
+    ticketItemId,
+    ticketId: item.ticketId,
+    from: item.overridePrice ?? item.unitPrice,
+    to: overridePrice,
+  });
   return { success: true, data: { ticketItemId } };
 }
 

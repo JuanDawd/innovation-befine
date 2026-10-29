@@ -39,7 +39,8 @@ export type ClientRow = {
 async function getClientSession() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) return null;
-  if (!hasRole(session.user, "admin", "secretary")) return null;
+  // T030: cashier and secretary manage saved clients (the cashier_admin split dropped cashier).
+  if (!hasRole(session.user, "admin", "secretary", "cashier")) return null;
   return session;
 }
 

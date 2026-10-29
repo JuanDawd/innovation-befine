@@ -23,6 +23,7 @@ import { recordPedidoPaymentSchema } from "@befine/types";
 import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
 import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
+import { financialBreadcrumb } from "@/lib/observability";
 import { getBusinessSettings } from "@/lib/business-settings";
 import { actorOf, logActivity } from "@/lib/activity";
 import { afterHoursNote, checkPedidoPayment } from "@/lib/pedido-payments";
@@ -158,6 +159,15 @@ export async function recordPedidoPayment(
 
     revalidatePath(`/pedidos/${pedidoId}`);
     revalidatePath("/pedidos");
+    financialBreadcrumb("recordPedidoPayment", {
+      pedidoId,
+      paymentId: result.id,
+      kind: input.kind,
+      amount: input.amount,
+      method: input.method,
+      afterHours: result.afterHours,
+      balance: result.balance,
+    });
     return { success: true, data: result };
   } catch (err) {
     if (err instanceof FieldProblem) return fieldError("amount", err.message);

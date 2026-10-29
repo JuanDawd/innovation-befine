@@ -38,6 +38,7 @@ import {
 import { approveClosingSchema, DEFECT_LABELS, reviewUnitsSchema } from "@befine/types";
 import type { ActionResult } from "@/lib/action-result";
 import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
+import { financialBreadcrumb, reportError } from "@/lib/observability";
 import { getBusinessSettings } from "@/lib/business-settings";
 import { createNotification } from "@/lib/notifications";
 import { actorOf, logActivity } from "@/lib/activity";
@@ -256,10 +257,17 @@ export async function reviewUnits(
         type: "generic",
         message: n.message,
         link: "/clothier",
-      }).catch(() => {});
+      }).catch((err) => reportError(err, "createNotification"));
 
     revalidatePath("/produccion");
     if (result.pedidoId) revalidatePath(`/pedidos/${result.pedidoId}`);
+    financialBreadcrumb("reviewUnits", {
+      assignmentId,
+      pedidoId: result.pedidoId,
+      approved: result.approved,
+      returned: result.returned,
+      scrapped: result.scrapped,
+    });
     return {
       success: true,
       data: { approved: result.approved, returned: result.returned, scrapped: result.scrapped },
@@ -397,8 +405,9 @@ export async function approveClosing(
         type: "generic",
         message: n.message,
         link: "/clothier/cierre",
-      }).catch(() => {});
+      }).catch((err) => reportError(err, "createNotification"));
     revalidatePath("/produccion");
+    financialBreadcrumb("approveClosing", { closingId, corrected });
     return { success: true, data: { corrected } };
   } catch (err) {
     const fail = toFail(err);
@@ -429,7 +438,7 @@ export async function remindClosings(): Promise<ActionResult<{ reminded: number 
       type: "generic",
       message: "Recuerda cerrar tu jornada: entra a Mi trabajo y confirma cuántas terminaste hoy.",
       link: "/clothier/cierre",
-    }).catch(() => {});
+    }).catch((err) => reportError(err, "createNotification"));
   return { success: true, data: { reminded: missing.length } };
 }
 

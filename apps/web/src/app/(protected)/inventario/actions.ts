@@ -35,6 +35,7 @@ import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
 import { getEmployeeRef } from "@/lib/employee-ref";
 import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
+import { financialBreadcrumb } from "@/lib/observability";
 import { actorOf, logActivity } from "@/lib/activity";
 import { checkStockChange, stockLockKey } from "@/lib/stock-rules";
 
@@ -218,5 +219,13 @@ export async function adjustStock(rawInput: unknown): Promise<ActionResult<{ onH
       },
     };
   revalidatePath("/inventario");
+  financialBreadcrumb("adjustStock", {
+    clothPieceVariantId: input.clothPieceVariantId,
+    sizeId: input.sizeId,
+    colorId: input.colorId,
+    quantity: input.quantity,
+    reasonCode: input.reasonCode,
+    onHand: result.onHand,
+  });
   return { success: true, data: { onHand: result.onHand } };
 }

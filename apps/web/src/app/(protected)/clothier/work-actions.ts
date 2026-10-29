@@ -41,6 +41,7 @@ import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
 import { getEmployeeRef } from "@/lib/employee-ref";
 import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
+import { financialBreadcrumb } from "@/lib/observability";
 import { getCurrentBusinessDay } from "@/lib/business-day";
 import { getBusinessSettings } from "@/lib/business-settings";
 import { actorOf, logActivity, type ActivityTx } from "@/lib/activity";
@@ -99,11 +100,7 @@ const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one :
 async function lockCell(tx: ActivityTx, cellId: string) {
   const rows = await tx.execute(sql`
     SELECT c.id, c.quantity, p.id AS pedido_id, p.number, p.cancelled_at, v.piece_rate,
-      cp.name || ' — ' || v.name AS garment, coalesce(gs.label, c.size_other) AS size_label,
-      (c.quantity
-        - coalesce((SELECT sum(a.quantity) FROM assignments a WHERE a.cell_id = c.id), 0)
-        + coalesce((SELECT sum(r.scrapped) FROM unit_reviews r JOIN assignments a ON a.id = r.assignment_id WHERE a.cell_id = c.id), 0)
-      )::int AS unassigned
+      cp.name || ' — ' || v.name AS garment, coalesce(gs.label, c.size_other) AS size_label
     FROM pedido_line_cells c
     JOIN pedido_lines l ON l.id = c.line_id
     JOIN pedidos p ON p.id = l.pedido_id
@@ -113,16 +110,29 @@ async function lockCell(tx: ActivityTx, cellId: string) {
     WHERE c.id = ${cellId}
     FOR UPDATE OF c
   `);
-  return (rows.rows[0] ?? null) as {
+  const cell = (rows.rows[0] ?? null) as {
     id: string;
+    quantity: number;
     pedido_id: string;
     number: number;
     cancelled_at: string | null;
     piece_rate: string;
     garment: string;
     size_label: string;
-    unassigned: number;
   } | null;
+  if (!cell) return null;
+
+  // Counted in a second statement, after the lock: a statement that waited for
+  // the lock still reads its subqueries from the snapshot taken before the wait,
+  // so a claim committed meanwhile would look free (two claims, one cell).
+  const free = await tx.execute(sql`
+    SELECT (${cell.quantity}
+      - coalesce((SELECT sum(a.quantity) FROM assignments a WHERE a.cell_id = ${cellId}), 0)
+      + coalesce((SELECT sum(r.scrapped) FROM unit_reviews r JOIN assignments a ON a.id = r.assignment_id WHERE a.cell_id = ${cellId}), 0)
+    )::int AS unassigned
+  `);
+  const { unassigned } = free.rows[0] as { unassigned: number };
+  return { ...cell, unassigned: Number(unassigned) };
 }
 
 /** Her assignment with its work so far, locked. */
@@ -447,6 +457,12 @@ export async function reportUnits(
     });
     revalidatePath("/clothier");
     if (result.pedidoId) revalidatePath(`/pedidos/${result.pedidoId}`);
+    financialBreadcrumb("reportUnits", {
+      employeeId: guard.employeeId,
+      pedidoId: result.pedidoId,
+      reported: result.reported,
+      rework: result.rework,
+    });
     return { success: true, data: { reported: result.reported, rework: result.rework } };
   } catch (err) {
     const f = fail(err);
@@ -602,6 +618,11 @@ export async function submitMyClosing(
     });
     revalidatePath("/clothier");
     revalidatePath("/produccion");
+    financialBreadcrumb("submitMyClosing", {
+      employeeId: guard.employeeId,
+      closingId: result.closingId,
+      units: result.units,
+    });
     return { success: true, data: result };
   } catch (err) {
     const f = fail(err);

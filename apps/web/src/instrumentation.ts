@@ -1,6 +1,16 @@
 export async function register() {
   if (process.env.NEXT_RUNTIME === "nodejs") {
     await import("../sentry.server.config");
+    const Sentry = await import("@sentry/nextjs");
+    const { setRealtimeErrorReporter } = await import("@befine/realtime/server");
+    setRealtimeErrorReporter((err, context) => {
+      console.error(`[realtime] ${context}`, err);
+      Sentry.captureException(err, {
+        level: "warning",
+        tags: { action: "realtime" },
+        extra: { context },
+      });
+    });
   }
 
   if (process.env.NEXT_RUNTIME === "edge") {

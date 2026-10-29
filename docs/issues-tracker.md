@@ -550,6 +550,22 @@
 - **Description:** Found in the back-office design critique (verified live: "Bata de spa" priced $8.000 — its piece rate — instead of its $35.000 selling price). Picking a piece set the line's unit price from `pieceRate`, and the order total is computed from the lines, so totals, deposits and balances came out at the clothier's pay instead of the client's price.
 - **Fix:** lines prefill from the variant's `sellingPrice` via `orderUnitPrice()` (tested); pieces without a selling price start at 0 so the price is typed in. Phase 11 (Pedidos, `docs/pedidos-spec` branch) replaces this flow and keeps the selling-price snapshot.
 
+### H-64 — Cashier could not create, edit or archive saved clients
+
+- **Severity:** High
+- **Status:** Resolved (2026-10-26)
+- **Affected:** T030 (saved client CRUD), clients/actions; regression from the cashier_admin split (4a27485)
+- **Description:** Found by the workday simulator. /cashier/clients shows "Agregar cliente", but every write returned "Sin permisos": the split replaced `cashier_admin` with `admin` only in the clients write guard, while T030 gives client CRUD to cashier and secretary. The role-gate contract tests had been rewritten to match the regression.
+- **Fix:** the guard allows admin, secretary and cashier; contract tests describe T030 again.
+
+### H-63 — Two clothiers claiming the same units at once got a server error
+
+- **Severity:** High
+- **Status:** Resolved (2026-10-26)
+- **Affected:** T123 claimUnits (Mi trabajo)
+- **Description:** Found by the workday simulator. `lockCell` took the cell lock and counted free units in one statement. A statement that waits for a row lock still evaluates its subqueries on the snapshot from before the wait, so a claim committed meanwhile looked free; the insert then tripped the database guard (`Assigned units exceed the cell quantity`) and the clothier saw a 500. The guard kept the data correct.
+- **Fix:** lock first, count in a second statement (as production-actions already did). Regression test holds the lock in another transaction and expects STALE_DATA.
+
 ### H-62 — Service worker served the previous API response after every save
 
 - **Severity:** High
@@ -2209,3 +2225,5 @@
 | M-81     | 2026-10-25    | Cancelled pedidos owe nothing; everything paid is saldo a favor (list and detail)                               | feat/phase-11-pedidos          |
 | H-61     | 2026-10-26    | Password forms use method="post"; a pre-hydration submit can't put credentials in the URL                       | feat/phase-11-pedidos          |
 | H-62     | 2026-10-26    | Service worker /api/ GETs NetworkFirst, not StaleWhileRevalidate — refetch after a save no longer serves stale  | feat/phase-11-pedidos          |
+| H-63     | 2026-10-26    | claimUnits counts free units after taking the cell lock (fresh snapshot); race → STALE_DATA, not 500            | feat/workday-sim               |
+| H-64     | 2026-10-26    | Cashier can create/edit/archive saved clients again (T030; cashier_admin split regression)                      | feat/workday-sim               |

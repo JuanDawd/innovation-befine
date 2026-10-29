@@ -16,7 +16,7 @@
 
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
-import { logger } from "@/lib/logger";
+import { reportError } from "@/lib/observability";
 
 // ─── In-memory fallback ───────────────────────────────────────────────────────
 //
@@ -141,7 +141,7 @@ export async function checkRateLimit(
     const { success } = await limiter.limit(identifier);
     return { allowed: success };
   } catch (err) {
-    logger.warn({ err }, "Rate limiter unavailable — allowing request");
+    reportError(err, "rateLimit", {}, "warning");
     return { allowed: true };
   }
 }
@@ -179,7 +179,7 @@ export async function checkPublicRateLimit(
   try {
     result = await limiter.limit(`${bucket}:${ip}`);
   } catch (err) {
-    logger.warn({ err, bucket }, "Rate limiter unavailable — allowing request");
+    reportError(err, "rateLimit", { bucket }, "warning");
     return null;
   }
   const { success, reset } = result;
