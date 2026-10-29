@@ -175,16 +175,14 @@ async function main() {
 
   // Arrive at work a few seconds apart.
   for (const a of everyone) {
-    await a
-      .start(browser)
-      .catch((err) =>
-        report.add({
-          actor: a.name,
-          kind: "step_failed",
-          action: "login",
-          detail: String(err).split("\n")[0]!,
-        }),
-      );
+    await a.start(browser).catch((err) =>
+      report.add({
+        actor: a.name,
+        kind: "step_failed",
+        action: "login",
+        detail: String(err).split("\n")[0]!,
+      }),
+    );
   }
 
   // Opening
