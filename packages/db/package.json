@@ -29,16 +29,16 @@
     "db:reset-test-data": "node --import tsx/esm src/reset-test-data.ts"
   },
   "dependencies": {
-    "@better-auth/utils": "^0.4.0",
-    "@neondatabase/serverless": "^1.0.2",
-    "@types/ws": "^8.18.1",
+    "@better-auth/utils": "^0.5.1",
+    "@neondatabase/serverless": "^1.2.0",
+    "@types/ws": "^8.18.2",
     "drizzle-orm": "^0.45.4",
     "ws": "^8.22.0"
   },
   "devDependencies": {
     "dotenv-cli": "^11.0.0",
-    "drizzle-kit": "^0.31.0",
-    "tsx": "^4.21.0",
+    "drizzle-kit": "^0.31.11",
+    "tsx": "^4.23.15",
     "typescript": "^5"
   }
 }
