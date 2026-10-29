@@ -386,6 +386,13 @@
       "when": 1793019994183,
       "tag": "0054_retire_old_model",
       "breakpoints": true
+    },
+    {
+      "idx": 55,
+      "version": "7",
+      "when": 1793283995788,
+      "tag": "0055_session_impersonated_by",
+      "breakpoints": true
     }
   ]
 }

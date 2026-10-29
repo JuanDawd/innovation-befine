@@ -4,7 +4,8 @@
  * These tables are managed by Better Auth. IDs are text (Better Auth generates
  * them internally). Do NOT add UUID primary keys here — Better Auth requires text.
  *
- * The admin plugin adds role, banned, banReason, banExpires to users.
+ * The admin plugin adds role, banned, banReason, banExpires to users and
+ * impersonatedBy to sessions.
  */
 
 import { boolean, pgTable, text, timestamp } from "drizzle-orm/pg-core";
@@ -32,6 +33,9 @@ export const sessions = pgTable("sessions", {
   updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull(),
   ipAddress: text("ip_address"),
   userAgent: text("user_agent"),
+  // Admin plugin (impersonation). Unused here, but Better Auth ≥ 1.7 checks
+  // the schema at startup and refuses to run without it.
+  impersonatedBy: text("impersonated_by"),
   userId: text("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
