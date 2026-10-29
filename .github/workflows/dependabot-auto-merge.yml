@@ -1,6 +1,6 @@
 name: Dependabot auto-merge
 
-# Turns on auto-merge for Dependabot minor/patch PRs. GitHub merges them only
+# Turns on auto-merge for Dependabot minor/patch PRs (labelled auto-merge). GitHub merges them only
 # once the required checks on main pass (CI, DB integration, E2E) and the
 # branch is up to date with main, so lockfile PRs land one at a time and each
 # is tested against the previous one. Majors and GitHub Actions bumps are
@@ -29,7 +29,11 @@ jobs:
         if: >-
           steps.meta.outputs.package-ecosystem == 'npm_and_yarn' &&
           steps.meta.outputs.update-type != 'version-update:semver-major'
-        run: gh pr merge --auto --squash "$PR_URL"
+        run: |
+          gh label create auto-merge --repo "$GITHUB_REPOSITORY" --color 0E8A16 \
+            --description "Weekly Dependabot minor/patch — merges itself once checks pass" --force
+          gh pr edit "$PR_URL" --add-label auto-merge
+          gh pr merge --auto --squash "$PR_URL"
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -39,8 +43,9 @@ jobs:
           steps.meta.outputs.package-ecosystem != 'npm_and_yarn' ||
           steps.meta.outputs.update-type == 'version-update:semver-major'
         run: |
-          gh label create manual-review --color B60205 \
-            --description "Dependabot bump not auto-merged — review manually" 2>/dev/null || true
+          # No checkout here, so gh needs the repo named explicitly.
+          gh label create manual-review --repo "$GITHUB_REPOSITORY" --color B60205 \
+            --description "Dependabot bump not auto-merged — review manually" --force
           gh pr edit "$PR_URL" --add-label manual-review
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
