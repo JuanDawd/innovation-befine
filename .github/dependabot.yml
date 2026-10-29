@@ -1,11 +1,21 @@
 version: 2
 updates:
+  # Minor and patch bumps arrive as one grouped PR a week, so only one PR
+  # rewrites pnpm-lock.yaml at a time (parallel lockfile PRs broke main, PR #16).
+  # Majors stay one PR each, for manual review.
   - package-ecosystem: npm
     directory: /
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    groups:
+      npm-minor-patch:
+        update-types: [minor, patch]
+
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
+    groups:
+      actions-minor-patch:
+        update-types: [minor, patch]

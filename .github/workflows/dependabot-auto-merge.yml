@@ -1,0 +1,47 @@
+name: Dependabot auto-merge
+
+# Turns on auto-merge for Dependabot minor/patch PRs. GitHub merges them only
+# once the required checks on main pass (CI, DB integration, E2E) and the
+# branch is up to date with main, so lockfile PRs land one at a time and each
+# is tested against the previous one. Majors and GitHub Actions bumps are
+# labelled and left for review (GITHUB_TOKEN can't merge workflow-file edits).
+
+on: pull_request
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-merge:
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Read Dependabot metadata
+        id: meta
+        uses: dependabot/fetch-metadata@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Enable auto-merge (npm minor / patch)
+        if: >-
+          steps.meta.outputs.package-ecosystem == 'npm_and_yarn' &&
+          steps.meta.outputs.update-type != 'version-update:semver-major'
+        run: gh pr merge --auto --squash "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Flag for manual review (major or GitHub Actions)
+        if: >-
+          steps.meta.outputs.package-ecosystem != 'npm_and_yarn' ||
+          steps.meta.outputs.update-type == 'version-update:semver-major'
+        run: |
+          gh label create manual-review --color B60205 \
+            --description "Dependabot bump not auto-merged — review manually" 2>/dev/null || true
+          gh pr edit "$PR_URL" --add-label manual-review
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
