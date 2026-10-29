@@ -550,6 +550,22 @@
 - **Description:** Found in the back-office design critique (verified live: "Bata de spa" priced $8.000 — its piece rate — instead of its $35.000 selling price). Picking a piece set the line's unit price from `pieceRate`, and the order total is computed from the lines, so totals, deposits and balances came out at the clothier's pay instead of the client's price.
 - **Fix:** lines prefill from the variant's `sellingPrice` via `orderUnitPrice()` (tested); pieces without a selling price start at 0 so the price is typed in. Phase 11 (Pedidos, `docs/pedidos-spec` branch) replaces this flow and keeps the selling-price snapshot.
 
+### H-66 — Edge Sentry events and email logs carried PII
+
+- **Severity:** High
+- **Status:** Resolved (2026-10-29)
+- **Affected:** T086 Sentry setup (`sentry.edge.config.ts`), `lib/email.ts`
+- **Description:** The server and browser Sentry inits ran `scrubEvent`; the edge init (middleware) did not, so an edge event could ship emails and names unscrubbed. `sendEmail` also logged the recipient address on every failure, and pino's redaction (`*.email`) doesn't match a field called `to`.
+- **Fix:** edge init uses `beforeSend: scrubEvent`; `sendEmail` reports only the subject (via `reportError`), never the recipient.
+
+### H-65 — Caught errors in checkout and other actions never reached Sentry
+
+- **Severity:** High
+- **Status:** Resolved (2026-10-29)
+- **Affected:** T040/T09R-R1 checkout (`processCheckout`, `processPaidOfflineCheckout`), T036 `resolveEditRequest`, T127 `attachAfterHoursPayments`, password-change activity log, Phase 11 notification sends
+- **Description:** Same pattern as M-61, still present elsewhere: both checkout paths caught any unexpected exception and returned a generic `INTERNAL_ERROR` with no log line or Sentry event, so a failed payment left no trace. `resolveEditRequest` did the same; six `createNotification(...).catch(() => {})` calls and two `logger.error`-only catches lost their causes too.
+- **Fix:** new `lib/observability.ts` `reportError(err, action, extra)` (pino + `Sentry.captureException`, tagged by action); used in every catch that turns an error into a generic result or swallows it. Test: `lib/__tests__/observability.test.ts`.
+
 ### H-64 — Cashier could not create, edit or archive saved clients
 
 - **Severity:** High
@@ -610,6 +626,38 @@
 ---
 
 ## Medium-priority issues
+
+### M-87 — Failed employee insert left an orphan login
+
+- **Severity:** Medium
+- **Status:** Resolved (2026-10-29)
+- **Affected:** T011 `admin/employees/actions/create-employee.ts`
+- **Description:** The auth user is created first; cleanup (`removeUser`) ran only when the employee insert returned no row. If the insert threw, the login stayed behind with no employee, and a failed cleanup was silently swallowed.
+- **Fix:** cleanup also runs when the transaction throws (then rethrows); a failed cleanup is reported via `reportError`.
+
+### M-86 — Degraded dependencies were only logged, never alerted
+
+- **Severity:** Medium
+- **Status:** Resolved (2026-10-29)
+- **Affected:** `lib/rate-limit.ts`, `lib/email.ts`, `lib/auth-activity.ts`, `lib/middleware-settings.ts`, `packages/realtime`
+- **Description:** The rate limiter fails open when Upstash is down (logged as a warning), so limits could be off for days unnoticed. Email failures, auth activity write failures, middleware settings DB errors (silently ignored) and realtime LISTEN drops / `pg_notify` failures (console only) never reached Sentry.
+- **Fix:** all report to Sentry; rate limiter and realtime at `warning` level. Realtime gets `setRealtimeErrorReporter()` so the package stays SDK-free; `instrumentation.ts` wires it to Sentry. Middleware settings (edge) call Sentry directly, without pino.
+
+### M-85 — Sentry events had no user context
+
+- **Severity:** Medium
+- **Status:** Resolved (2026-10-29)
+- **Affected:** T086 Sentry setup, `lib/auth-activity.ts`, protected layout
+- **Description:** `Sentry.setUser` was never called, so an error couldn't be tied to an employee or role.
+- **Fix:** a Better Auth after hook on `/get-session` (which also runs for server-side `auth.api.getSession`) sets user `{ id, role }` and a `role` tag; `<SentryUser>` in the protected layout does the same in the browser. Never name or email. Tests in `auth-activity.test.ts`.
+
+### M-84 — Financial mutations left no Sentry breadcrumbs
+
+- **Severity:** Medium
+- **Status:** Resolved (2026-10-29)
+- **Affected:** checkout, price overrides, edit requests, pedido payments/refunds, payouts, business day open/close/reopen, pedido create/update/cancel/deliver, rate changes, unit reports/reviews, closings, stock adjustments
+- **Description:** CLAUDE.md's financial checklist requires a Sentry breadcrumb on every money movement; only `createTicket` and `createClothSale` had one.
+- **Fix:** `financialBreadcrumb(message, data)` (category `financial`, ids, amounts and methods only) after each successful money-moving action.
 
 ### M-81 — A cancelled pedido showed a balance due and no saldo a favor
 
@@ -2063,6 +2111,8 @@
 
 - **E2E must own its database (M-71 / H-54).** A spec that "requires a seeded DB with an open day" silently depended on production having one — CI had been creating test tickets in production for four months. E2E now migrates and seeds a throwaway Postgres in the job; a seed or test that can write money records refuses to run unless it is pointed at that database.
 
+- **Use the observability helpers, not ad-hoc catches (H-65, M-84).** M-61 fixed one swallowed catch, but the same pattern lived on in checkout and five other places. Any catch that returns a generic error or swallows a promise must call `reportError()`; any action that moves money ends with `financialBreadcrumb()`. Grep for `catch {`, `.catch(() => {})` and `INTERNAL_ERROR` before closing a task.
+
 ## Resolution log
 
 > When an issue is resolved, update its status above and add an entry here.
@@ -2227,3 +2277,9 @@
 | H-62     | 2026-10-26    | Service worker /api/ GETs NetworkFirst, not StaleWhileRevalidate — refetch after a save no longer serves stale  | feat/phase-11-pedidos          |
 | H-63     | 2026-10-26    | claimUnits counts free units after taking the cell lock (fresh snapshot); race → STALE_DATA, not 500            | feat/workday-sim               |
 | H-64     | 2026-10-26    | Cashier can create/edit/archive saved clients again (T030; cashier_admin split regression)                      | feat/workday-sim               |
+| H-65     | 2026-10-29    | Checkout, edit requests, after-hours attach and notification catches call reportError                           | PR #38 (6bc6f01)               |
+| H-66     | 2026-10-29    | Edge Sentry init scrubs PII; sendEmail no longer logs the recipient                                             | PR #38 (6bc6f01)               |
+| M-84     | 2026-10-29    | financialBreadcrumb() after every money-moving action                                                           | PR #38 (6bc6f01)               |
+| M-85     | 2026-10-29    | Sentry user = id + role (Better Auth /get-session hook + SentryUser in the layout)                              | PR #38 (6bc6f01)               |
+| M-86     | 2026-10-29    | Rate limiter, email, auth activity, middleware settings and realtime failures reach Sentry                      | PR #38 (6bc6f01)               |
+| M-87     | 2026-10-29    | createEmployee removes the orphan auth user when the insert throws; failed cleanup reported                     | PR #38 (6bc6f01)               |
