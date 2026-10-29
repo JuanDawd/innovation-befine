@@ -50,8 +50,7 @@ Use **typed result objects** for expected failures — never throw errors for bu
 
 ```typescript
 type ActionResult<T> =
-  | { success: true; data: T }
-  | { success: false; error: { code: string; message: string } };
+  { success: true; data: T } | { success: false; error: { code: string; message: string } };
 ```
 
 Financial operations (ticket close, payout recording, payment recording) must be wrapped in **database transactions**. If any step fails, the entire operation rolls back.

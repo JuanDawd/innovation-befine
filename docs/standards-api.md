@@ -25,8 +25,7 @@ All server-side functions (Server Actions and API Route Handlers) return typed r
 
 ```typescript
 type ActionResult<T> =
-  | { success: true; data: T }
-  | { success: false; error: { code: string; message: string } };
+  { success: true; data: T } | { success: false; error: { code: string; message: string } };
 ```
 
 ### Error codes

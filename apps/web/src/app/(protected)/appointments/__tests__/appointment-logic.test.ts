@@ -3,12 +3,7 @@ import { describe, it, expect } from "vitest";
 // ─── Types mirrored from schema ───────────────────────────────────────────────
 
 type AppointmentStatus =
-  | "booked"
-  | "confirmed"
-  | "completed"
-  | "cancelled"
-  | "rescheduled"
-  | "no_show";
+  "booked" | "confirmed" | "completed" | "cancelled" | "rescheduled" | "no_show";
 
 type AppointmentAction = "confirm" | "cancel" | "no_show" | "complete" | "reopen";
 

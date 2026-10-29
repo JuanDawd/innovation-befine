@@ -618,37 +618,36 @@ async function loadExistingLines(tx: ActivityTx, pedidoId: string): Promise<Plan
     : [];
   const states = cellRows.length ? await loadCellStates(tx, pedidoId) : new Map();
 
-  return lineRows.map(
-    (l): PlanExistingLine =>
-      l.kind === "adjustment"
-        ? { id: l.id, kind: "adjustment", amount: l.amount!, priceReason: l.priceReason! }
-        : {
-            id: l.id,
-            kind: "garment",
-            clothPieceVariantId: l.clothPieceVariantId!,
-            colorId: l.colorId,
-            colorOther: l.colorOther,
-            style: l.style,
-            instructions: l.instructions,
-            unitPrice: l.unitPrice!,
-            priceReason: l.priceReason,
-            cells: cellRows
-              .filter((c) => c.lineId === l.id)
-              .map((c) => {
-                const st = states.get(c.id);
-                return {
-                  id: c.id,
-                  sizeId: c.sizeId,
-                  sizeOther: c.sizeOther,
-                  label: c.sizeLabel ?? c.sizeOther ?? "—",
-                  quantity: c.quantity,
-                  assigned: st?.assigned ?? 0,
-                  approved: st?.approved ?? 0,
-                  delivered: st?.delivered ?? 0,
-                  hasHistory: st?.hasHistory ?? false,
-                };
-              }),
-          },
+  return lineRows.map((l): PlanExistingLine =>
+    l.kind === "adjustment"
+      ? { id: l.id, kind: "adjustment", amount: l.amount!, priceReason: l.priceReason! }
+      : {
+          id: l.id,
+          kind: "garment",
+          clothPieceVariantId: l.clothPieceVariantId!,
+          colorId: l.colorId,
+          colorOther: l.colorOther,
+          style: l.style,
+          instructions: l.instructions,
+          unitPrice: l.unitPrice!,
+          priceReason: l.priceReason,
+          cells: cellRows
+            .filter((c) => c.lineId === l.id)
+            .map((c) => {
+              const st = states.get(c.id);
+              return {
+                id: c.id,
+                sizeId: c.sizeId,
+                sizeOther: c.sizeOther,
+                label: c.sizeLabel ?? c.sizeOther ?? "—",
+                quantity: c.quantity,
+                assigned: st?.assigned ?? 0,
+                approved: st?.approved ?? 0,
+                delivered: st?.delivered ?? 0,
+                hasHistory: st?.hasHistory ?? false,
+              };
+            }),
+        },
   );
 }
 

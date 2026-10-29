@@ -176,8 +176,7 @@ export async function adjustStock(rawInput: unknown): Promise<ActionResult<{ onH
       WHERE v.id = ${input.clothPieceVariantId}
     `);
     const l = labels.rows[0] as
-      | { garment: string; size: string | null; color: string | null }
-      | undefined;
+      { garment: string; size: string | null; color: string | null } | undefined;
     if (!l) return { ok: false as const, problem: "La prenda no existe." };
 
     const after = onHand + input.quantity;

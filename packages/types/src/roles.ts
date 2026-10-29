@@ -5,8 +5,4 @@
 export type AppRole = "cashier" | "admin" | "secretary" | "stylist" | "clothier";
 
 export type StylistSubtype =
-  | "manicurist"
-  | "spa_manager"
-  | "hairdresser"
-  | "masseuse"
-  | "makeup_artist";
+  "manicurist" | "spa_manager" | "hairdresser" | "masseuse" | "makeup_artist";
