@@ -21,8 +21,7 @@ export type LinePriceInput = {
 };
 
 export type LinePriceResult =
-  | { ok: true; unitPrice: number; priceReason: string | null }
-  | { ok: false; message: string };
+  { ok: true; unitPrice: number; priceReason: string | null } | { ok: false; message: string };
 
 export function resolveLinePrice(input: LinePriceInput): LinePriceResult {
   const { unitPrice, sellingPrice, canEditPrices, existing } = input;

@@ -52,9 +52,7 @@ import { searchClients, createClient } from "@/app/(protected)/clients/actions";
 const NO_SHOW_WARNING_THRESHOLD = 3;
 
 export type ClientSelection =
-  | { type: "saved"; client: ClientRow }
-  | { type: "guest"; guestName: string }
-  | null;
+  { type: "saved"; client: ClientRow } | { type: "guest"; guestName: string } | null;
 
 // ─── Inline create dialog ─────────────────────────────────────────────────────
 

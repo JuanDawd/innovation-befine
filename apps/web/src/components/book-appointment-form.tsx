@@ -33,9 +33,7 @@ import { fetchQuery } from "@/lib/action-query";
 import { HOLDS_TIME, nextFreeStart } from "@/lib/appointment-timing";
 
 type ClientSelection =
-  | { type: "saved"; client: ClientRow }
-  | { type: "guest"; guestName: string }
-  | null;
+  { type: "saved"; client: ClientRow } | { type: "guest"; guestName: string } | null;
 
 /** YYYY-MM-DDTHH:mm in Bogota time, for <input type="datetime-local"> */
 function toBogotaDatetimeValue(date: Date): string {
