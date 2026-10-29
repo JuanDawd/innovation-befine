@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { unwrap, QueryActionError } from "../action-query";
 import { newUuid } from "../uuid";
