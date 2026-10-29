@@ -12,7 +12,7 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import type { ActionResult } from "@/lib/action-result";
 import { getTxDb } from "@/lib/db";
-import { logger } from "@/lib/logger";
+import { reportError } from "@/lib/observability";
 import { actorOf, deviceOf, logActivity } from "@/lib/activity";
 
 const changePasswordSchema = z
@@ -75,7 +75,7 @@ export async function changePassword(rawInput: unknown): Promise<ActionResult<vo
         ...deviceOf(h),
       }),
     )
-    .catch((err) => logger.error({ err }, "Could not log password change"));
+    .catch((err) => reportError(err, "changePassword.logActivity"));
 
   return { success: true, data: undefined };
 }

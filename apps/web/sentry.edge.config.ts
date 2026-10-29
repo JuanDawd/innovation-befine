@@ -1,5 +1,5 @@
 import * as Sentry from "@sentry/nextjs";
-import { SENTRY_ENVIRONMENT, SENTRY_RELEASE } from "./sentry.shared";
+import { SENTRY_ENVIRONMENT, SENTRY_RELEASE, scrubEvent } from "./sentry.shared";
 
 Sentry.init({
   dsn: process.env.SENTRY_DSN,
@@ -7,4 +7,5 @@ Sentry.init({
   release: SENTRY_RELEASE,
   tracesSampleRate: 0.05,
   enabled: !!process.env.SENTRY_DSN,
+  beforeSend: scrubEvent,
 });

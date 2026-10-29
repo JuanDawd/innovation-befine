@@ -24,6 +24,7 @@ import { employees } from "@befine/db/schema";
 import { createEmployeeSchema } from "@befine/types";
 import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
+import { reportError } from "@/lib/observability";
 
 export type CreatedEmployee = {
   userId: string;
@@ -94,46 +95,55 @@ export async function createEmployee(rawInput: unknown): Promise<ActionResult<Cr
 
   // Insert employee record linked to the auth user
   // T131 — the employee row and its log entry commit together (no password logged).
-  const employeeRows = await getTxDb().transaction(async (tx) => {
-    const rows = await tx
-      .insert(employees)
-      .values({
-        userId,
-        role,
-        stylistSubtype: stylistSubtype ?? null,
-        dailyRate: role === "secretary" ? (dailyRate ?? null) : null,
-        expectedWorkDays: expectedWorkDays ?? 6,
-        birthday: birthday || null,
-        showEarnings: false,
-        isActive: true,
-      })
-      .returning();
-    if (rows[0])
-      await logActivity(tx, {
-        actor: actorOf(session.user),
-        action: "employee.create",
-        entityType: "employee",
-        entityId: rows[0].id,
-        summary: `Creó el empleado «${name}» (${ROLE_ES[role] ?? role})`,
-        after: {
-          name,
-          email,
+  // Rollback: delete the auth user so a failed insert leaves no orphan login.
+  const removeOrphanUser = async () => {
+    try {
+      await auth.api.removeUser({ body: { userId }, headers: await headers() });
+    } catch (err) {
+      reportError(err, "createEmployee.removeOrphanUser", { userId });
+    }
+  };
+
+  const employeeRows = await getTxDb()
+    .transaction(async (tx) => {
+      const rows = await tx
+        .insert(employees)
+        .values({
+          userId,
           role,
           stylistSubtype: stylistSubtype ?? null,
-          dailyRate: dailyRate ?? null,
-        },
-      });
-    return rows;
-  });
+          dailyRate: role === "secretary" ? (dailyRate ?? null) : null,
+          expectedWorkDays: expectedWorkDays ?? 6,
+          birthday: birthday || null,
+          showEarnings: false,
+          isActive: true,
+        })
+        .returning();
+      if (rows[0])
+        await logActivity(tx, {
+          actor: actorOf(session.user),
+          action: "employee.create",
+          entityType: "employee",
+          entityId: rows[0].id,
+          summary: `Creó el empleado «${name}» (${ROLE_ES[role] ?? role})`,
+          after: {
+            name,
+            email,
+            role,
+            stylistSubtype: stylistSubtype ?? null,
+            dailyRate: dailyRate ?? null,
+          },
+        });
+      return rows;
+    })
+    .catch(async (err: unknown) => {
+      await removeOrphanUser();
+      throw err;
+    });
 
   const employee = employeeRows[0];
   if (!employee) {
-    // Rollback: attempt to delete the created user to avoid orphan
-    try {
-      await auth.api.removeUser({ body: { userId }, headers: await headers() });
-    } catch {
-      // Best-effort cleanup; log if Sentry is available
-    }
+    await removeOrphanUser();
     return {
       success: false,
       error: { code: "INTERNAL_ERROR", message: "No se pudo crear el registro de empleado" },

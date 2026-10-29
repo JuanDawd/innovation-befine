@@ -41,6 +41,7 @@ import type { ActionResult } from "@/lib/action-result";
 import { hasRole } from "@/lib/middleware-helpers";
 import { getEmployeeRef } from "@/lib/employee-ref";
 import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
+import { financialBreadcrumb } from "@/lib/observability";
 import { getCurrentBusinessDay } from "@/lib/business-day";
 import { getBusinessSettings } from "@/lib/business-settings";
 import { actorOf, logActivity, type ActivityTx } from "@/lib/activity";
@@ -456,6 +457,12 @@ export async function reportUnits(
     });
     revalidatePath("/clothier");
     if (result.pedidoId) revalidatePath(`/pedidos/${result.pedidoId}`);
+    financialBreadcrumb("reportUnits", {
+      employeeId: guard.employeeId,
+      pedidoId: result.pedidoId,
+      reported: result.reported,
+      rework: result.rework,
+    });
     return { success: true, data: { reported: result.reported, rework: result.rework } };
   } catch (err) {
     const f = fail(err);
@@ -611,6 +618,11 @@ export async function submitMyClosing(
     });
     revalidatePath("/clothier");
     revalidatePath("/produccion");
+    financialBreadcrumb("submitMyClosing", {
+      employeeId: guard.employeeId,
+      closingId: result.closingId,
+      units: result.units,
+    });
     return { success: true, data: result };
   } catch (err) {
     const f = fail(err);

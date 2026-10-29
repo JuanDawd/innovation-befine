@@ -23,7 +23,7 @@ import { hasRole } from "@/lib/middleware-helpers";
 import { attachAfterHoursPayments } from "@/lib/after-hours";
 import { actorOf, logActivity } from "@/lib/activity";
 import { formatPesos, getDayIncome, type Database } from "@befine/db";
-import { logger } from "@/lib/logger";
+import { financialBreadcrumb, reportError } from "@/lib/observability";
 
 // ---------------------------------------------------------------------------
 // Open business day
@@ -95,10 +95,11 @@ export async function openBusinessDay(): Promise<ActionResult<BusinessDay>> {
   // T127: after-hours pedido payments belong to the day that opens next.
   // Idempotent, so a failure here is retried on the next open or payment read.
   await attachAfterHoursPayments(day.id, actorOf(session.user)).catch((err) =>
-    logger.error({ err, businessDayId: day.id }, "Could not attach after-hours payments"),
+    reportError(err, "attachAfterHoursPayments", { businessDayId: day.id }),
   );
 
   revalidatePath("/cashier");
+  financialBreadcrumb("openBusinessDay", { businessDayId: day.id });
   return { success: true, data: day };
 }
 
@@ -184,6 +185,7 @@ export async function closeBusinessDay(businessDayId: string): Promise<ActionRes
   }
 
   revalidatePath("/cashier");
+  financialBreadcrumb("closeBusinessDay", { businessDayId: day.id });
   return { success: true, data: day };
 }
 
@@ -281,5 +283,6 @@ export async function reopenBusinessDay(rawInput: unknown): Promise<ActionResult
   }
 
   revalidatePath("/cashier");
+  financialBreadcrumb("reopenBusinessDay", { businessDayId: day.id });
   return { success: true, data: day };
 }

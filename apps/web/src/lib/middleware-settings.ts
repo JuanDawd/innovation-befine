@@ -8,6 +8,7 @@
  * the toggle is a configuration change, not a real-time gate.
  */
 
+import * as Sentry from "@sentry/nextjs";
 import { eq } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { businessSettings, BUSINESS_SETTINGS_ID } from "@befine/db/schema";
@@ -31,9 +32,11 @@ export async function getCashierCanAccessAdminCached(): Promise<boolean> {
 
     cachedValue = row?.cashierCanAccessAdmin ?? false;
     cacheExpiresAt = now + TTL_MS;
-  } catch {
+  } catch (err) {
     // On any DB error, fall back to the previously cached value (default: false).
     // This ensures a transient DB outage never grants unexpected access.
+    // Edge runtime: Sentry directly, no pino.
+    Sentry.captureException(err, { level: "warning", tags: { action: "middlewareSettings" } });
   }
 
   return cachedValue;

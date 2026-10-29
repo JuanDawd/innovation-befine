@@ -6,15 +6,21 @@
  * sign-out is read before, while the session still exists.
  *
  * Logging must never block authentication: errors are reported, not thrown.
+ *
+ * Every session read (/get-session, incl. server-side auth.api.getSession)
+ * also tags the request's Sentry scope with the user — id and role only, never
+ * name or email.
  */
 
+import * as Sentry from "@sentry/nextjs";
 import { createAuthMiddleware, getSessionFromCtx, isAPIError } from "better-auth/api";
 import { getTxDb } from "@/lib/db";
-import { logger } from "@/lib/logger";
+import { reportError } from "@/lib/observability";
 import { deviceOf, logActivity, type ActivityEntry } from "@/lib/activity";
 
 const SIGN_IN_PATH = "/sign-in/email";
 const SIGN_OUT_PATH = "/sign-out";
+const GET_SESSION_PATH = "/get-session";
 
 type AuthUser = { id: string; role?: string | null };
 
@@ -22,7 +28,7 @@ async function record(entry: ActivityEntry): Promise<void> {
   try {
     await getTxDb().transaction((tx) => logActivity(tx, entry));
   } catch (err) {
-    logger.error({ err, action: entry.action }, "Could not write auth activity");
+    reportError(err, "authActivity", { activity: entry.action });
   }
 }
 
@@ -40,7 +46,18 @@ export const authActivityBefore = createAuthMiddleware(async (ctx) => {
   });
 });
 
+function tagSentryUser(returned: unknown): void {
+  const user = (returned as { user?: AuthUser } | null | undefined)?.user;
+  if (!user?.id) return;
+  Sentry.setUser({ id: user.id, role: user.role ?? undefined });
+  Sentry.setTag("role", user.role ?? "unknown");
+}
+
 export const authActivityAfter = createAuthMiddleware(async (ctx) => {
+  if (ctx.path === GET_SESSION_PATH) {
+    tagSentryUser(ctx.context.returned);
+    return;
+  }
   if (ctx.path !== SIGN_IN_PATH) return;
   const device = deviceOf(ctx.headers);
   const returned = ctx.context.returned;

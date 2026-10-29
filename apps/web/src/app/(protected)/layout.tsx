@@ -16,6 +16,7 @@ import { getDb } from "@/lib/db";
 import { employees } from "@befine/db/schema";
 import { AppShell } from "@/components/app-shell";
 import { SyncStatus } from "@/components/sync-status";
+import { SentryUser } from "@/components/sentry-user";
 import { listNotifications } from "@/app/(protected)/notifications/actions";
 import type { AppRole } from "@befine/types";
 
@@ -67,6 +68,7 @@ export default async function ProtectedLayout({
       {children}
       {modal}
       <SyncStatus role={role} />
+      <SentryUser id={session.user.id} role={role} />
     </AppShell>
   );
 }

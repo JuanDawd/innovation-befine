@@ -32,6 +32,7 @@ import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
 import { requestEditSchema, resolveEditRequestSchema } from "@befine/types";
 import { getEmployeeRef } from "@/lib/employee-ref";
 import { actorOf, logActivity } from "@/lib/activity";
+import { financialBreadcrumb, reportError } from "@/lib/observability";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -423,6 +424,7 @@ export async function resolveEditRequest(
         success: false,
         error: { code: "CONFLICT", message: "La solicitud ya fue resuelta" },
       };
+    reportError(err, "resolveEditRequest", { requestId, decision });
     return {
       success: false,
       error: { code: "INTERNAL_ERROR", message: "Error al resolver la solicitud" },
@@ -445,6 +447,12 @@ export async function resolveEditRequest(
   }
   revalidatePath("/cashier");
 
+  financialBreadcrumb("resolveEditRequest", {
+    requestId,
+    decision,
+    ticketItemId: req.ticketItemId,
+    newServiceVariantId: req.newServiceVariantId,
+  });
   return { success: true, data: undefined };
 }
 

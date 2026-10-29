@@ -9,7 +9,7 @@
 
 import { Resend } from "resend";
 import type { ReactElement } from "react";
-import { logger } from "./logger";
+import { reportError } from "./observability";
 
 let _resend: Resend | undefined;
 
@@ -38,12 +38,13 @@ export async function sendEmail({ to, subject, react }: SendEmailOptions): Promi
     const resend = getResend();
     const { error } = await resend.emails.send({ from, to, subject, react });
     if (error) {
-      logger.error({ msg: "Resend send failed", to, subject, error });
+      // The recipient is PII — only the subject goes to logs and Sentry.
+      reportError(new Error(`Resend: ${error.name}: ${error.message}`), "sendEmail", { subject });
       return false;
     }
     return true;
   } catch (err) {
-    logger.error({ msg: "sendEmail threw unexpectedly", to, subject, err });
+    reportError(err, "sendEmail", { subject });
     return false;
   }
 }

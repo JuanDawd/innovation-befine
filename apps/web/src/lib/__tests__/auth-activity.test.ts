@@ -8,6 +8,13 @@ const state = vi.hoisted(() => ({
   fail: false,
   session: null as null | { user: { id: string; role: string } },
 }));
+const sentry = vi.hoisted(() => ({
+  setUser: vi.fn(),
+  setTag: vi.fn(),
+  captureException: vi.fn(),
+}));
+
+vi.mock("@sentry/nextjs", () => sentry);
 
 vi.mock("better-auth/api", () => ({
   createAuthMiddleware: (fn: unknown) => fn,
@@ -17,7 +24,7 @@ vi.mock("better-auth/api", () => ({
 vi.mock("@/lib/db", () => ({
   getTxDb: () => ({ transaction: (fn: (tx: unknown) => unknown) => fn({}) }),
 }));
-vi.mock("@/lib/logger", () => ({ logger: { error: vi.fn() } }));
+vi.mock("@/lib/logger", () => ({ logger: { error: vi.fn(), warn: vi.fn() } }));
 vi.mock("@befine/db", () => ({
   logActivity: async (_tx: unknown, entry: Record<string, unknown>) => {
     if (state.fail) throw new Error("db down");
@@ -41,6 +48,7 @@ describe("auth activity hooks", () => {
     state.entries = [];
     state.fail = false;
     state.session = null;
+    vi.clearAllMocks();
   });
 
   it("logs a successful sign-in with IP and user agent", async () => {
@@ -86,12 +94,12 @@ describe("auth activity hooks", () => {
   });
 
   it("ignores other auth endpoints", async () => {
-    await after({ path: "/get-session", headers, context: { returned: {} } });
+    await after({ path: "/update-user", headers, context: { returned: {} } });
     await before({ path: "/sign-in/email", headers, context: {} });
     expect(state.entries).toHaveLength(0);
   });
 
-  it("never throws when the log cannot be written", async () => {
+  it("never throws when the log cannot be written, and reports it to Sentry", async () => {
     state.fail = true;
     await expect(
       after({
@@ -100,5 +108,30 @@ describe("auth activity hooks", () => {
         context: { returned: {}, newSession: { user: { id: "u1", role: "admin" } } },
       }),
     ).resolves.toBeUndefined();
+    expect(sentry.captureException).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({ tags: { action: "authActivity" } }),
+    );
+  });
+
+  it("tags the Sentry user with id and role only on a session read", async () => {
+    await after({
+      path: "/get-session",
+      headers,
+      context: {
+        returned: {
+          session: {},
+          user: { id: "u3", role: "cashier", name: "Ana", email: "ana@befine.co" },
+        },
+      },
+    });
+    expect(sentry.setUser).toHaveBeenCalledWith({ id: "u3", role: "cashier" });
+    expect(sentry.setTag).toHaveBeenCalledWith("role", "cashier");
+    expect(state.entries).toHaveLength(0);
+  });
+
+  it("leaves the Sentry user alone when there is no session", async () => {
+    await after({ path: "/get-session", headers, context: { returned: null } });
+    expect(sentry.setUser).not.toHaveBeenCalled();
   });
 });
