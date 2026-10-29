@@ -9,6 +9,8 @@
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import "fake-indexeddb/auto";
+import { checkIdempotency } from "@/lib/idempotency";
+import { clearAll, dequeue, enqueue, listQueued, markAttempted } from "@/lib/mutation-queue";
 
 // ─── (a) checkIdempotency ─────────────────────────────────────────────────────
 
@@ -39,7 +41,6 @@ describe("checkIdempotency", () => {
 
   it("returns null on cache miss", async () => {
     mockDb.select = buildSelect([]);
-    const { checkIdempotency } = await import("@/lib/idempotency");
     const result = await checkIdempotency("missing-key", mockDb as never);
     expect(result).toBeNull();
   });
@@ -48,7 +49,6 @@ describe("checkIdempotency", () => {
     const future = new Date(Date.now() + 60_000);
     const body = { success: true, data: { id: "abc" } };
     mockDb.select = buildSelect([{ responseBody: body, expiresAt: future }]);
-    const { checkIdempotency } = await import("@/lib/idempotency");
     const result = await checkIdempotency("hit-key", mockDb as never);
     expect(result).toEqual(body);
   });
@@ -57,14 +57,12 @@ describe("checkIdempotency", () => {
     const past = new Date(Date.now() - 1000);
     mockDb.select = buildSelect([{ responseBody: { success: true }, expiresAt: past }]);
     mockDb.delete = buildDelete([{ key: "expired-key" }]);
-    const { checkIdempotency } = await import("@/lib/idempotency");
     const result = await checkIdempotency("expired-key", mockDb as never);
     expect(result).toBeNull();
     expect(mockDb.delete).toHaveBeenCalled();
   });
 
   it("returns null for empty key", async () => {
-    const { checkIdempotency } = await import("@/lib/idempotency");
     const result = await checkIdempotency("", mockDb as never);
     expect(result).toBeNull();
   });
@@ -75,12 +73,10 @@ describe("checkIdempotency", () => {
 describe("mutation-queue (fake-indexeddb)", () => {
   beforeEach(async () => {
     // Reset the fake IDB between tests by clearing all data
-    const { clearAll } = await import("@/lib/mutation-queue");
     await clearAll();
   });
 
   it("enqueue then listQueued returns the item", async () => {
-    const { enqueue, listQueued } = await import("@/lib/mutation-queue");
     await enqueue({ id: "id-1", type: "reportUnits", payload: {}, createdAt: Date.now() });
     const items = await listQueued();
     expect(items).toHaveLength(1);
@@ -89,7 +85,6 @@ describe("mutation-queue (fake-indexeddb)", () => {
   });
 
   it("dequeue removes the item", async () => {
-    const { enqueue, dequeue, listQueued } = await import("@/lib/mutation-queue");
     await enqueue({ id: "id-2", type: "createTicket", payload: {}, createdAt: Date.now() });
     await dequeue("id-2");
     const items = await listQueued();
@@ -97,7 +92,6 @@ describe("mutation-queue (fake-indexeddb)", () => {
   });
 
   it("markAttempted increments attempt count and records error", async () => {
-    const { enqueue, markAttempted, listQueued } = await import("@/lib/mutation-queue");
     await enqueue({ id: "id-3", type: "paidOffline", payload: {}, createdAt: Date.now() });
     await markAttempted("id-3", "Network error");
     const items = await listQueued();
@@ -106,7 +100,6 @@ describe("mutation-queue (fake-indexeddb)", () => {
   });
 
   it("markAttempted twice accumulates attempts", async () => {
-    const { enqueue, markAttempted, listQueued } = await import("@/lib/mutation-queue");
     await enqueue({ id: "id-4", type: "reportUnits", payload: {}, createdAt: Date.now() });
     await markAttempted("id-4", "err1");
     await markAttempted("id-4", "err2");
@@ -116,7 +109,6 @@ describe("mutation-queue (fake-indexeddb)", () => {
   });
 
   it("enqueue is idempotent — second put with same id overwrites", async () => {
-    const { enqueue, listQueued } = await import("@/lib/mutation-queue");
     await enqueue({ id: "id-5", type: "createTicket", payload: { v: 1 }, createdAt: 100 });
     await enqueue({ id: "id-5", type: "createTicket", payload: { v: 2 }, createdAt: 200 });
     const items = await listQueued();

@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { Temporal } from "@js-temporal/polyfill";
+import { analyticsQuerySchema, employeeDrillDownSchema } from "@befine/types";
 
 // ─── Helpers under test (pure logic extracted from analytics queries) ─────────
 // These tests cover the pure computational logic used in analytics.
@@ -223,29 +224,25 @@ describe("Bogota date formatting (T08R-R14)", () => {
 // ─── T08R-R5: Zod schema validation ──────────────────────────────────────────
 
 describe("Analytics Zod schemas (T08R-R5)", () => {
-  it("analyticsQuerySchema accepts valid period", async () => {
-    const { analyticsQuerySchema } = await import("@befine/types");
+  it("analyticsQuerySchema accepts valid period", () => {
     expect(analyticsQuerySchema.safeParse({ period: "day" }).success).toBe(true);
     expect(analyticsQuerySchema.safeParse({ period: "week" }).success).toBe(true);
     expect(analyticsQuerySchema.safeParse({ period: "month" }).success).toBe(true);
   });
 
-  it("analyticsQuerySchema rejects invalid period", async () => {
-    const { analyticsQuerySchema } = await import("@befine/types");
+  it("analyticsQuerySchema rejects invalid period", () => {
     expect(analyticsQuerySchema.safeParse({ period: "year" }).success).toBe(false);
     expect(analyticsQuerySchema.safeParse({ period: "" }).success).toBe(false);
     expect(analyticsQuerySchema.safeParse({}).success).toBe(false);
   });
 
-  it("employeeDrillDownSchema rejects invalid uuid", async () => {
-    const { employeeDrillDownSchema } = await import("@befine/types");
+  it("employeeDrillDownSchema rejects invalid uuid", () => {
     expect(
       employeeDrillDownSchema.safeParse({ employeeId: "not-a-uuid", period: "day" }).success,
     ).toBe(false);
   });
 
-  it("employeeDrillDownSchema accepts valid input", async () => {
-    const { employeeDrillDownSchema } = await import("@befine/types");
+  it("employeeDrillDownSchema accepts valid input", () => {
     expect(
       employeeDrillDownSchema.safeParse({
         employeeId: "123e4567-e89b-12d3-a456-426614174000",
@@ -254,8 +251,7 @@ describe("Analytics Zod schemas (T08R-R5)", () => {
     ).toBe(true);
   });
 
-  it("analyticsQuerySchema yields field-level issues for the actions to surface", async () => {
-    const { analyticsQuerySchema } = await import("@befine/types");
+  it("analyticsQuerySchema yields field-level issues for the actions to surface", () => {
     const result = analyticsQuerySchema.safeParse({ period: "year" });
     expect(result.success).toBe(false);
     if (!result.success) {
@@ -264,8 +260,7 @@ describe("Analytics Zod schemas (T08R-R5)", () => {
     }
   });
 
-  it("employeeDrillDownSchema yields field-level issues identifying employeeId", async () => {
-    const { employeeDrillDownSchema } = await import("@befine/types");
+  it("employeeDrillDownSchema yields field-level issues identifying employeeId", () => {
     const result = employeeDrillDownSchema.safeParse({
       employeeId: "not-a-uuid",
       period: "day",
@@ -277,8 +272,7 @@ describe("Analytics Zod schemas (T08R-R5)", () => {
     }
   });
 
-  it("includeInactive defaults to false when omitted", async () => {
-    const { analyticsQuerySchema } = await import("@befine/types");
+  it("includeInactive defaults to false when omitted", () => {
     const result = analyticsQuerySchema.safeParse({ period: "day" });
     expect(result.success).toBe(true);
     if (result.success) expect(result.data.includeInactive).toBe(false);
