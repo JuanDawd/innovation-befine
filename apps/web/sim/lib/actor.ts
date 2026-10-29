@@ -94,7 +94,8 @@ export class Actor {
       const failure = req.failure()?.errorText ?? "unknown";
       if (IGNORED_FAILURES.some((f) => failure.includes(f))) return;
       const url = new URL(req.url());
-      if (url.hostname.endsWith("sentry.io") || url.hostname === "vercel.live") return;
+      const host = url.hostname;
+      if (host === "sentry.io" || host.endsWith(".sentry.io") || host === "vercel.live") return;
       this.emit("request_failed", `${failure} ${req.method()} ${url.pathname}`, page.url());
     });
   }
