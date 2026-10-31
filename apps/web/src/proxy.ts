@@ -12,14 +12,14 @@ import {
 import { getCashierCanAccessAdminCached } from "@/lib/middleware-settings";
 
 /**
- * Middleware — session check and role-path enforcement.
+ * Proxy — session check and role-path enforcement.
  *
  * Uses auth.api.getSession() (cookieCache reads the encrypted cookie payload —
  * no HTTP round-trip to /api/auth/get-session, no rate-limit consumption).
  * Previously used betterFetch which made an HTTP request on every navigation,
  * rapidly exhausting Better Auth's built-in rate limiter.
  */
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Next.js prefetch requests don't carry cookies — skip auth so they don't
