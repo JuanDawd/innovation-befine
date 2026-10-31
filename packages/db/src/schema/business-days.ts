@@ -9,7 +9,8 @@
  * Reopen: admin can reopen the most recently closed day with an audit trail.
  */
 
-import { index, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import { index, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { users } from "./auth";
 
 export const businessDays = pgTable(
@@ -34,5 +35,9 @@ export const businessDays = pgTable(
   (t) => [
     // T107: analytics period resolution queries filter by opened_at range
     index("idx_business_days_opened_at").on(t.openedAt),
+    // H-48: declared here so the schema, snapshots and drizzle-kit all know about it
+    uniqueIndex("uq_business_days_single_open")
+      .on(sql`(1)`)
+      .where(sql`${t.closedAt} IS NULL`),
   ],
 );

@@ -607,6 +607,22 @@
 - **Description:** Found when the T126 integration test first ran against a real database (Neon test branch). A unit review with approved units and scrapped units paid by the setting produces two earnings lines, both carrying the review id. `recordPayout` linked every line's reviews to the payout, so the same review was inserted twice into `payout_unit_reviews`, hit `uq_payout_unit_reviews_review` and rolled back — the clothier could not be paid at all whenever "pagar unidades descartadas" was on and a review mixed both.
 - **Fix:** `payoutReviewIds()` links each review once (unit tested); the integration test covers the approved + paid-scrap case.
 
+### H-48 — Production never got the single-open-day index
+
+- **Severity:** High
+- **Status:** Resolved (2026-10-31), takes effect when `0056` is applied to production
+- **Affected:** T019 business day, every feature that calls `getCurrentBusinessDay()`
+- **Description:** `uq_business_days_single_open` existed only as hand-written SQL in migration `0004`, not in the Drizzle schema or snapshots, so `drizzle-kit check` could not notice it was missing. Production had no such index. A schema diff against a database built from the migrations found no other drift in `public`. `0026`-`0028` have timestamps older than their predecessors, so the migrator skipped them on production; their changes reached it another way, apart from one check constraint on an archived table.
+- **Fix:** The index is declared in `business-days.ts`; `0056` creates it if missing and moves the stale `public.__drizzle_migrations` to `archive`. An integration test asserts a second open day is rejected.
+
+### H-54 — CI E2E ran against the production database
+
+- **Severity:** High
+- **Status:** Resolved (2026-10-31)
+- **Affected:** production database, `.github/workflows/ci.yml`
+- **Description:** CI E2E used `secrets.DATABASE_URL`, which was production, leaving test tickets and appointments there from April to October. Eleven test tickets were charged; none reached a payout.
+- **Fix:** CI uses a throwaway database (M-71). The owner confirmed production held no real operational data, so the 25 unpaid "Test E2E" tickets were voided, the 23 appointments cancelled, and all operational data then wiped with the T135 reset. Users, employees, catalog and settings were kept.
+
 ### H-59 — Payouts recorded the client's computed amount without recomputing
 
 - **Severity:** High
@@ -2111,6 +2127,8 @@
 
 - **E2E must own its database (M-71 / H-54).** A spec that "requires a seeded DB with an open day" silently depended on production having one — CI had been creating test tickets in production for four months. E2E now migrates and seeds a throwaway Postgres in the job; a seed or test that can write money records refuses to run unless it is pointed at that database.
 
+- **A hand-written migration line must also exist in the schema (H-48).** Anything only in migration SQL is invisible to `drizzle-kit check`, so it can go missing from a database without any warning.
+
 - **Use the observability helpers, not ad-hoc catches (H-65, M-84).** M-61 fixed one swallowed catch, but the same pattern lived on in checkout and five other places. Any catch that returns a generic error or swallows a promise must call `reportError()`; any action that moves money ends with `financialBreadcrumb()`. Grep for `catch {`, `.catch(() => {})` and `INTERNAL_ERROR` before closing a task.
 
 ## Resolution log
@@ -2283,3 +2301,5 @@
 | M-85     | 2026-10-29    | Sentry user = id + role (Better Auth /get-session hook + SentryUser in the layout)                              | PR #38 (6bc6f01)               |
 | M-86     | 2026-10-29    | Rate limiter, email, auth activity, middleware settings and realtime failures reach Sentry                      | PR #38 (6bc6f01)               |
 | M-87     | 2026-10-29    | createEmployee removes the orphan auth user when the insert throws; failed cleanup reported                     | PR #38 (6bc6f01)               |
+| H-48     | 2026-10-31    | Single-open-day index declared in the schema; 0056 creates it where missing                                     | fix/h48-single-open-day-index  |
+| H-54     | 2026-10-31    | Test data voided, then production operational data wiped with the T135 reset                                    | Production data change         |

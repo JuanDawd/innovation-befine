@@ -393,6 +393,13 @@
       "when": 1793283995788,
       "tag": "0055_session_impersonated_by",
       "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1793473492000,
+      "tag": "0056_h48_single_open_day_index",
+      "breakpoints": true
     }
   ]
 }
