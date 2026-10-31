@@ -54,6 +54,18 @@ jobs:
       - name: Migration consistency (drizzle-kit check)
         run: pnpm --filter @befine/db exec drizzle-kit check
 
+      # Production builds apply migrations automatically (scripts/vercel-migrate.sh).
+      - name: Migration safety
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          if [ -n "$BASE_REF" ]; then
+            git fetch --depth=1 origin "$BASE_REF"
+            pnpm --filter @befine/db exec node --import tsx/esm src/check-migrations.ts FETCH_HEAD
+          else
+            pnpm --filter @befine/db exec node --import tsx/esm src/check-migrations.ts
+          fi
+
       # M-73: blocks on any critical advisory reachable from production deps.
       # Remaining highs are build-time transitive deps (next-pwa/workbox/webpack,
       # Sentry bundler plugin) — reported but not blocking.
