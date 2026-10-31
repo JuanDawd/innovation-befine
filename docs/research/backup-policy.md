@@ -22,7 +22,7 @@ Neon console (Backup & Restore) or the Neon API, in this order:
 1. Create a snapshot of `main` at the target timestamp. It must be inside the retention window.
 2. Restore it as a new branch **without finalizing** (in the Neon MCP tool, pass `finalize: false` explicitly: it defaults to true for a new branch, and finalizing replaces the target).
 3. Inspect the restored branch and compare row counts.
-4. Finalize the restore. Neon moves the computes to the restored branch and replaces `main`, so connection details are meant to stay the same and no Vercel change should be needed. **Not yet exercised** (see below).
+4. Finalize the restore. Neon moves the computes to the restored branch and replaces `main`, so connection details stay the same and no Vercel change is needed.
 
 ## Restore drill
 
@@ -30,7 +30,9 @@ Neon console (Backup & Restore) or the Neon API, in this order:
 | ---------- | -------------------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
 | 2026-10-31 | Claude Code, for the owner | 2026-10-31T19:12:00Z | Pass. Restored 400 tickets, 25 voided, 23 cancelled test appointments, 9 payouts ($10.268.998), 11 checkouts ($5.990.000), 48 cleanup log rows, 53 migration rows. `main` stayed on the wiped state (0 tickets). | Snapshot to branch created: 7 s |
 
-The drill used a real loss: the T135 reset emptied production at about 19:13 UTC, and the restore brought back the data from just before it. The restore was not finalized, so **swapping a restored branch in as `main` and the app's behaviour afterwards are still untested**.
+The drill used a real loss: the T135 reset emptied production at about 19:13 UTC, and the restore brought back the data from just before it.
+
+The restore was then finalized at 19:25 UTC. The restored branch became `main`, the production endpoint (`ep-wild-hill`) and connection string stayed the same, no Vercel change was needed, and `/api/health` returned 200 on every check (first request after the swap: about 1 s, as the compute restarted). The previous branch stays as `main (old)` until deleted. Signing in and the app's screens were not exercised after the swap.
 
 ---
 
