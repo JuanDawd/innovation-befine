@@ -338,6 +338,8 @@ export const adjustStockSchema = z
     clothPieceVariantId: z.uuid("Elige la prenda"),
     sizeId: z.uuid().nullable(),
     colorId: z.uuid().nullable(),
+    /** T139: which details-split item; empty when it has none */
+    detailsKey: z.string().max(1000).default(""),
     /** Signed units: + adds stock, − removes it */
     quantity: z
       .number("Escribe la cantidad")

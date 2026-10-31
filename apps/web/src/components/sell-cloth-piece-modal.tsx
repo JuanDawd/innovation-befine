@@ -61,7 +61,7 @@ export function SellClothPieceModal({ open, onOpenChange, ticketId }: SellClothP
   const garments = Array.from(
     new Map(items.map((i) => [i.clothPieceVariantId, i.garment])).entries(),
   );
-  const keyOf = (i: SellableStockItem) => `${i.sizeId ?? "-"}:${i.colorId ?? "-"}`;
+  const keyOf = (i: SellableStockItem) => `${i.sizeId ?? "-"}:${i.colorId ?? "-"}:${i.detailsKey}`;
 
   const [selectedVariantId, setSelectedVariantId] = useState("");
   const [selectedOption, setSelectedOption] = useState("");
@@ -148,6 +148,7 @@ export function SellClothPieceModal({ open, onOpenChange, ticketId }: SellClothP
           clothPieceVariantId: selectedItem.clothPieceVariantId,
           sizeId: selectedItem.sizeId,
           colorId: selectedItem.colorId,
+          detailsKey: selectedItem.detailsKey,
           quantity,
           oversell: needsOversell && oversell ? true : undefined,
           oversellReason: needsOversell && oversell ? oversellReason.trim() : null,
@@ -248,8 +249,10 @@ export function SellClothPieceModal({ open, onOpenChange, ticketId }: SellClothP
                   <option value="">{t("variantPlaceholder")}</option>
                   {options.map((o) => (
                     <option key={keyOf(o)} value={keyOf(o)}>
-                      {[o.sizeLabel ?? t("noSize"), o.colorLabel ?? t("noColor")].join(" · ")} —{" "}
-                      {t("available", { n: o.onHand })}
+                      {[o.sizeLabel ?? t("noSize"), o.colorLabel ?? t("noColor"), o.detailsLabel]
+                        .filter(Boolean)
+                        .join(" · ")}{" "}
+                      — {t("available", { n: o.onHand })}
                     </option>
                   ))}
                 </NativeSelect>

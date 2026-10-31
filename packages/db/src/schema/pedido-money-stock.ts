@@ -93,6 +93,13 @@ export const stockMovements = pgTable(
     sizeId: uuid("size_id").references(() => garmentSizes.id, { onDelete: "restrict" }),
     /** Null = no colour */
     colorId: uuid("color_id").references(() => garmentColors.id, { onDelete: "restrict" }),
+    /**
+     * T139 — the line's custom details that split stock, in a stable order: part of
+     * what this item is. Empty for items with none, including everything before T139.
+     */
+    detailsKey: text("details_key").notNull().default(""),
+    /** Those details as people read them, "Tela: Seda" */
+    detailsLabel: text("details_label").notNull().default(""),
     /** Signed units: + into stock, − out of stock */
     quantity: integer("quantity").notNull(),
     kind: stockMovementKindEnum("kind").notNull(),
@@ -106,7 +113,7 @@ export const stockMovements = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
-    index("idx_stock_movements_item").on(t.clothPieceVariantId, t.sizeId, t.colorId),
+    index("idx_stock_movements_item").on(t.clothPieceVariantId, t.sizeId, t.colorId, t.detailsKey),
     index("idx_stock_movements_ref").on(t.refType, t.refId),
     check("chk_stock_movements_quantity", sql`${t.quantity} <> 0`),
     check(

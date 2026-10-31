@@ -13,6 +13,7 @@ export type StockOnHandRow = {
   clothPieceVariantId: string;
   sizeId: string | null;
   colorId: string | null;
+  detailsKey: string;
   onHand: number;
 };
 
@@ -26,6 +27,7 @@ export async function getStockOnHand(
       clothPieceVariantId: stockMovements.clothPieceVariantId,
       sizeId: stockMovements.sizeId,
       colorId: stockMovements.colorId,
+      detailsKey: stockMovements.detailsKey,
       onHand,
     })
     .from(stockMovements)
@@ -34,7 +36,12 @@ export async function getStockOnHand(
         ? eq(stockMovements.clothPieceVariantId, filter.clothPieceVariantId)
         : undefined,
     )
-    .groupBy(stockMovements.clothPieceVariantId, stockMovements.sizeId, stockMovements.colorId)
+    .groupBy(
+      stockMovements.clothPieceVariantId,
+      stockMovements.sizeId,
+      stockMovements.colorId,
+      stockMovements.detailsKey,
+    )
     .having(filter.includeZero ? undefined : sql`SUM(${stockMovements.quantity}) <> 0`);
   return rows.map((r) => ({ ...r, onHand: Number(r.onHand) }));
 }
@@ -42,12 +49,18 @@ export async function getStockOnHand(
 /** Units on hand of one exact variant + size + colour (null matches null). */
 export async function getStockOnHandFor(
   db: Database,
-  item: { clothPieceVariantId: string; sizeId: string | null; colorId: string | null },
+  item: {
+    clothPieceVariantId: string;
+    sizeId: string | null;
+    colorId: string | null;
+    detailsKey?: string;
+  },
 ): Promise<number> {
   const conditions: SQL[] = [
     eq(stockMovements.clothPieceVariantId, item.clothPieceVariantId),
     item.sizeId ? eq(stockMovements.sizeId, item.sizeId) : isNull(stockMovements.sizeId),
     item.colorId ? eq(stockMovements.colorId, item.colorId) : isNull(stockMovements.colorId),
+    eq(stockMovements.detailsKey, item.detailsKey ?? ""),
   ];
   const [row] = await db
     .select({ onHand: sql<number>`COALESCE(SUM(${stockMovements.quantity}), 0)::int` })
@@ -62,6 +75,8 @@ export type StockItem = {
   clothPieceVariantId: string;
   sizeId: string | null;
   colorId: string | null;
+  detailsKey: string;
+  detailsLabel: string;
   garment: string;
   sizeLabel: string | null;
   sizeOrder: number | null;
@@ -78,7 +93,8 @@ export type StockItem = {
  */
 export async function listStockItems(db: Database): Promise<StockItem[]> {
   const rows = await db.execute(sql`
-    SELECT m.cloth_piece_variant_id, m.size_id, m.color_id,
+    SELECT m.cloth_piece_variant_id, m.size_id, m.color_id, m.details_key,
+      max(m.details_label) AS details_label,
       cp.name || ' — ' || v.name AS garment, gs.label AS size_label, gs.sort_order AS size_order,
       gc.label AS color_label, gc.hex AS color_hex, v.selling_price,
       sum(m.quantity)::int AS on_hand, max(m.created_at) AS last_at
@@ -87,15 +103,17 @@ export async function listStockItems(db: Database): Promise<StockItem[]> {
     JOIN cloth_pieces cp ON cp.id = v.cloth_piece_id
     LEFT JOIN garment_sizes gs ON gs.id = m.size_id
     LEFT JOIN garment_colors gc ON gc.id = m.color_id
-    GROUP BY m.cloth_piece_variant_id, m.size_id, m.color_id, cp.name, v.name, gs.label,
+    GROUP BY m.cloth_piece_variant_id, m.size_id, m.color_id, m.details_key, cp.name, v.name, gs.label,
       gs.sort_order, gc.label, gc.hex, v.selling_price
-    ORDER BY garment, gs.sort_order NULLS LAST, gc.label NULLS FIRST
+    ORDER BY garment, gs.sort_order NULLS LAST, gc.label NULLS FIRST, m.details_key
   `);
   return (
     rows.rows as {
       cloth_piece_variant_id: string;
       size_id: string | null;
       color_id: string | null;
+      details_key: string;
+      details_label: string;
       garment: string;
       size_label: string | null;
       size_order: number | null;
@@ -109,6 +127,8 @@ export async function listStockItems(db: Database): Promise<StockItem[]> {
     clothPieceVariantId: r.cloth_piece_variant_id,
     sizeId: r.size_id,
     colorId: r.color_id,
+    detailsKey: r.details_key,
+    detailsLabel: r.details_label,
     garment: r.garment,
     sizeLabel: r.size_label,
     sizeOrder: r.size_order,
@@ -136,7 +156,12 @@ export type StockMovementRow = {
 /** Movement history of one variant + size + colour, newest first. */
 export async function listStockMovements(
   db: Database,
-  item: { clothPieceVariantId: string; sizeId: string | null; colorId: string | null },
+  item: {
+    clothPieceVariantId: string;
+    sizeId: string | null;
+    colorId: string | null;
+    detailsKey?: string;
+  },
   limit = 100,
 ): Promise<StockMovementRow[]> {
   const rows = await db.execute(sql`
@@ -157,6 +182,7 @@ export async function listStockMovements(
     WHERE m.cloth_piece_variant_id = ${item.clothPieceVariantId}
       AND m.size_id IS NOT DISTINCT FROM ${item.sizeId}::uuid
       AND m.color_id IS NOT DISTINCT FROM ${item.colorId}::uuid
+      AND m.details_key = ${item.detailsKey ?? ""}
     ORDER BY m.created_at DESC, m.id DESC
     LIMIT ${limit}
   `);
@@ -183,4 +209,27 @@ export async function listStockMovements(
     createdByName: r.created_by_name,
     createdAt: new Date(r.created_at),
   }));
+}
+
+// ─── Details that split stock (T139) ─────────────────────────────────────────
+
+/**
+ * The custom details of a cell's line that make its units a different stock item.
+ * Typed values are left out: they are never counted as their own item.
+ */
+export async function stockDetailsOfCell(
+  db: Pick<Database, "execute">,
+  cellId: string,
+): Promise<{ detailsKey: string; detailsLabel: string }> {
+  const res = await db.execute(sql`
+    SELECT coalesce(string_agg(d.id || ':' || v.id, '|' ORDER BY d.id), '') AS key,
+      coalesce(string_agg(d.name || ': ' || v.label, ' · ' ORDER BY d.sort_order, d.name), '') AS label
+    FROM pedido_line_cells c
+    JOIN pedido_line_details pld ON pld.line_id = c.line_id
+    JOIN details d ON d.id = pld.detail_id AND d.splits_stock
+    JOIN detail_values v ON v.id = pld.value_id
+    WHERE c.id = ${cellId}
+  `);
+  const row = res.rows[0] as { key: string; label: string } | undefined;
+  return { detailsKey: row?.key ?? "", detailsLabel: row?.label ?? "" };
 }

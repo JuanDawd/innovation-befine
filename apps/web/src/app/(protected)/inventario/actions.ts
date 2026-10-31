@@ -74,6 +74,7 @@ const itemSchema = z.object({
   clothPieceVariantId: z.uuid(),
   sizeId: z.uuid().nullable(),
   colorId: z.uuid().nullable(),
+  detailsKey: z.string().max(1000).default(""),
 });
 
 export async function getInventory(): Promise<ActionResult<Inventory>> {
@@ -157,6 +158,7 @@ export async function adjustStock(rawInput: unknown): Promise<ActionResult<{ onH
       WHERE cloth_piece_variant_id = ${input.clothPieceVariantId}
         AND size_id IS NOT DISTINCT FROM ${input.sizeId}::uuid
         AND color_id IS NOT DISTINCT FROM ${input.colorId}::uuid
+        AND details_key = ${input.detailsKey}
     `);
     const onHand = Number((onHandRes.rows[0] as { n: number }).n);
     if (already) return { ok: true as const, onHand };
@@ -181,10 +183,17 @@ export async function adjustStock(rawInput: unknown): Promise<ActionResult<{ onH
 
     const after = onHand + input.quantity;
     const negative = after < 0;
+    const [labelled] = await tx
+      .select({ label: stockMovements.detailsLabel })
+      .from(stockMovements)
+      .where(eq(stockMovements.detailsKey, input.detailsKey))
+      .limit(1);
     await tx.insert(stockMovements).values({
       clothPieceVariantId: input.clothPieceVariantId,
       sizeId: input.sizeId,
       colorId: input.colorId,
+      detailsKey: input.detailsKey,
+      detailsLabel: labelled?.label ?? "",
       quantity: input.quantity,
       kind: "adjustment",
       refType: "adjustment",
@@ -197,7 +206,7 @@ export async function adjustStock(rawInput: unknown): Promise<ActionResult<{ onH
       actor: actorOf(g.user),
       action: "stock.adjust",
       entityType: "stock",
-      entityId: `${input.clothPieceVariantId}:${input.sizeId ?? "-"}:${input.colorId ?? "-"}`,
+      entityId: `${input.clothPieceVariantId}:${input.sizeId ?? "-"}:${input.colorId ?? "-"}:${input.detailsKey}`,
       summary:
         `Ajustó el inventario de ${name}: ${input.quantity > 0 ? "+" : ""}${input.quantity} (${onHand} → ${after})` +
         (negative ? " · autorizó quedar por debajo de 0" : ""),

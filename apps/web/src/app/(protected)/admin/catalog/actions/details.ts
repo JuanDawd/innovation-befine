@@ -18,6 +18,7 @@ import {
   detailValues,
   garmentColors,
   garmentSizes,
+  pedidoLineDetails,
   productDetails,
   productDetailValues,
 } from "@befine/db/schema";
@@ -157,6 +158,19 @@ export async function updateDetail(id: string, rawInput: unknown): Promise<Actio
     return await getTxDb().transaction(async (tx): Promise<ActionResult<null>> => {
       const [before] = await tx.select().from(details).where(eq(details.id, id)).for("update");
       if (!before) return notFound;
+      // What was counted under the old rule couldn't be told apart afterwards.
+      if (!before.builtin && before.splitsStock !== parsed.data.splitsStock) {
+        const [used] = await tx
+          .select({ lineId: pedidoLineDetails.lineId })
+          .from(pedidoLineDetails)
+          .where(eq(pedidoLineDetails.detailId, id))
+          .limit(1);
+        if (used)
+          return fail(
+            "CONFLICT",
+            "Este detalle ya se usa en pedidos: no se puede cambiar si separa el inventario.",
+          );
+      }
       // A built-in detail's rules are how its columns work; only its name is free.
       const values = before.builtin ? { name: parsed.data.name } : parsed.data;
       await tx

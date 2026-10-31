@@ -34,6 +34,7 @@ import {
   type DayClosingStatus,
   type ReviewGroup,
   type StoredClosingLine,
+  stockDetailsOfCell,
 } from "@befine/db";
 import { approveClosingSchema, DEFECT_LABELS, reviewUnitsSchema } from "@befine/types";
 import type { ActionResult } from "@/lib/action-result";
@@ -41,7 +42,7 @@ import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
 import { financialBreadcrumb, reportError } from "@/lib/observability";
 import { getBusinessSettings } from "@/lib/business-settings";
 import { createNotification } from "@/lib/notifications";
-import { actorOf, logActivity } from "@/lib/activity";
+import { actorOf, logActivity, type ActivityTx } from "@/lib/activity";
 import { applyDayCount, DayCountError } from "@/lib/day-count";
 import { hasRole } from "@/lib/middleware-helpers";
 import {
@@ -116,7 +117,7 @@ export async function reviewUnits(
       if (!dayId) throw new ConflictError("CONFLICT", "Abre el día para revisar unidades.");
 
       const rows = await tx.execute(sql`
-        SELECT a.id, a.employee_id, a.piece_rate, p.id AS pedido_id, p.number, p.destination,
+        SELECT a.id, a.cell_id, a.employee_id, a.piece_rate, p.id AS pedido_id, p.number, p.destination,
           l.cloth_piece_variant_id AS variant_id, c.size_id, l.color_id,
           u.name AS clothier_name, cp.name || ' — ' || v.name AS garment,
           coalesce(gs.label, c.size_other) AS size_label,
@@ -141,6 +142,7 @@ export async function reviewUnits(
             pedido_id: string;
             number: number;
             destination: "client" | "inventory";
+            cell_id: string;
             variant_id: string;
             size_id: string | null;
             color_id: string | null;
@@ -190,6 +192,7 @@ export async function reviewUnits(
       // this review. Client pedido garments never enter general stock (§3.6.25).
       if (a.destination === "inventory" && input.approved > 0)
         await tx.insert(stockMovements).values({
+          ...(await stockDetailsOfCell(tx as unknown as ActivityTx, a.cell_id)),
           clothPieceVariantId: a.variant_id,
           sizeId: a.size_id,
           colorId: a.color_id,

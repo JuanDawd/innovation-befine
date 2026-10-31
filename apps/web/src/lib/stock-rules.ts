@@ -47,6 +47,7 @@ export function stockLockKey(item: {
   clothPieceVariantId: string;
   sizeId: string | null;
   colorId: string | null;
+  detailsKey?: string;
 }): string {
-  return `stock:${item.clothPieceVariantId}:${item.sizeId ?? "-"}:${item.colorId ?? "-"}`;
+  return `stock:${item.clothPieceVariantId}:${item.sizeId ?? "-"}:${item.colorId ?? "-"}${item.detailsKey ? `:${item.detailsKey}` : ""}`;
 }
