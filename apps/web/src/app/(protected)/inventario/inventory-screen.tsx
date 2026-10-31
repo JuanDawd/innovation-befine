@@ -41,8 +41,14 @@ import { cn } from "@/lib/utils";
 import { formatDateTime } from "@/i18n";
 import { adjustStock, getStockHistory, type Inventory } from "./actions";
 
-type ItemKey = { clothPieceVariantId: string; sizeId: string | null; colorId: string | null };
-const keyOf = (i: ItemKey) => `${i.clothPieceVariantId}:${i.sizeId ?? "-"}:${i.colorId ?? "-"}`;
+type ItemKey = {
+  clothPieceVariantId: string;
+  sizeId: string | null;
+  colorId: string | null;
+  detailsKey: string;
+};
+const keyOf = (i: ItemKey) =>
+  `${i.clothPieceVariantId}:${i.sizeId ?? "-"}:${i.colorId ?? "-"}:${i.detailsKey}`;
 
 const when = (d: Date | string) => formatDateTime(d);
 
@@ -101,6 +107,7 @@ function AdjustDialog({
         clothPieceVariantId: variantId,
         sizeId: sizeId || null,
         colorId: colorId || null,
+        detailsKey: item && item !== "new" ? item.detailsKey : "",
         quantity: signed,
         reasonCode,
         note: note || undefined,
@@ -315,7 +322,9 @@ function HistoryDialog({
             <DialogDescription>
               {item.garment}
               {item.sizeLabel ? ` · ${item.sizeLabel}` : ""}
-              {item.colorLabel ? ` · ${item.colorLabel}` : ""} · {t("onHand", { n: item.onHand })}
+              {item.colorLabel ? ` · ${item.colorLabel}` : ""}
+              {item.detailsLabel ? ` · ${item.detailsLabel}` : ""} ·{" "}
+              {t("onHand", { n: item.onHand })}
             </DialogDescription>
           )}
         </DialogHeader>
@@ -378,6 +387,7 @@ export function InventoryScreen({ data }: { data: Inventory }) {
         clothPieceVariantId: item.clothPieceVariantId,
         sizeId: item.sizeId,
         colorId: item.colorId,
+        detailsKey: item.detailsKey,
       });
       setHistoryRows(res.success ? res.data : []);
     });
@@ -389,7 +399,7 @@ export function InventoryScreen({ data }: { data: Inventory }) {
       (i) =>
         (!onlyInStock || i.onHand !== 0) &&
         (!query ||
-          [i.garment, i.sizeLabel, i.colorLabel]
+          [i.garment, i.sizeLabel, i.colorLabel, i.detailsLabel]
             .filter(Boolean)
             .join(" ")
             .toLowerCase()
@@ -463,8 +473,14 @@ export function InventoryScreen({ data }: { data: Inventory }) {
                 <span className="min-w-0">
                   <span className="block truncate text-sm font-medium">{item.garment}</span>
                   <span className="block text-xs text-muted-foreground">
-                    {[item.sizeLabel ?? t("noSize"), item.colorLabel ?? t("noColor")].join(" · ")} ·{" "}
-                    {t("lastMovement", { date: when(item.lastMovementAt) })}
+                    {[
+                      item.sizeLabel ?? t("noSize"),
+                      item.colorLabel ?? t("noColor"),
+                      item.detailsLabel,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}{" "}
+                    · {t("lastMovement", { date: when(item.lastMovementAt) })}
                   </span>
                 </span>
               </button>

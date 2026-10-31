@@ -539,7 +539,7 @@ The pedido form offers only what the product allows, and the server enforces it.
 ## T139 — Stock counts by details that split it
 
 **Phase:** 11G — Details
-**Status:** pending
+**Status:** done (2026-10-31) — Talla and Color keep their own tables as built-in details; a new item made through "Nuevo ajuste" has no custom details
 **Dependencies:** T138
 
 ### What to do
@@ -548,6 +548,6 @@ Stock and Vender prenda count each combination of details that split stock as it
 
 ### Acceptance criteria
 
-- [ ] Selling can't take units of a different combination
-- [ ] Existing stock keeps its count
-- [ ] A detail in use can't change whether it splits stock
+- [x] Selling can't take units of a different combination
+- [x] Existing stock keeps its count
+- [x] A detail in use can't change whether it splits stock

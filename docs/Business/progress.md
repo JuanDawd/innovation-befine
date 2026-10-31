@@ -725,7 +725,7 @@ Update `apps/web/src/lib/db/README.md` with a short "When to use `getDb()` vs `g
 | T136 | E2E, training guide and screenshots                          | pending | T135                         |
 | T137 | Product details catalog and product rules                    | done    | T110                         |
 | T138 | Pedidos follow product details                               | done    | T137                         |
-| T139 | Stock counts by details that split it                        | pending | T138                         |
+| T139 | Stock counts by details that split it                        | done    | T138                         |
 
 ---
 
