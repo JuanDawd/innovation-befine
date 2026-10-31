@@ -4,7 +4,7 @@ import { unstable_doesMiddlewareMatch } from "next/experimental/testing/server";
 vi.mock("@/lib/auth", () => ({ auth: { api: { getSession: vi.fn() } } }));
 vi.mock("@/lib/middleware-settings", () => ({ getCashierCanAccessAdminCached: vi.fn() }));
 
-import { config } from "@/middleware";
+import { config } from "@/proxy";
 
 const runs = (url: string) => unstable_doesMiddlewareMatch({ config, url });
 
