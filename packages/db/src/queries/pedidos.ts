@@ -363,6 +363,11 @@ export async function getPedidoDetail(
       colorHex: garmentColors.hex,
       colorOther: pedidoLines.colorOther,
       style: pedidoLines.style,
+      extraDetails: sql<
+        string | null
+      >`(SELECT string_agg(dd.name || ': ' || coalesce(dv.label, pld.value_other), ' · ' ORDER BY dd.sort_order, dd.name)
+  FROM pedido_line_details pld JOIN details dd ON dd.id = pld.detail_id
+  LEFT JOIN detail_values dv ON dv.id = pld.value_id WHERE pld.line_id = ${pedidoLines.id})`,
       instructions: pedidoLines.instructions,
       unitPrice: pedidoLines.unitPrice,
       priceReason: pedidoLines.priceReason,
@@ -531,7 +536,7 @@ export async function getPedidoDetail(
       variantName: l.variantName ?? "—",
       colorLabel: l.colorLabel ?? l.colorOther,
       colorHex: l.colorHex,
-      style: l.style,
+      style: [l.style, l.extraDetails].filter(Boolean).join(" · ") || null,
       instructions: l.instructions,
       unitPrice: l.unitPrice!,
       priceReason: l.priceReason,

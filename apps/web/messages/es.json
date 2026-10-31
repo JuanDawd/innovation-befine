@@ -1411,7 +1411,8 @@
       "changeReasonRequired": "Escribe el motivo del cambio.",
       "belowMinimum": "La talla {size} no puede bajar de {n}: ya están asignadas, aprobadas o entregadas.",
       "updatedWithCredit": "Pedido actualizado. Queda saldo a favor de {amount}.",
-      "startedBanner": "Este pedido ya está en producción. Puedes aumentar cantidades; para bajar, quitar tallas o cambiar especificaciones se aplican las reglas de producción."
+      "startedBanner": "Este pedido ya está en producción. Puedes aumentar cantidades; para bajar, quitar tallas o cambiar especificaciones se aplican las reglas de producción.",
+      "otherDetail": "Otro"
     },
     "status": {
       "pending": "Pendiente",

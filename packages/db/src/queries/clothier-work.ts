@@ -102,6 +102,11 @@ export async function getClothierWork(
       garment: garmentName,
       color: colorName,
       style: pedidoLines.style,
+      extraDetails: sql<
+        string | null
+      >`(SELECT string_agg(dd.name || ': ' || coalesce(dv.label, pld.value_other), ' · ' ORDER BY dd.sort_order, dd.name)
+  FROM pedido_line_details pld JOIN details dd ON dd.id = pld.detail_id
+  LEFT JOIN detail_values dv ON dv.id = pld.value_id WHERE pld.line_id = ${pedidoLines.id})`,
       instructions: pedidoLines.instructions,
       specChange: pedidoLines.specChange,
       specChangedAt: pedidoLines.specChangedAt,
@@ -164,7 +169,7 @@ export async function getClothierWork(
       destination: m.destination,
       garment: m.garment,
       color: m.color,
-      style: m.style,
+      style: [m.style, m.extraDetails].filter(Boolean).join(" · ") || null,
       instructions: m.instructions,
       sizeLabel: m.sizeLabel,
       sizeOrder: m.sizeOrder ?? Number.MAX_SAFE_INTEGER,
@@ -239,7 +244,10 @@ export async function listUnassignedCells(
   }>(sql`
     SELECT c.id AS cell_id, p.id AS pedido_id, p.number AS pedido_number, p.destination,
       cp.name || ' — ' || v.name AS garment,
-      coalesce(gc.label, l.color_other) AS color, l.style, l.instructions,
+      coalesce(gc.label, l.color_other) AS color,
+      concat_ws(' · ', l.style, (SELECT string_agg(dd.name || ': ' || coalesce(dv.label, pld.value_other), ' · ' ORDER BY dd.sort_order, dd.name)
+        FROM pedido_line_details pld JOIN details dd ON dd.id = pld.detail_id
+        LEFT JOIN detail_values dv ON dv.id = pld.value_id WHERE pld.line_id = l.id)) AS style, l.instructions,
       coalesce(gs.label, c.size_other) AS size_label, gs.sort_order AS size_order,
       (c.quantity
         - coalesce((SELECT sum(a.quantity - a.moved_out) FROM assignments a WHERE a.cell_id = c.id), 0)

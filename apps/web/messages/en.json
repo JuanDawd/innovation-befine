@@ -1379,7 +1379,8 @@
       "changeReasonRequired": "Write the reason for the change.",
       "belowMinimum": "Size {size} can't go below {n}: those units are assigned, approved or delivered.",
       "updatedWithCredit": "Pedido updated. The client has {amount} in credit.",
-      "startedBanner": "This pedido is in production. You can raise quantities; lowering them, removing sizes or changing specs follows the production rules."
+      "startedBanner": "This pedido is in production. You can raise quantities; lowering them, removing sizes or changing specs follows the production rules.",
+      "otherDetail": "Other"
     },
     "status": {
       "pending": "Pending",

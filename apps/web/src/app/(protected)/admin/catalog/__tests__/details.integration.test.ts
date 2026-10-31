@@ -76,8 +76,10 @@ describe.skipIf(!hasDb)("details", () => {
     const piece = await createClothPiece({ name: `Pieza ${tag()}` });
     if (!piece.success) throw new Error(piece.error.message);
 
+    const [talla] = await getDb().select().from(s.details).where(eq(s.details.builtin, "size"));
     const saved = await saveProductDetails(piece.data.id, {
       details: [
+        { detailId: talla!.id, required: true, allValues: true, valueIds: [] },
         { detailId: detail.data.id, required: true, allValues: false, valueIds: [seda.data.id] },
       ],
     });
@@ -91,7 +93,7 @@ describe.skipIf(!hasDb)("details", () => {
       allValues: false,
       valueIds: [seda.data.id],
     });
-    expect(rows.data.filter((r) => r.used)).toHaveLength(1);
+    expect(rows.data.filter((r) => r.used)).toHaveLength(2);
   });
 
   it("requires a value when a product doesn't take them all", async () => {

@@ -343,6 +343,13 @@ export async function saveProductDetails(
       .where(eq(clothPieces.id, clothPieceId))
       .for("update");
     if (!piece) return fail("NOT_FOUND", "Producto no encontrado");
+    // Assignments, reports and deliveries all work per size.
+    const [talla] = await tx
+      .select({ id: details.id })
+      .from(details)
+      .where(eq(details.builtin, "size"));
+    if (talla && !input.some((d) => d.detailId === talla.id))
+      return fail("VALIDATION_ERROR", "Todo producto usa Talla.");
     await tx.delete(productDetailValues).where(eq(productDetailValues.clothPieceId, clothPieceId));
     await tx.delete(productDetails).where(eq(productDetails.clothPieceId, clothPieceId));
     if (input.length)
