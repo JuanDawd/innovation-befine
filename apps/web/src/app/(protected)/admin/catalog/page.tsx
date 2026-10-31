@@ -16,16 +16,19 @@ import { ServiceCatalog } from "@/components/service-catalog";
 import { ClothPieceCatalog } from "@/components/cloth-piece-catalog";
 import { CatalogTabs } from "@/components/catalog-tabs";
 import { GarmentAttributeCatalog } from "@/components/garment-attribute-catalog";
+import { DetailCatalog } from "@/components/detail-catalog";
 import { listAllServices } from "./actions/services";
 import { listAllClothPieces } from "./actions/cloth-pieces";
 import { listGarmentAttributes } from "./actions/garment-attributes";
+import { listDetails } from "./actions/details";
 import { PageHeader } from "@/components/page-header";
 
 async function CatalogData() {
-  const [servicesResult, piecesResult, garmentsResult] = await Promise.all([
+  const [servicesResult, piecesResult, garmentsResult, detailsResult] = await Promise.all([
     listAllServices(),
     listAllClothPieces(),
     listGarmentAttributes(),
+    listDetails(),
   ]);
 
   const services = servicesResult.success ? servicesResult.data : [];
@@ -39,6 +42,7 @@ async function CatalogData() {
       garments={
         <GarmentAttributeCatalog initialSizes={garments.sizes} initialColors={garments.colors} />
       }
+      details={<DetailCatalog initialDetails={detailsResult.success ? detailsResult.data : []} />}
     />
   );
 }

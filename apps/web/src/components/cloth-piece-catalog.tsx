@@ -30,6 +30,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import { ProductDetailsDialog } from "@/components/product-details-dialog";
 import {
   Dialog,
   DialogContent,
@@ -674,6 +675,10 @@ function PieceRow({
           )}
         </div>
       )}
+
+      <div className="px-4 pb-2">
+        <ProductDetailsDialog clothPieceId={localPiece.id} name={localPiece.name} />
+      </div>
 
       <div className="px-4 pb-4">
         <CatalogAuditLog entityId={localPiece.id} />

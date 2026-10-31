@@ -21,6 +21,7 @@ export { businessDays } from "./business-days";
 export { services, serviceVariants } from "./services";
 export { clothPieces, clothPieceVariants } from "./cloth-pieces";
 export { garmentSizes, garmentColors } from "./garment-attributes";
+export { details, detailValues, productDetails, productDetailValues } from "./details";
 export {
   pedidoDestinationEnum,
   pedidoLineKindEnum,

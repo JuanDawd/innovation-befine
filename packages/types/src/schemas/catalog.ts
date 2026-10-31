@@ -60,6 +60,34 @@ export const auditLogPageSchema = z.object({
 });
 export type AuditLogPageInput = z.infer<typeof auditLogPageSchema>;
 
+// ─── Product details (T137) ─────────────────────────────────────────────────
+
+export const detailSchema = z.object({
+  name: z.string().trim().min(1, "El nombre es obligatorio").max(40, "Máximo 40 caracteres"),
+  splitsStock: z.boolean(),
+  allowFreeText: z.boolean(),
+});
+
+export const detailValueSchema = z.object({
+  label: z.string().trim().min(1, "El valor es obligatorio").max(40, "Máximo 40 caracteres"),
+});
+
+export const productDetailsSchema = z.object({
+  details: z
+    .array(
+      z.object({
+        detailId: z.uuid(),
+        required: z.boolean(),
+        allValues: z.boolean(),
+        valueIds: z.array(z.uuid()).max(500),
+      }),
+    )
+    .max(50)
+    .refine((list) => list.every((d) => d.allValues || d.valueIds.length > 0), {
+      message: "Elige al menos un valor para cada detalle, o déjalo con todos",
+    }),
+});
+
 // ─── Garment sizes and colours (T110) ──────────────────────────────────────
 
 export const garmentSizeSchema = z.object({
