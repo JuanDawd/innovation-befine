@@ -35,6 +35,10 @@ export const KEEP_TABLES = new Set([
   "cloth_piece_variants",
   "garment_sizes",
   "garment_colors",
+  "details",
+  "detail_values",
+  "product_details",
+  "product_detail_values",
   "business_settings",
 ]);
 

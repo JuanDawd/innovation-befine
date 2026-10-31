@@ -347,6 +347,39 @@
       "emptySizesDescription": "Add the first size to use it in pedidos.",
       "emptyColorsTitle": "No colours",
       "emptyColorsDescription": "Add the first colour to use it in pedidos."
+    },
+    "detailsTab": "Details",
+    "details": {
+      "tab": "Details",
+      "description": "What a product can vary by: fabric, length, embroidery… Each product then picks which it uses.",
+      "create": "New detail",
+      "name": "Name",
+      "splitsStock": "Splits stock",
+      "splitsStockHelp": "Each value is a separate stock item, like size.",
+      "allowFreeText": "Allows typing another value",
+      "allowFreeTextHelp": "Typed values aren't counted as a separate stock item.",
+      "builtin": "Built in",
+      "builtinHint": "Its values are managed in Sizes and colours.",
+      "styleHint": "Typed freely on each order.",
+      "values": "Values",
+      "addValue": "Add value",
+      "valueLabel": "New value",
+      "noValues": "No values yet",
+      "empty": "No details",
+      "save": "Save",
+      "saved": "Detail saved",
+      "deactivate": "Deactivate",
+      "restore": "Restore",
+      "inactive": "Inactive",
+      "splitsBadge": "Splits stock",
+      "productButton": "Product details",
+      "productTitle": "Details of {name}",
+      "productDescription": "Choose which details this product uses, whether they're required and which values it comes in.",
+      "uses": "Uses this detail",
+      "required": "Required",
+      "allValues": "All values",
+      "productSaved": "Details saved",
+      "loadError": "Couldn't load the details"
     }
   },
   "clients": {
@@ -1346,7 +1379,8 @@
       "changeReasonRequired": "Write the reason for the change.",
       "belowMinimum": "Size {size} can't go below {n}: those units are assigned, approved or delivered.",
       "updatedWithCredit": "Pedido updated. The client has {amount} in credit.",
-      "startedBanner": "This pedido is in production. You can raise quantities; lowering them, removing sizes or changing specs follows the production rules."
+      "startedBanner": "This pedido is in production. You can raise quantities; lowering them, removing sizes or changing specs follows the production rules.",
+      "otherDetail": "Other"
     },
     "status": {
       "pending": "Pending",

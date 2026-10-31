@@ -497,3 +497,57 @@ E2E: create pedido → assign/claim → report → review (incl. rework) → clo
 
 - [ ] Full flow green on chromium and mobile-chrome
 - [ ] Training guides cover Pedidos, Producción, Inventario, Mi trabajo, Actividad
+
+---
+
+## T137 — Product details catalog and product rules
+
+**Phase:** 11G — Details
+**Status:** done (2026-10-31)
+**Dependencies:** T110
+
+### What to do
+
+The admin creates details (Tela, Largo…) with values, and sets whether each splits stock and allows typed values. Each product picks its details, required or optional, and which values it comes in. Talla, Color and Estilo are built-in details whose values stay where production and stock already read them.
+
+### Acceptance criteria
+
+- [x] Existing and new products start with Talla, Color and Estilo, optional, all values
+- [x] A built-in detail's rules can't be changed
+- [x] Every change is in the activity log
+
+---
+
+## T138 — Pedidos follow product details
+
+**Phase:** 11G — Details
+**Status:** done (2026-10-31) — custom details freeze once a line is in production
+**Dependencies:** T137
+
+### What to do
+
+The pedido form offers only what the product allows, and the server enforces it. Lines save their custom details, and every screen showing a line shows them.
+
+### Acceptance criteria
+
+- [x] A value the product doesn't come in, or a missing required detail, is refused by the server
+- [x] A typed value is refused when the detail doesn't allow it
+- [x] Existing pedidos stay editable
+
+---
+
+## T139 — Stock counts by details that split it
+
+**Phase:** 11G — Details
+**Status:** done (2026-10-31) — Talla and Color keep their own tables as built-in details; a new item made through "Nuevo ajuste" has no custom details
+**Dependencies:** T138
+
+### What to do
+
+Stock and Vender prenda count each combination of details that split stock as its own item. Typed values never become stock items.
+
+### Acceptance criteria
+
+- [x] Selling can't take units of a different combination
+- [x] Existing stock keeps its count
+- [x] A detail in use can't change whether it splits stock

@@ -12,7 +12,7 @@
 
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { getDb, getTxDb } from "@/lib/db";
 import { clothPieces, clothPieceVariants } from "@befine/db/schema";
@@ -180,6 +180,12 @@ export async function createClothPiece(rawInput: unknown): Promise<ActionResult<
       .insert(clothPieces)
       .values({ name: parsed.data.name, description: parsed.data.description ?? null })
       .returning({ id: clothPieces.id });
+
+    // T137: a new product starts with Talla, Color and Estilo, all optional and all values.
+    await tx.execute(sql`
+      INSERT INTO product_details (cloth_piece_id, detail_id)
+      SELECT ${created.id}, id FROM details WHERE builtin IS NOT NULL AND is_active
+    `);
 
     await writeAuditLog(tx, {
       entityId: created.id,

@@ -30,6 +30,7 @@ import {
   formatPedidoNumber,
   formatPesos,
   planRestructureCell,
+  stockDetailsOfCell,
   type RestructureCell,
   type RestructureCellPlan,
   type RestructureDecision,
@@ -524,6 +525,7 @@ export async function approveRestructure(
         if (plan.toStock > 0)
           await tx.insert(stockMovements).values({
             clothPieceVariantId: info.variantId,
+            ...(await stockDetailsOfCell(db, plan.cellId)),
             sizeId: info.sizeId,
             colorId: info.colorId,
             quantity: plan.toStock,

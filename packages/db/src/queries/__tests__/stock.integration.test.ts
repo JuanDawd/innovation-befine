@@ -84,7 +84,13 @@ describeDb("getStockOnHand", () => {
       await f.move(-2, "sale", f.m);
       expect(await getStockOnHand(db)).toEqual([]);
       expect(await getStockOnHand(db, { includeZero: true })).toEqual([
-        { clothPieceVariantId: f.variantId, sizeId: f.m, colorId: f.rojo, onHand: 0 },
+        {
+          clothPieceVariantId: f.variantId,
+          sizeId: f.m,
+          colorId: f.rojo,
+          detailsKey: "",
+          onHand: 0,
+        },
       ]);
     }));
 

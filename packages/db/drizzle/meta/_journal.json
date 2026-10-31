@@ -407,6 +407,27 @@
       "when": 1793477083534,
       "tag": "0057_t120_restructure",
       "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "7",
+      "when": 1793484452258,
+      "tag": "0058_t137_details",
+      "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "7",
+      "when": 1793484800921,
+      "tag": "0059_t138_line_details",
+      "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1793485464400,
+      "tag": "0060_t139_stock_details",
+      "breakpoints": true
     }
   ]
 }

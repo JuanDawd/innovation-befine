@@ -49,6 +49,8 @@ export const clothSales = pgTable(
       .references(() => clothPieceVariants.id, { onDelete: "restrict" }),
     sizeId: uuid("size_id").references(() => garmentSizes.id, { onDelete: "restrict" }),
     colorId: uuid("color_id").references(() => garmentColors.id, { onDelete: "restrict" }),
+    /** T139 — custom details of what was sold, "Tela: Seda" */
+    detailsLabel: text("details_label").notNull().default(""),
     quantity: integer("quantity").notNull().default(1),
     /** Snapshot of cloth_piece_variants.selling_price at sale time */
     unitPrice: bigint("unit_price", { mode: "number" }).notNull(),

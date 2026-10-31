@@ -11,16 +11,18 @@ import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { oneOf, useSearchParamState } from "@/hooks/use-search-param-state";
 
-const CATALOG_TABS = ["services", "clothPieces", "garments"] as const;
+const CATALOG_TABS = ["services", "clothPieces", "garments", "details"] as const;
 
 export function CatalogTabs({
   services,
   clothPieces,
   garments,
+  details,
 }: {
   services: ReactNode;
   clothPieces: ReactNode;
   garments: ReactNode;
+  details: ReactNode;
 }) {
   const t = useTranslations("catalog");
   const [tab, setTab] = useSearchParamState("tab", "services", oneOf(CATALOG_TABS));
@@ -29,8 +31,9 @@ export function CatalogTabs({
     { id: "services" as const, label: t("servicesTab") },
     { id: "clothPieces" as const, label: t("clothPiecesTab") },
     { id: "garments" as const, label: t("garmentsTab") },
+    { id: "details" as const, label: t("detailsTab") },
   ];
-  const panels = { services, clothPieces, garments };
+  const panels = { services, clothPieces, garments, details };
 
   return (
     <div className="space-y-4">

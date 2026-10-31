@@ -53,6 +53,8 @@ export type SellableStockItem = {
   clothPieceVariantId: string;
   sizeId: string | null;
   colorId: string | null;
+  detailsKey: string;
+  detailsLabel: string;
   garment: string;
   sizeLabel: string | null;
   colorLabel: string | null;
@@ -75,6 +77,7 @@ const createClothSaleSchema = z
     clothPieceVariantId: z.string().uuid("ID de variante inválido"),
     sizeId: z.uuid().nullable(),
     colorId: z.uuid().nullable(),
+    detailsKey: z.string().max(1000).default(""),
     quantity: z.number().int().min(1, "La cantidad debe ser al menos 1").max(1000),
     priceOverride: z.number().int().min(0, "El precio no puede ser negativo").nullable().optional(),
     clientId: z.string().uuid().nullable().optional(),
@@ -144,7 +147,8 @@ export async function listSellableStock(): Promise<ActionResult<SellableStock>> 
   const db = getDb();
   const [rows, day] = await Promise.all([
     db.execute(sql`
-      SELECT v.cloth_piece_id, m.cloth_piece_variant_id, m.size_id, m.color_id,
+      SELECT v.cloth_piece_id, m.cloth_piece_variant_id, m.size_id, m.color_id, m.details_key,
+        max(m.details_label) AS details_label,
         cp.name || ' — ' || v.name AS garment, gs.label AS size_label, gc.label AS color_label,
         v.selling_price, sum(m.quantity)::int AS on_hand
       FROM stock_movements m
@@ -152,7 +156,7 @@ export async function listSellableStock(): Promise<ActionResult<SellableStock>> 
       JOIN cloth_pieces cp ON cp.id = v.cloth_piece_id AND cp.is_active
       LEFT JOIN garment_sizes gs ON gs.id = m.size_id
       LEFT JOIN garment_colors gc ON gc.id = m.color_id
-      GROUP BY v.cloth_piece_id, m.cloth_piece_variant_id, m.size_id, m.color_id, cp.name,
+      GROUP BY v.cloth_piece_id, m.cloth_piece_variant_id, m.size_id, m.color_id, m.details_key, cp.name,
         v.name, gs.label, gs.sort_order, gc.label, v.selling_price
       HAVING ${isAdmin} OR sum(m.quantity) > 0
       ORDER BY garment, gs.sort_order NULLS LAST, gc.label NULLS FIRST
@@ -165,6 +169,8 @@ export async function listSellableStock(): Promise<ActionResult<SellableStock>> 
       cloth_piece_variant_id: string;
       size_id: string | null;
       color_id: string | null;
+      details_key: string;
+      details_label: string;
       garment: string;
       size_label: string | null;
       color_label: string | null;
@@ -176,6 +182,8 @@ export async function listSellableStock(): Promise<ActionResult<SellableStock>> 
     clothPieceVariantId: r.cloth_piece_variant_id,
     sizeId: r.size_id,
     colorId: r.color_id,
+    detailsKey: r.details_key,
+    detailsLabel: r.details_label,
     garment: r.garment,
     sizeLabel: r.size_label,
     colorLabel: r.color_label,
@@ -272,7 +280,12 @@ export async function createClothSale(
       };
   }
 
-  const item = { clothPieceVariantId: variant.id, sizeId: input.sizeId, colorId: input.colorId };
+  const item = {
+    clothPieceVariantId: variant.id,
+    sizeId: input.sizeId,
+    colorId: input.colorId,
+    detailsKey: input.detailsKey,
+  };
   const sale = await getTxDb().transaction(async (tx) => {
     // Retried submit — return the sale that was already recorded.
     const [existing] = await tx
@@ -292,15 +305,18 @@ export async function createClothSale(
       SELECT coalesce(sum(quantity), 0)::int AS n,
         (SELECT cp.name || ' — ' || v.name FROM cloth_piece_variants v
           JOIN cloth_pieces cp ON cp.id = v.cloth_piece_id WHERE v.id = ${variant.id}) AS garment,
+        max(details_label) AS details_label,
         (SELECT label FROM garment_sizes WHERE id = ${input.sizeId}::uuid) AS size,
         (SELECT label FROM garment_colors WHERE id = ${input.colorId}::uuid) AS color
       FROM stock_movements
       WHERE cloth_piece_variant_id = ${variant.id}
         AND size_id IS NOT DISTINCT FROM ${input.sizeId}::uuid
         AND color_id IS NOT DISTINCT FROM ${input.colorId}::uuid
+        AND details_key = ${input.detailsKey}
     `);
     const stock = onHandRes.rows[0] as {
       n: number;
+      details_label: string | null;
       garment: string;
       size: string | null;
       color: string | null;
@@ -327,6 +343,7 @@ export async function createClothSale(
         clothPieceVariantId: variant.id,
         sizeId: input.sizeId,
         colorId: input.colorId,
+        detailsLabel: stock.details_label ?? "",
         quantity: input.quantity,
         unitPrice,
         priceOverride: input.priceOverride ?? null,
@@ -348,6 +365,7 @@ export async function createClothSale(
       : null;
     await tx.insert(stockMovements).values({
       ...item,
+      detailsLabel: stock.details_label ?? "",
       quantity: -input.quantity,
       kind: "sale",
       refType: "cloth_sale",
@@ -356,13 +374,15 @@ export async function createClothSale(
       createdBy: emp.id,
     });
 
-    const name = [stock.garment, stock.size, stock.color].filter(Boolean).join(" · ");
+    const name = [stock.garment, stock.size, stock.color, stock.details_label]
+      .filter(Boolean)
+      .join(" · ");
     const total = (input.priceOverride ?? unitPrice) * input.quantity;
     await logActivity(tx, {
       actor: actorOf(session.user),
       action: "stock.sale",
       entityType: "stock",
-      entityId: `${variant.id}:${input.sizeId ?? "-"}:${input.colorId ?? "-"}`,
+      entityId: `${variant.id}:${input.sizeId ?? "-"}:${input.colorId ?? "-"}:${input.detailsKey}`,
       businessDayId: businessDay?.id ?? null,
       summary:
         `Vendió ${input.quantity} ${name} por ${formatPesos(total)} (${METHOD_ES[input.paymentMethod]})` +

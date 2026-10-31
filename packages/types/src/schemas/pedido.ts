@@ -45,6 +45,21 @@ export const pedidoGarmentLineSchema = z
     /** Why the specs changed on a line already in production (T119) */
     changeReason: optionalText(300),
     cells: z.array(pedidoCellSchema).min(1, "Agrega al menos una talla").max(60),
+    /** Custom details (T138); blank entries are left out by the form */
+    details: z
+      .array(
+        z
+          .object({
+            detailId: z.uuid(),
+            valueId: z.uuid().optional(),
+            valueOther: optionalText(40),
+          })
+          .refine((d) => Boolean(d.valueId) !== Boolean(d.valueOther), {
+            message: "Elige un valor de la lista o escribe otro",
+          }),
+      )
+      .max(50)
+      .default([]),
   })
   .refine((l) => !(l.colorId && l.colorOther), {
     message: "Elige un color de la lista o escribe otro, no ambos",
@@ -323,6 +338,8 @@ export const adjustStockSchema = z
     clothPieceVariantId: z.uuid("Elige la prenda"),
     sizeId: z.uuid().nullable(),
     colorId: z.uuid().nullable(),
+    /** T139: which details-split item; empty when it has none */
+    detailsKey: z.string().max(1000).default(""),
     /** Signed units: + adds stock, − removes it */
     quantity: z
       .number("Escribe la cantidad")

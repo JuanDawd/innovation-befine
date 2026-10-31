@@ -25,6 +25,7 @@ export type ActivityEntityType =
   | "cloth_piece_variant"
   | "garment_size"
   | "garment_color"
+  | "detail"
   | "business_settings"
   | "client"
   | "pedido"
@@ -133,6 +134,7 @@ const ENTITY_NOUN: Record<ActivityEntityType, string> = {
   cloth_piece: "la prenda",
   cloth_piece_variant: "la variante de prenda",
   garment_size: "la talla",
+  detail: "el detalle",
   garment_color: "el color",
   business_settings: "la configuración",
   client: "el cliente",
