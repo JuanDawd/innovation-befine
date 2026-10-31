@@ -1505,6 +1505,32 @@
       "saved": "Payment of {amount} recorded",
       "refunded": "Refund of {amount} recorded",
       "savedAfterHours": "Payment of {amount} saved after hours; it goes into the next day"
+    },
+    "restructure": {
+      "button": "Restructure",
+      "title": "Restructure order",
+      "description": "For changes below what has been made. An admin approves and everything applies at once: clothiers keep the pay for approved units.",
+      "cellState": "Ordered {ordered} · approved {approved} · delivered {delivered} · unreviewed {pending}",
+      "inRework": "{n} in rework: resolve them before approval.",
+      "newQuantity": "New quantity",
+      "toStock": "To stock",
+      "toScrap": "To scrap",
+      "pendingLabel": "{n} unreviewed",
+      "pendingChoose": "Choose what to do",
+      "pendingApprove": "Approve (paid)",
+      "pendingReject": "Reject (unpaid)",
+      "reason": "Reason",
+      "submit": "Send for approval",
+      "requested": "Sent for approval",
+      "pendingTitle": "Restructure pending",
+      "pendingBy": "Requested by {name}. Reason: {reason}",
+      "pendingCell": "{ordered} → {newQuantity} · to stock {toStock} · to scrap {toScrap}",
+      "rejectReason": "Reason for rejecting",
+      "approve": "Approve",
+      "reject": "Reject",
+      "approved": "Restructure approved",
+      "rejected": "Restructure rejected",
+      "waitingAdmin": "Waiting for an admin's approval."
     }
   },
   "miTrabajo": {

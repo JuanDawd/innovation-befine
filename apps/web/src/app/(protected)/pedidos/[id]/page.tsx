@@ -9,12 +9,17 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { formatMoney } from "@/i18n";
 import { cn } from "@/lib/utils";
+import { headers } from "next/headers";
+import { auth } from "@/lib/auth";
+import { hasRole } from "@/lib/middleware-helpers";
 import { getPedido, type PedidoViewer } from "../actions";
 import { AssignButton, AssignmentRow } from "./assignment-controls";
 import { PaymentDialog } from "./payment-dialog";
 import { RecordHistory } from "@/components/record-history";
 import { afterHoursNote } from "@/lib/pedido-payments";
 import { CancelPedidoDialog } from "./cancel-pedido-dialog";
+import { PendingRestructurePanel, RestructureDialog } from "./restructure-dialog";
+import { getPendingRestructure } from "../restructure-actions";
 import { RecordDeliveryDialog, type DeliverableLine } from "./record-delivery-dialog";
 
 /**
@@ -453,6 +458,10 @@ export default async function PedidoPage({ params }: { params: Promise<{ id: str
     notFound();
   }
   const pedido = res.data;
+  const pendingRes = await getPendingRestructure(id);
+  const pendingRestructure = pendingRes.success ? pendingRes.data : null;
+  const session = await auth.api.getSession({ headers: await headers() });
+  const canApproveRestructure = !!session && hasRole(session.user, "admin");
   const subtitle = pedido.client
     ? [pedido.client.name, pedido.client.phone].filter(Boolean).join(" · ")
     : t("inventory");
@@ -476,6 +485,9 @@ export default async function PedidoPage({ params }: { params: Promise<{ id: str
                 <PencilIcon className="size-4" aria-hidden="true" />
                 {tc("edit")}
               </Link>
+              {pedido.destination === "client" && !pendingRestructure && (
+                <RestructureDialog pedidoId={id} version={pedido.version} />
+              )}
               {/* Cancelling is blocked once units are approved (spec §3.4.18). */}
               {pedido.progress.approved === 0 && (
                 <CancelPedidoDialog
@@ -489,6 +501,13 @@ export default async function PedidoPage({ params }: { params: Promise<{ id: str
           ) : undefined
         }
       />
+      {pendingRestructure && pedido.status !== "cancelled" && (
+        <PendingRestructurePanel
+          draft={pendingRestructure}
+          version={pedido.version}
+          canApprove={canApproveRestructure}
+        />
+      )}
       <PedidoContent pedido={pedido} />
       <section aria-labelledby="pedido-history" className="space-y-3 rounded-xl border bg-card p-4">
         <h2 id="pedido-history" className="text-lg font-semibold">

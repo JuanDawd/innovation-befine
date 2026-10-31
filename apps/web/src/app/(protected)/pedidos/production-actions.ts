@@ -105,7 +105,7 @@ async function unassignedUnits(tx: ActivityTx, cellId: string, quantity: number)
   const [row] = await tx
     .execute(
       sql`
-    SELECT (coalesce(sum(a.quantity), 0)
+    SELECT (coalesce(sum(a.quantity - a.moved_out), 0)
       - coalesce((SELECT sum(r.scrapped) FROM unit_reviews r JOIN assignments a2 ON a2.id = r.assignment_id WHERE a2.cell_id = ${cellId}), 0))::int AS live
     FROM assignments a WHERE a.cell_id = ${cellId}
   `,

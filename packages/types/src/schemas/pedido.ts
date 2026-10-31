@@ -127,6 +127,32 @@ export const cancelPedidoSchema = z.object({
   acknowledgePayments: z.boolean().optional(),
 });
 
+/** Draft an admin-approved restructure (T120, spec §3.4.17) */
+export const restructureCellSchema = z.object({
+  cellId: z.uuid(),
+  /** What this size is cut to; at least one unit, everything else is a cancellation */
+  newQuantity: z.number().int().min(1, "Mínimo 1 unidad").max(10_000),
+  /** Approved, undelivered units leaving the pedido */
+  toStock: z.number().int().min(0).default(0),
+  toScrap: z.number().int().min(0).default(0),
+  /** What happens to units reported and not reviewed yet */
+  pendingAction: z.enum(["approve", "reject"]).optional(),
+});
+
+export const requestRestructureSchema = z.object({
+  version: z.number().int().min(1),
+  reason: z.string().trim().min(3, "Escribe el motivo").max(300),
+  cells: z.array(restructureCellSchema).min(1, "Cambia al menos una talla"),
+});
+
+export const resolveRestructureSchema = z.object({
+  version: z.number().int().min(1),
+});
+
+export const rejectRestructureSchema = z.object({
+  reason: z.string().trim().min(3, "Escribe el motivo").max(300),
+});
+
 /** Register a delivery (T121): units per cell, only from approved undelivered units. */
 export const recordDeliverySchema = z.object({
   idempotencyKey: z.uuid(),

@@ -559,9 +559,10 @@ async function loadCellStates(tx: ActivityTx, pedidoId: string) {
     has_history: boolean;
   }>(sql`
     SELECT c.id AS cell_id,
-      (coalesce((SELECT sum(a.quantity) FROM assignments a WHERE a.cell_id = c.id), 0)
+      (coalesce((SELECT sum(a.quantity - a.moved_out) FROM assignments a WHERE a.cell_id = c.id), 0)
         - coalesce((SELECT sum(r.scrapped) FROM unit_reviews r JOIN assignments a ON a.id = r.assignment_id WHERE a.cell_id = c.id), 0))::int AS assigned,
-      coalesce((SELECT sum(r.approved) FROM unit_reviews r JOIN assignments a ON a.id = r.assignment_id WHERE a.cell_id = c.id), 0)::int AS approved,
+      (coalesce((SELECT sum(r.approved) FROM unit_reviews r JOIN assignments a ON a.id = r.assignment_id WHERE a.cell_id = c.id), 0)
+        - coalesce((SELECT sum(a.moved_out) FROM assignments a WHERE a.cell_id = c.id), 0))::int AS approved,
       coalesce((SELECT sum(dc.quantity) FROM delivery_cells dc WHERE dc.cell_id = c.id), 0)::int AS delivered,
       (EXISTS (SELECT 1 FROM unit_reports r JOIN assignments a ON a.id = r.assignment_id WHERE a.cell_id = c.id)
         OR EXISTS (SELECT 1 FROM delivery_cells dc WHERE dc.cell_id = c.id)) AS has_history
@@ -747,7 +748,7 @@ async function clothiersOnLines(tx: ActivityTx, lineIds: string[]): Promise<stri
       lineIds.map((l) => sql`${l}`),
       sql`, `,
     )})
-      AND a.quantity - coalesce((SELECT sum(r.scrapped) FROM unit_reviews r WHERE r.assignment_id = a.id), 0) > 0
+      AND a.quantity - a.moved_out - coalesce((SELECT sum(r.scrapped) FROM unit_reviews r WHERE r.assignment_id = a.id), 0) > 0
   `);
   return (rows.rows as { employee_id: string }[]).map((r) => r.employee_id);
 }

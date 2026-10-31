@@ -706,7 +706,7 @@ Update `apps/web/src/lib/db/README.md` with a short "When to use `getDb()` vs `g
 | T117 | Pedidos list and detail                                      | done    | T116, T118                   |
 | T118 | Derived status engine                                        | done    | T112, T113                   |
 | T119 | Edit rules after production starts                           | done    | T116, T112                   |
-| T120 | Admin-approved restructure                                   | pending | T119, T127, T128             |
+| T120 | Admin-approved restructure                                   | done    | T119, T127, T128             |
 | T121 | Deliveries in units                                          | done    | T112                         |
 | T122 | Assigning work                                               | done    | T112                         |
 | T123 | Mi trabajo (clothier)                                        | done    | T122, T115                   |

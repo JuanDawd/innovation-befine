@@ -1537,6 +1537,32 @@
       "saved": "Pago de {amount} registrado",
       "refunded": "Devolución de {amount} registrada",
       "savedAfterHours": "Pago de {amount} guardado fuera de horario; entra al próximo día"
+    },
+    "restructure": {
+      "button": "Reestructurar",
+      "title": "Reestructurar pedido",
+      "description": "Para cambios por debajo de lo ya hecho. Un administrador aprueba y todo se aplica de una vez: las confeccionistas conservan el pago de lo aprobado.",
+      "cellState": "Pedidas {ordered} · aprobadas {approved} · entregadas {delivered} · sin revisar {pending}",
+      "inRework": "{n} en corrección: resuélvelas antes de aprobar.",
+      "newQuantity": "Queda en",
+      "toStock": "A inventario",
+      "toScrap": "A descarte",
+      "pendingLabel": "{n} sin revisar",
+      "pendingChoose": "Elige qué hacer",
+      "pendingApprove": "Aprobar (se pagan)",
+      "pendingReject": "Rechazar (sin pago)",
+      "reason": "Motivo",
+      "submit": "Enviar a aprobación",
+      "requested": "Enviada a aprobación",
+      "pendingTitle": "Reestructuración pendiente",
+      "pendingBy": "Pedida por {name}. Motivo: {reason}",
+      "pendingCell": "{ordered} → {newQuantity} · a inventario {toStock} · a descarte {toScrap}",
+      "rejectReason": "Motivo para rechazar",
+      "approve": "Aprobar",
+      "reject": "Rechazar",
+      "approved": "Reestructuración aprobada",
+      "rejected": "Reestructuración rechazada",
+      "waitingAdmin": "Esperando la aprobación de un administrador."
     }
   },
   "miTrabajo": {

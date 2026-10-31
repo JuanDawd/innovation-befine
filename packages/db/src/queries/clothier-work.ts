@@ -242,7 +242,7 @@ export async function listUnassignedCells(
       coalesce(gc.label, l.color_other) AS color, l.style, l.instructions,
       coalesce(gs.label, c.size_other) AS size_label, gs.sort_order AS size_order,
       (c.quantity
-        - coalesce((SELECT sum(a.quantity) FROM assignments a WHERE a.cell_id = c.id), 0)
+        - coalesce((SELECT sum(a.quantity - a.moved_out) FROM assignments a WHERE a.cell_id = c.id), 0)
         + coalesce((SELECT sum(r.scrapped) FROM unit_reviews r JOIN assignments a ON a.id = r.assignment_id WHERE a.cell_id = c.id), 0)
       )::int AS unassigned,
       v.piece_rate, p.estimated_delivery_at

@@ -127,7 +127,7 @@ async function lockCell(tx: ActivityTx, cellId: string) {
   // so a claim committed meanwhile would look free (two claims, one cell).
   const free = await tx.execute(sql`
     SELECT (${cell.quantity}
-      - coalesce((SELECT sum(a.quantity) FROM assignments a WHERE a.cell_id = ${cellId}), 0)
+      - coalesce((SELECT sum(a.quantity - a.moved_out) FROM assignments a WHERE a.cell_id = ${cellId}), 0)
       + coalesce((SELECT sum(r.scrapped) FROM unit_reviews r JOIN assignments a ON a.id = r.assignment_id WHERE a.cell_id = ${cellId}), 0)
     )::int AS unassigned
   `);

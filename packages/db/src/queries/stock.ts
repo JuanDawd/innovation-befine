@@ -147,6 +147,9 @@ export async function listStockMovements(
           FROM unit_reviews r JOIN assignments a ON a.id = r.assignment_id
           JOIN pedido_line_cells c ON c.id = a.cell_id JOIN pedido_lines l ON l.id = c.line_id
           JOIN pedidos p ON p.id = l.pedido_id WHERE r.id = m.ref_id)
+        WHEN 'restructure' THEN (
+          SELECT 'Pedido #' || lpad(p.number::text, 4, '0')
+          FROM restructures x JOIN pedidos p ON p.id = x.pedido_id WHERE x.id = m.ref_id)
         ELSE NULL END AS source
     FROM stock_movements m
     LEFT JOIN employees e ON e.id = m.created_by

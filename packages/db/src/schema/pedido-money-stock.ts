@@ -24,6 +24,7 @@ import {
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
@@ -128,6 +129,10 @@ export const restructures = pgTable(
       .references(() => employees.id, { onDelete: "restrict" }),
     approvedBy: uuid("approved_by").references(() => employees.id, { onDelete: "restrict" }),
     approvedAt: timestamp("approved_at", { withTimezone: true }),
+    /** T120 — an admin may turn the draft down; it then stays as history */
+    rejectedBy: uuid("rejected_by").references(() => employees.id, { onDelete: "restrict" }),
+    rejectedAt: timestamp("rejected_at", { withTimezone: true }),
+    rejectionReason: text("rejection_reason"),
     reason: text("reason").notNull(),
     /** Before/after of every line, cell, assignment and money move in the event */
     summary: jsonb("summary").notNull(),
@@ -135,6 +140,11 @@ export const restructures = pgTable(
   },
   (t) => [
     index("idx_restructures_pedido").on(t.pedidoId),
+    // T120 — one draft at a time per pedido
+    uniqueIndex("uq_restructures_pedido_pending")
+      .on(t.pedidoId)
+      .where(sql`${t.approvedAt} IS NULL AND ${t.rejectedAt} IS NULL`),
+    check("chk_restructures_rejection", sql`(${t.rejectedBy} IS NULL) = (${t.rejectedAt} IS NULL)`),
     check("chk_restructures_approval", sql`(${t.approvedBy} IS NULL) = (${t.approvedAt} IS NULL)`),
   ],
 );
