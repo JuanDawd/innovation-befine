@@ -723,6 +723,9 @@ Update `apps/web/src/lib/db/README.md` with a short "When to use `getDb()` vs `g
 | T134 | Navigation and RBAC                                          | done    | T117, T123, T124, T128, T132 |
 | T135 | Retire the old model and reset test data                     | done    | T134                         |
 | T136 | E2E, training guide and screenshots                          | pending | T135                         |
+| T137 | Product details catalog and product rules                    | done    | T110                         |
+| T138 | Pedidos follow product details                               | pending | T137                         |
+| T139 | Stock counts by details that split it                        | pending | T138                         |
 
 ---
 

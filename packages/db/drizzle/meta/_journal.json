@@ -407,6 +407,13 @@
       "when": 1793477083534,
       "tag": "0057_t120_restructure",
       "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "7",
+      "when": 1793484452258,
+      "tag": "0058_t137_details",
+      "breakpoints": true
     }
   ]
 }
