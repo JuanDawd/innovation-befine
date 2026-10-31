@@ -1,6 +1,6 @@
 # Database Backup Policy — BeFine
 
-**Last updated:** 2026-04-24  
+**Last updated:** 2026-10-31  
 **Database:** Neon PostgreSQL (serverless, `ep-wild-hill-angoy5u6-pooler.c-6.us-east-1.aws.neon.tech`)
 
 ---
@@ -9,13 +9,7 @@
 
 Neon provides continuous, automatic point-in-time restore (PITR) for all projects. No manual configuration is required.
 
-| Plan            | PITR retention | Granularity |
-| --------------- | -------------- | ----------- |
-| Free            | 24 hours       | Any second  |
-| Launch ($19/mo) | 7 days         | Any second  |
-| Scale ($69/mo)  | 30 days        | Any second  |
-
-**Current plan:** Free (24-hour retention). **Upgrade to Launch before go-live** to get 7-day retention — sufficient for a small salon's operational risk.
+**Current plan:** Free. **Actual history retention: 6 hours** (`history_retention_seconds: 21600`, checked 2026-10-31). Before go-live, move to a paid plan with a longer window and confirm the new value in the project settings; check Neon's pricing page for current limits.
 
 Neon stores backups as Write-Ahead Log (WAL) segments replicated across availability zones. Data is encrypted at rest (AES-256) and in transit (TLS 1.3).
 
@@ -23,39 +17,22 @@ Neon stores backups as Write-Ahead Log (WAL) segments replicated across availabi
 
 ## Restore procedure
 
-### Point-in-time restore via Neon Console
+Neon console (Backup & Restore) or the Neon API, in this order:
 
-1. Log into [console.neon.tech](https://console.neon.tech)
-2. Select the **BeFine** project → **Branches**
-3. Click **Restore** on the `main` branch
-4. Choose the target timestamp (any second within the retention window)
-5. Neon creates a new branch at that point — inspect data before promoting
-6. To promote: update `DATABASE_URL` in Vercel to point to the restored branch, then delete the old main branch
+1. Create a snapshot of `main` at the target timestamp. It must be inside the retention window.
+2. Restore it as a new branch **without finalizing** (in the Neon MCP tool, pass `finalize: false` explicitly: it defaults to true for a new branch, and finalizing replaces the target).
+3. Inspect the restored branch and compare row counts.
+4. Finalize the restore. Neon moves the computes to the restored branch and replaces `main`, so connection details stay the same and no Vercel change is needed.
 
-**Total downtime:** typically < 5 minutes for branch creation; < 2 minutes for Vercel env var update + redeploy.
+## Restore drill
 
-### Restore drill (required before T089 go-live)
+| Date       | Performed by               | Target timestamp     | Result                                                                                                                                                                                                           | Duration                        |
+| ---------- | -------------------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
+| 2026-10-31 | Claude Code, for the owner | 2026-10-31T19:12:00Z | Pass. Restored 400 tickets, 25 voided, 23 cancelled test appointments, 9 payouts ($10.268.998), 11 checkouts ($5.990.000), 48 cleanup log rows, 53 migration rows. `main` stayed on the wiped state (0 tickets). | Snapshot to branch created: 7 s |
 
-Perform once on the staging branch before go-live:
+The drill used a real loss: the T135 reset emptied production at about 19:13 UTC, and the restore brought back the data from just before it.
 
-1. Note a target timestamp (e.g. 30 minutes ago)
-2. Insert a test row in `clients` table: `INSERT INTO clients (id, name, ...) VALUES (...)`
-3. Record the timestamp after insertion
-4. Restore the staging branch to the timestamp **before** the insertion
-5. Verify the test row does not appear in the restored branch
-6. Delete the restore branch; re-promote the original staging branch
-
-Document the drill result here:
-
-| Date | Performed by | Target timestamp | Row inserted | Row absent after restore | Duration |
-| ---- | ------------ | ---------------- | ------------ | ------------------------ | -------- |
-| ⏳   | —            | —                | —            | —                        | —        |
-
-> **Status (T10R-R3, 2026-04-24):** Blocked. There is currently no staging
-> Neon branch — local development talks to the production branch directly.
-> Running the drill against production is unsafe; the drill will be executed
-> as soon as a dedicated staging branch is provisioned. Tracked under
-> `T10R-R3` in `docs/Business/progress.md` with status `blocked`.
+The restore was then finalized at 19:25 UTC. The restored branch became `main`, the production endpoint (`ep-wild-hill`) and connection string stayed the same, no Vercel change was needed, and `/api/health` returned 200 on every check (first request after the swap: about 1 s, as the compute restarted). The previous branch stays as `main (old)` until deleted. Signing in and the app's screens were not exercised after the swap.
 
 ---
 
