@@ -643,6 +643,14 @@
 
 ## Medium-priority issues
 
+### M-83 — One transient Neon connection error failed the whole server render
+
+- **Severity:** Medium
+- **Status:** Resolved (2026-10-31)
+- **Affected:** every read through the Neon HTTP driver
+- **Description:** Found by the workday simulator: a single `fetch failed` / `ECONNRESET` during a count query on /cashier produced a Server Components render error.
+- **Fix:** `retryingFetch` retries read-only statements twice (100 ms, 300 ms) when the request itself fails. SQL errors arrive as responses and are not retried; neither are writes, since the connection may have dropped after the commit.
+
 ### M-87 — Failed employee insert left an orphan login
 
 - **Severity:** Medium
@@ -2303,3 +2311,4 @@
 | M-87     | 2026-10-29    | createEmployee removes the orphan auth user when the insert throws; failed cleanup reported                     | PR #38 (6bc6f01)               |
 | H-48     | 2026-10-31    | Single-open-day index declared in the schema; 0056 creates it where missing                                     | fix/h48-single-open-day-index  |
 | H-54     | 2026-10-31    | Test data voided, then production operational data wiped with the T135 reset                                    | Production data change         |
+| M-83     | 2026-10-31    | Read-only Neon HTTP statements retry twice on a dropped connection; writes and SQL errors never                 | fix/m83-retry-reads            |

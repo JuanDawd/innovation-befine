@@ -272,6 +272,11 @@ Apply rate limiting before business logic using `@upstash/ratelimit`:
 
 ## Database conventions
 
+### Migrations apply automatically
+
+- Production builds run them before building the app (`scripts/vercel-migrate.sh`); previews never do
+- The old code briefly runs against the new schema, so a migration must not break it. Rename or drop over two releases: stop using it, then remove it later. CI blocks these unless the file has `-- migration-safe: <why>`
+
 ### Drizzle ORM only
 
 - All schema definitions use Drizzle's `pgTable` helpers — never write raw DDL outside migration files

@@ -3,11 +3,15 @@ import { drizzle as drizzleHttp } from "drizzle-orm/neon-http";
 import { drizzle as drizzleWs } from "drizzle-orm/neon-serverless";
 import ws from "ws";
 import { configureLocalNeonProxy } from "./local-proxy";
+import { retryingFetch } from "./retry-fetch";
 
 import * as schema from "./schema";
 
 // Required for neon-serverless WebSocket driver in Node.js runtime
 neonConfig.webSocketConstructor = ws;
+
+// M-83: reads survive one dropped connection
+neonConfig.fetchFunction = retryingFetch;
 
 configureLocalNeonProxy();
 
