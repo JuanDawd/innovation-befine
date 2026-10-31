@@ -28,6 +28,7 @@ import {
   garmentColors,
   garmentSizes,
   pedidoLineCells,
+  pedidoLineDetails,
   pedidoLines,
   pedidoPayments,
   pedidos,
@@ -41,6 +42,10 @@ import {
   listPedidoOverviews,
   type PedidoDetail,
   type PedidoListItem,
+  checkLineDetails,
+  loadProductRules,
+  type Database,
+  type ProductRule,
 } from "@befine/db";
 import {
   createPedidoSchema,
@@ -81,6 +86,7 @@ export type PedidoFormVariant = {
   pieceName: string;
   variantName: string;
   sellingPrice: number | null;
+  pieceId: string;
   isActive: boolean;
 };
 
@@ -91,6 +97,8 @@ export type PedidoFormData = {
   variants: PedidoFormVariant[];
   sizes: PedidoFormOption[];
   colors: PedidoFormColor[];
+  /** T138 — what each product allows, by cloth piece */
+  rules: Record<string, ProductRule[]>;
   canEditPrices: boolean;
 };
 
@@ -135,6 +143,7 @@ type ResolvedLine =
       colorOther: string | null;
       style: string | null;
       instructions: string | null;
+      details?: { detailId: string; valueId: string | null; valueOther: string | null }[];
       unitPrice: number;
       priceReason: string | null;
       cells: { sizeId: string | null; sizeOther: string | null; quantity: number }[];
@@ -143,6 +152,10 @@ type ResolvedLine =
 
 type ExistingLine = {
   id: string;
+  colorOther?: string | null;
+  style?: string | null;
+  sizeOthers?: string[];
+  details?: { detailId: string; valueId: string | null; valueOther: string | null }[];
   kind: "garment" | "adjustment";
   clothPieceVariantId: string | null;
   colorId: string | null;
@@ -179,6 +192,7 @@ async function resolveLines(
             id: clothPieceVariants.id,
             sellingPrice: clothPieceVariants.sellingPrice,
             isActive: sql<boolean>`${clothPieceVariants.isActive} AND ${clothPieces.isActive}`,
+            pieceId: clothPieces.id,
           })
           .from(clothPieceVariants)
           .innerJoin(clothPieces, eq(clothPieceVariants.clothPieceId, clothPieces.id))
@@ -196,6 +210,9 @@ async function resolveLines(
           .from(garmentSizes)
           .where(inArray(garmentSizes.id, sizeIds))
       : [],
+  ]);
+  const rules = await loadProductRules(tx as unknown as Pick<Database, "select">, [
+    ...new Set(variantRows.map((v) => v.pieceId)),
   ]);
   const variants = new Map(variantRows.map((v) => [v.id, v]));
   const colors = new Map(colorRows.map((c) => [c.id, c]));
@@ -226,6 +243,33 @@ async function resolveLines(
     const variant = variants.get(line.clothPieceVariantId);
     if (!variant || (!variant.isActive && !sameVariant))
       throw new InputError(`lines.${i}.clothPieceVariantId`, "La prenda no está disponible.");
+
+    // A product with no setup has no rules; every product made in the app has one.
+    const pieceRules = rules.get(variant.pieceId);
+    const problem =
+      pieceRules &&
+      checkLineDetails(
+        pieceRules,
+        {
+          colorId: line.colorId ?? null,
+          colorOther: line.colorOther ?? null,
+          style: line.style ?? null,
+          sizeIds: line.cells.flatMap((c) => (c.sizeId ? [c.sizeId] : [])),
+          sizeOthers: line.cells.flatMap((c) => (c.sizeOther ? [c.sizeOther] : [])),
+          details: line.details,
+        },
+        prev && sameVariant
+          ? {
+              colorId: prev.colorId,
+              colorOther: prev.colorOther ?? null,
+              style: prev.style ?? null,
+              sizeIds: prev.sizeIds,
+              sizeOthers: prev.sizeOthers ?? [],
+              details: prev.details ?? [],
+            }
+          : undefined,
+      )[0];
+    if (problem) throw new InputError(`lines.${i}.${problem.field}`, problem.message);
 
     if (line.colorId) {
       const color = colors.get(line.colorId);
@@ -259,6 +303,11 @@ async function resolveLines(
       colorOther: line.colorOther ?? null,
       style: line.style ?? null,
       instructions: line.instructions ?? null,
+      details: line.details.map((d) => ({
+        detailId: d.detailId,
+        valueId: d.valueId ?? null,
+        valueOther: d.valueOther ?? null,
+      })),
       unitPrice: price.unitPrice,
       priceReason: price.priceReason,
       cells: line.cells.map((c) => ({
@@ -346,8 +395,13 @@ async function insertLines(
             },
       )
       .returning({ id: pedidoLines.id });
-    if (line.kind === "garment")
+    if (line.kind === "garment") {
       await tx.insert(pedidoLineCells).values(line.cells.map((c) => ({ lineId: row.id, ...c })));
+      if (line.details?.length)
+        await tx
+          .insert(pedidoLineDetails)
+          .values(line.details.map((d) => ({ lineId: row.id, ...d })));
+    }
   }
 }
 
@@ -395,6 +449,7 @@ export async function getPedidoFormData(): Promise<ActionResult<PedidoFormData>>
         pieceName: clothPieces.name,
         variantName: clothPieceVariants.name,
         sellingPrice: clothPieceVariants.sellingPrice,
+        pieceId: clothPieces.id,
         isActive: sql<boolean>`${clothPieceVariants.isActive} AND ${clothPieces.isActive}`,
       })
       .from(clothPieceVariants)
@@ -421,6 +476,7 @@ export async function getPedidoFormData(): Promise<ActionResult<PedidoFormData>>
       variants: variantRows,
       sizes: sizeRows,
       colors: colorRows,
+      rules: Object.fromEntries(await loadProductRules(db)),
       canEditPrices: guard.canEditPrices,
     },
   };
@@ -550,6 +606,28 @@ type CellState = {
 };
 
 /** Work done on each cell of a pedido: what limits how its lines can change. */
+async function loadLineDetails(tx: ActivityTx, lineIds: string[]) {
+  const map = new Map<
+    string,
+    { detailId: string; valueId: string | null; valueOther: string | null }[]
+  >();
+  if (!lineIds.length) return map;
+  const rows = await tx
+    .select()
+    .from(pedidoLineDetails)
+    .where(inArray(pedidoLineDetails.lineId, lineIds));
+  for (const { lineId, ...d } of rows) map.set(lineId, [...(map.get(lineId) ?? []), d]);
+  return map;
+}
+
+const detailsKey = (
+  list: { detailId: string; valueId: string | null; valueOther: string | null }[],
+) =>
+  list
+    .map((d) => `${d.detailId}:${d.valueId ?? d.valueOther}`)
+    .sort()
+    .join("|");
+
 async function loadCellStates(tx: ActivityTx, pedidoId: string) {
   const rows = await tx.execute<{
     cell_id: string;
@@ -697,6 +775,11 @@ export async function getPedidoForEdit(id: string): Promise<ActionResult<PedidoF
         ),
       };
 
+  const storedDetails = await loadLineDetails(
+    db as unknown as ActivityTx,
+    existing.map((l) => l.id),
+  );
+
   return {
     success: true,
     data: {
@@ -723,6 +806,11 @@ export async function getPedidoForEdit(id: string): Promise<ActionResult<PedidoF
               colorOther: l.colorOther ?? undefined,
               style: l.style ?? undefined,
               instructions: l.instructions ?? undefined,
+              details: (storedDetails.get(l.id) ?? []).map((d) => ({
+                detailId: d.detailId,
+                valueId: d.valueId ?? undefined,
+                valueOther: d.valueOther ?? undefined,
+              })),
               unitPrice: l.unitPrice,
               priceReason: l.priceReason ?? undefined,
               changeReason: undefined,
@@ -807,6 +895,10 @@ export async function updatePedido(
         );
 
       const client = await resolveClient(tx, input, actor);
+      const storedDetails = await loadLineDetails(
+        tx,
+        existing.map((l) => l.id),
+      );
       const lines = await resolveLines(
         tx,
         input.lines,
@@ -828,6 +920,10 @@ export async function updatePedido(
                 kind: l.kind,
                 clothPieceVariantId: l.clothPieceVariantId,
                 colorId: l.colorId,
+                colorOther: l.colorOther,
+                style: l.style,
+                details: storedDetails.get(l.id) ?? [],
+                sizeOthers: l.cells.flatMap((c) => (c.sizeOther ? [c.sizeOther] : [])),
                 unitPrice: l.unitPrice,
                 priceReason: l.priceReason,
                 amount: null,
@@ -835,6 +931,18 @@ export async function updatePedido(
               },
         ),
       );
+
+      // Which stock a unit counts as depends on these (T139), so they freeze with production.
+      for (const [i, l] of lines.entries()) {
+        if (l.kind !== "garment" || !l.id) continue;
+        const prev = existing.find((e) => e.id === l.id);
+        if (prev?.kind !== "garment" || !lineIsStarted(prev)) continue;
+        if (detailsKey(storedDetails.get(l.id) ?? []) !== detailsKey(l.details ?? []))
+          throw new InputError(
+            `lines.${i}.details`,
+            "Esta línea ya está en producción: sus detalles no se pueden cambiar.",
+          );
+      }
 
       const colorRows = await tx
         .select({ id: garmentColors.id, label: garmentColors.label })
@@ -892,6 +1000,14 @@ export async function updatePedido(
       const now = new Date();
       for (const u of plan.updateLines) {
         const l = u.line;
+        if (l.kind === "garment") {
+          const details = lines.find((x) => x.kind === "garment" && x.id === l.id);
+          await tx.delete(pedidoLineDetails).where(eq(pedidoLineDetails.lineId, l.id!));
+          if (details?.kind === "garment" && details.details?.length)
+            await tx
+              .insert(pedidoLineDetails)
+              .values(details.details.map((d) => ({ lineId: l.id!, ...d })));
+        }
         await tx
           .update(pedidoLines)
           .set(

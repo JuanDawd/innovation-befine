@@ -27,6 +27,7 @@ import {
   pgTable,
   text,
   timestamp,
+  primaryKey,
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
@@ -35,6 +36,7 @@ import { clients } from "./clients";
 import { employees } from "./employees";
 import { clothPieceVariants } from "./cloth-pieces";
 import { garmentColors, garmentSizes } from "./garment-attributes";
+import { details, detailValues } from "./details";
 
 export const pedidoDestinationEnum = pgEnum("pedido_destination_enum", ["client", "inventory"]);
 
@@ -128,6 +130,31 @@ export const pedidoLines = pgTable(
     check("chk_pedido_lines_unit_price", sql`${t.unitPrice} IS NULL OR ${t.unitPrice} >= 0`),
     check("chk_pedido_lines_amount", sql`${t.amount} IS NULL OR ${t.amount} <> 0`),
     check("chk_pedido_lines_color", sql`${t.colorId} IS NULL OR ${t.colorOther} IS NULL`),
+  ],
+);
+
+/**
+ * T138 — a line's custom details. Talla, Color and Estilo keep their own columns.
+ * A value from the detail's list or, when the detail allows it, typed text.
+ */
+export const pedidoLineDetails = pgTable(
+  "pedido_line_details",
+  {
+    lineId: uuid("line_id")
+      .notNull()
+      .references(() => pedidoLines.id, { onDelete: "cascade" }),
+    detailId: uuid("detail_id")
+      .notNull()
+      .references(() => details.id, { onDelete: "restrict" }),
+    valueId: uuid("value_id").references(() => detailValues.id, { onDelete: "restrict" }),
+    valueOther: text("value_other"),
+  },
+  (t) => [
+    primaryKey({ columns: [t.lineId, t.detailId] }),
+    check(
+      "chk_pedido_line_details_value",
+      sql`(${t.valueId} IS NULL) <> (${t.valueOther} IS NULL)`,
+    ),
   ],
 );
 

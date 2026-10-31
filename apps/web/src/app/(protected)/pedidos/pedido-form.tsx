@@ -9,6 +9,7 @@
  * the lines — there is no total field.
  */
 
+import type { ProductRule } from "@befine/db";
 import { useEffect, useId, useMemo, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import {
@@ -55,6 +56,8 @@ type GarmentDraft = {
   colorOther: string;
   style: string;
   instructions: string;
+  /** T138 — custom details: detailId → value id, or OTHER with the typed text */
+  details: Record<string, { choice: string; other: string }>;
   /** sizeId → digits */
   qty: Record<string, string>;
   others: { key: number; label: string; qty: string }[];
@@ -106,6 +109,7 @@ function emptyGarment(): GarmentDraft {
     colorChoice: "",
     colorOther: "",
     style: "",
+    details: {},
     instructions: "",
     qty: {},
     others: [],
@@ -139,6 +143,12 @@ function draftsFrom(pedido: PedidoForEdit | undefined): LineDraft[] {
       kind: "garment",
       id: l.id,
       variantId: l.clothPieceVariantId,
+      details: Object.fromEntries(
+        (l.details ?? []).map((d) => [
+          d.detailId,
+          { choice: d.valueId ?? OTHER, other: d.valueOther ?? "" },
+        ]),
+      ),
       ...specs,
       original: specs,
       changeReason: "",
@@ -423,8 +433,19 @@ function GarmentLine({
     line.others.reduce((n, o) => n + (Number(o.qty) || 0), 0);
 
   // Active sizes, plus deactivated ones this line already uses.
-  const sizes = data.sizes.filter((s) => s.isActive || line.qty[s.id]);
-  const colors = data.colors.filter((c) => c.isActive || c.id === line.colorChoice);
+  const rules = variant ? (data.rules[variant.pieceId] ?? []) : [];
+  const sizeRule = rules.find((r) => r.builtin === "size");
+  const colorRule = rules.find((r) => r.builtin === "color");
+  const styleRule = rules.find((r) => r.builtin === "style");
+  const customRules = rules.filter((r) => !r.builtin);
+  const allowed = (rule: ProductRule | undefined, id: string) =>
+    !rule || rule.allValues || rule.allowedIds.includes(id);
+  const sizes = data.sizes.filter((s) => (s.isActive && allowed(sizeRule, s.id)) || line.qty[s.id]);
+  const colors = data.colors.filter(
+    (c) => (c.isActive && allowed(colorRule, c.id)) || c.id === line.colorChoice,
+  );
+  const showColor = rules.length === 0 || !!colorRule || !!line.colorChoice;
+  const showStyle = rules.length === 0 || !!styleRule || !!line.style;
   const pieces = useMemo(() => {
     const groups = new Map<string, PedidoFormData["variants"]>();
     for (const v of data.variants) {
@@ -620,48 +641,104 @@ function GarmentLine({
 
       {/* Colour, style, instructions */}
       <div className="grid gap-3 sm:grid-cols-2">
-        <div className="space-y-1.5">
-          <label htmlFor={`${uid}-color`} className="text-sm font-medium">
-            {t("color")} <span className="text-muted-foreground">{t("optional")}</span>
-          </label>
-          <NativeSelect
-            id={`${uid}-color`}
-            value={line.colorChoice}
-            onChange={(e) => onChange({ colorChoice: e.target.value })}
-            className="w-full"
-            aria-invalid={!!err("colorId")}
-          >
-            <option value="">{t("noColor")}</option>
-            {colors.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.label}
-              </option>
-            ))}
-            <option value={OTHER}>{t("otherColor")}</option>
-          </NativeSelect>
-          {line.colorChoice === OTHER && (
+        {showColor && (
+          <div className="space-y-1.5">
+            <label htmlFor={`${uid}-color`} className="text-sm font-medium">
+              {t("color")}{" "}
+              {!colorRule?.required && (
+                <span className="text-muted-foreground">{t("optional")}</span>
+              )}
+            </label>
+            <NativeSelect
+              id={`${uid}-color`}
+              value={line.colorChoice}
+              onChange={(e) => onChange({ colorChoice: e.target.value })}
+              className="w-full"
+              aria-invalid={!!err("colorId")}
+            >
+              <option value="">{t("noColor")}</option>
+              {colors.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.label}
+                </option>
+              ))}
+              {(!colorRule || colorRule.allValues) && (
+                <option value={OTHER}>{t("otherColor")}</option>
+              )}
+            </NativeSelect>
+            {line.colorChoice === OTHER && (
+              <Input
+                aria-label={t("otherColorLabel")}
+                placeholder={t("otherColorLabel")}
+                value={line.colorOther}
+                maxLength={40}
+                onChange={(e) => onChange({ colorOther: e.target.value })}
+              />
+            )}
+            <FieldError id={`${uid}-color-error`} message={err("colorId")} />
+          </div>
+        )}
+        {showStyle && (
+          <div className="space-y-1.5">
+            <label htmlFor={`${uid}-style`} className="text-sm font-medium">
+              {t("style")}{" "}
+              {!styleRule?.required && (
+                <span className="text-muted-foreground">{t("optional")}</span>
+              )}
+            </label>
             <Input
-              aria-label={t("otherColorLabel")}
-              placeholder={t("otherColorLabel")}
-              value={line.colorOther}
-              maxLength={40}
-              onChange={(e) => onChange({ colorOther: e.target.value })}
+              id={`${uid}-style`}
+              value={line.style}
+              maxLength={200}
+              placeholder={t("stylePlaceholder")}
+              onChange={(e) => onChange({ style: e.target.value })}
             />
-          )}
-          <FieldError id={`${uid}-color-error`} message={err("colorId")} />
-        </div>
-        <div className="space-y-1.5">
-          <label htmlFor={`${uid}-style`} className="text-sm font-medium">
-            {t("style")} <span className="text-muted-foreground">{t("optional")}</span>
-          </label>
-          <Input
-            id={`${uid}-style`}
-            value={line.style}
-            maxLength={200}
-            placeholder={t("stylePlaceholder")}
-            onChange={(e) => onChange({ style: e.target.value })}
-          />
-        </div>
+          </div>
+        )}
+        {customRules.map((r) => {
+          const value = line.details[r.detailId] ?? { choice: "", other: "" };
+          const setValue = (next: Partial<typeof value>) =>
+            onChange({ details: { ...line.details, [r.detailId]: { ...value, ...next } } });
+          return (
+            <div key={r.detailId} className="space-y-1.5">
+              <label htmlFor={`${uid}-d-${r.detailId}`} className="text-sm font-medium">
+                {r.name}{" "}
+                {!r.required && <span className="text-muted-foreground">{t("optional")}</span>}
+              </label>
+              <NativeSelect
+                id={`${uid}-d-${r.detailId}`}
+                value={value.choice}
+                onChange={(e) => setValue({ choice: e.target.value })}
+                className="w-full"
+                aria-invalid={!!err(`details.${r.detailId}`)}
+              >
+                <option value="" />
+                {r.values
+                  .filter((v) => allowed(r, v.id) || v.id === value.choice)
+                  .map((v) => (
+                    <option key={v.id} value={v.id}>
+                      {v.label}
+                    </option>
+                  ))}
+                {r.allowFreeText && r.allValues && (
+                  <option value={OTHER}>{t("otherDetail")}</option>
+                )}
+              </NativeSelect>
+              {value.choice === OTHER && (
+                <Input
+                  aria-label={r.name}
+                  value={value.other}
+                  maxLength={40}
+                  onChange={(e) => setValue({ other: e.target.value })}
+                />
+              )}
+              <FieldError
+                id={`${uid}-d-${r.detailId}-error`}
+                message={err(`details.${r.detailId}`)}
+              />
+            </div>
+          );
+        })}
       </div>
       <div className="space-y-1.5">
         <label htmlFor={`${uid}-instructions`} className="text-sm font-medium">
@@ -900,6 +977,20 @@ export function PedidoForm({ data, pedido }: { data: PedidoFormData; pedido?: Pe
         colorOther: l.colorChoice === OTHER ? l.colorOther : undefined,
         style: l.style,
         instructions: l.instructions,
+        details: Object.entries(l.details).flatMap(
+          ([detailId, d]): {
+            detailId: string;
+            valueId?: string;
+            valueOther?: string;
+          }[] =>
+            d.choice === OTHER
+              ? d.other.trim()
+                ? [{ detailId, valueOther: d.other.trim() }]
+                : []
+              : d.choice
+                ? [{ detailId, valueId: d.choice }]
+                : [],
+        ),
         unitPrice: price ?? Number.NaN,
         priceReason: keeps ? (l.snapshot!.priceReason ?? undefined) : l.priceReason,
         changeReason: specsChanged(l) ? l.changeReason : undefined,

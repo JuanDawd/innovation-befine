@@ -28,6 +28,7 @@ export {
   pedidos,
   pedidoLines,
   pedidoLineCells,
+  pedidoLineDetails,
 } from "./pedidos";
 export {
   assignmentSourceEnum,

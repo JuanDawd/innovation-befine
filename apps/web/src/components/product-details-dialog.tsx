@@ -95,6 +95,7 @@ export function ProductDetailsDialog({
                     type="checkbox"
                     className="size-4"
                     checked={r.used}
+                    disabled={r.builtin === "size"}
                     onChange={(e) => patch(r.detailId, { used: e.target.checked })}
                   />
                   {t("uses")}

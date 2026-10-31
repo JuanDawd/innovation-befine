@@ -521,7 +521,7 @@ The admin creates details (Tela, Largo…) with values, and sets whether each sp
 ## T138 — Pedidos follow product details
 
 **Phase:** 11G — Details
-**Status:** pending
+**Status:** done (2026-10-31) — custom details freeze once a line is in production
 **Dependencies:** T137
 
 ### What to do
@@ -530,9 +530,9 @@ The pedido form offers only what the product allows, and the server enforces it.
 
 ### Acceptance criteria
 
-- [ ] A value the product doesn't come in, or a missing required detail, is refused by the server
-- [ ] A typed value is refused when the detail doesn't allow it
-- [ ] Existing pedidos stay editable
+- [x] A value the product doesn't come in, or a missing required detail, is refused by the server
+- [x] A typed value is refused when the detail doesn't allow it
+- [x] Existing pedidos stay editable
 
 ---
 
