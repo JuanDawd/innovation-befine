@@ -9,6 +9,8 @@
 
 export type ProgressAssignment = {
   quantity: number;
+  /** T120 — approved units a restructure took out of the pedido */
+  movedOut?: number;
   reports: { quantity: number; kind: "report" | "rework" }[];
   reviews: { approved: number; returned: number; scrapped: number }[];
 };
@@ -60,17 +62,19 @@ export function summarizeAssignment(a: ProgressAssignment): AssignmentProgress {
     a.reports.filter((r) => r.kind === "rework"),
     (r) => r.quantity,
   );
-  const approved = sum(a.reviews, (r) => r.approved);
+  const reviewedApproved = sum(a.reviews, (r) => r.approved);
+  const movedOut = a.movedOut ?? 0;
+  const approved = reviewedApproved - movedOut;
   const returned = sum(a.reviews, (r) => r.returned);
   const scrapped = sum(a.reviews, (r) => r.scrapped);
   return {
-    live: a.quantity - scrapped,
+    live: a.quantity - scrapped - movedOut,
     reported,
     rework,
     approved,
     returned,
     scrapped,
-    pendingReview: reported + rework - approved - returned - scrapped,
+    pendingReview: reported + rework - reviewedApproved - returned - scrapped,
     inRework: returned - rework,
     unstarted: a.quantity - reported,
   };

@@ -51,6 +51,9 @@ export const ACTIVITY_ACTIONS = [
   "pedido.create",
   "pedido.update",
   "pedido.cancel",
+  "pedido.restructure_request",
+  "pedido.restructure_reject",
+  "pedido.restructure",
   "pedido.deliver",
   "production.assign",
   "production.rate_change",
@@ -183,6 +186,12 @@ export function activitySummary(
       return `Editó el pedido ${data.number ?? ""}`.trim();
     case "pedido.cancel":
       return `Canceló el pedido ${data.number ?? ""}`.trim();
+    case "pedido.restructure_request":
+      return `Pidió reestructurar el pedido ${data.number ?? ""}`.trim();
+    case "pedido.restructure_reject":
+      return `Rechazó la reestructuración del pedido ${data.number ?? ""}`.trim();
+    case "pedido.restructure":
+      return `Aprobó la reestructuración del pedido ${data.number ?? ""}`.trim();
     case "production.assign":
       return `Asignó ${data.units ?? ""} unidades del pedido ${data.number ?? ""}`
         .replace(/\s+/g, " ")

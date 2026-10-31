@@ -59,6 +59,7 @@ export * from "./queries/pedido-progress";
 export * from "./queries/pedido-balance";
 export * from "./queries/pedido-status";
 export * from "./queries/pedidos";
+export * from "./queries/pedido-restructure";
 export * from "./queries/clothier-work";
 export * from "./queries/production-review";
 export * from "./queries/day-closings";

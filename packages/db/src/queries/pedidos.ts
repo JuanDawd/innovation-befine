@@ -133,7 +133,7 @@ export async function listPedidoOverviews(
       FROM pedido_line_cells c JOIN pedido_lines l ON l.id = c.line_id
     ),
     asg AS (
-      SELECT a.id, a.quantity, cell.pedido_id
+      SELECT a.id, a.quantity, a.moved_out, cell.pedido_id
       FROM assignments a JOIN cell ON cell.id = a.cell_id
     ),
     rev AS (
@@ -158,10 +158,11 @@ export async function listPedidoOverviews(
     SELECT p.id, p.number, p.destination, cl.name AS client_name, cl.phone AS client_phone,
       p.estimated_delivery_at, p.cancelled_at, p.created_at,
       coalesce((SELECT sum(quantity) FROM cell WHERE cell.pedido_id = p.id), 0)::int AS ordered,
-      (coalesce((SELECT sum(quantity) FROM asg WHERE asg.pedido_id = p.id), 0)
+      (coalesce((SELECT sum(quantity - moved_out) FROM asg WHERE asg.pedido_id = p.id), 0)
         - coalesce(rev.scrapped, 0))::int AS assigned,
       coalesce(rep.reported, 0)::int AS reported,
-      coalesce(rev.approved, 0)::int AS approved,
+      (coalesce(rev.approved, 0)
+        - coalesce((SELECT sum(moved_out) FROM asg WHERE asg.pedido_id = p.id), 0))::int AS approved,
       coalesce(dlv.delivered, 0)::int AS delivered,
       coalesce(money.total, 0)::bigint AS total,
       coalesce((SELECT sum(amount) FROM pedido_payments pp WHERE pp.pedido_id = p.id), 0)::bigint AS paid
@@ -399,6 +400,7 @@ export async function getPedidoDetail(
           id: assignments.id,
           cellId: assignments.cellId,
           quantity: assignments.quantity,
+          movedOut: assignments.movedOut,
           employeeId: assignments.employeeId,
           employeeName: users.name,
           source: assignments.source,
@@ -478,6 +480,7 @@ export async function getPedidoDetail(
         .filter((a) => a.cellId === cellId)
         .map((a) => ({
           quantity: a.quantity,
+          movedOut: a.movedOut,
           reports: reportRows.filter((r) => r.assignmentId === a.id),
           reviews: reviewRows.filter((r) => r.assignmentId === a.id),
         })),
@@ -514,6 +517,7 @@ export async function getPedidoDetail(
         version: a.version,
         progress: summarizeAssignment({
           quantity: a.quantity,
+          movedOut: a.movedOut,
           reports: reportRows.filter((r) => r.assignmentId === a.id),
           reviews: reviewRows.filter((r) => r.assignmentId === a.id),
         }),

@@ -195,7 +195,7 @@ Enforce spec §3.4.16: increases always; decreases only down to assigned units; 
 ## T120 — Admin-approved restructure
 
 **Phase:** 11B — Pedidos
-**Status:** pending
+**Status:** done (2026-10-31) — client pedidos only; each size keeps at least 1 unit (dropping one entirely is not supported); blocked while the size has corrections in progress
 **Dependencies:** T119, T127, T128
 
 ### What to do
@@ -204,9 +204,9 @@ Enforce spec §3.4.16: increases always; decreases only down to assigned units; 
 
 ### Acceptance criteria
 
-- [ ] Clothiers keep pay for approved units moved out of the pedido
-- [ ] Stock movements created for units sent to stock; scrap written off with reason
-- [ ] One `restructures` row + activity log entry with requester, approver and full summary
+- [x] Clothiers keep pay for approved units moved out of the pedido
+- [x] Stock movements created for units sent to stock; scrap written off with reason
+- [x] One `restructures` row + activity log entry with requester, approver and full summary
 
 ---
 

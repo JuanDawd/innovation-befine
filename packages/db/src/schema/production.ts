@@ -59,6 +59,11 @@ export const assignments = pgTable(
       .notNull()
       .references(() => employees.id, { onDelete: "restrict" }),
     quantity: integer("quantity").notNull(),
+    /**
+     * T120 — approved units a restructure took out of the pedido. They stay
+     * reviewed (the clothier stays paid) but no longer count on the cell.
+     */
+    movedOut: integer("moved_out").notNull().default(0),
     /** Whole COP paid per approved unit — copied from the variant at creation */
     pieceRate: bigint("piece_rate", { mode: "number" }).notNull(),
     /** Why the admin changed this assignment's rate (rush, embroidery) */
@@ -75,6 +80,7 @@ export const assignments = pgTable(
     index("idx_assignments_cell").on(t.cellId),
     index("idx_assignments_employee").on(t.employeeId),
     check("chk_assignments_quantity", sql`${t.quantity} >= 0`),
+    check("chk_assignments_moved_out", sql`${t.movedOut} >= 0`),
     check("chk_assignments_piece_rate", sql`${t.pieceRate} >= 0`),
   ],
 );
