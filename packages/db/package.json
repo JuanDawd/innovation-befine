@@ -33,7 +33,7 @@
     "@neondatabase/serverless": "^1.2.0",
     "@types/ws": "^8.18.2",
     "drizzle-orm": "^0.45.4",
-    "ws": "^8.22.0"
+    "ws": "^8.22.1"
   },
   "devDependencies": {
     "dotenv-cli": "^11.1.0",
